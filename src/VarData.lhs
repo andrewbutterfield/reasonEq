@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module VarData ( VarMatchRole
-               , pattern KnownConst, pattern KnownVar
+               , pattern KnownTerm, pattern KnownVar
                , pattern GenericVar, pattern InstanceVar, pattern UnknownVar
                , isKnownConst, isKnownVar
                , vmrConst, vmrType, vmrInst
@@ -112,14 +112,14 @@ while those in the last category are simply ``unknown''.
 We use the unknown category when a variable lookup fails.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
-  =  KC Term     -- Known Constant
+  =  KT Term     -- Known Term
   |  KV Type     -- Known Variable
   |  KG          -- Generic Variable
   |  KI Variable -- Instance Variable ! variable must be known as generic
   |  UV          -- Unknown Variable
   deriving (Eq, Ord, Show, Read)
 
-pattern KnownConst trm = KC trm
+pattern KnownTerm trm = KT trm
 pattern KnownVar typ   = KV typ
 pattern GenericVar     = KG
 pattern InstanceVar v  = KI v
@@ -129,13 +129,13 @@ pattern UnknownVar     = UV
 \newpage
 Useful predicates and destructors:
 \begin{code}
-isKnownConst (KC _)  = True     -- used
+isKnownConst (KT _)  = True     -- used
 isKnownConst _       = False
 isKnownVar (KV _)    = True     -- used
 isKnownVar _         = False
 
 vmrConst :: VarMatchRole -> Term
-vmrConst (KC trm) =  trm
+vmrConst (KT trm) =  trm
 vmrConst _        =  error "vmrConst: not known constant"
 
 vmrType :: VarMatchRole -> Type
@@ -321,9 +321,9 @@ addKnownConst var@(Vbl _ _ Static) trm vt@(VD (nm,vtable,stable,dtable))
   | otherwise
     = case M.lookup var vtable of
         Nothing
-          ->  return $ VD (nm, M.insert var (KC trm) vtable,stable,dtable )
+          ->  return $ VD (nm, M.insert var (KT trm) vtable,stable,dtable )
         Just UV  
-          ->  return $ VD (nm, M.insert var (KC trm) vtable,stable,dtable )
+          ->  return $ VD (nm, M.insert var (KT trm) vtable,stable,dtable )
         _ -> fail "addKnownConst: cannot update."
   where
      freev = freeVars scTrue trm  -- always safe?
@@ -1051,7 +1051,7 @@ mapTS :: [VarTable] -> [GenVar] -> [GenVar] -> [GenVar]
 mapTS vts svg [] =  svg
 mapTS vts svg (gv@(StdVar v):gvs)
   = case lookupVarTables vts v of
-      KC (Var _ tv)  ->  mapTS vts (StdVar v:svg) gvs
+      KT (Var _ tv)  ->  mapTS vts (StdVar v:svg) gvs
       _              ->  mapTS vts (gv:svg)       gvs
 mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
   = case lookupLVarTables vts v of

@@ -1083,7 +1083,7 @@ Unknown & \texttt{UnknownVar} & Anything as per classification.
 \\\hline
 Known variable & \texttt{KnownVar} & Itself only
 \\\hline
-Known constant & \texttt{KnownConst} & Itself or the constant
+Known constant & \texttt{KnownTerm} & Itself or the constant
 \\\hline
 Generic variable & \texttt{GenericVar}
  & Itself or any \texttt{InstanceVar} that references this.
@@ -1095,7 +1095,7 @@ Instance variable & \texttt{InstanceVar} & Itself only
 vMatch''' _ _ bind UnknownVar   vC vP  =  bindVarToVar vP vC bind
 vMatch''' _ _ bind (KnownVar _) vC vP
   | vC == vP                         =  bindVarToVar vP vC bind
-vMatch''' _ _ bind (KnownConst (Var _ v)) vC vP
+vMatch''' _ _ bind (KnownTerm (Var _ v)) vC vP
   | vC == v                          =  bindVarToVar vP vC bind
 vMatch''' vts fits bind GenericVar vC vP
   = case lookupVarTables vts vC of

@@ -401,7 +401,7 @@ genVarTable idsubs (VarData (vtname,vtable,stable,dtable))
           =  unlines' $ map ( ((kKnown++" ")++) . showMapping ) alist 
 
 genKnownVar :: IdSubMap -> (Variable,VarMatchRole) -> String
-genKnownVar _ (v,KnownConst trm) = genVariable v ++ " = " 
+genKnownVar _ (v,KnownTerm trm) = genVariable v ++ " = " 
   ++ kBegin ++ " " ++ genTerm 0 trm ++ " " ++ kEnd
 genKnownVar idsubs (v@(Vbl idnt vc _),KnownVar typ)
  = genVariable v ++ " " 

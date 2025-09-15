@@ -379,7 +379,7 @@ generating fresh type-variables when needed.
 addVarType :: [VarTable] -> (FreshInts,Env) -> Variable -> (FreshInts,Env)
 addVarType vts (fis,env) v@(Vbl n _ _)
   = case lookupVarTables vts v of
-      KnownConst trm ->  foldl (addVarType vts) (fis,env) (getVars trm)           
+      KnownTerm trm ->  foldl (addVarType vts) (fis,env) (getVars trm)           
       KnownVar typ -> (fis, M.insert n (Scheme [] typ) env)
       -- generic or unknown
       _ -> let (fis',tv) = newTyVar fis 

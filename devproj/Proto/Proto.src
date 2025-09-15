@@ -1,24 +1,24 @@
 Theory Proto
 
 
-Known 'a : N .
-Known a' : N .
-Known aterm : B .
-Known atermf : ( B -> B ) .
+Known 'a {O} : N .
+Known a' {O} : N .
+Known aterm {O} : B .
+Known atermf {O} : ( B -> B ) .
 Known gen :: generic
 Known inst instanceof gen
 Known mol = BEGIN 42 END
-Known prodt : ( Prod A B ) .
-Known sumt : 
+Known prodt {O} : ( Prod A B ) .
+Known sumt {O} : 
     ( S
       < P1  >
       < P2 B >
       < P3 ( B -> B ) A B >
     ) .
-Known 'u : B .
-Known 'v : B .
-Known x : B .
-Known y : B .
+Known 'u {O} : B .
+Known 'v {O} : B .
+Known x {O} : B .
+Known y {O} : B .
 Known alist$ :: list
 Known aset$ :: set
 Known klist0$ = <  >
@@ -93,13 +93,15 @@ END
 Conjecture univ_closure BEGIN
   CLS universal
   QS forall 'a a'
-  @  body
+  @
+  body
 END
 
 Conjecture exist_closure BEGIN
   CLS existential
   QS exists 'a
-  @  csQ CS (T,T)
+  @
+  csQ (T,T)
 END
 
 Conjecture sub_none_none BEGIN
@@ -119,7 +121,7 @@ Conjecture sub_one_none BEGIN
 END
 
 Conjecture sub_two_two BEGIN
-  SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
+  SUB [('a,42) ('b,ns2 (T,T)) (a$',a$'d) ('b$,b$')] body
 END
 
 Conjecture forall_zero BEGIN
@@ -128,22 +130,26 @@ END
 
 Conjecture exists_one BEGIN
   QS exists 'a
-  @  csQ CS (T,T)
+  @
+csQ (T,T)
 END
 
 Conjecture forall_two BEGIN
   QS forall 'a a'
-  @  body
+  @
+body
 END
 
 Conjecture exists_three BEGIN
   QS exists 'a 'a$ a'
-  @  body
+  @
+body
 END
 
 Conjecture forall_four BEGIN
   QS forall 'a 'a$ a$' a'
-  @  body
+  @
+body
 END
 
 Conjecture lambda_zero BEGIN
@@ -152,7 +158,7 @@ END
 
 Conjecture lambda_one BEGIN
   QL lambda 'a
-  @ csQ CS (T,T)
+  @ csQ (T,T)
 END
 
 Conjecture lambda_two BEGIN
@@ -211,29 +217,29 @@ Conjecture pred_during BEGIN
 END
 
 Conjecture cons_S_zero BEGIN
-  cs0 CS ()
+  cs0 ()
 END
 
 Conjecture cons_S_one BEGIN
-  cs1 CS (T)
+  cs1 (T)
 END
 
 Conjecture cons_S_two BEGIN
-  cs2 CS (T,T)
+  cs2 (T,T)
 END
 
 Conjecture cons_N_zero BEGIN
-  ns0 NS ()
+  ns0 ()
 END
 
 Conjecture cons_N_two BEGIN
-  ns2 NS (T,T)
+  ns2 (T,T)
 END
 
 Conjecture cons_N_two BEGIN
-  ns2 NS (T,T)
+  ns2 (T,T)
 END
 
 Conjecture cons_nesting BEGIN
-  nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+  nest (sub1 (),sub2 (T),sub3 ())
 END

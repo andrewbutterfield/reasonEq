@@ -127,15 +127,19 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 
 Top-level:
 \begin{code}
-loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text =  loadTheoryParts nullTheory $ tlex $ prepare text
+loadTheory :: MonadFail mf => TheoryDAG -> String -> mf Theory
+loadTheory thrys text 
+  =  loadTheoryParts thrys nullTheory $ tlex $ prepare text
 
-loadTheoryParts :: MonadFail mf  => Theory -> [Token] -> mf Theory
-loadTheoryParts thry [] = fail "Empty theory file!"
-loadTheoryParts thry ( (lno,TVar key Static)
+loadTheoryParts :: MonadFail mf  
+                => TheoryDAG ->  Theory -> [Token] -> mf Theory
+loadTheoryParts _ thry [] = fail "Empty theory file!"
+loadTheoryParts thrys thry ( (lno,TVar key Static)
                    :(_,TVar name Static):rest)
   | key == kTheory && validFileName name = do
         (thry',rest') <- loadDependencies (thName_ name thry) rest 
+        -- idsubmap <- getKnownVar
+        -- check dependencies in thrys !
         loadDefinitions thry' rest'   
   | otherwise  =  fail $ unlines  
       [ "loadTheory headline parse error at line " ++ show lno 

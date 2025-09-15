@@ -237,7 +237,7 @@ loadTheoryFile [thName] reqs = do
   haveSource <- doesFileExist fname
   if haveSource then do 
     theory_text <- readFile fname
-    case loadTheory theory_text of
+    case loadTheory (theories reqs) theory_text of
       Yes thry ->  do
         putStrLn ("Parsed as:\n"++show thry)
         putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) thry)

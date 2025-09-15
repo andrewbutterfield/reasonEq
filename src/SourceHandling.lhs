@@ -407,7 +407,7 @@ genVarTable idsubs (VarData (vtname,vtable,stable,dtable))
 genKnownVar :: IdSubMap -> (Variable,VarMatchRole) -> String
 genKnownVar _ (v,KnownTerm trm) = genVariable v ++ " = " 
   ++ kBegin ++ " " ++ genTerm 0 trm ++ " " ++ kEnd
-genKnownVar idsubs (v@(Vbl idnt vc _),KnownVar typ)
+genKnownVar idsubs (v@(Vbl idnt vc _),KnownVar typ _)
  = genVariable v ++ " " 
    ++ varInfo idsubs idnt vc 
    ++ " : " ++ genType 4 typ ++ " ."

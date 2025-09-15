@@ -93,6 +93,8 @@ can belong to one of the following categories as regards matching:
     and can take many possible values from a defined type.
     It has a predefined interpretation in some intended semantic model,
     and can only match itself.
+    It also represents constructor identifiers,
+    that are typed and have a substitutability indication.
   \item[Generic Variable]~\\
     This is a variable used to define some generic properties,
     via appropriate axioms.
@@ -113,17 +115,17 @@ We use the unknown category when a variable lookup fails.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
   =  KT Term     -- Known Term
-  |  KV Type     -- Known Variable
+  |  KV Type (Maybe Subable) -- Known Variable
   |  KG          -- Generic Variable
   |  KI Variable -- Instance Variable ! variable must be known as generic
   |  UV          -- Unknown Variable
   deriving (Eq, Ord, Show, Read)
 
-pattern KnownTerm trm = KT trm
-pattern KnownVar typ   = KV typ
-pattern GenericVar     = KG
-pattern InstanceVar v  = KI v
-pattern UnknownVar     = UV
+pattern KnownTerm trm     = KT trm
+pattern KnownVar typ sub  = KV typ sub
+pattern GenericVar        = KG
+pattern InstanceVar v     = KI v
+pattern UnknownVar        = UV
 \end{code}
 
 \newpage
@@ -131,7 +133,7 @@ Useful predicates and destructors:
 \begin{code}
 isKnownConst (KT _)  = True     -- used
 isKnownConst _       = False
-isKnownVar (KV _)    = True     -- used
+isKnownVar (KV _ _)  = True     -- used
 isKnownVar _         = False
 
 vmrConst :: VarMatchRole -> Term
@@ -139,7 +141,7 @@ vmrConst (KT trm) =  trm
 vmrConst _        =  error "vmrConst: not known constant"
 
 vmrType :: VarMatchRole -> Type
-vmrType (KV typ) =  typ
+vmrType (KV typ _) =  typ
 vmrType _        =  error "vmrType: not known variable"
 
 vmrInst :: VarMatchRole -> Variable
@@ -353,7 +355,7 @@ addKnownVar (ObsVar _ (During _)) _ _
 
 -- we allow updating here as it does not effect table integrity.
 addKnownVar var typ (VD (nm,vtable,stable,dtable))
-  =  return $ VD (nm, M.insert var (KV typ) vtable,stable,dtable )
+  =  return $ VD (nm, M.insert var (KV typ Nothing) vtable,stable,dtable )
 \end{code}
 
 \newpage

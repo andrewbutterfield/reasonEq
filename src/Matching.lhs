@@ -1093,10 +1093,10 @@ Instance variable & \texttt{InstanceVar} & Itself only
 \end{tabular}
 \begin{code}
 vMatch''' _ _ bind UnknownVar   vC vP  =  bindVarToVar vP vC bind
-vMatch''' _ _ bind (KnownVar _) vC vP
-  | vC == vP                         =  bindVarToVar vP vC bind
+vMatch''' _ _ bind (KnownVar _ _) vC vP
+  | vC == vP                           =  bindVarToVar vP vC bind
 vMatch''' _ _ bind (KnownTerm (Var _ v)) vC vP
-  | vC == v                          =  bindVarToVar vP vC bind
+  | vC == v                            =  bindVarToVar vP vC bind
 vMatch''' vts fits bind GenericVar vC vP
   = case lookupVarTables vts vC of
       (InstanceVar v) | v == vP     ->  bindVarToVar vP vC bind

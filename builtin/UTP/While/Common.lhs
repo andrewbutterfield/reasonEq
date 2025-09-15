@@ -92,7 +92,7 @@ $$ P \cond b Q $$
 cond :: Term -> Term -> Term -> Term
 i_cond       =  jId "cond"
 cond p b q   =  Cons arbpred True i_cond [p, b, q]
-condIntro = mkConsIntro i_cond boolf_3
+condIntro = mkConsIntro i_cond boolf_3 True
 \end{code}
 
 \subsection{Sequential Composition}
@@ -102,7 +102,7 @@ mkSeq :: Term -> Term -> Term
 sqcmp = "sqcmp"
 i_seq        =  jId sqcmp
 mkSeq p q    =  Cons arbpred False i_seq [p, q]
-seqIntro = mkConsIntro i_seq boolf_2
+seqIntro = mkConsIntro i_seq boolf_2 False
 \end{code}
 
 \subsection{While Loop}

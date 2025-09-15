@@ -82,7 +82,7 @@ v .:= e      =  simassign [(v,e)] []
 (.::=) :: ListVar -> ListVar -> Term
 lv .::= le   =  simassign [] [(lv,le)]
 
-asgIntro = mkConsIntro i_asg apred11
+asgIntro = mkConsIntro i_asg apred11 False
 \end{code}
 
 \subsection{Defn. of Assignment}

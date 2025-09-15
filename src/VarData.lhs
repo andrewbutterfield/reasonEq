@@ -22,14 +22,14 @@ module VarData ( VarMatchRole
                , pattern VarData
                , vtList, stList, dtList
                , newVarTable, newNamedVarTable
-               , addKnownConst, addKnownVar
+               , addKnownConst, addKnownVar, addKnownConstructor
                , addGenericVar, addInstanceVar
                , addKnownLListVar, addKnownSListVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
                , mkKnownConst
                , mkKnownVar
-               , mkConsVar, mkConsIntro
+               , mkConsVar, mkVarIntro, mkConsIntro
                , mkPredVar, mkPredIntro
                , mkAbsSetVar, mkAbsListVar
                , lookupLVarTs, lookupVarTable, lookupVarTables
@@ -358,6 +358,14 @@ addKnownVar var typ (VD (nm,vtable,stable,dtable))
   =  return $ VD (nm, M.insert var (KV typ Nothing) vtable,stable,dtable )
 \end{code}
 
+For variables denoting constructor names, we add a substitutability indicator:
+\begin{code}
+addKnownConstructor :: MonadFail m 
+            => Variable -> Type -> Subable -> VarTable -> m VarTable
+addKnownConstructor var typ sbbl (VD (nm,vtable,stable,dtable))
+  =  return $ VD (nm, M.insert var (KV typ $ Just sbbl) vtable,stable,dtable )
+\end{code}
+
 \newpage
 \subsection{Inserting Generic Variables}
 
@@ -640,8 +648,11 @@ mkKnownVar v t  = fromJust . addKnownVar v t
 mkConsVar ::  Identifier -> Type -> Variable
 mkConsVar i t = Vbl i ObsV Static
 
-mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
-mkConsIntro i t = mkKnownVar (mkConsVar i t) t
+mkVarIntro :: Identifier -> Type -> VarTable -> VarTable
+mkVarIntro i t = mkKnownVar (mkConsVar i t) t
+
+mkConsIntro :: Identifier -> Type -> Subable -> VarTable -> VarTable
+mkConsIntro i t s = fromJust . addKnownConstructor (mkConsVar i t) t s
 
 mkPredVar ::  Identifier -> Type -> Variable
 mkPredVar i t = Vbl i PredV Static

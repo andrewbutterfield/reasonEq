@@ -55,7 +55,7 @@ sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 
 \begin{code}
 orKnown :: VarTable
-orKnown =  fromJust $ addKnownVar v_or boolf_2 
+orKnown =  fromJust $ addKnownConstructor v_or boolf_2 True
                     $ newNamedVarTable disjName
 \end{code}
 

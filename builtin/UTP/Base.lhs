@@ -78,7 +78,7 @@ $$ P \sqsupseteq Q $$
 refines :: Term -> Term -> Term
 i_refines    =  jId "refines"
 refines p q  =  Cons arbpred False i_refines [p, q]
-refinesIntro = mkConsIntro i_refines boolf_2
+refinesIntro = mkConsIntro i_refines boolf_2 True
 \end{code}
 
 \subsection{Non-deterministic Choice}
@@ -87,7 +87,7 @@ $$ P \sqcap Q $$
 ndc :: Term -> Term -> Term
 i_ndc    =  jId "sqcap"
 ndc p q  =  Cons arbpred True i_ndc [p, q]
-ndcIntro = mkConsIntro i_ndc boolf_2
+ndcIntro = mkConsIntro i_ndc boolf_2 True
 \end{code}
 
 \subsection{Abort}

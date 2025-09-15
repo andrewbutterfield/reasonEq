@@ -75,14 +75,14 @@ card_t t = FunType (power t) int
 \end{eqnarray*}
 All of the above are substitutable.
 \begin{code}
-i_mt  = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
+i_mt  = jId "emptyset" ; mtIntro      = mkVarIntro i_mt  sett
 i_set = jId "set"   
-i_mbr = jId "mbr"      ; inIntro      = mkConsIntro i_mbr $ mbr_t  elemt
-i_U   = jId "union"    ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
-i_I   = jId "intsct"   ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
-i_D   = jId "sdiff"    ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
-i_SS  = jId "subseteq" ; subsetIntro  = mkConsIntro i_SS  $ subs_t elemt
-i_crd = jId "card"     ; cardIntro    = mkConsIntro i_crd $ card_t elemt
+i_mbr = jId "mbr"      ; inIntro      = mkConsIntro i_mbr (mbr_t  elemt) True
+i_U   = jId "union"    ; unionIntro   = mkConsIntro i_U   (setf_2 elemt) True
+i_I   = jId "intsct"   ; intsctIntro  = mkConsIntro i_I   (setf_2 elemt) True
+i_D   = jId "sdiff"    ; setdiffIntro = mkConsIntro i_D   (setf_2 elemt) True
+i_SS  = jId "subseteq" ; subsetIntro  = mkConsIntro i_SS  (subs_t elemt) True
+i_crd = jId "card"     ; cardIntro    = mkConsIntro i_crd (card_t elemt) True
 \end{code}
 
 \begin{code}

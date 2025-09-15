@@ -130,34 +130,34 @@ then the low-level semantics that defines basic building blocks.
 atom :: Term -> Term
 i_atom  =  jId "atom"
 atom a  =  Cons bool False i_atom [a]
-atomIntro  =  mkConsIntro i_atom boolf_1
+atomIntro  =  mkConsIntro i_atom boolf_1 False
 
 cskip :: Term
 i_cskip  =  jId "cskip"
 v_cskip  =  Vbl i_cskip PredV Static
 g_cskip  =  StdVar v_cskip
 cskip    =  jVar bool v_cskip 
-cskipIntro  =  mkConsIntro i_cskip bool
+cskipIntro  =  mkVarIntro i_cskip bool
 
 cseq :: Term -> Term -> Term
 i_cseq = jId "cseq"
 cseq c d = Cons bool True i_cseq [c,d]
-cseqIntro  =  mkConsIntro i_cseq boolf_2
+cseqIntro  =  mkConsIntro i_cseq boolf_2 True
 
 cplus :: Term -> Term -> Term
 i_cplus = jId "cplus"
 cplus c d = Cons bool True i_cplus [c,d]
-cplusIntro  =  mkConsIntro i_cplus boolf_2
+cplusIntro  =  mkConsIntro i_cplus boolf_2 True
 
 cpll :: Term -> Term -> Term
 i_cpll = jId "cpll"
 cpll c d = Cons bool True i_cpll [c,d]
-cpllIntro  =  mkConsIntro i_cpll boolf_2
+cpllIntro  =  mkConsIntro i_cpll boolf_2 True
 
 cstar :: Term -> Term
 i_cstar  =  jId "cstar"
 cstar c  =  Cons bool True i_cstar [c]
-cstarIntro  =  mkConsIntro i_cstar boolf_1
+cstarIntro  =  mkConsIntro i_cstar boolf_1 True
 \end{code}
 
 We want predicate variables $C$, $D$, $E$ and $F$:
@@ -535,7 +535,7 @@ areUTCPAtomic gcs = mrgscs $ map isUTCPAtomic gcs
 xact :: Term -> Term -> Term -> Term -> Term
 i_xact = jId "X"
 typeX = FunType ls_t (FunType bool (FunType ls_t (FunType ls_t bool)))
-xactIntro = mkConsIntro i_xact typeX
+xactIntro = mkConsIntro i_xact typeX False
 xact e act r a = Cons bool False i_xact [e,act,r,a]
 xactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vR,vN])
 axXDef = ( "X" -.- "def"
@@ -562,7 +562,7 @@ We note that the following is true: \m{X(E|a|R|N) = X(E|a|(R\setminus N)|N)}.
 \begin{code}
 i_aact = jId "A"
 typeA = FunType ls_t (FunType bool (FunType ls_t bool))
-aactIntro = mkConsIntro i_aact typeA
+aactIntro = mkConsIntro i_aact typeA False
 aact e act n = Cons bool False i_aact [e,act,n]
 aactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vN] )
 axADef = ( "A" -.- "def"

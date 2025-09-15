@@ -94,17 +94,17 @@ len_t t   = FunType (star t) int    -- t*->N
 \\ \len &:& \Seq t \fun \Nat
 \end{eqnarray*}
 \begin{code}
-i_nil   = jId "nil"   ; nilIntro    = mkConsIntro i_nil     seqt
-i_cons  = jId "cons"  ; consIntro   = mkConsIntro i_cons  $ cons_t  contt
-i_hd    = jId "hd"    ; hdIntro     = mkConsIntro i_hd    $ hd_t    contt
-i_tl    = jId "tl"    ; tlIntro     = mkConsIntro i_tl    $ seqf_1  contt
+i_nil   = jId "nil"   ; nilIntro    = mkVarIntro i_nil     seqt
+i_cons  = jId "cons"  ; consIntro   = mkConsIntro i_cons  (cons_t  contt) True
+i_hd    = jId "hd"    ; hdIntro     = mkConsIntro i_hd    (hd_t    contt) True
+i_tl    = jId "tl"    ; tlIntro     = mkConsIntro i_tl    (seqf_1  contt) True
 i_seq   = jId "seq"   
-i_cat   = jId "cat"   ; catIntro    = mkConsIntro i_cat   $ seqf_2  contt
-i_pfx   = jId "pfx"   ; pfxIntro    = mkConsIntro i_pfx   $ pfx_t   contt
-i_lsngl = jId "lsngl" ; snglIntro   = mkConsIntro i_lsngl $ sngl_t  contt
-i_rev   = jId "rev"   ; revIntro    = mkConsIntro i_rev   $ seqf_1  contt
-i_elems = jId "elems" ; elemslIntro = mkConsIntro i_elems $ elems_t contt
-i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
+i_cat   = jId "cat"   ; catIntro    = mkConsIntro i_cat   (seqf_2  contt) True
+i_pfx   = jId "pfx"   ; pfxIntro    = mkConsIntro i_pfx   (pfx_t   contt) True
+i_lsngl = jId "lsngl" ; snglIntro   = mkConsIntro i_lsngl (sngl_t  contt) True
+i_rev   = jId "rev"   ; revIntro    = mkConsIntro i_rev   (seqf_1  contt) True
+i_elems = jId "elems" ; elemslIntro = mkConsIntro i_elems (elems_t contt) True
+i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   (len_t   contt) True
 \end{code}
 
 \newpage

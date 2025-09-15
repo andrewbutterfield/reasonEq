@@ -59,7 +59,7 @@ sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 
 \begin{code}
 impKnown :: VarTable
-impKnown =  fromJust $ addKnownVar v_imp boolf_2 
+impKnown =  fromJust $ addKnownConstructor v_imp boolf_2 True
                      $ newNamedVarTable implName
 \end{code}
 

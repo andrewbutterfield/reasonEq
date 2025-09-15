@@ -95,7 +95,7 @@ $$ P \design Q $$
 \begin{code}
 i_design    =  jId "design"
 v_design    =  Vbl i_design ObsV Static
-designIntro = mkConsIntro i_design boolf_2
+designIntro = mkConsIntro i_design boolf_2 False
 \end{code}
 
 \subsection{Healthiness}

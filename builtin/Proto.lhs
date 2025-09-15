@@ -46,14 +46,14 @@ This is an isolated theory for prototyping stuff
 
 \begin{code}
 --variables
-atermIntro  =  mkConsIntro (jId "aterm") bool
-atermfIntro =  mkConsIntro (jId "atermf") boolf_1
+atermIntro  =  mkVarIntro (jId "aterm") bool
+atermfIntro =  mkVarIntro (jId "atermf") boolf_1
 var'AIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
 varA'Intro = mkKnownVar (Vbl (jId "a") ObsV After) (GivenType $ jId "N")
 molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
-prodIntro =  mkConsIntro (jId "prodt") 
+prodIntro =  mkVarIntro (jId "prodt") 
                           (TypeCons (jId "Prod") [(GivenType $ jId "A"),bool])
-sumIntro = mkConsIntro (jId "sumt")
+sumIntro = mkVarIntro (jId "sumt")
   ( AlgType (jId "S")
       [ ((jId "P1"),[])
       , ((jId "P2"),[(GivenType $ jId "B")])
@@ -82,8 +82,8 @@ ksetIntro = fromJust . addKnownSListVar ksLVar S.empty
 kabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Static)
 kabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV Static)
 
-xIntro = mkConsIntro (jId "x") bool
-yIntro = mkConsIntro (jId "y") bool
+xIntro = mkVarIntro (jId "x") bool
+yIntro = mkVarIntro (jId "y") bool
 
 
 --dynamic list variables

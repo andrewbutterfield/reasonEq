@@ -113,6 +113,7 @@ kBegin = "BEGIN"
 kEnd = "END"
 \end{code}
 
+\newpage
 \subsection{Load Theory}
 
 Theory names become filenames,
@@ -124,11 +125,10 @@ validFileChar c = c `elem` validFileChars
 validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 \end{code}
 
-
+Top-level:
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text  =  loadTheoryParts nullTheory $ tlex $ prepare text
-
+loadTheory text =  loadTheoryParts nullTheory $ tlex $ prepare text
 
 loadTheoryParts :: MonadFail mf  => Theory -> [Token] -> mf Theory
 loadTheoryParts thry [] = fail "Empty theory file!"
@@ -141,7 +141,10 @@ loadTheoryParts thry ( (lno,TVar key Static)
       [ "loadTheory headline parse error at line " ++ show lno 
       , "  expected: "++kTheory++" theoryname"
       , "  got: " ++ key ++ " " ++ name ]
+\end{code}
 
+Looks for \textbf{Needs} thname1 \dots thnameN \textbf{END} (optional).
+\begin{code}
 loadDependencies :: MonadFail mf 
                    => Theory -> [Token] 
                    -> mf (Theory,[Token])
@@ -163,13 +166,10 @@ loadDeps thry sped (tok@(lno,_):rest)
   = fail $ unlines
       [ "invalid dependency at line "++show lno
       , "  saw "++renderToken tok ]
+\end{code}
 
--- loadDepLine thry sped rest lno [] = loadDeps thry sped rest
--- loadDepLine thry sped rest lno ((_,TVar  dep Static):deps)
---   | validFileName dep = loadDepLine thry (dep:sped) rest lno deps
---   | otherwise = 
-
-
+Expects \textbf{Known}, or \textbf{Law}, or \textbf{Conjecture}. 
+\begin{code}
 loadDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
 loadDefinitions thry []  =  return thry
 loadDefinitions thry ((lno,TVar category Static)

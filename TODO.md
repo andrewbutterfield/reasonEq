@@ -2,12 +2,28 @@
 
 ## PLAN
 
+### Generate/Load
+
 When `load`ing a file of a theory
 we need to apply `collectConsSubstitutability` 
 to not just that theory, but also all of the theories 
 on which it depends.
 
+The load process should be done as follows:  
+
+1. Parse the theory name and dependencies. 
+
+2. Gather all the `Known v {...} : type` entries from those dependencies to build a `IdSubMap`.
+
+3. Use this to complete the parsing and building of the loaded theory.
+
+
+
+### Types
+
 Should we have the unit type `()` with the sole value `()` ?
+
+### Theories
 
 * Continue developing the  `Designs` theory.
 

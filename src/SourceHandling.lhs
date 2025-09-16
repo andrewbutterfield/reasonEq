@@ -91,15 +91,6 @@ Constructor names are defined as known with a type
 But we really also need to know if its construct is substitutable or not.
 We define a function that runs over all axioms, 
 constructing a map from constructor names to their substitutability.
-\begin{code}
-type IdSubMap = Map Identifier Subable
-collectConsSubstitutability :: Theory -> IdSubMap
-collectConsSubstitutability theory = collConsSub $ laws theory
-
-collConsSub [] = M.empty
-collConsSub (((_,Assertion tm _),_):rest)
-  = M.fromList (termIdSubability tm) `M.union` collConsSub rest
-\end{code}
 
 
 Keywords:
@@ -128,19 +119,17 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 Top-level:
 \begin{code}
 loadTheory :: MonadFail mf => TheoryDAG -> String -> mf Theory
-loadTheory thrys text 
-  =  loadTheoryParts thrys nullTheory $ tlex $ prepare text
+loadTheory thrys text = loadTheoryParts thrys $ tlex $ prepare text
 
-loadTheoryParts :: MonadFail mf  
-                => TheoryDAG ->  Theory -> [Token] -> mf Theory
-loadTheoryParts _ thry [] = fail "Empty theory file!"
-loadTheoryParts thrys thry ( (lno,TVar key Static)
-                   :(_,TVar name Static):rest)
+loadTheoryParts :: MonadFail mf => TheoryDAG -> [Token] -> mf Theory
+loadTheoryParts thrys [] = fail "Empty theory file!" 
+loadTheoryParts thrys ( (lno,TVar key Static) : (_,TVar name Static) : rest)
   | key == kTheory && validFileName name = do
-        (thry',rest') <- loadDependencies (thName_ name thry) rest 
-        -- idsubmap <- getKnownVar
+        (deps,rest') <- loadDependencies rest 
+        idsubmap <- getKnownVarSubabilities thrys deps
         -- check dependencies in thrys !
-        loadDefinitions thry' rest'   
+        let thry = thName_ name $ thDeps_ deps nullTheory
+        loadDefinitions thry rest'   
   | otherwise  =  fail $ unlines  
       [ "loadTheory headline parse error at line " ++ show lno 
       , "  expected: "++kTheory++" theoryname"
@@ -150,23 +139,22 @@ loadTheoryParts thrys thry ( (lno,TVar key Static)
 Looks for \textbf{Needs} thname1 \dots thnameN \textbf{END} (optional).
 \begin{code}
 loadDependencies :: MonadFail mf 
-                   => Theory -> [Token] 
-                   -> mf (Theory,[Token])
-loadDependencies thry []  =  return (thry,[])
-loadDependencies thry nlines@((lno,TVar  needs Static):rest)
-  | needs == kNeeds  =  loadDeps thry [] rest
-  | otherwise = return (thry,nlines) -- no dependencies is fine
+                   => [Token] 
+                   -> mf ([String],[Token])
+loadDependencies toks@[]  =  return ([],toks)
+loadDependencies nlines@((lno,TVar  needs Static):rest)
+  | needs == kNeeds  =  loadDeps [] rest
+  | otherwise = return ([],nlines) -- no dependencies is fine
 
-loadDeps thry sped []  =  premAfter [ kNeeds ]
+loadDeps sped []  =  premAfter [ kNeeds ]
 
-loadDeps thry sped ((lno,TVar close _):rest) 
-  | close == kEnd  
-     =  return ((thDeps__ (++(reverse sped)) thry), rest)
+loadDeps sped ((lno,TVar close _):rest) 
+  | close == kEnd  =  return (reverse sped, rest)
 
-loadDeps thry sped ((lno,TVar i Static):rest) 
-  | validFileName i = loadDeps thry (i:sped) rest 
+loadDeps sped ((lno,TVar i Static):rest) 
+  | validFileName i = loadDeps (i:sped) rest 
 
-loadDeps thry sped (tok@(lno,_):rest) 
+loadDeps sped (tok@(lno,_):rest) 
   = fail $ unlines
       [ "invalid dependency at line "++show lno
       , "  saw "++renderToken tok ]

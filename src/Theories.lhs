@@ -25,6 +25,7 @@ module Theories
  , addTheory, addTheory', getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
+ , IdSubMap, getKnownVarSubabilities, collectConsSubstitutability
  , isATheoryIn
  , replaceTheory, replaceTheory', replaceTheory''
  , updateTheory
@@ -44,6 +45,8 @@ import Data.Maybe (catMaybes, isJust)
 
 import YesBut
 import Utilities
+import LexBase
+import AST
 import StratifiedDAG
 import Substitution
 import VarData
@@ -317,6 +320,7 @@ getAllTheories theories
  where lookin tmp nm = M.lookup nm tmp
 \end{code}
 
+
 \newpage
 \section{Various Lookups}
 
@@ -349,6 +353,29 @@ getTheoryProofs thNm thrys
          Nothing    ->  fail ("Proofs: theory '"++thNm++", not found")
          Just thry  ->  return $ proofs thry
 \end{code}
+
+\subsection{Getting substitutability information}
+
+\begin{code}
+type IdSubMap = Map Identifier Subable
+\end{code}
+
+\begin{code}
+getKnownVarSubabilities :: MonadFail mf 
+                        => TheoryDAG -> [String] -> mf IdSubMap
+getKnownVarSubabilities thrys deps = return M.empty
+\end{code}
+
+\begin{code}
+collectConsSubstitutability :: Theory -> IdSubMap
+collectConsSubstitutability theory = collConsSub $ laws theory
+
+collConsSub [] = M.empty
+collConsSub (((_,Assertion tm _),_):rest)
+  = M.fromList (termIdSubability tm) `M.union` collConsSub rest
+\end{code}
+
+
 
 \section{Various Changes}
 

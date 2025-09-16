@@ -24,7 +24,7 @@ module Theories
  , noTheories
  , addTheory, addTheory', getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
- , listTheories, getTheoryConjectures, getTheoryProofs
+ , listTheoryNames, getTheoryConjectures, getTheoryProofs
  , IdSubMap, getKnownVarSubabilities, collectConsSubstitutability
  , isATheoryIn
  , replaceTheory, replaceTheory', replaceTheory''
@@ -327,8 +327,8 @@ getAllTheories theories
 \subsection{List all theories}
 
 \begin{code}
-listTheories :: TheoryDAG -> [String]
-listTheories thrys = M.keys $ tmap thrys
+listTheoryNames :: TheoryDAG -> [String]
+listTheoryNames thrys = M.keys $ tmap thrys
 \end{code}
 
 \subsection{Get Conjectures of current theory}
@@ -356,16 +356,16 @@ getTheoryProofs thNm thrys
 
 \subsection{Getting substitutability information}
 
+We need to associate substitutability information (subability) with identifiers
+used a constructor names.
 \begin{code}
 type IdSubMap = Map Identifier Subable
 \end{code}
 
-\begin{code}
-getKnownVarSubabilities :: MonadFail mf 
-                        => TheoryDAG -> [String] -> mf IdSubMap
-getKnownVarSubabilities thrys deps = return M.empty
-\end{code}
-
+It helps (at time of writing) 
+to be able to scrape terms in theories to extract subability mappings.
+We focus on axioms because those provide the most definitive source 
+of such indicators.
 \begin{code}
 collectConsSubstitutability :: Theory -> IdSubMap
 collectConsSubstitutability theory = collConsSub $ laws theory
@@ -373,6 +373,26 @@ collectConsSubstitutability theory = collConsSub $ laws theory
 collConsSub [] = M.empty
 collConsSub (((_,Assertion tm _),_):rest)
   = M.fromList (termIdSubability tm) `M.union` collConsSub rest
+\end{code}
+
+
+The (newly) official place to obtain subability data is to interrogate the
+recorded known variables in the relevant theories.
+\begin{code}
+getKnownVarSubabilities :: MonadFail mf 
+                        => TheoryDAG -> [String] -> mf IdSubMap
+getKnownVarSubabilities thrys [] = return M.empty
+getKnownVarSubabilities thrys (nm:deps)
+  = case M.lookup nm (tmap thrys) of
+      Nothing -> fail ("getKnownVarSubabilities: unknown theory: "++nm)
+      Just thry -> do
+        let idsubmap = getTheorySubabilities thry
+        idsubmap' <- getKnownVarSubabilities thrys deps
+        return (idsubmap `M.union` idsubmap')
+
+getTheorySubabilities :: Theory -> IdSubMap
+
+getTheorySubabilities thry = M.empty
 \end{code}
 
 

@@ -126,10 +126,10 @@ loadTheoryParts thrys [] = fail "Empty theory file!"
 loadTheoryParts thrys ( (lno,TVar key Static) : (_,TVar name Static) : rest)
   | key == kTheory && validFileName name = do
         (deps,rest') <- loadDependencies rest 
-        idsubmap <- getKnownVarSubabilities thrys deps
+        idsubmap <- getKnownVarSubabilities thrys $ pdbg "DEPS" deps
         -- check dependencies in thrys !
         let thry = thName_ name $ thDeps_ deps nullTheory
-        loadDefinitions thry rest'   
+        loadDefinitions (pdbg "IDSUBMAP" idsubmap) thry rest'   
   | otherwise  =  fail $ unlines  
       [ "loadTheory headline parse error at line " ++ show lno 
       , "  expected: "++kTheory++" theoryname"
@@ -162,21 +162,21 @@ loadDeps sped (tok@(lno,_):rest)
 
 Expects \textbf{Known}, or \textbf{Law}, or \textbf{Conjecture}. 
 \begin{code}
-loadDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
-loadDefinitions thry []  =  return thry
-loadDefinitions thry ((lno,TVar category Static)
+loadDefinitions :: MonadFail mf => IdSubMap -> Theory -> [Token] -> mf Theory  
+loadDefinitions _ thry []  =  return thry
+loadDefinitions ismap thry ((lno,TVar category Static)
                        :(_,TVar name Static):rest)
   | category == kConjecture = do
       (conj',rest') <- loadConjecture name rest
-      loadDefinitions (conjs__ (++[conj']) thry) rest'
+      loadDefinitions ismap (conjs__ (++[conj']) thry) rest'
   | category == kLaw = do
       (law',rest') <- loadLaw name rest
-      loadDefinitions (laws__ (++[law']) thry) rest'
-loadDefinitions thry ((lno,TVar category Static):rest)
+      loadDefinitions ismap (laws__ (++[law']) thry) rest'
+loadDefinitions ismap thry ((lno,TVar category Static):rest)
   | category == kKnown = do
       (known',rest') <- loadKnown (known thry) rest
-      loadDefinitions (known_ known' thry) rest'
-loadDefinitions thry (tok@(lno,_):_)
+      loadDefinitions ismap (known_ known' thry) rest'
+loadDefinitions _ thry (tok@(lno,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
                    , "but got: "++renderToken tok
@@ -222,19 +222,27 @@ kInstanceOf = "instanceof"
 \subsubsection{Load Known Variable}
 
 \begin{verbatim}
-Known v : <type> .
+Known v [{ [O|E|P] [CS|NS] }] : <type>
 Known t = BEGIN <term> END
 Known g :: generic
 Known i instanceof g
 \end{verbatim}
+
+We need to track variable class and subability:
+\begin{code}
+type VarClsSub = (VarClass,Subable)
+defVCS = (ObsV,False)
+\end{code}
 
 Seen \h{Known var}
 \begin{code}
 loadKVar :: MonadFail mf 
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
+loadKVar vt _ var vw ((lno,TOpen "{"):rest) 
+                                  =  loadKConstr vt lno var vw defVCS rest
 loadKVar vt _ var vw ((lno,TSym ":"):rest) 
-                                  =  loadKVarOfType vt lno var vw rest
+                                  =  loadKVarOfType vt lno var vw defVCS rest
 loadKVar vt _ var vw ((lno,TSym "="):rest)  
                                   =  loadKVarIsConst vt lno var vw rest
 loadKVar vt _ var vw ((lno,TSym "::"):rest)  
@@ -247,16 +255,39 @@ loadKVar vt _ var vw ((lno,ttyp):_)
 loadKVar vt lno var vw []  =  premImport "known var" var lno 
 \end{code}
 
-Seen \h{Known var :}, expect a type terminated by \h{.}
+Seen \h{Known var \{}, 
+expect some of \h{O E P} and \h{CS NS}, 
+followed by \h{\} :} and a type terminated by \h{.}
+\begin{code}
+loadKConstr :: MonadFail mf 
+            => VarTable -> Int -> String -> VarWhen -> VarClsSub 
+            -> [Token] -> mf (VarTable,[Token])
+loadKConstr vt lno var vw _ []  =  premImport "constr" var lno
+loadKConstr vt _   var vw vcs ( (lno,TClose "}") 
+                              : (_,  TSym   ":") : rest1 )
+   = loadKVarOfType vt lno var vw vcs rest1
+loadKConstr vt _   var vw vcs@(c,s) ((lno,TVar nm _):rest1)
+  |  nm == "O"   =  loadKConstr vt lno var vw (ObsV, s)  rest1
+  |  nm == "E"   =  loadKConstr vt lno var vw (ExprV,s)  rest1
+  |  nm == "P"   =  loadKConstr vt lno var vw (PredV,s)  rest1
+  |  nm == "CS"  =  loadKConstr vt lno var vw (c ,True)  rest1
+  |  nm == "NS"  =  loadKConstr vt lno var vw (c ,False) rest1
+loadKConstr vt _ _ _ _ rest = fail $ unlines'
+  [ "loadKConstr: expecting some O E S CS NS followed by } : <type>"
+  , "but got "++show (take 5 rest) ]
+\end{code}
+
+Seen \h{Known var \dots :}, expect a type terminated by \h{.}
 \begin{code}
 loadKVarOfType :: MonadFail mf 
-                 => VarTable -> Int -> String -> VarWhen -> [Token] 
-                 -> mf (VarTable,[Token])
-loadKVarOfType vt lno var vw []  =  premImport "type" var lno
-loadKVarOfType vt lno var vw rest = do
+                 => VarTable -> Int -> String -> VarWhen -> VarClsSub 
+                 -> [Token] -> mf (VarTable,[Token])
+loadKVarOfType vt lno var vw vcs []  =  premImport "type" var lno
+loadKVarOfType vt lno var vw (vc,sbbl) rest = do
   (typ,rest') <- loadType rest
   rest'' <- expectToken "loadKVarOfType" dotTok rest'
-  vt' <- addKnownVar (Vbl (jId var) ObsV vw) typ vt
+  let vbl = Vbl (jId var) vc vw
+  vt' <- addKnownConstructor vbl typ sbbl vt
   return (vt',rest'')
 \end{code}
 

@@ -174,8 +174,8 @@ loadDefinitions ismap thry ((lno,TVar category Static)
       loadDefinitions ismap (laws__ (++[law']) thry) rest'
 loadDefinitions ismap thry ((lno,TVar category Static):rest)
   | category == kKnown = do
-      (known',rest') <- loadKnown (known thry) rest
-      loadDefinitions ismap (known_ known' thry) rest'
+      (ismap',known',rest') <- loadKnown ismap (known thry) rest
+      loadDefinitions ismap' (known_ known' thry) rest'
 loadDefinitions _ thry (tok@(lno,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
@@ -207,11 +207,15 @@ genDeps deps =
 
 Seen \h{kKnown}:
 \begin{code}
-loadKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
-loadKnown vt [] = return (vt,[])
-loadKnown vt toks@((lno,TVar var vw):rest) = loadKVar vt lno var vw rest
-loadKnown vt toks@((lno,TLVar var vw):rest) = loadKLVar vt lno var vw rest
-loadKnown name (tok:rest) 
+loadKnown :: MonadFail mf 
+          => IdSubMap -> VarTable -> [Token] 
+          -> mf (IdSubMap,VarTable,[Token])
+loadKnown ism vt [] = return (ism,vt,[])
+loadKnown ism vt toks@((lno,TVar var vw):rest) = loadKVar ism vt lno var vw rest
+loadKnown ism vt toks@((lno,TLVar var vw):rest1) = do 
+   (vt',rest2) <- loadKLVar vt lno var vw rest1
+   return (ism,vt',rest2)
+loadKnown ism name (tok:rest) 
   = fail ("loadVarData NYfI - tok:"++show tok)
 
 dot = "."
@@ -237,42 +241,48 @@ defVCS = (ObsV,False)
 Seen \h{Known var}
 \begin{code}
 loadKVar :: MonadFail mf 
-           => VarTable -> Int -> String -> VarWhen -> [Token] 
-           -> mf (VarTable,[Token])
-loadKVar vt _ var vw ((lno,TOpen "{"):rest) 
-                                  =  loadKConstr vt lno var vw defVCS rest
-loadKVar vt _ var vw ((lno,TSym ":"):rest) 
-                                  =  loadKVarOfType vt lno var vw defVCS rest
-loadKVar vt _ var vw ((lno,TSym "="):rest)  
-                                  =  loadKVarIsConst vt lno var vw rest
-loadKVar vt _ var vw ((lno,TSym "::"):rest)  
-                                  =  loadKVarIsGeneric vt lno var vw rest
-loadKVar vt _ var vw ((lno,TVar iof _):rest)
-  | iof == kInstanceOf  =  loadKVarInstance vt lno var vw rest
-loadKVar vt _ var vw ((lno,ttyp):_)
+           => IdSubMap ->  VarTable -> Int -> String -> VarWhen -> [Token] 
+           -> mf (IdSubMap,VarTable,[Token])
+loadKVar ism vt _ var vw ((lno,TOpen "{"):rest) 
+                                  =  loadKConstr ism vt lno var vw defVCS rest
+loadKVar ism vt _ var vw ((lno,TSym ":"):rest) 
+                                  =  loadKVarOfType ism vt lno var vw defVCS rest
+loadKVar ism vt _ var vw ((lno,TSym "="):rest) = do  
+  (vt',rest') <- loadKVarIsConst vt lno var vw rest
+  return (ism,vt',rest')
+loadKVar ism vt _ var vw ((lno,TSym "::"):rest) = do 
+  (vt',rest') <- loadKVarIsGeneric vt lno var vw rest
+  return (ism,vt',rest')
+loadKVar ism vt _ var vw ((lno,TVar iof _):rest)
+  | iof == kInstanceOf  =  do
+  (vt',rest') <- loadKVarInstance vt lno var vw rest
+  return (ism,vt',rest')
+loadKVar ism vt _ var vw ((lno,ttyp):_)
   = fail ( "loadKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
-loadKVar vt lno var vw []  =  premImport "known var" var lno 
+loadKVar ism vt lno var vw []  =  premImport "known var" var lno 
 \end{code}
+
+\newpage
 
 Seen \h{Known var \{}, 
 expect some of \h{O E P} and \h{CS NS}, 
 followed by \h{\} :} and a type terminated by \h{.}
 \begin{code}
 loadKConstr :: MonadFail mf 
-            => VarTable -> Int -> String -> VarWhen -> VarClsSub 
-            -> [Token] -> mf (VarTable,[Token])
-loadKConstr vt lno var vw _ []  =  premImport "constr" var lno
-loadKConstr vt _   var vw vcs ( (lno,TClose "}") 
+            => IdSubMap -> VarTable -> Int -> String -> VarWhen -> VarClsSub 
+            -> [Token] -> mf (IdSubMap,VarTable,[Token])
+loadKConstr ism vt lno var vw _ []  =  premImport "constr" var lno
+loadKConstr ism vt _   var vw vcs ( (lno,TClose "}") 
                               : (_,  TSym   ":") : rest1 )
-   = loadKVarOfType vt lno var vw vcs rest1
-loadKConstr vt _   var vw vcs@(c,s) ((lno,TVar nm _):rest1)
-  |  nm == "O"   =  loadKConstr vt lno var vw (ObsV, s)  rest1
-  |  nm == "E"   =  loadKConstr vt lno var vw (ExprV,s)  rest1
-  |  nm == "P"   =  loadKConstr vt lno var vw (PredV,s)  rest1
-  |  nm == "CS"  =  loadKConstr vt lno var vw (c ,True)  rest1
-  |  nm == "NS"  =  loadKConstr vt lno var vw (c ,False) rest1
-loadKConstr vt _ _ _ _ rest = fail $ unlines'
+   = loadKVarOfType ism vt lno var vw vcs rest1
+loadKConstr ism vt _   var vw vcs@(c,s) ((lno,TVar nm _):rest1)
+  |  nm == "O"   =  loadKConstr ism vt lno var vw (ObsV, s)  rest1
+  |  nm == "E"   =  loadKConstr ism vt lno var vw (ExprV,s)  rest1
+  |  nm == "P"   =  loadKConstr ism vt lno var vw (PredV,s)  rest1
+  |  nm == "CS"  =  loadKConstr ism vt lno var vw (c ,True)  rest1
+  |  nm == "NS"  =  loadKConstr ism vt lno var vw (c ,False) rest1
+loadKConstr ism vt _ _ _ _ rest = fail $ unlines'
   [ "loadKConstr: expecting some O E S CS NS followed by } : <type>"
   , "but got "++show (take 5 rest) ]
 \end{code}
@@ -280,15 +290,16 @@ loadKConstr vt _ _ _ _ rest = fail $ unlines'
 Seen \h{Known var \dots :}, expect a type terminated by \h{.}
 \begin{code}
 loadKVarOfType :: MonadFail mf 
-                 => VarTable -> Int -> String -> VarWhen -> VarClsSub 
-                 -> [Token] -> mf (VarTable,[Token])
-loadKVarOfType vt lno var vw vcs []  =  premImport "type" var lno
-loadKVarOfType vt lno var vw (vc,sbbl) rest = do
+                 => IdSubMap ->  VarTable -> Int -> String -> VarWhen 
+                 -> VarClsSub -> [Token] -> mf (IdSubMap,VarTable,[Token])
+loadKVarOfType ism vt lno var vw vcs []  =  premImport "type" var lno
+loadKVarOfType ism vt lno var vw (vc,sbbl) rest = do
   (typ,rest') <- loadType rest
   rest'' <- expectToken "loadKVarOfType" dotTok rest'
   let vbl = Vbl (jId var) vc vw
+  -- ism' : var -> sbbl
   vt' <- addKnownConstructor vbl typ sbbl vt
-  return (vt',rest'')
+  return (ism,vt',rest'')
 \end{code}
 
 Seen \h{Known var =}, expect a term wrapped with \h{BEGIN \dots END}
@@ -324,6 +335,7 @@ loadKVarIsGeneric vt lno var vw ((lno',tok):rest)
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
+\newpage
 Seen \h{Known var instanceof}, expect (generic) variable.
 \begin{code}
 loadKVarInstance :: MonadFail mf 
@@ -390,6 +402,7 @@ loadKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
       , "but got "++renderTokTyp tok++" at line "++show lno ]
 \end{code}
 
+\newpage
 
 Seen \h{Known var\$ ::}, expect keyword \h{list} or \h{set}.
 \begin{code}
@@ -409,7 +422,7 @@ loadKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
-
+\newpage
 \subsection{Generate VarTable}
 
 

@@ -119,7 +119,7 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 Top-level:
 \begin{code}
 loadTheory :: MonadFail mf => TheoryDAG -> String -> mf Theory
-loadTheory thrys text = loadTheoryParts thrys $ pdbg "TOKENS" $ tlex 1 $ pdbg "NNTOKS "$ numberlines text
+loadTheory thrys text = loadTheoryParts thrys $ tlex 1 $ numberlines text
 
 loadTheoryParts :: MonadFail mf => TheoryDAG -> [NNToken] -> mf Theory
 loadTheoryParts thrys [] = fail "Empty theory file!" 
@@ -156,8 +156,7 @@ loadDeps sped ((lno,pos,TVar i Static):rest)
 
 loadDeps sped (tok@(lno,pos,_):rest) 
   = fail $ unlines
-      [ "invalid dependency at line "++show lno
-      , "  saw "++renderNNToken tok ]
+      [ "invalid dependency, saw " ++ renderNNToken tok ]
 \end{code}
 
 Expects \textbf{Known}, or \textbf{Law}, or \textbf{Conjecture}. 
@@ -257,9 +256,8 @@ loadKVar ism vt _ var vw ((lno,pos,TVar iof _):rest)
   | iof == kInstanceOf  =  do
   (vt',rest') <- loadKVarInstance vt lno var vw rest
   return (ism,vt',rest')
-loadKVar ism vt _ var vw ((lno,pos,ttyp):_)
-  = fail ( "loadKVar: unexpected token "
-           ++show ttyp++" at line "++show lno )
+loadKVar ism vt _ var vw (nntok:_)
+  = fail ( "loadKVar: unexpected token " ++ renderNNToken nntok )
 loadKVar ism vt lno var vw []  =  premImport "known var" var lno 
 \end{code}
 
@@ -317,8 +315,7 @@ loadKVarIsConst vt lno var vw tokens = do
   else fail $ unlines'
         [ "loadKVarIsConst("++var++")"
         , "after term: "++trTerm 0 term
-        , "has junk "++renderToken (thd3 (head rest))
-        , "at line no "++show (fst3 (head rest)) ]
+        , "has junk "++renderNNToken (head rest) ]
 \end{code}
 
 Seen \h{Known var ::}, expect keyword \h{generic}
@@ -330,9 +327,9 @@ loadKVarIsGeneric vt lno var vw []  =  premImport "generic" var lno
 loadKVarIsGeneric vt lno var vw ((lno',_,TVar "generic" _):rest) = do
   vt' <- addGenericVar (Vbl (jId var) ExprV Static) vt
   return (vt',rest)
-loadKVarIsGeneric vt lno var vw ((lno',_,tok):rest)
+loadKVarIsGeneric vt lno var vw (nntok:rest)
   = fail ( "loadKVarGeneric("++var++"): unexpected token "
-           ++renderToken tok++" at line "++show lno' )
+           ++renderNNToken nntok )
 \end{code}
 
 \newpage
@@ -346,9 +343,9 @@ loadKVarInstance vt lno var vw ((lno',_,TVar gvar _):rest) = do
   vt' <- addInstanceVar (Vbl (jId var) ExprV Static) 
            (Vbl (jId gvar) ExprV Static) vt
   return (vt',rest)
-loadKVarInstance vt lno var vw ((lno',_,tok):rest)
+loadKVarInstance vt lno var vw (nntok:rest)
   = fail ( "loadKVarInstance("++var++"): unexpected token "
-           ++renderToken tok++" at line "++show lno' )
+           ++renderNNToken nntok )
 \end{code}
 
 \subsubsection{Load Known List-Variable}
@@ -369,9 +366,8 @@ loadKLVar vt _ lvar vw ((lno,pos,TSym "="):rest)
                               =  loadKLVarIsContainer vt lno lvar vw rest
 loadKLVar vt _ lvar vw ((lno,pos,TSym "::"):rest)  
                           =  loadKLVarIsAbsContainer vt lno lvar vw rest
-loadKLVar vt _ lvar vw ((lno,pos,ttyp):_)
-  = fail ( "loadKLVar: unexpected token "
-           ++show ttyp++" at line "++show lno )
+loadKLVar vt _ lvar vw (nntok:_)
+  = fail ( "loadKLVar: unexpected token " ++ renderNNToken nntok )
 loadKLVar vt lno lvar vw []  =  premImport "known list-var" lvar lno 
 \end{code}
 
@@ -386,7 +382,7 @@ loadKLVarIsContainer :: MonadFail mf
                   => VarTable -> Int -> String -> VarWhen -> [NNToken] 
                   -> mf (VarTable,[NNToken])
 loadKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
-loadKLVarIsContainer vt _   lvar vw tokens@((lno,pos,tok):_)
+loadKLVarIsContainer vt _   lvar vw tokens@(nntok@(lno,pos,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
       (list,rest) <- loadSepList (TSep ",") loadGenVar block
@@ -399,7 +395,7 @@ loadKLVarIsContainer vt _   lvar vw tokens@((lno,pos,tok):_)
       return (vt',beyond)
   | otherwise = fail $ unlines'
       [ "loadKLVarIsContainer: expected '<' or '{'"
-      , "but got "++renderToken tok++" at line "++show lno ]
+      , "but got "++renderNNToken nntok ]
 \end{code}
 
 \newpage
@@ -417,9 +413,9 @@ loadKLVarIsAbsContainer vt lno lvar vw ((lno',_,TVar abstract _):rest)
   | abstract == "set" = do
       vt' <- addAbstractVarSet (Vbl (jId lvar) ExprV vw) vt
       return (vt',rest)
-loadKLVarIsAbsContainer vt lno lvar vw ((lno',_,tok):rest)
+loadKLVarIsAbsContainer vt lno lvar vw (nntok:rest)
   = fail ( "loadKLVarIsAbsContainer("++lvar++"): unexpected token "
-           ++renderToken tok++" at line "++show lno' )
+           ++renderNNToken nntok )
 \end{code}
 
 \newpage
@@ -629,10 +625,9 @@ loadConjecture conjname tokens = do
     ((_,_,TSep ","):rest3) -> do
       (sc,rest4) <- loadSideCond rest3
       return ( ( conjname, mkAsn term sc ), beyond )
-    (tok@(lno,pos,_):_) -> 
-      fail $ unlines
-        [ "loadConjecture: unexpected token after term"
-        , renderNNToken tok ++ " at line "++show lno ]
+    (nntok:_) -> 
+      fail ( "loadConjecture: unexpected token after term "
+             ++ renderNNToken nntok )
 \end{code}
 
 \subsection{Generate Conjectures}
@@ -1812,7 +1807,7 @@ tlex pos ((lno,str@(c:cs)):rest)
   | isSpace c              =  tlex (pos+1) ((lno,cs):rest)
   | isDigit c              =  tlexNum lno pos rest [c] cs
   | c == '-'               =  tlexMinus lno pos rest cs
-  | isAlpha c || c == '_'  =  tlexVar pos lno rest [c] cs
+  | isAlpha c || c == '_'  =  tlexVar lno pos rest [c] cs
   | c == beforeChar        =  tlexBeforeId lno pos rest cs
   | c `elem` openings      =  (lno,pos,TOpen [c])  : tlex (pos+1) ((lno,cs):rest)
   | c `elem` closings      =  (lno,pos,TClose [c]) : tlex (pos+1) ((lno,cs):rest)
@@ -1874,10 +1869,8 @@ tlexBeforeGVar lno pos rest di cs@(c:cs')
 
 -- tlexVar lno rest di cs   (di is non-empty)
 --  seen  v  expecting  v  v'  v'm  v$ v$' v$'m
-tlexVar lno pos rest di ""  
-  =  (lno,pos,mkDi di) : tlex pos' rest -- std-var
-  where pos' = pos + length di
-
+tlexVar lno pos rest di ""  =  (lno,pos,mkDi di) : tlex 1 rest -- std-var
+ 
 tlexVar lno pos rest di cs@(c:cs') 
   | isAlphaNum c    =  tlexVar lno pos rest (c:di) cs'
   | c == '_'        =  tlexVar lno pos rest (c:di) cs'

@@ -591,7 +591,7 @@ newConj cjnm reqs
         But msgs         ->  But msgs
         Yes (term,[])    ->  Yes term
         Yes (term,xtra)  ->  But [ "Error: leftover tokens" 
-                                 , concat (map renderToken' xtra) ]
+                                 , concat (map renderNNToken' xtra) ]
 \end{code}
                   
 

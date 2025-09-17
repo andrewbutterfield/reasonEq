@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module SourceHandling (
   mkLawName
 , term_syntax
-, renderToken'
+, renderNNToken'
 , loadTheory, genTheory
 , loadTerm
 )
@@ -119,11 +119,11 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 Top-level:
 \begin{code}
 loadTheory :: MonadFail mf => TheoryDAG -> String -> mf Theory
-loadTheory thrys text = loadTheoryParts thrys $ tlex $ prepare text
+loadTheory thrys text = loadTheoryParts thrys $ pdbg "TOKENS" $ tlex 1 $ pdbg "NNTOKS "$ numberlines text
 
-loadTheoryParts :: MonadFail mf => TheoryDAG -> [Token] -> mf Theory
+loadTheoryParts :: MonadFail mf => TheoryDAG -> [NNToken] -> mf Theory
 loadTheoryParts thrys [] = fail "Empty theory file!" 
-loadTheoryParts thrys ( (lno,TVar key Static) : (_,TVar name Static) : rest)
+loadTheoryParts thrys ( (lno,pos,TVar key Static) : (_,_,TVar name Static) : rest)
   | key == kTheory && validFileName name = do
         (deps,rest') <- loadDependencies rest 
         idsubmap <- getKnownVarSubabilities thrys $ pdbg "DEPS" deps
@@ -139,47 +139,47 @@ loadTheoryParts thrys ( (lno,TVar key Static) : (_,TVar name Static) : rest)
 Looks for \textbf{Needs} thname1 \dots thnameN \textbf{END} (optional).
 \begin{code}
 loadDependencies :: MonadFail mf 
-                   => [Token] 
-                   -> mf ([String],[Token])
+                   => [NNToken] 
+                   -> mf ([String],[NNToken])
 loadDependencies toks@[]  =  return ([],toks)
-loadDependencies nlines@((lno,TVar  needs Static):rest)
+loadDependencies nlines@((lno,pos,TVar  needs Static):rest)
   | needs == kNeeds  =  loadDeps [] rest
   | otherwise = return ([],nlines) -- no dependencies is fine
 
 loadDeps sped []  =  premAfter [ kNeeds ]
 
-loadDeps sped ((lno,TVar close _):rest) 
+loadDeps sped ((lno,pos,TVar close _):rest) 
   | close == kEnd  =  return (reverse sped, rest)
 
-loadDeps sped ((lno,TVar i Static):rest) 
+loadDeps sped ((lno,pos,TVar i Static):rest) 
   | validFileName i = loadDeps (i:sped) rest 
 
-loadDeps sped (tok@(lno,_):rest) 
+loadDeps sped (tok@(lno,pos,_):rest) 
   = fail $ unlines
       [ "invalid dependency at line "++show lno
-      , "  saw "++renderToken tok ]
+      , "  saw "++renderNNToken tok ]
 \end{code}
 
 Expects \textbf{Known}, or \textbf{Law}, or \textbf{Conjecture}. 
 \begin{code}
-loadDefinitions :: MonadFail mf => IdSubMap -> Theory -> [Token] -> mf Theory  
+loadDefinitions :: MonadFail mf => IdSubMap -> Theory -> [NNToken] -> mf Theory  
 loadDefinitions _ thry []  =  return thry
-loadDefinitions ismap thry ((lno,TVar category Static)
-                       :(_,TVar name Static):rest)
+loadDefinitions ismap thry ((lno,pos,TVar category Static)
+                       :(_,_,TVar name Static):rest)
   | category == kConjecture = do
       (conj',rest') <- loadConjecture name rest
       loadDefinitions ismap (conjs__ (++[conj']) thry) rest'
   | category == kLaw = do
       (law',rest') <- loadLaw name rest
       loadDefinitions ismap (laws__ (++[law']) thry) rest'
-loadDefinitions ismap thry ((lno,TVar category Static):rest)
+loadDefinitions ismap thry ((lno,pos,TVar category Static):rest)
   | category == kKnown = do
       (ismap',known',rest') <- loadKnown ismap (known thry) rest
       loadDefinitions ismap' (known_ known' thry) rest'
-loadDefinitions _ thry (tok@(lno,_):_)
+loadDefinitions _ thry (tok@(lno,pos,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
-                   , "but got: "++renderToken tok
+                   , "but got: "++renderNNToken tok
                    ] 
 \end{code}
 
@@ -208,11 +208,11 @@ genDeps deps =
 Seen \h{kKnown}:
 \begin{code}
 loadKnown :: MonadFail mf 
-          => IdSubMap -> VarTable -> [Token] 
-          -> mf (IdSubMap,VarTable,[Token])
+          => IdSubMap -> VarTable -> [NNToken] 
+          -> mf (IdSubMap,VarTable,[NNToken])
 loadKnown ism vt [] = return (ism,vt,[])
-loadKnown ism vt toks@((lno,TVar var vw):rest) = loadKVar ism vt lno var vw rest
-loadKnown ism vt toks@((lno,TLVar var vw):rest1) = do 
+loadKnown ism vt toks@((lno,pos,TVar var vw):rest) = loadKVar ism vt lno var vw rest
+loadKnown ism vt toks@((lno,pos,TLVar var vw):rest1) = do 
    (vt',rest2) <- loadKLVar vt lno var vw rest1
    return (ism,vt',rest2)
 loadKnown ism name (tok:rest) 
@@ -241,23 +241,23 @@ defVCS = (ObsV,False)
 Seen \h{Known var}
 \begin{code}
 loadKVar :: MonadFail mf 
-           => IdSubMap ->  VarTable -> Int -> String -> VarWhen -> [Token] 
-           -> mf (IdSubMap,VarTable,[Token])
-loadKVar ism vt _ var vw ((lno,TOpen "{"):rest) 
+           => IdSubMap ->  VarTable -> Int -> String -> VarWhen -> [NNToken] 
+           -> mf (IdSubMap,VarTable,[NNToken])
+loadKVar ism vt _ var vw ((lno,pos,TOpen "{"):rest) 
                                   =  loadKConstr ism vt lno var vw defVCS rest
-loadKVar ism vt _ var vw ((lno,TSym ":"):rest) 
+loadKVar ism vt _ var vw ((lno,pos,TSym ":"):rest) 
                                   =  loadKVarOfType ism vt lno var vw defVCS rest
-loadKVar ism vt _ var vw ((lno,TSym "="):rest) = do  
+loadKVar ism vt _ var vw ((lno,pos,TSym "="):rest) = do  
   (vt',rest') <- loadKVarIsConst vt lno var vw rest
   return (ism,vt',rest')
-loadKVar ism vt _ var vw ((lno,TSym "::"):rest) = do 
+loadKVar ism vt _ var vw ((lno,pos,TSym "::"):rest) = do 
   (vt',rest') <- loadKVarIsGeneric vt lno var vw rest
   return (ism,vt',rest')
-loadKVar ism vt _ var vw ((lno,TVar iof _):rest)
+loadKVar ism vt _ var vw ((lno,pos,TVar iof _):rest)
   | iof == kInstanceOf  =  do
   (vt',rest') <- loadKVarInstance vt lno var vw rest
   return (ism,vt',rest')
-loadKVar ism vt _ var vw ((lno,ttyp):_)
+loadKVar ism vt _ var vw ((lno,pos,ttyp):_)
   = fail ( "loadKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
 loadKVar ism vt lno var vw []  =  premImport "known var" var lno 
@@ -271,12 +271,12 @@ followed by \h{\} :} and a type terminated by \h{.}
 \begin{code}
 loadKConstr :: MonadFail mf 
             => IdSubMap -> VarTable -> Int -> String -> VarWhen -> VarClsSub 
-            -> [Token] -> mf (IdSubMap,VarTable,[Token])
+            -> [NNToken] -> mf (IdSubMap,VarTable,[NNToken])
 loadKConstr ism vt lno var vw _ []  =  premImport "constr" var lno
-loadKConstr ism vt _   var vw vcs ( (lno,TClose "}") 
-                              : (_,  TSym   ":") : rest1 )
+loadKConstr ism vt _   var vw vcs ( (lno,pos,TClose "}") 
+                              : (_,_, TSym   ":") : rest1 )
    = loadKVarOfType ism vt lno var vw vcs rest1
-loadKConstr ism vt _   var vw vcs@(c,s) ((lno,TVar nm _):rest1)
+loadKConstr ism vt _   var vw vcs@(c,s) ((lno,pos,TVar nm _):rest1)
   |  nm == "O"   =  loadKConstr ism vt lno var vw (ObsV, s)  rest1
   |  nm == "E"   =  loadKConstr ism vt lno var vw (ExprV,s)  rest1
   |  nm == "P"   =  loadKConstr ism vt lno var vw (PredV,s)  rest1
@@ -291,7 +291,7 @@ Seen \h{Known var \dots :}, expect a type terminated by \h{.}
 \begin{code}
 loadKVarOfType :: MonadFail mf 
                  => IdSubMap ->  VarTable -> Int -> String -> VarWhen 
-                 -> VarClsSub -> [Token] -> mf (IdSubMap,VarTable,[Token])
+                 -> VarClsSub -> [NNToken] -> mf (IdSubMap,VarTable,[NNToken])
 loadKVarOfType ism vt lno var vw vcs []  =  premImport "type" var lno
 loadKVarOfType ism vt lno var vw (vc,sbbl) rest = do
   (typ,rest') <- loadType rest
@@ -305,8 +305,8 @@ loadKVarOfType ism vt lno var vw (vc,sbbl) rest = do
 Seen \h{Known var =}, expect a term wrapped with \h{BEGIN \dots END}
 \begin{code}
 loadKVarIsConst :: MonadFail mf 
-                  => VarTable -> Int -> String -> VarWhen -> [Token] 
-                  -> mf (VarTable,[Token])
+                  => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+                  -> mf (VarTable,[NNToken])
 loadKVarIsConst vt lno var vw tokens = do
   (block,beyond) <- getBlock beBlock tokens
   (term,rest) <- parseTerm block
@@ -317,38 +317,38 @@ loadKVarIsConst vt lno var vw tokens = do
   else fail $ unlines'
         [ "loadKVarIsConst("++var++")"
         , "after term: "++trTerm 0 term
-        , "has junk "++renderTokTyp (snd (head rest))
-        , "at line no "++show (fst (head rest)) ]
+        , "has junk "++renderToken (thd3 (head rest))
+        , "at line no "++show (fst3 (head rest)) ]
 \end{code}
 
 Seen \h{Known var ::}, expect keyword \h{generic}
 \begin{code}
 loadKVarIsGeneric :: MonadFail mf 
-                  => VarTable -> Int -> String -> VarWhen -> [Token] 
-                  -> mf (VarTable,[Token])
+                  => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+                  -> mf (VarTable,[NNToken])
 loadKVarIsGeneric vt lno var vw []  =  premImport "generic" var lno
-loadKVarIsGeneric vt lno var vw ((lno',TVar "generic" _):rest) = do
+loadKVarIsGeneric vt lno var vw ((lno',_,TVar "generic" _):rest) = do
   vt' <- addGenericVar (Vbl (jId var) ExprV Static) vt
   return (vt',rest)
-loadKVarIsGeneric vt lno var vw ((lno',tok):rest)
+loadKVarIsGeneric vt lno var vw ((lno',_,tok):rest)
   = fail ( "loadKVarGeneric("++var++"): unexpected token "
-           ++renderTokTyp tok++" at line "++show lno' )
+           ++renderToken tok++" at line "++show lno' )
 \end{code}
 
 \newpage
 Seen \h{Known var instanceof}, expect (generic) variable.
 \begin{code}
 loadKVarInstance :: MonadFail mf 
-                  => VarTable -> Int -> String -> VarWhen -> [Token] 
-                  -> mf (VarTable,[Token])
+                  => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+                  -> mf (VarTable,[NNToken])
 loadKVarInstance vt lno var vw []  =  premImport "instance" var lno
-loadKVarInstance vt lno var vw ((lno',TVar gvar _):rest) = do
+loadKVarInstance vt lno var vw ((lno',_,TVar gvar _):rest) = do
   vt' <- addInstanceVar (Vbl (jId var) ExprV Static) 
            (Vbl (jId gvar) ExprV Static) vt
   return (vt',rest)
-loadKVarInstance vt lno var vw ((lno',tok):rest)
+loadKVarInstance vt lno var vw ((lno',_,tok):rest)
   = fail ( "loadKVarInstance("++var++"): unexpected token "
-           ++renderTokTyp tok++" at line "++show lno' )
+           ++renderToken tok++" at line "++show lno' )
 \end{code}
 
 \subsubsection{Load Known List-Variable}
@@ -363,13 +363,13 @@ Known set$ = { gv1 , ... , gvn }
 Seen \h{Known var\$}
 \begin{code}
 loadKLVar :: MonadFail mf 
-           => VarTable -> Int -> String -> VarWhen -> [Token] 
-           -> mf (VarTable,[Token])
-loadKLVar vt _ lvar vw ((lno,TSym "="):rest)  
+           => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+           -> mf (VarTable,[NNToken])
+loadKLVar vt _ lvar vw ((lno,pos,TSym "="):rest)  
                               =  loadKLVarIsContainer vt lno lvar vw rest
-loadKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
+loadKLVar vt _ lvar vw ((lno,pos,TSym "::"):rest)  
                           =  loadKLVarIsAbsContainer vt lno lvar vw rest
-loadKLVar vt _ lvar vw ((lno,ttyp):_)
+loadKLVar vt _ lvar vw ((lno,pos,ttyp):_)
   = fail ( "loadKLVar: unexpected token "
            ++show ttyp++" at line "++show lno )
 loadKLVar vt lno lvar vw []  =  premImport "known list-var" lvar lno 
@@ -383,10 +383,10 @@ listOpen = TSym "<"; listClose = TSym ">"; listBlock = (listOpen,listClose)
 setOpen = TOpen "{"; setClose = TClose "}"; setBlock = (setOpen,setClose)
 
 loadKLVarIsContainer :: MonadFail mf 
-                  => VarTable -> Int -> String -> VarWhen -> [Token] 
-                  -> mf (VarTable,[Token])
+                  => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+                  -> mf (VarTable,[NNToken])
 loadKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
-loadKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
+loadKLVarIsContainer vt _   lvar vw tokens@((lno,pos,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
       (list,rest) <- loadSepList (TSep ",") loadGenVar block
@@ -399,7 +399,7 @@ loadKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
       return (vt',beyond)
   | otherwise = fail $ unlines'
       [ "loadKLVarIsContainer: expected '<' or '{'"
-      , "but got "++renderTokTyp tok++" at line "++show lno ]
+      , "but got "++renderToken tok++" at line "++show lno ]
 \end{code}
 
 \newpage
@@ -407,19 +407,19 @@ loadKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
 Seen \h{Known var\$ ::}, expect keyword \h{list} or \h{set}.
 \begin{code}
 loadKLVarIsAbsContainer :: MonadFail mf 
-                  => VarTable -> Int -> String -> VarWhen -> [Token] 
-                  -> mf (VarTable,[Token])
+                  => VarTable -> Int -> String -> VarWhen -> [NNToken] 
+                  -> mf (VarTable,[NNToken])
 loadKLVarIsAbsContainer vt lno lvar vw []  =  premImport "list or set" lvar lno
-loadKLVarIsAbsContainer vt lno lvar vw ((lno',TVar abstract _):rest)
+loadKLVarIsAbsContainer vt lno lvar vw ((lno',_,TVar abstract _):rest)
   | abstract == "list" = do
       vt' <- addAbstractVarList (Vbl (jId lvar) ExprV vw) vt
       return (vt',rest)
   | abstract == "set" = do
       vt' <- addAbstractVarSet (Vbl (jId lvar) ExprV vw) vt
       return (vt',rest)
-loadKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
+loadKLVarIsAbsContainer vt lno lvar vw ((lno',_,tok):rest)
   = fail ( "loadKLVarIsAbsContainer("++lvar++"): unexpected token "
-           ++renderTokTyp tok++" at line "++show lno' )
+           ++renderToken tok++" at line "++show lno' )
 \end{code}
 
 \newpage
@@ -499,20 +499,20 @@ which are a contiguous run of text bracketed by `BEGIN` and `END`.
 
 \begin{code}
 getBlock :: MonadFail mf 
-         => (TokenType,TokenType) -> [Token] -> mf ([Token],[Token])
+         => (Token,Token) -> [NNToken] -> mf ([NNToken],[NNToken])
 getBlock _ [] = fail "no block"
-getBlock (tBegin,tEnd) ((lno,tok):rest)
+getBlock (tBegin,tEnd) ((lno,pos,tok):rest)
   | tok == tBegin  =  scanBlock tEnd [] rest
-getBlock (tBegin,tEnd) (tok@(lno,_):_)
-  = fail $ unlines' [ "getBlock: "++renderTokTyp tBegin++" expected"
-                    , "but "++renderToken tok++" found at line "++show lno
+getBlock (tBegin,tEnd) (tok@(lno,pos,_):_)
+  = fail $ unlines' [ "getBlock: "++renderToken tBegin++" expected"
+                    , "but "++renderNNToken tok++" found at line "++show lno
                     ]
 
 -- 
 scanBlock :: MonadFail mf 
-             => TokenType -> [Token] -> [Token] -> mf ([Token],[Token])
+             => Token -> [NNToken] -> [NNToken] -> mf ([NNToken],[NNToken])
 scanBlock _ sofar []  =  premDuring ["scanning block"]
-scanBlock tEnd sofar ((lno,tok):rest)
+scanBlock tEnd sofar ((lno,pos,tok):rest)
   | tok == tEnd           =  return (reverse sofar, rest)
 scanBlock tEnd sofar (tok:rest)  =  scanBlock tEnd (tok:sofar) rest
 \end{code}
@@ -540,44 +540,44 @@ END
 
 \begin{code}
 loadLaw :: MonadFail mf 
-          => String -> [Token] 
-          -> mf (Law,[Token])
+          => String -> [NNToken] 
+          -> mf (Law,[NNToken])
 loadLaw lawname []  =  premAfter [kLaw,lawname,kBegin]
 loadLaw lawname tokens = do
   (block,beyond) <- getBlock beBlock tokens
   (provenance,rest1) <- loadProvenace block
   case rest1 of
     []  ->  premAfter [kLaw,show provenance ]
-    ((_,TSep ","):rest2) -> do
+    ((_,_,TSep ","):rest2) -> do
       (term,rest3) <- parseTerm rest2
       case rest3 of
         [] -> return (((lawname,(mkAsn term scTrue)),provenance),beyond)
-        ((_,TSep ","):rest4) -> do
+        ((_,_,TSep ","):rest4) -> do
           (sc,rest5) <- loadSideCond rest4
           return (((lawname,(mkAsn term sc)),provenance),beyond)
-        (tok@(lno,_):_) -> fail $ unlines'
+        (tok@(lno,pos,_):_) -> fail $ unlines'
           [ "loadLaw: unexpected token after provenance"
-          , renderToken tok ++ " at line "++show lno ]
-    (tok@(lno,_):_) -> fail $ unlines'
+          , renderNNToken tok ++ " at line "++show lno ]
+    (tok@(lno,pos,_):_) -> fail $ unlines'
       [ "loadLaw: unexpected token after provenance"
-      , renderToken tok ++ " at line "++show lno ]
+      , renderNNToken tok ++ " at line "++show lno ]
 
-loadProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
+loadProvenace :: MonadFail mf => [NNToken] -> mf (Provenance,[NNToken])
 loadProvenace []  =  premAfter [kBegin]
-loadProvenace ((_,TVar  "axiom" Static):rest) 
+loadProvenace ((_,_,TVar  "axiom" Static):rest) 
   = return (Axiom,rest)
-loadProvenace ((_,TVar  "assumed" Static):rest) 
+loadProvenace ((_,_,TVar  "assumed" Static):rest) 
   = return (Assumed,rest)
-loadProvenace ((_,TVar  "proven" Static)
-                :(_,TVar i Static):rest) 
+loadProvenace ((_,_,TVar  "proven" Static)
+                :(_,_,TVar i Static):rest) 
   = return (Proven i,rest)
-loadProvenace ((_,TVar  "suspect" Static)
-                :(_,TVar i Static):rest) 
+loadProvenace ((_,_,TVar  "suspect" Static)
+                :(_,_,TVar i Static):rest) 
   = return ((Suspect i),rest)
-loadProvenace (tok@(lno,_):_)
+loadProvenace (tok@(lno,pos,_):_)
   = fail $ unlines'
       [ "loadProvenace: unexpected token after "++kBegin 
-      , renderToken tok ++ "at line " ++ show lno ]
+      , renderNNToken tok ++ "at line " ++ show lno ]
 \end{code}
 
 \subsection{Generate Laws}
@@ -618,21 +618,21 @@ END
 
 \begin{code}
 loadConjecture :: MonadFail mf 
-                 => String -> [Token] 
-                 -> mf (NmdAssertion,[Token])
+                 => String -> [NNToken] 
+                 -> mf (NmdAssertion,[NNToken])
 loadConjecture conjname []  =  premAfter [kConjecture,conjname]
 loadConjecture conjname tokens = do
   (block,beyond) <- getBlock beBlock tokens
   (term,rest2) <- parseTerm block
   case rest2 of
     [] -> return ( ( conjname, mkAsn term scTrue ), beyond )
-    ((_,TSep ","):rest3) -> do
+    ((_,_,TSep ","):rest3) -> do
       (sc,rest4) <- loadSideCond rest3
       return ( ( conjname, mkAsn term sc ), beyond )
-    (tok@(lno,_):_) -> 
+    (tok@(lno,pos,_):_) -> 
       fail $ unlines
         [ "loadConjecture: unexpected token after term"
-        , renderToken tok ++ " at line "++show lno ]
+        , renderNNToken tok ++ " at line "++show lno ]
 \end{code}
 
 \subsection{Generate Conjectures}
@@ -813,9 +813,9 @@ mkLV id1 vw  = LVbl (mkV id1 vw) [] []
 
 mkVarTerm id1 vw  =  fromJust $ var arbpred $ mkV id1 vw
 
-tok2GVar :: Token -> GenVar
-tok2GVar (_,(TVar  nm vw)) = StdVar $ mkV  (jId nm) vw
-tok2GVar (_,(TLVar nm vw)) = LstVar $ mkLV (jId nm) vw
+tok2GVar :: NNToken -> GenVar
+tok2GVar (_,_,(TVar  nm vw)) = StdVar $ mkV  (jId nm) vw
+tok2GVar (_,_,(TLVar nm vw)) = LstVar $ mkLV (jId nm) vw
 \end{code}
 
 Subability:
@@ -833,14 +833,14 @@ loadSBBL str
 \subsection{Term Parser}
 
 \begin{code}
-parseTerm :: MonadFail m => [Token] -> m (Term, [Token])
+parseTerm :: MonadFail m => [NNToken] -> m (Term, [NNToken])
 parseTerm [] =  fail "parseTerm: nothing to parse"
 \end{code}
 
 \paragraph{Numbers}~
 
 \begin{code}
-parseTerm ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
+parseTerm ((_,_,TNum n):tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
 \paragraph{Symbols}
@@ -848,11 +848,11 @@ parseTerm ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 Symbols are valid identifiers
 
 \begin{code}
-parseTerm ((_,TSym consName):(_,TVar subable Static ):(_,TOpen "("):tts)
+parseTerm ((_,_,TSym consName):(_,_,TVar subable Static ):(_,_,TOpen "("):tts)
   | subable == "N" = parseCons cons False [] tts
   | subable == "S" = parseCons cons True  [] tts
   where cons = jId consName
-parseTerm ((_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
+parseTerm ((_,_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
 \end{code}
 
 \paragraph{Constructions}
@@ -865,12 +865,12 @@ check for lone identifiers.
 We check for constructions first \dots
 
 \begin{code}
-parseTerm ((_,TVar consName vw):(_,TVar subable Static ):(_,TOpen "("):tts)
+parseTerm ((_,_,TVar consName vw):(_,_,TVar subable Static ):(_,_,TOpen "("):tts)
   | subable == kNS = parseCons cons False [] tts
   | subable == kCS = parseCons cons True  [] tts
   where 
     cons = jId consName
-parseTerm ((_,TVar nm vw):tts)
+parseTerm ((_,_,TVar nm vw):tts)
   | nm == kTrue      =  return ( mkTrue nm,  tts)
   | nm == kFalse     =  return ( mkFalse nm, tts)
   | nm == kSetBind   =  parseSetQ tts
@@ -885,7 +885,7 @@ parseTerm ((_,TVar nm vw):tts)
 
 
 \begin{code}
-parseTerm (tt:tts)  = fail ("parseTerm: unexpected token: "++renderToken tt)
+parseTerm (tt:tts)  = fail ("parseTerm: unexpected token: "++renderNNToken tt)
 \end{code}
 
 \subsection{Term Helpers}
@@ -895,8 +895,8 @@ $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
 parseCons :: MonadFail mf 
-          => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
-parseCons id1 subable smretbus ((_,TClose ")") : tts)
+          => Identifier -> Bool -> [Term] -> [NNToken]-> mf (Term,[NNToken])
+parseCons id1 subable smretbus ((_,_,TClose ")") : tts)
   = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 parseCons id1 subable smretbus tts
   = do (tsub',tts') <- parseTerm tts
@@ -908,10 +908,10 @@ Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
 parseCons' :: MonadFail mf 
-           => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
-parseCons' id1 subable smretbus ((_,TSep ",") : tts)
+           => Identifier -> Bool -> [Term] -> [NNToken]-> mf (Term,[NNToken])
+parseCons' id1 subable smretbus ((_,_,TSep ",") : tts)
   =  parseCons id1 subable smretbus tts
-parseCons' id1 subable smretbus ((_,TClose ")") : tts)
+parseCons' id1 subable smretbus ((_,_,TClose ")") : tts)
   =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 parseCons' id1 subable smretbus tts
   =  fail $ unlines'
@@ -926,28 +926,28 @@ Seen \texttt{QS},
 $$ QS~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-parseSetQ :: MonadFail mf => [Token] -> mf (Term,[Token])
+parseSetQ :: MonadFail mf => [NNToken] -> mf (Term,[NNToken])
 parseSetQ []  =  premDuring ["parseSetQ"]
-parseSetQ ((_,TVar nm Static) : tts) = do
+parseSetQ ((_,_,TVar nm Static) : tts) = do
   let i = jId nm
   (i,sg,term,tts') <- parseQVars i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
-parseSetQ (tok:_) = fail ("parseSetQ: exp. ident, found: "++renderToken tok)
+parseSetQ (tok:_) = fail ("parseSetQ: exp. ident, found: "++renderNNToken tok)
 \end{code}
 
 Seen \texttt{QL}, 
 $$ QL~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-parseListQ :: MonadFail mf => [Token] -> mf (Term,[Token])
+parseListQ :: MonadFail mf => [NNToken] -> mf (Term,[NNToken])
 parseListQ []  = premDuring ["parseListQ"]
-parseListQ ((_,TVar nm Static) : tts) = do
+parseListQ ((_,_,TVar nm Static) : tts) = do
   let i = jId nm
   (i,sg,term,tts') <- parseQVars i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
-parseListQ (tok:_) = fail ("parseListQ: exp. ident, found: "++renderToken tok)
+parseListQ (tok:_) = fail ("parseListQ: exp. ident, found: "++renderNNToken tok)
 \end{code}
 
 Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
@@ -955,12 +955,12 @@ $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 parseQVars i _ []  =  premDuring ["parseQVars:",trId i]
-parseQVars i sg ((_,TSym sym) : tts)
+parseQVars i sg ((_,_,TSym sym) : tts)
   | sym == kQBody  =  parseQBody i sg tts
-parseQVars i sg (v@(_,TVar _ _)    : tts)   =  parseQVars i (v:sg) tts
-parseQVars i sg (lv@(_,TLVar _ _) : tts)   =  parseQVars i (lv:sg) tts
-parseQVars i sg ((lno,ttyp) : _)  
-  = fail ( "parseQVars: unexpected token "++renderTokTyp ttyp
+parseQVars i sg (v@(_,_,TVar _ _)    : tts)   =  parseQVars i (v:sg) tts
+parseQVars i sg (lv@(_,_,TLVar _ _) : tts)   =  parseQVars i (lv:sg) tts
+parseQVars i sg ((lno,pos,ttyp) : _)  
+  = fail ( "parseQVars: unexpected token "++renderToken ttyp
            ++" at line "++show lno)
 \end{code}
 
@@ -980,12 +980,12 @@ parseQBody i sg tts = do
 Seen \texttt{CLS}.
 \begin{code}
 parseClosure [] = premDuring ["parseClosure"]
-parseClosure ((lno,TVar nm _):rest1) = do
+parseClosure ((lno,pos,TVar nm _):rest1) = do
   (term,rest2) <- parseTerm rest1
   return (Cls (jId nm) term,rest2)
-parseClosure ((lno,ttyp):rest) = fail $ unlines'
+parseClosure ((lno,pos,ttyp):rest) = fail $ unlines'
   [ "parseClosure: expected name"
-  , "but got "++renderTokTyp ttyp++" at line "++show lno]
+  , "but got "++renderToken ttyp++" at line "++show lno]
   
 \end{code}
 
@@ -995,24 +995,24 @@ parseClosure ((lno,ttyp):rest) = fail $ unlines'
 Seen \texttt{SUB}.
 \begin{code}
 parseSubstn [] = premDuring ["parseSubstn"]
-parseSubstn ((lno,TOpen open):rest1)
+parseSubstn ((lno,pos,TOpen open):rest1)
   | open == "["  =  do
      ((vts,lvlvs),rest2) <- parseSubPairs [] [] rest1
      rest3 <- expectToken "parseSubstn" (TClose "]") rest2
      (term,rest4) <- parseTerm rest3
      sub <- substn vts lvlvs
      return (Sub (termtype term) term sub,rest4)
-parseSubstn ((lno,ttyp):rest) = fail $ unlines'
+parseSubstn ((lno,pos,ttyp):rest) = fail $ unlines'
   [ "parseSubstn: expected '['"
-  , "but got "++renderTokTyp ttyp++" at line "++show lno]
+  , "but got "++renderToken ttyp++" at line "++show lno]
 
 parseSubPairs vts lvlvs []                      = return ((vts,lvlvs),[])
-parseSubPairs vts lvlvs toks@((_,TClose "]"):_) = return ((vts,lvlvs),toks)
+parseSubPairs vts lvlvs toks@((_,_,TClose "]"):_) = return ((vts,lvlvs),toks)
 
 parseSubPairs vts lvlvs
-   ((lno,TOpen "(")
-   :vart@(_,TVar v _)
-   :(_,TSep ","):rest1) = do
+   ((lno,pos,TOpen "(")
+   :vart@(_,_,TVar v _)
+   :(_,_,TSep ","):rest1) = do
      (term,rest2) <- parseTerm rest1
      rest3 <- expectToken "parseSubPairs" (TClose ")") rest2
      parseSubPairs ((var,term):vts) lvlvs rest3
@@ -1021,11 +1021,11 @@ parseSubPairs vts lvlvs
        -- (term,_) = fromJust $ parseTerm [tt]
 
 parseSubPairs vts lvlvs
-   ((lno,TOpen "(")
-   :lvart@(_,TLVar v _)
-   :(_,TSep ",")
-   :lvarr@(_,TLVar t _)
-   :(_,TClose ")"):rest1) = parseSubPairs vts ((tlv,rlv):lvlvs) rest1
+   ((lno,pos,TOpen "(")
+   :lvart@(_,_,TLVar v _)
+   :(_,_,TSep ",")
+   :lvarr@(_,_,TLVar t _)
+   :(_,_,TClose ")"):rest1) = parseSubPairs vts ((tlv,rlv):lvlvs) rest1
  where 
        (tlv,_) = fromJust $ loadListVariable [lvart]
        (rlv,_) = fromJust $ loadListVariable [lvarr]
@@ -1042,23 +1042,23 @@ Expect subable,identifier,subable,identifier,list-variable list.
 \begin{code}
 parseIter [] = premDuring ["parseIter"]
 parseIter 
-  ( (lno,TVar sa _) : (_,TVar na _) :
-    (_,TVar si _) : (_,TVar ni _) : (_,TOpen "[") : rest1 ) = do
+  ( (lno,pos,TVar sa _) : (_,_,TVar na _) :
+    (_,_,TVar si _) : (_,_,TVar ni _) : (_,_,TOpen "[") : rest1 ) = do
       asub <- loadSBBL sa
       isub <- loadSBBL si
       (lvars,rest2) <- loadListVariables "]" rest1
       return ( Iter ArbType asub (jId na) isub (jId ni) lvars
              , rest2 )
-parseIter ((lno,ttyp):rest) = fail $ unlines'
+parseIter ((lno,pos,ttyp):rest) = fail $ unlines'
   [ "parseIter: expected subable indicator"
-  , "but got "++renderTokTyp ttyp++" at line "++show lno]
+  , "but got "++renderToken ttyp++" at line "++show lno]
 \end{code}
 
 \subsubsection{Top-Level Term Reader}
 
 \begin{code}
-loadTerm :: MonadFail mf => String -> mf (Term, [Token])
-loadTerm = parseTerm . tlex . prepare
+loadTerm :: MonadFail mf => String -> mf (Term, [NNToken])
+loadTerm = parseTerm . tlex 1 . numberlines
 \end{code}
 
 
@@ -1121,15 +1121,15 @@ genVS vs = intercalate " " $ map genGenVar $ S.toList vs
 
 Expecting on of \texttt{NONE}, \texttt{VREL}, and \texttt{FREE}.
 \begin{code}
-loadSideCond :: MonadFail mf => [Token] -> mf (SideCond, [Token])
+loadSideCond :: MonadFail mf => [NNToken] -> mf (SideCond, [NNToken])
 loadSideCond [] = premDuring [ "loadSideCond" ]
-loadSideCond toks@(tok@(lno,TVar nm _):rest)
+loadSideCond toks@(tok@(lno,pos,TVar nm _):rest)
   | nm == kNone  =  return (scTrue,rest)
   | nm == kVRel  =  parseVRel [] rest
   | nm == kFree  =  parseFree [] [] rest
-loadSideCond ((lno,ttyp):_) = fail $ unlines'
+loadSideCond ((lno,pos,ttyp):_) = fail $ unlines'
   [ "loadSideCond: expected "++kNone++", "++kVRel++", "++kFree
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 Seen \texttt{VREL}, zero or more \texttt{(\dots)},
@@ -1137,31 +1137,31 @@ expecting \texttt{(}, \texttt{FREE},
 ended by \texttt{END}.
 \begin{code}
 parseVRel :: MonadFail mf 
-          => [VarSideConds] -> [Token] -> mf (SideCond,[Token])
+          => [VarSideConds] -> [NNToken] -> mf (SideCond,[NNToken])
 parseVRel vscs []  =  checkSC vscs [] []
-parseVRel vscs toks@((lno,TVar nm _):rest)
+parseVRel vscs toks@((lno,pos,TVar nm _):rest)
   |  nm == kEnd  =  checkSC vscs [] toks
   |  nm == kFree  = parseFree vscs [] rest
-parseVRel vscs ((lno,TOpen open):rest)
+parseVRel vscs ((lno,pos,TOpen open):rest)
   | open == "("  =  parseVSC vscs rest  
-parseVRel _ ((lno,ttyp):_) = fail $ unlines'
+parseVRel _ ((lno,pos,ttyp):_) = fail $ unlines'
   [ "parseVRel: expected var-sidecond '(...)'"
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 Seen \texttt{(}, expected \texttt{DISJ}, \texttt{COV}, \texttt{DYNCOV},
 followed by gen-var, \texttt{FROM} or \texttt{BY}, gen-vars, and \texttt{)}.
 \begin{code}
 parseVSC :: MonadFail mf 
-          => [VarSideConds] -> [Token] -> mf (SideCond,[Token])
+          => [VarSideConds] -> [NNToken] -> mf (SideCond,[NNToken])
 parseVSC vscs [] = premDuring ["parseVRel"]
-parseVSC vscs ((lno,TVar nm _):rest)
+parseVSC vscs ((lno,pos,TVar nm _):rest)
   | nm == kDisj    = parseSCRel1 kFrom disjfrom   vscs rest
   | nm == kCovBy   = parseSCRel1 kBy   coveredby  vscs rest
   | nm == kDynCov  = parseSCRel1 kBy   dyncovered vscs rest
-parseVSC _ ((lno,ttyp):_) = fail $ unlines'
+parseVSC _ ((lno,pos,ttyp):_) = fail $ unlines'
   [ "parseVSC: expected DISJ, COV, DYNCOV"
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 
@@ -1172,23 +1172,23 @@ parseSCRel1 :: MonadFail mf
             => String 
             -> (GenVar -> VarSet -> VarSideConds) 
             -> [VarSideConds]
-            -> [Token]
-            -> mf (SideCond,[Token])
+            -> [NNToken]
+            -> mf (SideCond,[NNToken])
 parseSCRel1 sepk makesc vscs [] = premDuring ["parseSCRel1"]
 
-parseSCRel1 sepk makesc vscs toks@((_,TVar nm _):_) = do
+parseSCRel1 sepk makesc vscs toks@((_,_,TVar nm _):_) = do
   (var,rest1) <- loadVariable toks
   rest2 <- expectToken "parseSCRel1-var" (TVar sepk Static) rest1
   parseSCRel2 makesc vscs (StdVar var) [] rest2
 
-parseSCRel1 sepk makesc vscs toks@((_,TLVar nm _):_) = do
+parseSCRel1 sepk makesc vscs toks@((_,_,TLVar nm _):_) = do
   (lvar,rest1) <- loadListVariable toks
   rest2 <- expectToken "parseSCRel1-lvar" (TVar sepk Static) rest1
   parseSCRel2 makesc vscs (LstVar lvar) [] rest2
 
-parseSCRel1 sepk _ _ ((lno,ttyp):_) = fail $ unlines'
+parseSCRel1 sepk _ _ ((lno,pos,ttyp):_) = fail $ unlines'
   [ "parseSCRel1: expected gv "++sepk++"varlist"
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 Seen \texttt{( what gvar sepk}. 
@@ -1199,24 +1199,24 @@ parseSCRel2 :: MonadFail mf
             -> [VarSideConds]
             -> GenVar
             -> [GenVar]
-            -> [Token]
-            -> mf (SideCond,[Token])
+            -> [NNToken]
+            -> mf (SideCond,[NNToken])
 parseSCRel2 makesc vscs gv gvs [] = premDuring ["parseSCRel2"]
 
-parseSCRel2 makesc vscs gv gvs ((lno,TClose ")"):rest)
+parseSCRel2 makesc vscs gv gvs ((lno,pos,TClose ")"):rest)
   = parseVRel (makesc gv (S.fromList gvs):vscs) rest
 
-parseSCRel2 makesc vscs gv gvs toks@((lno,TVar nm _):_) = do
+parseSCRel2 makesc vscs gv gvs toks@((lno,pos,TVar nm _):_) = do
   (var,rest1) <- loadVariable toks
   parseSCRel2 makesc vscs gv (StdVar var:gvs) rest1
 
-parseSCRel2 makesc vscs gv gvs toks@((lno,TLVar nm _):_) = do
+parseSCRel2 makesc vscs gv gvs toks@((lno,pos,TLVar nm _):_) = do
   (lvar,rest1) <- loadListVariable toks
   parseSCRel2 makesc vscs gv (LstVar lvar:gvs) rest1
 
-parseSCRel2 sepk _ _ _ ((lno,ttyp):_) = fail $ unlines'
+parseSCRel2 sepk _ _ _ ((lno,pos,ttyp):_) = fail $ unlines'
   [ "parseSCRel2: expected varlist"
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 
@@ -1225,26 +1225,26 @@ expecting \texttt{genvar},
 ended by \texttt{END}.
 \begin{code}
 parseFree :: MonadFail mf 
-          => [VarSideConds] -> VarList -> [Token] -> mf (SideCond,[Token])
+          => [VarSideConds] -> VarList -> [NNToken] -> mf (SideCond,[NNToken])
 parseFree vscs gvs []  =  checkSC vscs gvs []
-parseFree vscs gvs toks@((lno,TVar nm _):rest)
+parseFree vscs gvs toks@((lno,pos,TVar nm _):rest)
   |  nm == kEnd  =  checkSC vscs gvs toks
   |  otherwise   =  do
        (var,rest) <- loadVariable toks
        parseFree vscs (StdVar var:gvs) rest
-parseFree vscs gvs toks@((lno,TLVar nm _):rest)
+parseFree vscs gvs toks@((lno,pos,TLVar nm _):rest)
   |  nm == kEnd  =  checkSC vscs gvs toks
   |  otherwise   =  do
        (lvar,rest) <- loadListVariable toks
        parseFree vscs (LstVar lvar:gvs) rest
-parseFree _ _ ((lno,ttyp):_) = fail $ unlines'
+parseFree _ _ ((lno,pos,ttyp):_) = fail $ unlines'
   [ "parseFree: expected gen-var"
-  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+  , " got "++renderToken ttyp++" at line "++show lno ]
 \end{code}
 
 \begin{code}
 checkSC :: MonadFail mf 
-        => [VarSideConds] -> VarList -> [Token] -> mf(SideCond,[Token])
+        => [VarSideConds] -> VarList -> [NNToken] -> mf(SideCond,[NNToken])
 checkSC vscs gvs rest = do
   vscs' <- mergeVarConds vscs
   return ((vscs',S.fromList gvs),rest)
@@ -1264,17 +1264,17 @@ genGenVar (LstVar lv) = genListVariable lv
 
 
 \begin{code}
-loadGenVar :: MonadFail mf => [Token] -> mf (GenVar,[Token])
+loadGenVar :: MonadFail mf => [NNToken] -> mf (GenVar,[NNToken])
 loadGenVar [] = premDuring ["loadGenVar"]
-loadGenVar toks@((lno,TVar nm vw):_) = do
+loadGenVar toks@((lno,pos,TVar nm vw):_) = do
   (var,rest) <- loadVariable toks
   return (StdVar var,rest)
-loadGenVar toks@((lno,TLVar nm vw):_) = do
+loadGenVar toks@((lno,pos,TLVar nm vw):_) = do
   (lvar,rest) <- loadListVariable toks
   return (LstVar lvar,rest)
-loadGenVar ((lno,tok):_) = fail $ unlines'
+loadGenVar ((lno,pos,tok):_) = fail $ unlines'
   [ "loadGenVar: expecting standard or list variable"
-  , "but got "++renderTokTyp tok++" at line "++show lno]
+  , "but got "++renderToken tok++" at line "++show lno]
 \end{code}
 
 \subsection{Generate List Variable}
@@ -1294,19 +1294,19 @@ genListVariable (LVbl (Vbl i vc _) is js)
 \subsection{Load List Variable}
 
 \begin{code}
-loadListVariable :: MonadFail mf => [Token] -> mf (ListVar,[Token])
+loadListVariable :: MonadFail mf => [NNToken] -> mf (ListVar,[NNToken])
 loadListVariable [] = premDuring ["loadListVariable"]
-loadListVariable ((lno,TLVar nm vw):rest) 
+loadListVariable ((lno,pos,TLVar nm vw):rest) 
   = return (LVbl (Vbl (jId nm) ObsV vw) [] [],rest)
-loadListVariable ((lno,tok):_) = fail $ unlines'
+loadListVariable ((lno,pos,tok):_) = fail $ unlines'
   [ "loadListVariable: expecting list variable"
-  , "but got "++renderTokTyp tok++" at line "++show lno]
+  , "but got "++renderToken tok++" at line "++show lno]
 
 loadListVariables :: MonadFail mf 
-                  => String -> [Token] -> mf ([ListVar],[Token])
+                  => String -> [NNToken] -> mf ([ListVar],[NNToken])
 loadListVariables close [] 
   = premDuring ["loadListVariables",close]
-loadListVariables close ((lno,TClose str):rest)
+loadListVariables close ((lno,pos,TClose str):rest)
   | str == close  =  return ([],rest)
 loadListVariables close toks = do
   (lvar,rest1) <- loadListVariable toks
@@ -1342,12 +1342,12 @@ For UTP variables we need to tighten this up a bit.
 Here, for now, we simply make observation variables,
 and let post-processing sort things out.
 \begin{code}
-loadVariable :: MonadFail mf => [Token] -> mf (Variable,[Token])
+loadVariable :: MonadFail mf => [NNToken] -> mf (Variable,[NNToken])
 loadVariable [] = premDuring ["loadVariable"]
-loadVariable ((lno,TVar nm vw):rest) = return (Vbl (jId nm) ObsV vw,rest)
-loadVariable ((lno,tok):_) = fail $ unlines'
+loadVariable ((lno,pos,TVar nm vw):rest) = return (Vbl (jId nm) ObsV vw,rest)
+loadVariable ((lno,pos,tok):_) = fail $ unlines'
   [ "loadVariable: expecting standard variable"
-  , "but got "++renderTokTyp tok++" at line "++show lno]
+  , "but got "++renderToken tok++" at line "++show lno]
 \end{code}
 
 \newpage
@@ -1359,7 +1359,7 @@ Experimentation makes it clear that keywords are too heavy,
 so we use parentheses a lot!
 \def\typestart{Tokens that can start a type:  $id~($}
 \def\typefollow{Tokens that can follow and continue a type: $\fun~id~(~$}
-\def\typeopenfollow{(The) Token that can follow ( or $<$ is: $id$}
+\def\typeopenfollow{(The) NNToken that can follow ( or $<$ is: $id$}
 \def\typeidfollow{Tokens that can follow a name and continue a type: $id~(~<$}
 \def\typeover{Tokens that can \emph{end} a type: $)$}
 \def\varstart{Tokens that can start a variant:  $<$}
@@ -1431,10 +1431,10 @@ Once parsing is complete we post-process
 names to pull out $\top$ and $\bot$ types.
 
 \begin{code}
-loadType :: MonadFail mf => [Token] -> mf (Type,[Token])
+loadType :: MonadFail mf => [NNToken] -> mf (Type,[NNToken])
 loadType [] = premDuring ["loadType"]
-loadType ((lno,TVar name _):rest) = return (TypeVar $ jId name,rest)
-loadType ((lno,TOpen open):rest)
+loadType ((lno,pos,TVar name _):rest) = return (TypeVar $ jId name,rest)
+loadType ((lno,pos,TOpen open):rest)
   | open == startCompType   =  loadCompositeType rest
 loadType toks = fail ("loadType: invalid start "++show (take 5 toks))
 \end{code}
@@ -1445,9 +1445,9 @@ Seen: \textbf{(}.
 Expects an initial name, then looks at second token to determine what follows.
 \begin{code}
 loadCompositeType [] = premDuring ["loadCompositeType"]
-loadCompositeType ((lno,TVar name _):rest1) 
+loadCompositeType ((lno,pos,TVar name _):rest1) 
   = loadCompType2 (TypeVar $ jId name) rest1
-loadCompositeType toks@((lno,TOpen open):_)
+loadCompositeType toks@((lno,pos,TOpen open):_)
   | open == startCompType = do
       (typ,rest1) <- loadType toks
       loadCompType2 typ rest1
@@ -1470,15 +1470,15 @@ only valid if head type is \textbf{name}.
 \begin{code}
 loadCompType2 htype [] = premDuring["loadCompType2",show htype]
 -- (1)   ?  )
-loadCompType2 head toks@((_,TClose close):rest1) = return (head,rest1)
+loadCompType2 head toks@((_,_,TClose close):rest1) = return (head,rest1)
 -- (2)   ?  -> 
-loadCompType2 dtyp toks@((_,TSym sym):rest1)
+loadCompType2 dtyp toks@((_,_,TSym sym):rest1)
   | sym == funArrow  = do
       (rtyp,rest2) <- loadType rest1
       rest3 <- expectToken "loadCompType2 ->" (TClose endCompType) rest2
       return (FunType dtyp rtyp,rest3)
 -- (3)   ?  <
-loadCompType2 (TypeVar tid) toks@((_,TSym sym):_)
+loadCompType2 (TypeVar tid) toks@((_,_,TSym sym):_)
   | sym == startVariant  =  do
       (variants,rest1) <- loadVariants [] toks
       rest2 <- expectToken "loadCompType2 <" (TClose endCompType) rest1
@@ -1494,7 +1494,7 @@ Seen: \textbf{( name $t^*$}.
 Expecting a type or \textbf{)}.
 \begin{code}
 loadProdType pid _ [] = premDuring ["loadProdType",idName pid]
-loadProdType pid sepyt ((lno,TClose close):rest1)
+loadProdType pid sepyt ((lno,pos,TClose close):rest1)
   | close == endCompType  
      -- we need to check below for function arrows
      =  return (TypeCons pid (reverse sepyt),rest1)
@@ -1508,11 +1508,11 @@ Seen \textbf{sum sumname},
 called from top-level knowning that the next token is $\mathbf{<}$.
 \begin{code}
 loadVariants :: MonadFail mf 
-               => [Variant] -> [Token] -> mf ([Variant],[Token])
+               => [Variant] -> [NNToken] -> mf ([Variant],[NNToken])
 loadVariants stnairav toks@[] = return (reverse stnairav,toks)
-loadVariants stnairav toks@(tok@(lno,TClose close):rest1)
+loadVariants stnairav toks@(tok@(lno,pos,TClose close):rest1)
   | close == endCompType  =  return (reverse stnairav,toks)
-loadVariants stnairav toks@(tok@(lno,TSym str):_)
+loadVariants stnairav toks@(tok@(lno,pos,TSym str):_)
  | str /= startVariant  
      = fail ("loadVariants: expecting '<' but got "++show tok)
  | otherwise = do
@@ -1528,7 +1528,7 @@ loadVariants stnairav toks = fail $ unlines'
 Looks for $\mathbf{<}~name~t_1~t_2~\dots~t_n~\mathbf{>}$
 \begin{code}
 loadVariant [] = premDuring ["loadVariant"]
-loadVariant ((lno,TSym sym):rest1)
+loadVariant ((lno,pos,TSym sym):rest1)
   | sym == startVariant  = do
       (Vbl vid _ _,rest2) <- loadVariable rest1
       (types,rest3) <- loadTypes [] rest2
@@ -1542,11 +1542,11 @@ loadVariant toks = fail $ unlines'
 
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
-loadTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
+loadTypes :: MonadFail mf => [Type] -> [NNToken] -> mf ([Type],[NNToken])
 loadTypes sepyt toks@[]            = return (reverse sepyt,toks)
-loadTypes sepyt toks@((lno,TClose end):rest)
+loadTypes sepyt toks@((lno,pos,TClose end):rest)
   | end == endCompType  =  return (reverse sepyt,toks)
-loadTypes sepyt toks@((lno,TSym end):rest)
+loadTypes sepyt toks@((lno,pos,TSym end):rest)
   | end == endVariant  =  return (reverse sepyt,toks)
 loadTypes sepyt toks = do
   (typ',rest1) <- loadType toks
@@ -1556,19 +1556,19 @@ loadTypes sepyt toks = do
 \typestart
 
 \begin{code}
-typeStart :: Token -> Bool
-typeStart (_,TVar _ _)                            =  True
-typeStart (_,TSym _)                              =  True
---typeStart (_,TOpen open) | open == openParString  =  True
+typeStart :: NNToken -> Bool
+typeStart (_,_,TVar _ _)                            =  True
+typeStart (_,_,TSym _)                              =  True
+--typeStart (_,_,TOpen open) | open == openParString  =  True
 typeStart _                                       =  False
 \end{code}
 
 \typeover
 
 \begin{code}
-typeOver :: Token -> Bool
-typeOver (_,TSym sym)     | sym   == dot             =  True
--- typeOver (_,TClose close) | close == closeParString  =  True
+typeOver :: NNToken -> Bool
+typeOver (_,_,TSym sym)     | sym   == dot             =  True
+-- typeOver (_,_,TClose close) | close == closeParString  =  True
 typeOver _                                           =  False
 \end{code}
 
@@ -1579,8 +1579,8 @@ Called to parse a list of items with a separator symbol,
 and consumes entire input.
 \begin{code}
 loadSepList :: MonadFail m 
-            => TokenType -> ([Token] -> m (a, [Token])) -> [Token] 
-            -> m ([a], [Token])
+            => Token -> ([NNToken] -> m (a, [NNToken])) -> [NNToken] 
+            -> m ([a], [NNToken])
 loadSepList sep objparser [] = return ([],[])
 loadSepList sep objparser tokens = do
   (obj,rest1) <- objparser tokens
@@ -1618,8 +1618,8 @@ and add line numbers, and remove blank lines before processing.
 
 \begin{code}
 type NumberedLine = (Int,String)
-prepare :: String -> [NumberedLine]
-prepare 
+numberlines :: String -> [NumberedLine]
+numberlines 
   = filter nonNull . zip [1..] . lines
   where nonNull (_,string) = not $ all isSpace string
 \end{code}
@@ -1675,10 +1675,10 @@ lstvChar = '$'
 If any of the above is immediately followed by `\$',
 then it denotes the corresponding list-variable.
 
-\subsection{Token Data Type}
+\subsection{NNToken Data Type}
 
 \begin{code}
-data TokenType
+data Token
   =  TNum   Integer
   |  TVar   String VarWhen  -- v 'v v'm v'
   |  TLVar  String VarWhen  -- v$ 'v$ v$'m v$'
@@ -1688,31 +1688,31 @@ data TokenType
   |  TSym   String
   |  TErr   String
   deriving (Eq,Show)
-type Token = (Int,TokenType)
+type NNToken = (Int,Int,Token) -- lineno,linepos,token
 \end{code}
 
 We provide some rendering code, mostly for error reporting:
 \begin{code}
-renderTokTyp :: TokenType -> String
-renderTokTyp (TNum i) = show i
-renderTokTyp (TVar  nm Static)     = nm
-renderTokTyp (TVar  nm Before)     = beforeChar : nm
-renderTokTyp (TVar  nm (During d)) = nm ++ afterChar : d
-renderTokTyp (TVar  nm After)      = nm ++ [afterChar]
-renderTokTyp (TLVar nm Static)     = nm ++ "$"
-renderTokTyp (TLVar nm Before)     = beforeChar : nm ++ "$"
-renderTokTyp (TLVar nm (During d)) = nm ++ '$' : afterChar : d
-renderTokTyp (TLVar nm After)      = nm ++ ['$',afterChar]
-renderTokTyp (TOpen str) = str
-renderTokTyp (TClose str) = str
-renderTokTyp (TSep str) = str
-renderTokTyp (TSym sym) = sym
-renderTokTyp (TErr str) = str
+renderToken :: Token -> String
+renderToken (TNum i) = show i
+renderToken (TVar  nm Static)     = nm
+renderToken (TVar  nm Before)     = beforeChar : nm
+renderToken (TVar  nm (During d)) = nm ++ afterChar : d
+renderToken (TVar  nm After)      = nm ++ [afterChar]
+renderToken (TLVar nm Static)     = nm ++ "$"
+renderToken (TLVar nm Before)     = beforeChar : nm ++ "$"
+renderToken (TLVar nm (During d)) = nm ++ '$' : afterChar : d
+renderToken (TLVar nm After)      = nm ++ ['$',afterChar]
+renderToken (TOpen str) = str
+renderToken (TClose str) = str
+renderToken (TSep str) = str
+renderToken (TSym sym) = sym
+renderToken (TErr str) = str
 
-renderToken (lno,toktyp) = renderTokTyp toktyp
--- useful for lists
+renderNNToken (lno,pos,toktyp) 
+  = show lno ++ ":" ++ show pos ++ ":" ++ renderToken toktyp
 
-renderToken' tok = ' ' : renderToken tok
+renderNNToken' tok = ' ' : renderNNToken tok
 \end{code}
 
 
@@ -1793,11 +1793,11 @@ mkRavL = mkLVar . reverse
 \begin{code}
 mkLawName :: [String] -> String
 mkLawName ss
-  = intercalate "_" $ map showTTok $ concat $ map (tlex . prepare) ss
+  = intercalate "_" $ map showTTok $ concat $ map (tlex 1 . numberlines) ss
   where
-    showTTok (_,(TNum n))     =  show n
-    showTTok (_,(TVar nm _))  =  nm
-    showTTok (_,(TSym nm))    =  nm
+    showTTok (_,_,(TNum n))     =  show n
+    showTTok (_,_,(TVar nm _))  =  nm
+    showTTok (_,_,(TSym nm))    =  nm
     showTTok ttok             =  _redQ
 \end{code}
 
@@ -1805,28 +1805,29 @@ mkLawName ss
 \subsection{Lexer}
 Now we define the lexer:
 \begin{code}
-tlex :: [NumberedLine] -> [Token]
-tlex []                    = []
-tlex ((lno,""):rest)       =  tlex rest
-tlex ((lno,str@(c:cs)):rest)
-  | isSpace c              =  tlex ((lno,cs):rest)
-  | isDigit c              =  tlexNum lno rest [c] cs
-  | c == '-'               =  tlexMinus lno rest cs
-  | isAlpha c || c == '_'  =  tlexVar lno rest [c] cs
-  | c == beforeChar        =  tlexBeforeId lno rest cs
-  | c `elem` openings      =  (lno,TOpen [c])  : tlex ((lno,cs):rest)
-  | c `elem` closings      =  (lno,TClose [c]) : tlex ((lno,cs):rest)
-  | c `elem` separators    =  (lno,TSep [c])   : tlex ((lno,cs):rest)
-  | otherwise              =  tlexSym lno rest [c] cs
+tlex :: Int -> [NumberedLine] -> [NNToken]
+tlex _ []                    = []
+tlex _ ((lno,""):rest)       =  tlex 1 rest
+tlex pos ((lno,str@(c:cs)):rest)
+  | isSpace c              =  tlex (pos+1) ((lno,cs):rest)
+  | isDigit c              =  tlexNum lno pos rest [c] cs
+  | c == '-'               =  tlexMinus lno pos rest cs
+  | isAlpha c || c == '_'  =  tlexVar pos lno rest [c] cs
+  | c == beforeChar        =  tlexBeforeId lno pos rest cs
+  | c `elem` openings      =  (lno,pos,TOpen [c])  : tlex (pos+1) ((lno,cs):rest)
+  | c `elem` closings      =  (lno,pos,TClose [c]) : tlex (pos+1) ((lno,cs):rest)
+  | c `elem` separators    =  (lno,pos,TSep [c])   : tlex (pos+1) ((lno,cs):rest)
+  | otherwise              =  tlexSym lno pos rest [c] cs
 \end{code}
 
 
 Seen one or more digits, keep looking for more.
 \begin{code}
-tlexNum lno rest mun ""  = (lno,mkNum mun) : tlex rest
-tlexNum lno rest mun str@(c:cs)
-  | isDigit c  =  tlexNum lno rest (c:mun) cs
-  | otherwise  =  (lno,mkNum mun) : tlex ((lno,str):rest)
+tlexNum lno pos rest mun ""  = (lno,pos,mkNum mun) : tlex 1 rest
+tlexNum lno pos rest mun str@(c:cs)
+  | isDigit c  =  tlexNum lno pos rest (c:mun) cs
+  | otherwise  =  (lno,pos,mkNum mun) : tlex pos' ((lno,str):rest)
+  where pos' = pos + length mun
 
 mkNum mun = TNum $ read $ reverse mun
 \end{code}
@@ -1835,10 +1836,10 @@ We have seen a minus sign. If followed immediately by a number
 it is then merged with it to form a negative literal.
 Otherwise it is treated as a (part of a) symbol.
 \begin{code}
-tlexMinus lno rest "" = [ (lno, mkSym "-") ]
-tlexMinus lno rest str@(c:cs)
-  | isDigit c  =  tlexNum lno rest [c,'-'] cs
-  | otherwise  =  tlexSym lno rest [c,'-'] cs
+tlexMinus lno pos rest "" = [ (lno,pos,mkSym "-") ]
+tlexMinus lno pos rest str@(c:cs)
+  | isDigit c  =  tlexNum lno pos rest [c,'-'] cs
+  | otherwise  =  tlexSym lno pos rest [c,'-'] cs
 \end{code}
 
 A \texttt{afterChar} may end an identifier,
@@ -1851,44 +1852,61 @@ is an error.
 
 \begin{code}
 -- seen '  expecting  v v$ 
-tlexBeforeId lno rest "" 
-  =  (lno,TErr "' found without variable part") : tlex rest
-tlexBeforeId lno rest cs@(c:cs')
-  | isAlpha c  =  tlexBeforeGVar lno rest [c] cs'
-  | otherwise  =  (lno,TErr "' found without variable part") : tlex ((lno,cs):rest) 
+tlexBeforeId lno pos rest "" 
+  =  (lno,pos,TErr "' found without variable part") : tlex (pos+1) rest
+tlexBeforeId lno pos rest cs@(c:cs')
+  | isAlpha c  =  tlexBeforeGVar lno pos rest [c] cs'
+  | otherwise  =  (lno,pos,TErr "' without var part") 
+                     : tlex (pos+1) ((lno,cs):rest) 
 
 --seen 'v   expecting 'v  'v$
-tlexBeforeGVar lno rest di "" 
-  =  (lno,TVar (reverse di) Before) : tlex rest
-tlexBeforeGVar lno rest di cs@(c:cs')
-  | isAlpha c  =  tlexBeforeGVar lno rest (c:di) cs'
-  | c == '_'   =  tlexBeforeGVar lno rest (c:di) cs'
-  | c == '$'   =  (lno,TLVar (reverse di) Before) : tlex ((lno,cs'):rest)
-  | otherwise  =  (lno,TVar (reverse di) Before) : tlex ((lno,cs):rest)
+tlexBeforeGVar lno pos rest di "" 
+  =  (lno,pos,TVar (reverse di) Before) : tlex pos' rest
+  where pos' = pos + 1 + length di
+tlexBeforeGVar lno pos rest di cs@(c:cs')
+  | isAlpha c  =  tlexBeforeGVar lno pos rest (c:di) cs'
+  | c == '_'   =  tlexBeforeGVar lno pos rest (c:di) cs'
+  | c == '$'   =  ( lno,pos,TLVar (reverse di) Before) 
+                       : tlex pos' ((lno,cs'):rest )
+  | otherwise  =  ( lno,pos,TVar  (reverse di) Before) 
+                        : tlex pos' ((lno,cs):rest )
+  where pos' = pos + 1 + length di
 
 -- tlexVar lno rest di cs   (di is non-empty)
 --  seen  v  expecting  v  v'  v'm  v$ v$' v$'m
-tlexVar lno rest di ""     =  (lno, mkDi di) : tlex rest -- std-var
-tlexVar lno rest di cs@(c:cs') 
-  | isAlphaNum c    =  tlexVar lno rest (c:di) cs'
-  | c == '_'        =  tlexVar lno rest (c:di) cs'
-  | c == afterChar  =  tlexLater lno rest (reverse di) TVar "" cs' -- v'
-  | c == lstvChar   =  tlexLVar   lno rest (reverse di) cs' -- v$
-  | otherwise = (lno,mkDi di) : tlex ((lno,cs):rest)
+tlexVar lno pos rest di ""  
+  =  (lno,pos,mkDi di) : tlex pos' rest -- std-var
+  where pos' = pos + length di
+
+tlexVar lno pos rest di cs@(c:cs') 
+  | isAlphaNum c    =  tlexVar lno pos rest (c:di) cs'
+  | c == '_'        =  tlexVar lno pos rest (c:di) cs'
+  | c == afterChar  =  tlexLater lno pos rest (reverse di) TVar "" cs' -- v'
+  | c == lstvChar   =  tlexLVar  lno pos rest (reverse di) cs' -- v$
+  | otherwise = (lno,pos,mkDi di) : tlex pos' ((lno,cs):rest)
+  where pos' = pos + length di
 
 -- seen v$  expecting v$ v$' v$'m
-tlexLVar lno rest var "" = (lno,TLVar var Static) : tlex rest
-tlexLVar lno rest var cs@(c:cs')
-  | c == afterChar  =  tlexLater lno rest var TLVar "" cs' -- v$'
-  | otherwise       =  (lno,TLVar var Static) : tlex ((lno,cs):rest)
+tlexLVar lno pos rest var "" 
+  = (lno,pos,TLVar var Static) : tlex pos' rest
+  where pos' = pos + length var
+
+tlexLVar lno pos rest var cs@(c:cs')
+  | c == afterChar  =  tlexLater lno pos rest var TLVar "" cs' -- v$'
+  | otherwise       =  (lno,pos,TLVar var Static) 
+                         : tlex pos' ((lno,cs):rest)
+  where pos' = pos + length var
 
 -- seen v' v$'   expecting  v' v'm v$' v$'m
-tlexLater lno rest var tvar rud ""  -- v'   v$'
-  =  (lno,tvar var $ mkLater rud) : tlex rest 
-tlexLater lno rest var tvar rud cs@(c:cs')
-  | isAlpha c  =  tlexLater lno rest var tvar (c:rud) cs' 
-  | isDigit c  =  tlexLater lno rest var tvar (c:rud) cs'
-  | otherwise  =  (lno,tvar var $ mkLater rud) : tlex ((lno,cs):rest)
+tlexLater lno pos rest var tvar rud ""  -- v'   v$'
+  =  (lno,pos,tvar var $ mkLater rud) : tlex pos' rest 
+  where pos' = pos + length var + length rud
+tlexLater lno pos rest var tvar rud cs@(c:cs')
+  | isAlpha c  =  tlexLater lno pos rest var tvar (c:rud) cs' 
+  | isDigit c  =  tlexLater lno pos rest var tvar (c:rud) cs'
+  | otherwise  
+     =  (lno,pos,tvar var $ mkLater rud) : tlex pos' ((lno,cs):rest)
+     where pos' = pos + length var + length rud
 
 mkLater rud = if null rud then After else During (reverse rud)
 \end{code}
@@ -1896,13 +1914,16 @@ mkLater rud = if null rud then After else During (reverse rud)
 
 If none of the above apply, we gobble up a maximum-munch symbol:
 \begin{code}
-tlexSym lno rest mys ""  = (lno, mkMys mys) : tlex rest
-tlexSym lno rest mys str@(c:cs)
-  | issymbol c  =  tlexSym lno rest (c:mys) cs
-  | otherwise  =  (lno,mkMys mys) : tlex ((lno,str):rest)
+tlexSym lno pos rest mys ""  
+  = (lno,pos, mkMys mys) : tlex pos' rest
+  where pos' =  pos + length mys
+tlexSym lno pos rest mys str@(c:cs)
+  | issymbol c  =  tlexSym lno pos rest (c:mys) cs
+  | otherwise  =  (lno,pos,mkMys mys) : tlex pos' ((lno,str):rest)
+  where pos' = pos+length mys
 \end{code}
 
-\section{Token Parsing Utilities}
+\section{NNToken Parsing Utilities}
 
 When input ends unexpectedly:
 \begin{code}
@@ -1916,11 +1937,11 @@ premImport what got lno
 
 Called when a specific token is expected:
 \begin{code}
-expectToken :: MonadFail mf => String -> TokenType -> [Token] -> mf [Token]
+expectToken :: MonadFail mf => String -> Token -> [NNToken] -> mf [NNToken]
 expectToken msg tok [] = fail $ unlines'
   [ "premature end ("++msg++")"
-  , "while expecting "++renderTokTyp tok ]
-expectToken msg tok toks@((lno,tok'):rest)
+  , "while expecting "++renderToken tok ]
+expectToken msg tok toks@((lno,pos,tok'):rest)
   | tok == tok'  =  return rest
   | otherwise    =  fail $ unlines'
                       [ "expectToken("++msg++") error"
@@ -1932,9 +1953,9 @@ Called to parse something inside delimiters.
 Called when the opening delimiter has been seen.
 \begin{code}
 delimitedParse :: MonadFail mf =>
-  TokenType -> ([Token] -> mf (a, [Token])) -> [Token] -> mf (a, [Token])
+  Token -> ([NNToken] -> mf (a, [NNToken])) -> [NNToken] -> mf (a, [NNToken])
 delimitedParse close parser [] 
-  = fail ("premature end while parsing before "++renderTokTyp close)
+  = fail ("premature end while parsing before "++renderToken close)
 delimitedParse close parser tokens = do
   (thing,rest) <- parser tokens
   rest' <- expectToken "delimitedParse" close rest
@@ -1959,7 +1980,7 @@ tread str
       Yes (term,tokens) 
         | null tokens -> putStrLn $ trTerm 0 term
         | otherwise   -> putStrLn ( "tokens leftover: " ++
-                                     concat (map renderToken' tokens) )
+                                     concat (map renderNNToken' tokens) )
       But msgs -> putStrLn $ unlines' msgs
 \end{code}
 

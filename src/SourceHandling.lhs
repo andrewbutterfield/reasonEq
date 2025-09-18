@@ -123,7 +123,7 @@ loadTheory thrys text = loadTheoryParts thrys $ tlex 1 $ numberlines text
 
 loadTheoryParts :: MonadFail mf => TheoryDAG -> [NNToken] -> mf Theory
 loadTheoryParts thrys [] = fail "Empty theory file!" 
-loadTheoryParts thrys ( (lno,pos,TVar key Static) : (_,_,TVar name Static) : rest)
+loadTheoryParts thrys ((lno,pos,TVar key Static):(_,_,TVar name Static):rest)
   | key == kTheory && validFileName name = do
         (deps,rest') <- loadDependencies rest 
         idsubmap <- getKnownVarSubabilities thrys $ pdbg "DEPS" deps
@@ -237,15 +237,16 @@ type VarClsSub = (VarClass,Subable)
 defVCS = (ObsV,False)
 \end{code}
 
+
 Seen \h{Known var}
 \begin{code}
 loadKVar :: MonadFail mf 
            => IdSubMap ->  VarTable -> Int -> String -> VarWhen -> [NNToken] 
            -> mf (IdSubMap,VarTable,[NNToken])
 loadKVar ism vt _ var vw ((lno,pos,TOpen "{"):rest) 
-                                  =  loadKConstr ism vt lno var vw defVCS rest
+                                =  loadKConstr ism vt lno var vw defVCS rest
 loadKVar ism vt _ var vw ((lno,pos,TSym ":"):rest) 
-                                  =  loadKVarOfType ism vt lno var vw defVCS rest
+                             =  loadKVarOfType ism vt lno var vw defVCS rest
 loadKVar ism vt _ var vw ((lno,pos,TSym "="):rest) = do  
   (vt',rest') <- loadKVarIsConst vt lno var vw rest
   return (ism,vt',rest')

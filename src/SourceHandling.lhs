@@ -552,11 +552,11 @@ loadLaw lawname tokens = do
           (sc,rest5) <- loadSideCond rest4
           return (((lawname,(mkAsn term sc)),provenance),beyond)
         (tok@(lno,pos,_):_) -> fail $ unlines'
-          [ "loadLaw: unexpected token after provenance"
-          , renderNNToken tok ++ " at line "++show lno ]
-    (tok@(lno,pos,_):_) -> fail $ unlines'
-      [ "loadLaw: unexpected token after provenance"
-      , renderNNToken tok ++ " at line "++show lno ]
+          [ "loadLaw.3: unexpected token after provenance "
+                         ++ show (take 5 rest3) 
+          , "parsed term: " ++ trTerm 0 term ]
+    (nntok:_) -> fail ( "loadLaw.1: unexpected token after provenance "
+                         ++ show (take 5 rest1) )
 
 loadProvenace :: MonadFail mf => [NNToken] -> mf (Provenance,[NNToken])
 loadProvenace []  =  premAfter [kBegin]
@@ -843,10 +843,8 @@ parseTerm ((_,_,TNum n):tts) = return ( Val int $ Integer n, tts)
 Symbols are valid identifiers
 
 \begin{code}
-parseTerm ((_,_,TSym consName):(_,_,TVar subable Static ):(_,_,TOpen "("):tts)
-  | subable == "N" = parseCons cons False [] tts
-  | subable == "S" = parseCons cons True  [] tts
-  where cons = jId consName
+parseTerm ((_,_,TSym consName):(_,_,TOpen "("):tts)
+  =  parseCons (jId consName) [] tts
 parseTerm ((_,_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
 \end{code}
 
@@ -860,11 +858,8 @@ check for lone identifiers.
 We check for constructions first \dots
 
 \begin{code}
-parseTerm ((_,_,TVar consName vw):(_,_,TVar subable Static ):(_,_,TOpen "("):tts)
-  | subable == kNS = parseCons cons False [] tts
-  | subable == kCS = parseCons cons True  [] tts
-  where 
-    cons = jId consName
+parseTerm ((_,_,TVar consName vw):(_,_,TOpen "("):tts)
+   =  parseCons (jId consName) [] tts
 parseTerm ((_,_,TVar nm vw):tts)
   | nm == kTrue      =  return ( mkTrue nm,  tts)
   | nm == kFalse     =  return ( mkFalse nm, tts)
@@ -890,12 +885,12 @@ $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
 parseCons :: MonadFail mf 
-          => Identifier -> Bool -> [Term] -> [NNToken]-> mf (Term,[NNToken])
-parseCons id1 subable smretbus ((_,_,TClose ")") : tts)
-  = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
-parseCons id1 subable smretbus tts
+          => Identifier -> [Term] -> [NNToken]-> mf (Term,[NNToken])
+parseCons id1 smretbus ((_,_,TClose ")") : tts)
+  = return ( Cons arbpred False id1 $ reverse smretbus, tts)
+parseCons id1 smretbus tts
   = do (tsub',tts') <- parseTerm tts
-       parseCons' id1 subable (tsub':smretbus) tts'
+       parseCons' id1 (tsub':smretbus) tts'
 \end{code}
 
 \newpage
@@ -903,12 +898,12 @@ Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
 parseCons' :: MonadFail mf 
-           => Identifier -> Bool -> [Term] -> [NNToken]-> mf (Term,[NNToken])
-parseCons' id1 subable smretbus ((_,_,TSep ",") : tts)
-  =  parseCons id1 subable smretbus tts
-parseCons' id1 subable smretbus ((_,_,TClose ")") : tts)
-  =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
-parseCons' id1 subable smretbus tts
+           => Identifier -> [Term] -> [NNToken]-> mf (Term,[NNToken])
+parseCons' id1  smretbus ((_,_,TSep ",") : tts)
+  =  parseCons id1  smretbus tts
+parseCons' id1  smretbus ((_,_,TClose ")") : tts)
+  =  return ( Cons arbpred False id1 $ reverse smretbus, tts)
+parseCons' id1  smretbus tts
   =  fail $ unlines'
        [ "parseCons': expected ',' or ')'"
        , "got "++show (take 3 tts)++" ..." ]

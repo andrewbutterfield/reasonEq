@@ -162,19 +162,26 @@ loadDeps sped (tok@(lno,pos,_):rest)
 Expects \textbf{Known}, or \textbf{Law}, or \textbf{Conjecture}. 
 \begin{code}
 loadDefinitions :: MonadFail mf => IdSubMap -> Theory -> [NNToken] -> mf Theory  
+
+
 loadDefinitions _ thry []  =  return thry
 loadDefinitions ismap thry ((lno,pos,TVar category Static)
                        :(_,_,TVar name Static):rest)
   | category == kConjecture = do
-      (conj',rest') <- loadConjecture name rest
-      loadDefinitions ismap (conjs__ (++[conj']) thry) rest'
+      (nmdass,rest') <- loadConjecture name rest
+      let nmdass' = fixNmdAssSubability ismap nmdass
+      loadDefinitions (pdbg "lD.Conj.ismap" ismap) (conjs__ (++[nmdass']) thry) rest'
+
   | category == kLaw = do
-      (law',rest') <- loadLaw name rest
-      loadDefinitions ismap (laws__ (++[law']) thry) rest'
+      ((nmdass,prov),rest') <- loadLaw name rest
+      let nmdass' = fixNmdAssSubability ismap nmdass
+      loadDefinitions (pdbg "lD.Law.ismap" ismap) (laws__ (++[(nmdass',prov)]) thry) rest'
+
 loadDefinitions ismap thry ((lno,pos,TVar category Static):rest)
   | category == kKnown = do
       (ismap',known',rest') <- loadKnown ismap (known thry) rest
       loadDefinitions ismap' (known_ known' thry) rest'
+
 loadDefinitions _ thry (tok@(lno,pos,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
@@ -295,11 +302,13 @@ loadKVarOfType ism vt lno var vw vcs []  =  premImport "type" var lno
 loadKVarOfType ism vt lno var vw (vc,sbbl) rest = do
   (typ,rest') <- loadType rest
   rest'' <- expectToken "loadKVarOfType" dotTok rest'
-  let vbl = Vbl (jId var) vc vw
-  -- ism' : var -> sbbl
+  let varid = jId var
+  let vbl = Vbl varid vc vw
+  let ism' = M.insert varid sbbl ism
   vt' <- addKnownConstructor vbl typ sbbl vt
-  return (ism,vt',rest'')
+  return (ism',vt',rest'')
 \end{code}
+
 
 Seen \h{Known var =}, expect a term wrapped with \h{BEGIN \dots END}
 \begin{code}

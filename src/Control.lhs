@@ -5,24 +5,28 @@ Copyright  Andrew Butterfield (c) 2019-22
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Control  ( mifte
-                , fcombine
-                , andf, orf
-                , addIfWanted
-                , mapfst, mapsnd, mappair, mapboth
-                , mapaccum
-                , BasicM
-                , matchPair
-                , Combine, defCombine
-                , manyToOne
-                , manyToMany
-                , Extract, defExtract
-                , manyToMultiple
+module Control ( 
+  mifte
+, fcombine
+, andf, orf
+, addIfWanted
+, mapfst, mapsnd, mappair, mapboth
+, smapfst, smapsnd, smappair, smapboth
+, mapaccum
+, BasicM
+, matchPair
+, Combine, defCombine
+, manyToOne
+, manyToMany
+, Extract, defExtract
+, manyToMultiple
 )
 where
 
-import Data.Map(Map)
-import qualified Data.Map as M
+import Data.Set(Set)
+import qualified Data.Set as S
+-- import Data.Map(Map)
+-- import qualified Data.Map as M
 import Control.Monad
 \end{code}
 
@@ -67,6 +71,8 @@ addIfWanted opf wanted currf extraf
 
 \subsection{Mapping Pairs}
 
+
+
 \begin{code}
 mapfst :: (a -> c) -> [(a,b)] -> [(c,b)]
 mapfst f1 [] = []
@@ -84,6 +90,25 @@ mapboth :: (a->b) -> [(a,a)] -> [(b,b)]
 mapboth _ [] = []
 mapboth f ((x,y):xys) = (f x, f y) : mapboth f xys
 \end{code}
+
+\subsubsection{Mapping Sets}
+
+
+\begin{code}
+smapfst :: (Ord a, Ord b, Ord c) => (a -> c) -> Set (a,b) -> Set (c,b)
+smapfst f1 xys = S.fromList $ mapfst f1 $ S.toList xys
+
+smapsnd :: (Ord a, Ord b, Ord c) => (b -> c) -> Set (a,b) -> Set (a,c)
+smapsnd f2 xys = S.fromList $ mapsnd f2 $ S.toList xys
+
+smappair :: (Ord a, Ord b, Ord c, Ord d) 
+         => (a->c) -> (b->d) -> Set (a,b) -> Set (c,d)
+smappair f1 f2 xys = S.fromList $ mappair f1 f2 $ S.toList xys
+
+smapboth :: (Ord a, Ord b) => (a->b) -> Set (a,a) -> Set (b,b)
+smapboth f xys = S.fromList $ mapboth f $ S.toList xys
+\end{code}
+
 
 \subsection{Mapping an Accumulator}
 

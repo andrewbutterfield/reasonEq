@@ -26,6 +26,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheoryNames, getTheoryConjectures, getTheoryProofs
  , IdSubMap, getKnownVarSubabilities, collectConsSubstitutability
+ , fixNmdAssSubability
  , isATheoryIn
  , replaceTheory, replaceTheory', replaceTheory''
  , updateTheory
@@ -38,11 +39,14 @@ module Theories
  , lawClassify, lawDepClassify
  ) where
 
+import Data.Set (Set)
+import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List
 import Data.Maybe (catMaybes, isJust)
 
+import Control (mapsnd)
 import YesBut
 import Utilities
 import LexBase
@@ -398,6 +402,38 @@ getTheorySubabilities thry = M.empty
 
 
 \section{Various Changes}
+
+\subsection{Fixing Substitutability}
+
+This uses a map from identifiers to their substitutability
+to ensure the relevant constructor terms have the correct \h{Subable} value.
+
+\begin{code}
+fixNmdAssSubability :: IdSubMap -> NmdAssertion -> NmdAssertion
+fixNmdAssSubability ismap (nm,Assertion tm sc)
+  =  (nm,mkAsn (fixTermSubability ismap tm) sc)
+
+fixTermSubability :: IdSubMap -> Term -> Term
+fixTermSubability ismap (Cons typ _ n ts)
+  = case M.lookup (pdbg "fTS.N" n) ismap of
+      Nothing    ->  Cons typ (pdbg "fTS.Nothing" False) n ts'
+      Just sbbl  ->  Cons typ (pdbg "fTS.SBBL" sbbl) n ts'
+  where ts' = map (fixTermSubability ismap) ts
+fixTermSubability ismap (Bnd typ n vs tm) 
+  = jBnd typ n vs $ fixTermSubability ismap tm
+fixTermSubability ismap (Lam typ n vl tm) 
+  = jLam typ n vl $ fixTermSubability ismap tm
+fixTermSubability ismap (Cls n tm) 
+  = Cls n $ fixTermSubability ismap tm
+fixTermSubability ismap (Sub typ tm s)
+  =  Sub typ (fixTermSubability ismap tm) $ fixSubstSubability ismap s
+fixTermSubability ismap term = term -- Iter, Vtyp
+
+fixSubstSubability :: IdSubMap -> Substn -> Substn
+fixSubstSubability ismap (Substn ts lvs)
+  = jSub (mapsnd (fixTermSubability ismap) $ S.toList ts) 
+         (S.toList lvs)
+\end{code}
 
 \subsection{Generic Theory Replacement}
 

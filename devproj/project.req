@@ -6,6 +6,33 @@ END THEORIES
 CURRTHEORY = EQV
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("EQV","eqv_subst")
+BEGIN LIVE-PROOF
+TH-NAME: EQV
+CJ-NAME: eqv_subst
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TQ = False
+TS = False
+FV = False
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (S (TG (Id "B" 0)) (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),[Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]]])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.eqv_subst", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [1]
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -255,12 +255,12 @@ We have the following possibilities:
 \end{itemize} 
 \begin{code}
 applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
-     (alookup v vtl)  -- v[..,r,../..,v,..] = r
+  =  (alookup (pdbg "aS.Var.v" v) $ pdbg "aS.Var.vtl" vtl)  -- v[..,r,../..,v,..] = r
      <|> 
-     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]     
+     (termVarSubstitute (pdbg "aS.Var.sctx" sctx) (pdbg "aS.Var.vrt" vrt) vtl $ pdbg "aS.Var.lvlvl1" lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]     
      <|> 
-     (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+     (lvlvlSubstitute sctx vrt vtl $ pdbg "aS.Var.lvlvl2" lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+  where vtl = S.toList vts ; lvlvl = S.toList lvlvs
 \end{code}
 \textbf{Notes:}
 \textsf{
@@ -282,8 +282,9 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 \end{eqnarray*}
 \begin{code}
 applySubst sctx sub ct@(Cons tk subable i ts)
-  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) ts
-                     return $ Cons tk subable i ts'
+  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) 
+                              $ pdbg ("aS.Cons.i "++trId i) ts
+                     return $ Cons tk subable i $ pdbg ("aS.Cons."++trId i++".ts'") ts'
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
@@ -402,7 +403,7 @@ termVarSubstitute :: MonadFail m
                   => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
 termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
   = do let (fvs,_) = freeVars sc vrt -- no bound vars to be subtracted here
-       let (_,vtl') = keepMentionedTermSubs fvs False [] vtl
+       let (_,vtl') = keepMentionedTermSubs (pdbg "tVS.Var.fvs" fvs) False [] vtl
        if null vtl' then fail "termVarSubstitute: complete overlap"
                     else return $ Sub tk vrt $ jSubstn vtl' lvlvl
        
@@ -410,6 +411,7 @@ termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
 termVarSubstitute _ _ _ _
   = fail "termVarSubstitute: not a variable term"
 \end{code}
+
 
 \begin{code}
 keepMentionedTermSubs :: VarSet -> Bool -> [TermSub] -> [TermSub]

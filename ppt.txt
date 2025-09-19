@@ -1,50 +1,22 @@
-@aKVL.vt:  VD ("",fromList [(VR (Id "a" 0,VO,WB),KV (TV (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TV (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TV (Id "B" 0)) (TV (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42))),(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TV (Id "B" 0)])),(VR (Id "sumt" 0,VO,WS),KV (TA (Id "Sum" 0) [(Id "Sum1" 0,[]),(Id "Sum2" 0,[TV (Id "B" 0)]),(Id "Sum3" 0,[TF (TV (Id "B" 0)) (TV (Id "B" 0)),TV (Id "A" 0),TV (Id "B" 0)])])),(VR (Id "x" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "y" 0,VO,WS),KV (TV (Id "B" 0)))],fromList [(VR (Id "alist" 0,VE,WS),AL),(VR (Id "aset" 0,VE,WS),AS)],fromList [])
-Parsed
-as:
-@aKVL.vt':  VD ("",fromList [(VR (Id "a" 0,VO,WB),KV (TV (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TV (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TV (Id "B" 0)) (TV (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42))),(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TV (Id "B" 0)])),(VR (Id "sumt" 0,VO,WS),KV (TA (Id "Sum" 0) [(Id "Sum1" 0,[]),(Id "Sum2" 0,[TV (Id "B" 0)]),(Id "Sum3" 0,[TF (TV (Id "B" 0)) (TV (Id "B" 0)),TV (Id "A" 0),TV (Id "B" 0)])])),(VR (Id "x" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "y" 0,VO,WS),KV (TV (Id "B" 0)))],fromList [(VR (Id "alist" 0,VE,WS),AL),(VR (Id "aset" 0,VE,WS),AS),(VR (Id "list0" 0,VE,WS),KL [] [] 0)],fromList [])
-Theory
-{thName
-=
-"Proto"
-thDeps
-=
+@aS.Cons.i ≡:  [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]
+@aS.Var.vtl:
 []
-known
-=
-VD
-( ""
-, { (VR (Id "a" 0, VO, WB), KV (TV (Id "N" 0)))
-  , (VR (Id "a" 0, VO, WA), KV (TV (Id "N" 0)))
-  , (VR (Id "aterm" 0, VO, WS), KV (TV (Id "B" 0)))
-  , (VR (Id "atermf" 0, VO, WS), KV (TF (TV (Id "B" 0)) (TV (Id "B" 0))))
-  , (VR (Id "gen" 0, VE, WS), KG)
-  , (VR (Id "inst" 0, VE, WS), KI (VR (Id "gen" 0, VE, WS)))
-  , (VR (Id "mol" 0, VE, WS), KC (K (TG (Id "Z" 0)) (VI 42)))
-  , (VR (Id "prodt" 0, VO, WS), KV (TC (Id "Prod" 0) [TV (Id "A" 0), TV (Id "B" 0)]))
-  , (VR (Id "sumt" 0, VO, WS), KV (TA (Id "Sum" 0) [(Id "Sum1" 0, []), (Id "Sum2" 0, [TV (Id "B" 0)]), (Id "Sum3" 0, [TF (TV (Id "B" 0)) (TV (Id "B" 0)), TV (Id "A" 0), TV (Id "B" 0)])]))
-  , (VR (Id "x" 0, VO, WS), KV (TV (Id "B" 0)))
-  , (VR (Id "y" 0, VO, WS), KV (TV (Id "B" 0))) }
-, { (VR (Id "alist" 0, VE, WS), AL)
-  , (VR (Id "aset" 0, VE, WS), AS)
-  , (VR (Id "list0" 0, VE, WS), KL [] [] 0) }
-, {} )
-laws
-=
+@aS.Var.sctx:  SubCtxt {subSC = ([],fromList []), subVD = [VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])]}
+@aS.Var.vrt:
+V
+( TG
+  (Id "B" 0) )
+(VR (Id "P" 0, VP, WS))
+@aS.Var.lvlvl2:  [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
+@aS.Var.vtl:
 []
-proofs
-=
-[]
-auto
-=
-AutoLaws
-{simps
-=
-[]
-folds
-=
-[]
-}
-conjs
-=
-[]
-}
+@aS.Var.sctx:  SubCtxt {subSC = ([],fromList []), subVD = [VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])]}
+@aS.Var.vrt:
+V
+( TG
+  (Id "B" 0) )
+(VR (Id "Q" 0, VP, WS))
+@aS.Var.lvlvl2:  [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
+@aS.Cons.≡.ts':
+[ V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))
+, V (TG (Id "B" 0)) (VR (Id "Q" 0, VP, WS)) ]

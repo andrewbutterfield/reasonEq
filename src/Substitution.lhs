@@ -255,22 +255,17 @@ We have the following possibilities:
 \end{itemize} 
 \begin{code}
 applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  (alookup (pdbg "aS.Var.v" v) $ pdbg "aS.Var.vtl" vtl)  -- v[..,r,../..,v,..] = r
+  =  (alookup v vtl)  -- v[..,r,../..,v,..] = r
      <|> 
-     (termVarSubstitute (pdbg "aS.Var.sctx" sctx) (pdbg "aS.Var.vrt" vrt) vtl $ pdbg "aS.Var.lvlvl1" lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]     
+     (termVarSubstitute sctx vrt vtl lvlvl) 
+    -- v[..,r,../..,t,..] = r,v[r/t]     
      <|> 
-     (lvlvlSubstitute sctx vrt vtl $ pdbg "aS.Var.lvlvl2" lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+     (lvlvlSubstitute (pdbg "aS.Var.sctx" sctx) vrt vtl $ pdbg "aS.Var.lvlvl" lvlvl) 
+     -- v[..,r$,../..,t$,..]=r,v[r$/t$]
   where vtl = S.toList vts ; lvlvl = S.toList lvlvs
 \end{code}
-\textbf{Notes:}
-\textsf{
-   It is possible that \h{lvlvlSubstitute} could do the work
-   of \h{uniformSubstitute} if we had a boolean indicating 
-   if the original substitution was \emph{uniform}.
-}
 
 
-\newpage
 \subsection{Cons-Term Substitution}
 
 \begin{eqnarray*}
@@ -596,8 +591,8 @@ lvlvlSubstitute :: MonadFail m
                 -> m Term
 
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
-  let involvements = map (getTermVarInvolvement sctx v) lvlvl
-  let involved = filter ((/= Uninvolved) . fst3) involvements
+  let involvements = map (getTermVarInvolvement sctx v) $ pdbg "lv2S.lvlvl" lvlvl
+  let involved = filter ((/= Uninvolved) . fst3) $ pdbg "lv2S.involvements" involvements
   if null involved then 
     return vrt
   else case head involved of

@@ -1,5 +1,50 @@
 # To Do
 
+Issue: s.c. instantition bug?
+
+We see a case where `⊇ₐ` is instantiated by `⊇` !
+```
+Law S.C.:
+  O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
+Instantiated Law S.C.:
+  O$,O$'⊇R, fresh:O$_0
+```
+
+Full details:
+
+```
+Proof for sqcmp_sqcap_ldistr
+	(P ⊓ Q ; R) ≡ (P ; R) ⊓ (Q ; R)
+	O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐR
+⊢
+P ⊓ Q ; R
+ O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐR
+Focus = [] :: 𝔹  
+O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐR
+
+proof: tm 1 sqcmp_def
+@mkVSC-Dynamic:  Nothing
+@mkVSC-Dynamic:  Nothing
+@mkVSC-Static:  Just (VSC (GV (VR (Id "R" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA)
+Match against 'sqcmp_def'[1] was successful
+Binding:
+  { B  ⟼ 𝔹  , P  ⟼ P ⊓ Q, Q  ⟼ R, ;  ⟼ ;, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+Instantiated Replacement:
+  (∃ O$_0  • (P ⊓ Q)[O$_0/O$'] ∧ R[O$_0/O$])
+Instantiated Variables: {P,Q,R,O$,O$_0,O$'}
+Floating Vars?: False
+Law S.C.:
+  O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
+Instantiated Law S.C.:
+  O$,O$'⊇R, fresh:O$_0
+Goal S.C.:
+  O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐR
+Discharged Law S.C.:
+  O$,O$'⊇R, fresh:O$_0
+
+hit <enter> to continue
+```
+
 
 Issue:  
 
@@ -21,6 +66,8 @@ by red-All
 ```
 
 Those `substitute` commands should not change anything!
+
+
 
 
 ## PLAN

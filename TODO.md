@@ -2,6 +2,10 @@
 
 Issue: s.c. instantition bug?
 
+We have a bespoke DS: `VSetExpr` and `VSetPred`.
+We inter-convert between these and `VarSideConds`,
+but the restriction to dynamic variables gets lost in translation.
+
 We see a case where `⊇ₐ` is instantiated by `⊇` !
 ```
 Law S.C.:

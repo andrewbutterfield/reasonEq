@@ -1141,7 +1141,28 @@ instantiateSC ictx bind (vscs,freshvs)
        vscs2 <- vsps2vscs vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs
        mkSideCond vscs2 $ theFreeVars freshvs'
+\end{code}
 
+This transforms 
+$$
+\seqof{
+  ( p_1, \seqof{ p_{11},\dots,{p_{1n_1}}})
+, \dots 
+, ( p_m, \seqof{ p_{m1},\dots,{p_{mn_m}}})
+}
+$$
+into
+$$
+\seqof{
+  p_1, \dots, p_m
+, p_{11},\dots,{p_{1n_1}}
+, \dots
+, p_{m1},\dots,{p_{mn_m}}
+}
+$$
+where each $p$ has the form $true \mid e \disj e \mid e \supseteq e$,
+and each $e$ has the form $\setof{v,\dots,v} \mid e \cup e \mid e\setminus e$.
+\begin{code}
 mergeSimplifiedVSetPreds :: [(VSetPred,[VSetPred])] -> [VSetPred]
 mergeSimplifiedVSetPreds simplified
   = let (tvarPreds,adjunctPredss) = unzip simplified

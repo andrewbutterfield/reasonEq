@@ -850,6 +850,7 @@ data VSetPred
   =  VSTrueP
   |  VSDisj  VSetExpr VSetExpr  -- relation on sets
   |  VSSup   VSetExpr VSetExpr  -- relation on sets
+  |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
   deriving (Eq,Ord,Show)
 
 trVSExpr = trvsexpr trId
@@ -876,6 +877,8 @@ trvspred trid (VSDisj vse1 vse2)
   = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
 trvspred trid (VSSup vse1 vse2) 
   = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
+trvspred trid (VSSupD vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
 
 trvspreds trid = seplist "," $ trvspred trid
 
@@ -921,7 +924,7 @@ This list is interpreted as a logical conjunction of its elements
 \begin{code}
 vsc2vsp :: VarSideConds -> [VSetPred]
 vsc2vsp (VSC gv nvsD nvsC nvsCd)
-  = mkVSP VSDisj gv nvsD ++ mkVSP VSSup gv nvsC ++ mkVSP VSSup gv nvsCd
+  = mkVSP VSDisj gv nvsD ++ mkVSP VSSup gv nvsC ++ mkVSP VSSupD gv nvsCd
 
 mkVSP :: (VSetExpr -> VSetExpr -> VSetPred) -> GenVar -> NVarSet 
       -> [VSetPred]
@@ -948,6 +951,9 @@ vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
 vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
   = sequence $ map (mkCovVSC vs) (S.toList gvs)
 
+vsp2vsc (VSSupD  (VSEnum gvs) (VSEnum vs))
+  = sequence $ map (mkCovDVSC vs) (S.toList gvs)
+
 vsp2vsc vsp 
   = fail $ unlines'
       [ "vsp2vsc: " ++ trVSPred vsp
@@ -961,16 +967,16 @@ mkDisjVSC vs gv = mkVSC gv (The vs) NA NA
 
 mkCovVSC :: MonadFail mf 
          => Set GenVar -> GenVar -> mf (Maybe VarSideConds)
-mkCovVSC vs gv
-  =  if isDynGVar gv && all isDynGVar vs
-     then mdbg "mkVSC-Dynamic" $ mkVSC gv NA NA (The vs)
-     else mdbg "mkVSC-Static" $ mkVSC gv NA (The vs) NA
+mkCovVSC vs gv =  mkVSC gv NA (The vs) NA
+
+mkCovDVSC :: MonadFail mf 
+         => Set GenVar -> GenVar -> mf (Maybe VarSideConds)
+mkCovDVSC vs gv = mkVSC gv NA NA (The vs)
 \end{code}
 
 Then walk \h{vsp2vsc} over a list to convert:
 \begin{code}
 vsps2vscs :: MonadFail mf => [VSetPred] -> mf [VarSideConds]
--- **** right now vsps is a singleton (tm 1 univ_id_on_closed)
 vsps2vscs vsps = do
   mvscss <- sequence (map vsp2vsc vsps)
   let vscs = catMaybes $ concat mvscss
@@ -992,6 +998,10 @@ instVSP ictx bind (VSSup (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
   return $ VSSup (fvs2vses sgvfvs) (fvs2vses vsfvs)
+instVSP ictx bind (VSSupD (VSEnum gvs) (VSEnum vs)) = do
+  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
+  return $ VSSupD (fvs2vses sgvfvs) (fvs2vses vsfvs)
 instVSP _ _ vsp
   = fail ("instVSP: cannot instantiate "++trVSPred vsp)
 \end{code}

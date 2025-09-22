@@ -1146,7 +1146,7 @@ Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
   = do let vsps = concat $ map vsc2vsp vscs
-       vsps' <- sequence $ map (instVSP ictx bind) vsps
+       vsps' <- fmap nub $ sequence $ map (instVSP ictx bind) vsps
        let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
        vscs2 <- vsps2vscs vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs

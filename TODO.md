@@ -1,31 +1,5 @@
 # To Do
 
-
-Issue:  
-
-Problem with `scDischarge`?
-
-```
-X(E|a|E|N)   O$,O$'⋔E, O$,O$'⋔N, s,s'⊇ₐa   Focus = [] :: 𝔹  
-
-Target (RHS):  (E ⊆ ls ∧ a) ∧ ls' = ls ∖ E ∪ N
-XPNDD:  ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
-
-proof: tm 1 X_def
-Match against 'X_def'[1] was successful
-Binding:
-  { B  ⟼ 𝔹  , LE  ⟼ LE, P  ⟼ P, E  ⟼ E, N  ⟼ N, R  ⟼ E, X  ⟼ X
-  , a  ⟼ a, ls  ⟼ «BI (Id "ls" 0)» }
-Instantiated Replacement:  (E ⊆ ls ∧ a) ∧ ls' = ls ∖ E ∪ N
-Instantiated Variables: {E,N,a,ls,ls'}
-Floating Vars?: False
-Law S.C.:               O$,O$'⋔E, O$,O$'⋔N, O$,O$'⋔R, s,s'⊇ₐa
-Instantiated Law S.C.:  ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, ls,ls',s,s'⋔E, s,s'⊇ₐa
-Goal S.C.:              ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
-Discharged Law S.C.:    ls,ls',s,s'⋔E
-```
-
-
 ## PLAN
 
 

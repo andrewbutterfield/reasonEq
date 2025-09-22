@@ -612,7 +612,7 @@ matchFocusAgainst lawnm liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType ((cmapdbg "mFA.tvmap") $! tvmap)
+          let fits  =  cSubType tvmap
           case matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
@@ -630,7 +630,7 @@ tryFocusAgainst lawnm parts liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType $ cmapdbg "tFA.tvmap" tvmap
+          let fits  =  cSubType tvmap
           tryLawByName asn' lawnm parts ctxts fits
 \end{code}
 

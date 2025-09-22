@@ -260,7 +260,7 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
      (termVarSubstitute sctx vrt vtl lvlvl) 
     -- v[..,r,../..,t,..] = r,v[r/t]     
      <|> 
-     (lvlvlSubstitute (pdbg "aS.Var.sctx" sctx) vrt vtl $ pdbg "aS.Var.lvlvl" lvlvl) 
+     (lvlvlSubstitute sctx vrt vtl lvlvl)
      -- v[..,r$,../..,t$,..]=r,v[r$/t$]
      <|> (return $ Sub tk vrt sub)
   where vtl = S.toList vts ; lvlvl = S.toList lvlvs
@@ -278,9 +278,8 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 \end{eqnarray*}
 \begin{code}
 applySubst sctx sub ct@(Cons tk subable i ts)
-  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) 
-                              $ pdbg ("aS.Cons.i "++trId i) ts
-                     return $ Cons tk subable i $ pdbg ("aS.Cons."++trId i++".ts'") ts'
+  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) ts
+                     return $ Cons tk subable i ts'
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
@@ -399,7 +398,7 @@ termVarSubstitute :: MonadFail m
                   => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
 termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
   = do let (fvs,_) = freeVars sc vrt -- no bound vars to be subtracted here
-       let (_,vtl') = keepMentionedTermSubs (pdbg "tVS.Var.fvs" fvs) False [] vtl
+       let (_,vtl') = keepMentionedTermSubs fvs False [] vtl
        if null vtl' then fail "termVarSubstitute: complete overlap"
                     else return $ Sub tk vrt $ jSubstn vtl' lvlvl
        
@@ -589,8 +588,8 @@ lvlvlSubstitute :: MonadFail m
                 -> m Term
 
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
-  let involvements = map (getTermVarInvolvement sctx v) $ pdbg "lv2S.lvlvl" lvlvl
-  let involved = filter ((/= Uninvolved) . fst3) $ pdbg "lv2S.involvements" involvements
+  let involvements = map (getTermVarInvolvement sctx v) lvlvl
+  let involved = filter ((/= Uninvolved) . fst3) involvements
   if null involved 
   then fail "lvlvlSubstitute: not involved"
   else case head involved of

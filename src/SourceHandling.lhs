@@ -126,10 +126,10 @@ loadTheoryParts thrys [] = fail "Empty theory file!"
 loadTheoryParts thrys ((lno,pos,TVar key Static):(_,_,TVar name Static):rest)
   | key == kTheory && validFileName name = do
         (deps,rest') <- loadDependencies rest 
-        idsubmap <- getKnownVarSubabilities thrys $ pdbg "DEPS" deps
+        idsubmap <- getKnownVarSubabilities thrys deps
         -- check dependencies in thrys !
         let thry = thName_ name $ thDeps_ deps nullTheory
-        loadDefinitions (pdbg "IDSUBMAP" idsubmap) thry rest'   
+        loadDefinitions idsubmap thry rest'   
   | otherwise  =  fail $ unlines  
       [ "loadTheory headline parse error at line " ++ show lno 
       , "  expected: "++kTheory++" theoryname"
@@ -170,12 +170,12 @@ loadDefinitions ismap thry ((lno,pos,TVar category Static)
   | category == kConjecture = do
       (nmdass,rest') <- loadConjecture name rest
       let nmdass' = fixNmdAssSubability ismap nmdass
-      loadDefinitions (pdbg "lD.Conj.ismap" ismap) (conjs__ (++[nmdass']) thry) rest'
+      loadDefinitions ismap (conjs__ (++[nmdass']) thry) rest'
 
   | category == kLaw = do
       ((nmdass,prov),rest') <- loadLaw name rest
       let nmdass' = fixNmdAssSubability ismap nmdass
-      loadDefinitions (pdbg "lD.Law.ismap" ismap) (laws__ (++[(nmdass',prov)]) thry) rest'
+      loadDefinitions ismap (laws__ (++[(nmdass',prov)]) thry) rest'
 
 loadDefinitions ismap thry ((lno,pos,TVar category Static):rest)
   | category == kKnown = do

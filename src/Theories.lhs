@@ -415,9 +415,9 @@ fixNmdAssSubability ismap (nm,Assertion tm sc)
 
 fixTermSubability :: IdSubMap -> Term -> Term
 fixTermSubability ismap (Cons typ _ n ts)
-  = case M.lookup (pdbg "fTS.N" n) ismap of
-      Nothing    ->  Cons typ (pdbg "fTS.Nothing" False) n ts'
-      Just sbbl  ->  Cons typ (pdbg "fTS.SBBL" sbbl) n ts'
+  = case M.lookup n ismap of
+      Nothing    ->  Cons typ False n ts'
+      Just sbbl  ->  Cons typ sbbl n ts'
   where ts' = map (fixTermSubability ismap) ts
 fixTermSubability ismap (Bnd typ n vs tm) 
   = jBnd typ n vs $ fixTermSubability ismap tm

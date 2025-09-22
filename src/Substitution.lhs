@@ -473,12 +473,9 @@ data LVInvolvement -- given   v[r$/t$]
   = Uninvolved  -- v has no relationship with t$, search for other t$
   | DisjInvolvement  -- v is disjoint from t$, search for other t$ 
   | CoverInvolvement VarSet -- v is covered by t$, eval v[r$/t$]
-  | ExpandInvolvement Variable
+  | ExpandInvolvement Variable -- v is covered by expansion of t$, 
+                               -- return corresponding term from expand r$
   deriving (Eq, Ord, Show)
-    -- v is covered by expansion of t$, return corr. var from expand r$
-  -- if search ends without cover, return v
-  -- eval v[r$/t$] depends on the class of v
-  -- return critical info too?
 \end{code}
 
 \begin{code}
@@ -594,12 +591,12 @@ lvlvlSubstitute :: MonadFail m
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
   let involvements = map (getTermVarInvolvement sctx v) $ pdbg "lv2S.lvlvl" lvlvl
   let involved = filter ((/= Uninvolved) . fst3) $ pdbg "lv2S.involvements" involvements
-  if null involved then 
-    return vrt
+  if null involved 
+  then fail "lvlvlSubstitute: not involved"
   else case head involved of
-    (DisjInvolvement, _, _)            ->  return vrt  
     ((ExpandInvolvement rv), _, _)     ->  return $ jVar tk rv 
     (CoverInvolvement xvs,lvlv,xpnds)  ->  doCoverSubst vrt xvs lvlv xpnds
+    _ -> fail "lvlvlSubstitute: not involved (disjoint)"
 
   where
     doCoverSubst :: MonadFail m

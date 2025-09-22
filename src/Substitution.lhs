@@ -262,6 +262,7 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
      <|> 
      (lvlvlSubstitute (pdbg "aS.Var.sctx" sctx) vrt vtl $ pdbg "aS.Var.lvlvl" lvlvl) 
      -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+     <|> (return $ Sub tk vrt sub)
   where vtl = S.toList vts ; lvlvl = S.toList lvlvs
 \end{code}
 

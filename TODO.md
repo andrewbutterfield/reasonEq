@@ -2,6 +2,18 @@
 
 ## PLAN
 
+Command 'classify' - remove duplicates from lists. 
+How to handle multiple fold rules for the same operator (alt_def)?
+
+E.g., in `UWhile`:
+
+```
+ii. folds:
+	1. cond_def
+	2. sqcmp_def
+	3. cond_alt_def
+	4. cond_alt_def2
+```
 
 ### Types
 

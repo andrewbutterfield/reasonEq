@@ -18,10 +18,6 @@ ii. folds:
 	4. cond_alt_def2
 ```
 
-Any command that changes the status of conjectures,laws or autolaws
-in the current theory (e.g., `(Assume|Demote|classify).` ) 
-should re-show the current theory once done.
-
 
 ### Types
 

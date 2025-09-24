@@ -194,6 +194,11 @@ showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
 doshow :: REqState -> String -> IO REqState
 doshow reqs str  =  putStrLn str >> return reqs
 
+doCTshow :: REqState -> String -> String -> IO REqState
+doCTshow reqs nm str = do
+  theoryTxt <- showCurrentTheory nm reqs
+  doshow reqs $ unlines' [ theoryTxt, str ]
+
 
 showWorkspaces :: [String] -> REqState -> IO REqState
 showWorkspaces args reqs
@@ -481,10 +486,15 @@ cmdClassify
     , doClassify)
 
 doClassify args reqs
-  =  case classifyLaw (currTheory reqs) lwnm reqs of
+  =  case classifyLaw thname lwnm reqs of
          But lns     ->  doshow reqs  (unlines' lns)
-         Yes reqs'   ->  doshow reqs' ("Classify " ++ lwnm)
- where lwnm = args2str args
+         Yes reqs'
+          | lwnm == "."  ->  doCTshow reqs' thname msg
+          | otherwise    ->  doshow   reqs'        msg
+ where 
+   thname = currTheory reqs
+   lwnm = args2str args
+   msg = "Classify "++lwnm
 
 \end{code}
 
@@ -511,13 +521,8 @@ setState (cmd:rest) reqs
  | cmd == setCurrThry
     =  case setCurrentTheory nm reqs of
          But msgs   ->  doshow reqs $ unlines' msgs
-         Yes reqs'  ->  do
-           case getCurrentTheory reqs' of
-             But msgs'  ->  doshow reqs $ unlines' msgs'
-             Yes thry' ->
-               doshow reqs' 
-                 ( (showTheoryLong (trTerm 0, trSideCond) thry')
-                   ++ "Current Theory now '" ++ nm ++ "'" )
+         Yes reqs'  ->  doCTshow reqs' nm 
+                                 ("Current Theory now '" ++ nm ++ "'")
  | cmd == setSettings
     =  case modifyProofSettings rest (prfSettings reqs) of
          But msgs     ->  doshow reqs $ unlines' msgs
@@ -613,11 +618,21 @@ cmdAssume
     , doAssumption )
 
 doAssumption args reqs
-  =  case assumeConjecture (currTheory reqs) args reqs of
+  =  case assumeConjecture thname args reqs of
          But lns     ->  doshow reqs  (unlines' lns)
-         Yes reqs'  ->  doshow reqs' ("Assumed " ++ args2str args)
+         Yes reqs'
+           | which == "."  ->  doCTshow reqs' thname msg
+           | otherwise     ->  doshow   reqs'        msg
+  where
+   thname = currTheory reqs
+   which = args2str args
+   msg = "Assumed " ++ which
 \end{code}
 
+
+doshow reqs' 
+                 ( (showTheoryLong (trTerm 0, trSideCond) thry')
+                   ++ "Current Theory now '" ++ nm ++ "'" )
 
 Reverting proven or assumed laws back to conjectures.
 \begin{code}
@@ -633,10 +648,13 @@ cmdDemote
     , doDemotion )
 
 doDemotion args reqs
-  =  case demoteLaw (currTheory reqs) lwnm reqs of
+  =  case demoteLaw thname lwnm reqs of
          But lns     ->  doshow reqs  (unlines' lns)
-         Yes reqs'  ->  doshow reqs' ("Demoted " ++ lwnm)
- where lwnm = args2str args
+         Yes reqs'   ->  doCTshow reqs' thname msg 
+ where
+   thname = currTheory reqs 
+   lwnm = args2str args
+   msg = "Demoted " ++ lwnm
 \end{code}
 
 

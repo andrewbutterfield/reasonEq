@@ -15,7 +15,7 @@ module UI.AbstractUI
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , modifyProofSettings
-, setCurrentTheory
+, setCurrentTheory, showCurrentTheory
 , newConjecture
 , readConjecture
 , assumeConjecture, demoteLaw , classifyLaw
@@ -244,6 +244,16 @@ setCurrentTheory thnm reqs
       Nothing  ->  fail ("No theory named '"++thnm++"'.")
       Just _   ->  return ( changed $ currTheory_ thnm reqs)
 \end{code}
+Sometimes we want to show the current theory,
+after a command that has modified it.
+\begin{code}
+showCurrentTheory :: MonadFail m => String -> REqState -> m String
+showCurrentTheory thnm reqs
+  = case getTheory thnm $ theories reqs of
+      Nothing  ->  fail ("No theory named '"++thnm++"'.")
+      Just thry   ->  return (showTheoryLong (trTerm 0, trSideCond) thry)
+\end{code}
+
 
 \newpage
 \subsection{Adding a new conjecture}

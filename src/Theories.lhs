@@ -635,7 +635,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
-lawClassify lw thry = return $ auto_ (addLawsClass (lw) (auto thry)) thry
+lawClassify lw thry = return $ auto_ (addLawsClass lw nullAutoLaws) thry
 
 lawDepClassify :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 lawDepClassify thnm thys

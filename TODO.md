@@ -3,11 +3,8 @@
 ## PLAN
 
 
-Command 'classify' - remove duplicates from lists. 
+
 How to handle multiple fold rules for the same operator (alt_def)?
-
-When 'classify' runs, it should zero any pre-existing classifications.
-
 E.g., in `UWhile`:
 
 ```

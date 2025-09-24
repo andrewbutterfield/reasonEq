@@ -2,6 +2,8 @@
 
 ## PLAN
 
+Add a theory-level setting for simplifier 
+(relative/absolute) difference thresholds?
 
 
 How to handle multiple fold rules for the same operator (alt_def)?

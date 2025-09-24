@@ -112,7 +112,11 @@ If $P$ is larger that $Q$,
 then using the law left-to-right is a simplification.
 If $Q$ is larger, then right-to-left simplifies.
 For now any size difference at all is used to classify laws.
+\textbf{
 A possible future modification might require a size difference threshold.
+This could also be based on either absolute or relative differences.
+It might make sense for this to be a setting at the level of individual theories.
+}
 \begin{code}
 addSimp :: String -> Term -> [(String, Direction)]
 addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))

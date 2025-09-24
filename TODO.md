@@ -2,8 +2,11 @@
 
 ## PLAN
 
+
 Command 'classify' - remove duplicates from lists. 
 How to handle multiple fold rules for the same operator (alt_def)?
+
+When 'classify' runs, it should zero any pre-existing classifications.
 
 E.g., in `UWhile`:
 
@@ -14,6 +17,11 @@ ii. folds:
 	3. cond_alt_def
 	4. cond_alt_def2
 ```
+
+Any command that changes the status of conjectures,laws or autolaws
+in the current theory (e.g., `(Assume|Demote|classify).` ) 
+should re-show the current theory once done.
+
 
 ### Types
 

@@ -607,9 +607,17 @@ matchFocus ranking liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
-          let fits  =  cSubType $ cmapdbg "mF.tvmap" tvmap
-          let rankedM = ranking ctxts $ matchInContexts ctxts fits asn'
-          return $ matches_ rankedM liveProof
+          let fits  =  cSubType tvmap
+          let mtchs = matchInContexts ctxts fits asn'
+          let rankedM = ranking ctxts mtchs
+          return $ matches_ (ldbg mshow "mF.rankedM" rankedM) liveProof
+  where 
+    mshow m = 
+      mName m 
+      ++ "(" 
+      ++ show (mClass m)
+      ++ ")  --  "
+      ++ trTerm 0 (mRepl m)
 \end{code}
 
 Matching a specific law:

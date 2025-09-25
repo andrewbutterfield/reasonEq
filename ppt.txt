@@ -1,22 +1,14 @@
-@aS.Cons.i ≡:  [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]
-@aS.Var.vtl:
-[]
-@aS.Var.sctx:  SubCtxt {subSC = ([],fromList []), subVD = [VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])]}
-@aS.Var.vrt:
-V
-( TG
-  (Id "B" 0) )
-(VR (Id "P" 0, VP, WS))
-@aS.Var.lvlvl2:  [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
-@aS.Var.vtl:
-[]
-@aS.Var.sctx:  SubCtxt {subSC = ([],fromList []), subVD = [VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])]}
-@aS.Var.vrt:
-V
-( TG
-  (Id "B" 0) )
-(VR (Id "Q" 0, VP, WS))
-@aS.Var.lvlvl2:  [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
-@aS.Cons.≡.ts':
-[ V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))
-, V (TG (Id "B" 0)) (VR (Id "Q" 0, VP, WS)) ]
+@tFA.tvmap:  {A1 ⟼  A1,A2 ⟼  A1,A3 ⟼  A3,A4 ⟼  A3,A5 ⟼  A5,A6 ⟼  A6,A7 ⟼  A7}
+@iSC.vsps: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, ls,ls',s,s'⋔R, s,s'⊇ₐa
+@iSC.vsps': ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
+@iSC.vsps2: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
+@iSC.vscs2:  
+[VSC (GV (VR (Id "E" 0,VE,WS))) 
+     (The (fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])) 
+     NA NA
+,VSC (GV (VR (Id "N" 0,VE,WS))) 
+     (The (fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])) 
+     NA NA
+,VSC (GV (VR (Id "a" 0,VP,WS))) 
+     NA NA 
+     (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))]

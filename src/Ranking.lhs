@@ -9,11 +9,11 @@ module Ranking
   ( FilterFunction, OrderFunction, Ranking
   , filterAndSort -- used in ProverTUI
   -- exported Filters
-  , acceptAll -- used in ProofSettings
-  , isNonTrivial-- used in ProofSettings
-  , nonTrivialQuantifiers -- used in ProofSettings
-  , nonTrivialSubstitution -- used in ProofSettings
-  , noFloatingVariables -- used in ProofSettings
+  , acceptAll, acceptNone -- used in ProofSettings
+  , isTrivialMatch-- used in ProofSettings
+  , onlyTrivialLVarMatches -- used in ProofSettings
+  , anyTrivialSubstitutions -- used in ProofSettings
+  , hasFloatingVariables -- used in ProofSettings
   -- exported Orderings
   , sizeOrd -- not used
   , favourDefLHSOrd -- used in ProverTUI
@@ -71,8 +71,15 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
-  where  fms = filter (ff ctxts) ms
+  = let fms = filter (ff ctxts) $ ldbg mshow "fAS.ms" ms
+    in remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) $ ldbg mshow "fAS.fms" fms
+  where  
+    mshow m = 
+      mName m 
+      ++ "(" 
+      ++ show (mClass m)
+      ++ ")  --  "
+      ++ trTerm 0 (mRepl m)
 \end{code}
 
 Note: given the same instantiated replacement from different laws,
@@ -111,55 +118,70 @@ sizeRanking = filterAndSort ( acceptAll, sizeOrd )
 
 \begin{code}
 favouriteRanking  :: Ranking
-favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourDefLHSOrd )
+favouriteRanking = filterAndSort ( onlyTrivialLVarMatches, favourDefLHSOrd )
 \end{code}
 
 
 \newpage
 \section{Filters}
 
-\subsection{Accept All}
+\subsection{Accept All/None}
 
 \begin{code}
-acceptAll :: FilterFunction
-acceptAll _ _ = True
-\end{code}
-
-\subsection{Accept Trivial Matches}
-
-Reject matches against a single predicate variable
-\begin{code}
-isNonTrivial :: FilterFunction
-isNonTrivial _ m
-  =  nontrivial $ mClass m
-  where
-     nontrivial (MatchEqvVar _)  =  False
-     nontrivial _                =  True
-\end{code}
-
-\subsection{Accept Vanishing Quantifiers}
-
-Often we do not want matches in which all pattern list-variables
-are mapped to empty sets and lists.
-\begin{code}
-nonTrivialQuantifiers :: FilterFunction
-nonTrivialQuantifiers _  =  not . onlyTrivialListVarBindings . mBind
-\end{code}
-
-\subsection{Accept Empty Substitutions}
-
-Often we do not want matches that contain empty substitutions ($t[/]$).
-\begin{code}
-nonTrivialSubstitution :: FilterFunction
-nonTrivialSubstitution _  =  not . anyTrivialSubstitution . mRepl
+acceptAll, acceptNone :: FilterFunction
+acceptAll _ _   =  True
+acceptNone _ _  =  False
 \end{code}
 
 \subsection{Accept Floating Matches}
 
+Some matches to one part of a law will not cover all the variables
+in the other (replacement) part.
+Sometimes we need these matches, sometimes they are a distraction.
 \begin{code}
-noFloatingVariables :: FilterFunction
-noFloatingVariables _ =   not . any isFloatingGVar . mentionedVars . mRepl
+hasFloatingVariables :: FilterFunction
+hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
 \end{code}
+
+
+\subsection{Pathological Cases}
+
+Some matches are quite pathological in character,
+and usually we want to supress these.
+Sometimes, however, they are useful.
+
+We provide some predicates here that identify specific pathologies.
+
+\subsubsection{Trivial Matches}
+
+Matches against a single predicate variable
+\begin{code}
+isTrivialMatch :: FilterFunction
+isTrivialMatch _ m
+  = trivial $ pdbg "isTvlMtch.mClass" $ mClass m
+  where
+     trivial (MatchEqvVar _)  =  True
+     trivial _                =  False
+\end{code}
+
+\subsubsection{Vanishing List Variables}
+
+All pattern list-variables
+are mapped to empty sets or lists.
+\begin{code}
+onlyTrivialLVarMatches :: FilterFunction
+onlyTrivialLVarMatches _ mtch
+  =  onlyTrivialListVarBindings (pdbg "onlyTLV.mBind" $ mBind mtch)
+\end{code}
+
+\subsubsection{Accept Empty Substitutions}
+
+Matches that contain empty substitutions ($t[/]$).
+\begin{code}
+anyTrivialSubstitutions :: FilterFunction
+anyTrivialSubstitutions _  =  anyTrivialSubstitution . mRepl
+\end{code}
+
 
 \newpage
 \section{Orderings}

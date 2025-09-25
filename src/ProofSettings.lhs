@@ -24,6 +24,7 @@ import Data.Maybe (fromJust)
 import Utilities
 import WriteRead
 import Ranking
+import ProofMatch
 
 import Debugger
 \end{code}
@@ -40,7 +41,7 @@ data ProofSettings
      , showBindings :: Bool -- bd, showbinds
      -- Section 2 - settings that specify behaviour
      , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
-     , showTrivialQuantifiers :: Bool -- tq, trivialquant --> matchFilter
+     , showTrivialListVars :: Bool -- tq, trivialquant --> matchFilter
      , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
@@ -76,7 +77,7 @@ showTrivialMatch__ f r
 showTrivialMatch_   =  showTrivialMatch__ . const
 
 showTrivialQuantifiers__ f r
-  =  matchFilterUpdate r{showTrivialQuantifiers = f $ showTrivialQuantifiers r}
+  =  matchFilterUpdate r{showTrivialListVars = f $ showTrivialListVars r}
 showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
 
 showTrivialSubst__ f r
@@ -93,21 +94,26 @@ showFloatingVariables_   =  showFloatingVariables__ . const
 
 
 Section 3 updater --- not exported, internal use only.
-NOW WORKS INCORRECTLY (hide became show in field names but not HERE)
+STLL WORKS INCORRECTLY !!!! 
+
 
 \begin{code}
+-- FilterFunction = [MatchContext] -> ProofMatch -> Bool
 matchFilterUpdate r
-  = r{matchFilter = mfu}
+  = r{matchFilter = keep filterSpecs}
   where
-    mfu = foldl mfuMrg acceptAll filterSpecs
-    mfuMrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
     filterSpecs
-      = [ ( not $ showTrivialMatches r,     isNonTrivial          )
-        , ( not $ showTrivialQuantifiers r, nonTrivialQuantifiers )
-        , ( not $ showTrivialSubst r,       nonTrivialSubstitution)
-        , ( not $ showFloatingVariables r,  noFloatingVariables   )
+      = [ ( showTrivialMatches r,     isTrivialMatch         )
+        , ( showTrivialListVars r,    onlyTrivialLVarMatches )
+        , ( showTrivialSubst r,       anyTrivialSubstitutions)
+        , ( showFloatingVariables r,  hasFloatingVariables   )
         ]
+    keep [] ctxt mtch = True
+    keep s@((showit,isunusual):specs) ctxt mtch
+      |  (pdbg "keep.unusual" $ isunusual ctxt $ rdbn mName "keep.mtch" mtch) && not (pdbg ("keep.showit."++show (length s)) showit)  =  False
+      |  otherwise = keep specs ctxt mtch
 \end{code}
+Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
 The following code, 
 given list \m{\seqof{(e_1,p_1),\dots,(e_n,p_n)}}
@@ -137,9 +143,9 @@ initProofSettings
     , maxStepDisplay         = 6
     , showBindings           = False
     , showTrivialMatches     = False
-    , showTrivialQuantifiers = False 
+    , showTrivialListVars    = False 
     , showTrivialSubst       = False
-    , showFloatingVariables  = False 
+    , showFloatingVariables  = True 
     , matchFilter = acceptAll
     }
 \end{code}
@@ -155,7 +161,7 @@ prfSettingStrings = [ ("mm","Number","Max. Match Display")
                     , ("ms","Number","Max. Step Display")
                     , ("bd","Bool","Show Bindings")
                     , ("tm","Bool","Show Trivial Matches")
-                    , ("tq","Bool","Show Trivial Quantifiers")
+                    , ("tl","Bool","Show Trivial List-Variables")
                     , ("ts","Bool","Show Trivial Substitutions")
                     , ("fv","Bool","Show Floating Variables")
                     ]
@@ -174,7 +180,7 @@ showPrfSettings rsettings
     disp r (code@"ms",_,text) = disp2 code text $ show (maxStepDisplay r)
     disp r (code@"bd",_,text) = disp2 code text $ show (showBindings r)
     disp r (code@"tm",_,text) = disp2 code text $ show (showTrivialMatches r)
-    disp r (code@"tq",_,text) = disp2 code text $ show (showTrivialQuantifiers r)
+    disp r (code@"tl",_,text) = disp2 code text $ show (showTrivialListVars r)
     disp r (code@"ts",_,text) = disp2 code text $ show (showTrivialSubst r)
     disp r (code@"fv",_,text) = disp2 code text $ show (showFloatingVariables r)
 
@@ -216,7 +222,7 @@ changeBoolPrfSetting :: MonadFail m
 changeBoolPrfSetting name value reqs
  | name == "bd"  =  return $ showBindings_ value reqs
  | name == "tm"  =  return $ showTrivialMatch_ value reqs
- | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
+ | name == "tl"  =  return $ showTrivialQuantifiers_ value reqs
  | name == "ts"  =  return $ showTrivialSubst_ value reqs
  | name == "fv"  =  return $ showFloatingVariables_ value reqs
  | otherwise     =  fail ("changeBoolPrfSetting - unknown field: "++name)
@@ -242,7 +248,7 @@ mmKey = "MM = "
 msKey = "MS = "
 bdKey = "BD = "
 tmKey = "TM = "
-tqKey = "TQ = "
+tlKey = "TL = "
 tsKey = "TS = "  
 fvKey = "FV = "
 
@@ -253,7 +259,7 @@ renderProofSettings rqset
     , msKey ++ show (maxStepDisplay rqset)
     , bdKey ++ show (showBindings rqset)
     , tmKey ++ show (showTrivialMatches rqset)
-    , tqKey ++ show (showTrivialQuantifiers rqset)
+    , tlKey ++ show (showTrivialListVars rqset)
     , tsKey ++ show (showTrivialSubst rqset)
     , fvKey ++ show (showFloatingVariables rqset)
     , reqsetTRL ]
@@ -266,7 +272,7 @@ parseProofSettings txts
        (theMSD,rest3) <- readKey msKey read     rest2
        (theSBD,rest4) <- readKey bdKey readBool rest3
        (theMHT,rest5) <- readKey tmKey readBool rest4
-       (theMHQ,rest6) <- readKey tqKey readBool rest5
+       (theMHQ,rest6) <- readKey tlKey readBool rest5
        (theMHS,rest7) <- readKey tsKey readBool rest6
        (theMHF,rest8) <- readKey fvKey readBool rest7
        rest9 <- readThis reqsetTRL              rest8

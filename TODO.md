@@ -1,5 +1,17 @@
 # To Do
 
+## URGENT or NEXT
+
+**CURRENT ISSUEs**
+
+**RANKING+PROOFSETTINGS ARE BROKEN**
+
+*It all needs to be redesigned, with less HOF magic going on*
+
+ * setting `mps fv 0` doesn't stop display of `?P` variables!!!
+
+*very broken - there is a top-level proofsettings written to `settings.req` and used when proofs re-start. We need to ensure that proof-settings are retrieved and saved with the relevant proof.*
+
 ## PLAN
 
 Add a theory-level setting for simplifier 
@@ -39,15 +51,6 @@ In progress.
 * Do proper UTCP Semantics with Designs and invariants
 
 
-## URGENT or NEXT
-
-**CURRENT ISSUEs**
-
-**RANKING+PROOFSETTINGS ARE BROKEN**
-
-*It all needs to be redesigned, with less HOF magic going on*
-
- * setting `mps fv 0` doesn't stop display of `?P` variables!!!
 
 Proving `Arith.neg_zero` with goal `(-0) = 0`  gives us the
 following match:

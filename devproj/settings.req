@@ -3,7 +3,7 @@ MM = 30
 MS = 6
 BD = False
 TM = False
-TQ = False
+TL = False
 TS = False
 FV = False
 END PRFSET

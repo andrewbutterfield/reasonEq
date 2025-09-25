@@ -1678,13 +1678,13 @@ but all the listvars are bound to empty sets/lists.
 onlyTrivialListVarBindings :: Binding -> Bool
 onlyTrivialListVarBindings (BD (_,_,_,lbind))
   | null lpairs  =  False -- all pred [] returns True !
-  | otherwise    =  all onlyTrivialListVarBinding lpairs
+  | otherwise    =  all isTrivialListVarBinding lpairs
   where lpairs   =  M.assocs lbind
 
-onlyTrivialListVarBinding :: (ListVarKey,LstVarBind) -> Bool
-onlyTrivialListVarBinding (_,BL vl)   =  null vl
-onlyTrivialListVarBinding (_,BS vs)   =  S.null vs
-onlyTrivialListVarBinding (_,BX lvts) =  null lvts
+isTrivialListVarBinding :: (ListVarKey,LstVarBind) -> Bool
+isTrivialListVarBinding (_,BL vl)   =  null vl
+isTrivialListVarBinding (_,BS vs)   =  S.null vs
+isTrivialListVarBinding (_,BX lvts) =  null lvts
 \end{code}
 
 \subsection{Finding Unbound Replacement Variables}

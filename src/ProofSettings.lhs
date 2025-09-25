@@ -100,20 +100,37 @@ STLL WORKS INCORRECTLY !!!!
 \begin{code}
 -- FilterFunction = [MatchContext] -> ProofMatch -> Bool
 matchFilterUpdate r
-  = r{matchFilter = keep filterSpecs}
+  = r{matchFilter = filterSpecs}
   where
-    filterSpecs
-      = [ ( showTrivialMatches r,     isTrivialMatch         )
-        , ( showTrivialListVars r,    onlyTrivialLVarMatches )
-        , ( showTrivialSubst r,       anyTrivialSubstitutions)
-        , ( showFloatingVariables r,  hasFloatingVariables   )
-        ]
-    keep [] ctxt mtch = True
-    keep s@((showit,isunusual):specs) ctxt mtch
-      |  (pdbg "keep.unusual" $ isunusual ctxt $ rdbn mName "keep.mtch" mtch) && not (pdbg ("keep.showit."++show (length s)) showit)  =  False
-      |  otherwise = keep specs ctxt mtch
+    mkFilter ( showit, ff ) (ctxts,mtch)
+      = if ff ctxts mtch then showit else True
+    filterTM = mkFilter ( pdbg "mFU.TM" $ showTrivialMatches r, isTrivialMatch  )
+    filterTLV = mkFilter ( pdbg "mFU.TLV" $ showTrivialListVars r, onlyTrivialLVarMatches )
+    filterTS = mkFilter ( pdbg "mFU.TS" $ showTrivialSubst r, anyTrivialSubstitutions)
+    filterFV = mkFilter ( pdbg "mFU.FV" $ showFloatingVariables r,hasFloatingVariables   )
+    filterSpecs ctxts mtch
+      = or [filterTM cm,filterTLV cm,filterTS cm,filterFV cm]
+      where cm=(ctxts,mtch)
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
+
+% \begin{code}
+% -- FilterFunction = [MatchContext] -> ProofMatch -> Bool
+% matchFilterUpdate r
+%   = r{matchFilter = keep filterSpecs}
+%   where
+%     filterSpecs
+%       = [ ( showTrivialMatches r,     isTrivialMatch         )
+%         , ( showTrivialListVars r,    onlyTrivialLVarMatches )
+%         , ( showTrivialSubst r,       anyTrivialSubstitutions)
+%         , ( showFloatingVariables r,  hasFloatingVariables   )
+%         ]
+%     keep [] ctxt mtch = True
+%     keep s@((showit,isunusual):specs) ctxt mtch
+%       |  (pdbg "keep.unusual" $ isunusual ctxt $ rdbn mName "keep.mtch" mtch) && not (pdbg ("keep.showit."++show (length s)) showit)  =  False
+%       |  otherwise = keep specs ctxt mtch
+% \end{code}
+% Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
 The following code, 
 given list \m{\seqof{(e_1,p_1),\dots,(e_n,p_n)}}

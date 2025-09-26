@@ -1,163 +1,73 @@
+roof: m
 @fAS.ms: (list)
-  subseteq_def(MEL)  --  (∀ ?x  • ?x ∈ S ⟹  ?x ∈ ls ∪ N)
-  exists_def(MEL)  --  ¬(¬(S ⊆ ls ∪ N))
-  add_l_unit(MEV 2)  --  0 + (S ⊆ ls ∪ N)
-  add_r_unit(MEV 2)  --  (S ⊆ ls ∪ N) + 0
-  sub_r_unit(MEV 2)  --  (S ⊆ ls ∪ N) - 0
-  mul_l_unit(MEV 2)  --  1 * (S ⊆ ls ∪ N)
-  mul_r_unit(MEV 2)  --  (S ⊆ ls ∪ N) * 1
-  div_r_unit(MEV 2)  --  (S ⊆ ls ∪ N) div 1
-  mul_div_same(MEV 2)  --  ((S ⊆ ls ∪ N) * ?f) div ?f
-  forall_remove(MEL)  --  S ⊆ ls ∪ N
-  forall_remove(MEV 2)  --  (∀ ?x$  • S ⊆ ls ∪ N)
-  forall_inst(MIA)  --  S ⊆ ls ∪ N ∧ (S ⊆ ls ∪ N)[/]
-  forall_alpha_rename(MEL)  --  (∀ ?y$  • (S ⊆ ls ∪ N)[/])
-  eq_refl(MEV 1)  --  S ⊆ ls ∪ N
-  eq_refl(MEV 2)  --  S ⊆ ls ∪ N
-  or_idem(MEV 2)  --  S ⊆ ls ∪ N ∨ S ⊆ ls ∪ N
-  eqv_symm(MEV 4)  --  S ⊆ ls ∪ N≡?Q≡?Q
-  eqv_symm(MEV 3)  --  ?P≡S ⊆ ls ∪ N≡?P
-  eqv_symm(MEV 2)  --  ?P≡S ⊆ ls ∪ N≡?P
-  eqv_symm(MEV 1)  --  ?Q≡?Q≡S ⊆ ls ∪ N
-  id_subst(MEV 2)  --  (S ⊆ ls ∪ N)[/]
-  non_subst(MEV 2)  --  (S ⊆ ls ∪ N)[?e$/?x$]
-@keep.mtch:
-subseteq_def
+  eqv_assoc(MEL)  --  true ≡ (Q ≡ Q)
+  eqv_symm(ME [1,2])  --  Q ≡ (true ≡ Q)
+  eqv_symm(ME [3,4])  --  (true ≡ Q) ≡ Q
+  eqv_symm(MEV 4)  --  true≡Q≡Q≡?Q≡?Q
+  eqv_symm(MEV 3)  --  ?P≡((true ≡ Q) ≡ Q)≡?P
+  eqv_symm(MEV 2)  --  ?P≡((true ≡ Q) ≡ Q)≡?P
+  eqv_symm(MEV 1)  --  ?Q≡?Q≡((true ≡ Q) ≡ Q)
+  id_subst(MEV 2)  --  ((true ≡ Q) ≡ Q)[/]
+  non_subst(MEV 2)  --  ((true ≡ Q) ≡ Q)[?e$/?x$]
+@mFU.mtch:
+eqv_assoc
 @isTvlMtch.mClass:  MEL
-@keep.unusual:  False
-@keep.mtch:
-subseteq_def
-@keep.unusual:  False
-@keep.mtch:
-subseteq_def
-@keep.unusual:  False
-@keep.mtch:
-subseteq_def
-@keep.unusual:  True
-@keep.showit.1:  False
-@keep.mtch:
-exists_def
-@isTvlMtch.mClass:  MEL
-@keep.unusual:  False
-@keep.mtch:
-exists_def
-@keep.unusual:  True
-@keep.showit.3:  False
-@keep.mtch:
-add_l_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-add_r_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-sub_r_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-mul_l_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-mul_r_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-div_r_unit
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-mul_div_same
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-forall_remove
-@isTvlMtch.mClass:  MEL
-@keep.unusual:  False
-@keep.mtch:
-forall_remove
-@keep.unusual:  True
-@keep.showit.3:  False
-@keep.mtch:
-forall_remove
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-forall_inst
-@isTvlMtch.mClass:  MIA
-@keep.unusual:  False
-@keep.mtch:
-forall_inst
-@keep.unusual:  False
-@keep.mtch:
-forall_inst
-@keep.unusual:  True
-@keep.showit.2:  False
-@keep.mtch:
-forall_alpha_rename
-@isTvlMtch.mClass:  MEL
-@keep.unusual:  False
-@keep.mtch:
-forall_alpha_rename
-@keep.unusual:  False
-@keep.mtch:
-forall_alpha_rename
-@keep.unusual:  True
-@keep.showit.2:  False
-@keep.mtch:
-eq_refl
-@isTvlMtch.mClass:  MEV 1
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-eq_refl
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
-or_idem
-@isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.fTM:  True
+@mFU.fTS:  True
+@onlyTLV.mBind:  BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (K (TG (Id "B" 0)) (VB True))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "R" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "eqv" 0,VO),BV (VR (Id "eqv" 0,VO,WS)))],fromList [],fromList [])
+@onlyTLV.result:  False
+@mFU.fTLV:  True
+@mFU.fFV:  True
+@mFU.mtch:
+eqv_symm
+@isTvlMtch.mClass:  ME [1,2]
+@mFU.fTM:  True
+@mFU.fTS:  True
+@onlyTLV.mBind:  BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "eqv" 0,VO),BV (VR (Id "eqv" 0,VO,WS)))],fromList [],fromList [])
+@onlyTLV.result:  False
+@mFU.fTLV:  True
+@mFU.fFV:  True
+@mFU.mtch:
+eqv_symm
+@isTvlMtch.mClass:  ME [3,4]
+@mFU.fTM:  True
+@mFU.fTS:  True
+@onlyTLV.mBind:  BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "eqv" 0,VO),BV (VR (Id "eqv" 0,VO,WS)))],fromList [],fromList [])
+@onlyTLV.result:  False
+@mFU.fTLV:  True
+@mFU.fFV:  True
+@mFU.mtch:
 eqv_symm
 @isTvlMtch.mClass:  MEV 4
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.TM:  False
+@mFU.fTM:  False
+@mFU.mtch:
 eqv_symm
 @isTvlMtch.mClass:  MEV 3
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.fTM:  False
+@mFU.mtch:
 eqv_symm
 @isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.fTM:  False
+@mFU.mtch:
 eqv_symm
 @isTvlMtch.mClass:  MEV 1
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.fTM:  False
+@mFU.mtch:
 id_subst
 @isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
-@keep.mtch:
+@mFU.fTM:  False
+@mFU.mtch:
 non_subst
 @isTvlMtch.mClass:  MEV 2
-@keep.unusual:  True
-@keep.showit.4:  False
+@mFU.fTM:  False
+@fAS.fms: (list)
+  eqv_assoc(MEL)  --  true ≡ (Q ≡ Q)
+  eqv_symm(ME [1,2])  --  Q ≡ (true ≡ Q)
+  eqv_symm(ME [3,4])  --  (true ≡ Q) ≡ Q
 @mF.rankedM: (list)
+  eqv_assoc(MEL)  --  true ≡ (Q ≡ Q)
+  eqv_symm(ME [1,2])  --  Q ≡ (true ≡ Q)
+  eqv_symm(ME [3,4])  --  (true ≡ Q) ≡ Q
 
 

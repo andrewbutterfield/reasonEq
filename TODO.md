@@ -4,13 +4,9 @@
 
 **CURRENT ISSUEs**
 
-**RANKING+PROOFSETTINGS ARE BROKEN**
+Changes to proof-settings made in the prover aren't be updated
+(they mainfest in the ranking function supplied to the proof )
 
-*It all needs to be redesigned, with less HOF magic going on*
-
- * setting `mps fv 0` doesn't stop display of `?P` variables!!!
-
-*very broken - there is a top-level proofsettings written to `settings.req` and used when proofs re-start. We need to ensure that proof-settings are retrieved and saved with the relevant proof.*
 
 ## PLAN
 

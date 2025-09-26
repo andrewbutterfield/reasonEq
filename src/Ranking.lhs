@@ -142,6 +142,8 @@ Sometimes we need these matches, sometimes they are a distraction.
 hasFloatingVariables :: FilterFunction
 hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
 \end{code}
+If floating variables are enabled (the default),
+they will also be subject to the screening below for pathological matches.
 
 
 \subsection{Pathological Cases}
@@ -151,6 +153,7 @@ and usually we want to supress these.
 Sometimes, however, they are useful.
 
 We provide some predicates here that identify specific pathologies.
+All of these are disabled by default.
 
 \subsubsection{Trivial Matches}
 
@@ -171,7 +174,7 @@ are mapped to empty sets or lists.
 \begin{code}
 onlyTrivialLVarMatches :: FilterFunction
 onlyTrivialLVarMatches _ mtch
-  =  onlyTrivialListVarBindings (pdbg "onlyTLV.mBind" $ mBind mtch)
+  =  pdbg "onlyTLV.result" $ onlyTrivialListVarBindings (pdbg "onlyTLV.mBind" $ mBind mtch)
 \end{code}
 
 \subsubsection{Accept Empty Substitutions}

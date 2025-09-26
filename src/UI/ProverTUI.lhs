@@ -346,7 +346,7 @@ matchLawCommand [] (reqs, liveProof)
              waitForReturn
              return (reqs, matches_ [] liveProof)
   where
-    ranking = filterAndSort (matchFilter $ prfSettings reqs, favourDefLHSOrd)
+    ranking = filterAndSort (matchFilter $ rdbn showPrfSettings "prfSttngs" $ prfSettings reqs, favourDefLHSOrd)
 
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm liveProof of

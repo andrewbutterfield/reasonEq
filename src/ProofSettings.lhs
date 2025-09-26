@@ -109,8 +109,11 @@ matchFilterUpdate r
     filterTS = mkFilter ( pdbg "mFU.TS" $ showTrivialSubst r, anyTrivialSubstitutions)
     filterFV = mkFilter ( pdbg "mFU.FV" $ showFloatingVariables r,hasFloatingVariables   )
     filterSpecs ctxts mtch
-      = or [filterTM cm,filterTLV cm,filterTS cm,filterFV cm]
-      where cm=(ctxts,mtch)
+      = and [ pdbg "mFU.fTM" $ filterTM cm
+            , pdbg "mFU.fTS" $ filterTS cm
+            , pdbg "mFU.fTLV" $ filterTLV cm
+            , pdbg "mFU.fFV" $ filterFV cm ]
+      where cm = (ctxts,rdbn mName "mFU.mtch" mtch)
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 

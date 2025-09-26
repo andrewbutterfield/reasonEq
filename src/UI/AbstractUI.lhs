@@ -393,8 +393,9 @@ newProof1 nconj@(nm,asn) reqs
 newProof2 :: MonadFail m => NmdAssertion -> (String,Sequent) -> REqState
           -> m LiveProof
 newProof2 (nm,asn) seqnt reqs
-  = return $ launchProof thylist currTh nm asn seqnt
+  = return $ launchProof thylist psettings currTh nm asn seqnt
   where
+    psettings = prfSettings reqs
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     thys = theories reqs

@@ -230,16 +230,17 @@ parseLiveProofs thrys txts
 \subsection{Starting a Proof with given strategy}
 
 \begin{code}
-launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
+launchProof :: [Theory] -> ProofSettings 
+            -> String -> String -> Assertion -> (String,Sequent)
             -> LiveProof
-launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
+launchProof thys prfset thnm cjnm asn@(Assertion t sc) (strat,sequent)
   = LP { conjThName = thnm
        , conjName = cjnm
        , conjecture = asn
        , conjSC = sc
        , strategy = strat
        , mtchCtxts =  mcs
-       , liveSettings = initProofSettings
+       , liveSettings = prfset
        , focus =  sz
        , fPath = []
        , matches = []

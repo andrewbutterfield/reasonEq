@@ -17,7 +17,7 @@ BEGIN PRFSET
 MM = 30
 MS = 6
 BD = False
-TM = False
+TM = True
 TL = True
 TS = True
 FV = True

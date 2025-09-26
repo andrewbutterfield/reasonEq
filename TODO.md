@@ -4,8 +4,15 @@
 
 **CURRENT ISSUEs**
 
-Changes to proof-settings made in the prover aren't be updated
-(they mainfest in the ranking function supplied to the proof )
+Proof settings now being set/saved properly.
+
+However they seem to have no effect now: 
+it's like they are all set to false if at least one is false.
+If all are true then only one match is discarded: 
+`eqv_symm(MEV 3)  --  ?P≡((true ≡ Q) ≡ Q)≡?P`,
+but that is because the replacement terms is the same as 
+`eqv_symm(MEV 2)  --  ?P≡((true ≡ Q) ≡ Q)≡?P`.
+
 
 
 ## PLAN

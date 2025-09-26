@@ -19,7 +19,7 @@ MS = 6
 BD = False
 TM = False
 TL = False
-TS = False
+TS = True
 FV = True
 END PRFSET
 BEGIN SEQZIP

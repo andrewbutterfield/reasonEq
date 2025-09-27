@@ -1,7 +1,7 @@
 \chapter{Classifier}
 \begin{verbatim}
 Copyright  Saqib Zardari (c) 2023
-           Andrew Butterfield (c) 2024
+           Andrew Butterfield (c) 2024--25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -89,7 +89,7 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
 \begin{code}
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
 addLawClassifier (nme, asser) au 
-  = removeFoldSimps 
+  = reconcileFoldSimps 
       $ AutoLaws { simps   = simps au   ++ addSimp nme (assnT asser)
                  , folds   = folds au   ++ addFold nme (assnT asser)
                  }
@@ -192,11 +192,36 @@ checkIsUnFold MatchEqvRHS = False
 checkIsUnFold _ = False 
 \end{code}
 
-\section{Remove Fold Simplifiers}
+\section{Reconcile Folds and  Simplifiers}
 
+Many definitions have the same shape as a 
+(typically right-to-left) simplifier.
+We want any classified law to only have one classification,
+so we usually decide they are classified as definitions,
+and not simplifiers.
+However, some logical operators satisfy a number of laws,
+each of which satisfies the requirements to be a definition.
+For example, logical implication satisfies the following laws:
+\begin{eqnarray*}
+   P \implies Q &\equiv& \lnot P \lor Q
+\\ P \implies Q &\equiv& (P \land Q \equiv P)
+\\ P \implies Q &\equiv& (P \lor Q \equiv Q)
+\end{eqnarray*}
+The first is a commonly used definition,
+while the second is used in \cite{gries.93}.
+The second and third capture the fact 
+that implication is an complete lattice ordering.
+
+
+Right now, all three lasws above are classified as definitions,
+and  ``reconciliation'' just removes simplification status
+from anything judged to be a definition.
+What we need to do is to let the one used as an axiom be the definition,
+while the other get classified as simplifiers.
 \begin{code}
-removeFoldSimps :: AutoLaws -> AutoLaws
-removeFoldSimps au 
+-- needs rework!
+reconcileFoldSimps :: AutoLaws -> AutoLaws
+reconcileFoldSimps au 
   = AutoLaws { simps = removeSimpsList (folds au) (simps au)
              , folds = folds au
              }

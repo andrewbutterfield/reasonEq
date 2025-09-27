@@ -20,6 +20,13 @@ ii. folds:
 	4. cond_alt_def2
 ```
 
+Most definitions also get classified as right-to-left simplifiers,
+and right now we remove the simplifiers.
+A more nuanced approach is that if we have multiple definitions as above,
+we select one to be *the* definition, and remove it from the simplication list,
+while the other definitions are removed, and their simplification 
+(if it exists) is kept.
+
 
 ### Types
 

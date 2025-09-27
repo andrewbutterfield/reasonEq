@@ -354,15 +354,15 @@ classifyLaw thnm whichL reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry 
-        | whichL == "*"
-            ->  do thys' <- lawDepClassify thnm thys
-                   return $ changed $ theories_ thys' reqs
-        | otherwise
-            ->  do case getLaws thry whichL of
-                      Nothing -> fail ("No law named '"++whichL++"' in theory.")
-                      Just lws -> do  thry' <- lawClassify lws thry
-                                      return $ changed
-                                             $ theories__ (replaceTheory' thry') $ reqs
+        | whichL == "*"  ->  do 
+            thys' <- lawDepClassify thnm thys
+            return $ changed $ theories_ thys' reqs
+        | otherwise  ->  do 
+            case getLaws thry whichL of
+              Nothing -> fail ("No law named '"++whichL++"' in theory.")
+              Just lws -> do  
+                thry' <- lawClassify lws thry
+                return $ changed $ theories__ (replaceTheory' thry') $ reqs
     where thys = theories reqs
 \end{code}
 

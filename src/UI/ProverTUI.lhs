@@ -774,7 +774,8 @@ applyFolds' :: MonadFail m
             => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
 applyFolds' input autos (reqs, liveProof) 
   = do  let match = if input == "f" then checkIsFold else checkIsUnFold
-        let lws = folds autos -- if input == "f" then folds autos else unfolds autos
+        let lws = folds autos 
+        -- if input == "f" then folds autos else unfolds autos
         applyFolds match lws (reqs, liveProof)
 
 applyFolds :: MonadFail m 
@@ -826,7 +827,8 @@ tryMatch args state@( reqs, liveProof)
               , "Binding:\n  " ++ trBinding bind
               , "Instantiated Replacement:\n  " ++ trTerm 0 tPasC
               , "Instantiated Variables: "  ++ trVSet (mentionedVars tPasC)
-              , "Floating Vars?: " ++ show (any isFloatingGVar $ mentionedVars tPasC)
+              , "Floating Vars?: " 
+                ++ show (any isFloatingGVar $ mentionedVars tPasC)
               , "Law S.C.:\n  " ++ trSideCond scP 
               , "Instantiated Law S.C.:\n  " ++ trSideCond scC'
               , "Goal S.C.:\n  " ++ trSideCond (xpndSC liveProof)

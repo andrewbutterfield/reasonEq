@@ -92,48 +92,53 @@ showFloatingVariables_   =  showFloatingVariables__ . const
 \newpage
 \section{Section 3 Updater}
 
-
 Section 3 updater --- not exported, internal use only.
 STLL WORKS INCORRECTLY !!!! 
 
+We identify the following cases where we may want to filter out matches:
+\begin{description}
+\item[FV]
+  The replacement term has floating variables ($?P$).
+\item[TM]
+  The match is a trivial one in that 
+  the focus is matched against a single term variable.
+\item[TL]
+  All the pattern list-variables are bound to empty variable sets or lists.
+\item[TS]
+  All substitutions in the replacement term are empty.
+\end{description}
+All are modelled by a boolean setting,
+where $\true$ means that such matches are kept,
+means $\false$ states they should be removed.
+Using these filters works by 
+first asking if the match has the relevant feature,
+and if it has, 
+then using its setting to determine if is kept or dropped.
+A match is dropped if any filter says it should be dropped.
+
+More precisely: if a match has a filter feature $F$, 
+and the setting for $F$ is $\false$,
+then that match is dropped, regardless of any other settings.
 
 \begin{code}
 -- FilterFunction = [MatchContext] -> ProofMatch -> Bool
 matchFilterUpdate r
   = r{matchFilter = filterSpecs}
   where
-    mkFilter ( showit, ff ) (ctxts,mtch)
-      = if ff ctxts mtch then showit else True
-    filterTM = mkFilter ( pdbg "mFU.TM" $ showTrivialMatches r, isTrivialMatch  )
-    filterTLV = mkFilter ( pdbg "mFU.TLV" $ showTrivialListVars r, onlyTrivialLVarMatches )
-    filterTS = mkFilter ( pdbg "mFU.TS" $ showTrivialSubst r, anyTrivialSubstitutions)
-    filterFV = mkFilter ( pdbg "mFU.FV" $ showFloatingVariables r,hasFloatingVariables   )
+    mkFilter ( showit, ff ) (ctxts,mtch)  = ff ctxts mtch && not showit
+    filterTM = mkFilter ( showTrivialMatches r, isTrivialMatch  )
+    filterTL = mkFilter ( showTrivialListVars r, onlyTrivialLVarMatches )
+    filterTS = mkFilter ( showTrivialSubst r, anyTrivialSubstitutions)
+    filterFV = mkFilter ( showFloatingVariables r,hasFloatingVariables   )
     filterSpecs ctxts mtch
-      = and [ pdbg "mFU.fTM" $ filterTM cm
-            , pdbg "mFU.fTS" $ filterTS cm
-            , pdbg "mFU.fTLV" $ filterTLV cm
-            , pdbg "mFU.fFV" $ filterFV cm ]
-      where cm = (ctxts,rdbn mName "mFU.mtch" mtch)
+      = not $ or  [ filterTM cm
+                  , filterTS cm
+                  , filterTL cm
+                  , filterFV cm ]
+      where cm = (ctxts,mtch)
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
-% \begin{code}
-% -- FilterFunction = [MatchContext] -> ProofMatch -> Bool
-% matchFilterUpdate r
-%   = r{matchFilter = keep filterSpecs}
-%   where
-%     filterSpecs
-%       = [ ( showTrivialMatches r,     isTrivialMatch         )
-%         , ( showTrivialListVars r,    onlyTrivialLVarMatches )
-%         , ( showTrivialSubst r,       anyTrivialSubstitutions)
-%         , ( showFloatingVariables r,  hasFloatingVariables   )
-%         ]
-%     keep [] ctxt mtch = True
-%     keep s@((showit,isunusual):specs) ctxt mtch
-%       |  (pdbg "keep.unusual" $ isunusual ctxt $ rdbn mName "keep.mtch" mtch) && not (pdbg ("keep.showit."++show (length s)) showit)  =  False
-%       |  otherwise = keep specs ctxt mtch
-% \end{code}
-% Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
 The following code, 
 given list \m{\seqof{(e_1,p_1),\dots,(e_n,p_n)}}

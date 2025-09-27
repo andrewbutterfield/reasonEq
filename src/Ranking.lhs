@@ -161,7 +161,7 @@ Matches against a single predicate variable
 \begin{code}
 isTrivialMatch :: FilterFunction
 isTrivialMatch _ m
-  = trivial $ pdbg "isTvlMtch.mClass" $ mClass m
+  = trivial $ mClass m
   where
      trivial (MatchEqvVar _)  =  True
      trivial _                =  False
@@ -174,7 +174,7 @@ are mapped to empty sets or lists.
 \begin{code}
 onlyTrivialLVarMatches :: FilterFunction
 onlyTrivialLVarMatches _ mtch
-  =  pdbg "onlyTLV.result" $ onlyTrivialListVarBindings (pdbg "onlyTLV.mBind" $ mBind mtch)
+  =  onlyTrivialListVarBindings (mBind mtch)
 \end{code}
 
 \subsubsection{Accept Empty Substitutions}

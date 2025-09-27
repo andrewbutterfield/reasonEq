@@ -171,37 +171,3 @@ parseREqState2 theSet thMap txts
                          , liveProofs = lPrfs }
 \end{code}
 
-\newpage
-\section{Test Functions}
-
-For \texttt{andIfWanted}
-
-\begin{code}
-yes _ _ = True
-oddt _ = odd
-event _ = even
-small _ n = n < 5
-big _ n = n > 10
-
-preds     = [  oddt, event, small,   big ]
-
-oddsmall  = [  True, False,  True, False ]
-oddbig    = [  True, False, False, True  ]
-evensmall = [ False,  True,  True, False ]
-evenbig   = [ False,  True, False, True  ]
-evens     = [ False,  True, False, False ]
-contra    = [ True,   True, False, False ]
-
-litteodd  = run $ zip oddsmall  preds
-bigodd    = run $ zip oddbig    preds
-tinyeven  = run $ zip evensmall preds
-hugeeven  = run $ zip evenbig   preds
-justevens = run $ zip evens preds
-nope      = run $ zip contra preds
-
-run spec n
- =  f [] n
- where
-   f = foldl mrg yes spec
-   mrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
-\end{code}

@@ -7,9 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Classifier 
-  ( Direction(..)
-  , AutoLaws(..)
-  , nullAutoLaws, combineAutos, showAuto
+  ( Direction(..), AutoLaws(..), nullAutoLaws, showAuto
+  , combineAutos
   , addLawsClass
   , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
   ) where

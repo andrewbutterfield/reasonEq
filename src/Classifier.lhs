@@ -39,24 +39,21 @@ data AutoLaws = AutoLaws
   , folds    :: [String]
   }
   deriving (Eq,Show,Read)
+
+nullAutoLaws  = AutoLaws { simps = [], folds = [] }
 \end{code}
 
 \newpage
 \subsection{Classifier Top-Level Operations}
 \begin{code}
-nullAutoLaws
-  = AutoLaws {  simps = []
-             ,  folds = []
-             }
-
 combineTwoAuto :: AutoLaws -> AutoLaws -> AutoLaws
 combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
                               , folds = folds a ++ folds b
                               }
 
-combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
-combineAutos auto [] = auto
-combineAutos auto (x:xs) = combineAutos (combineTwoAuto auto x) xs
+combineAutos :: [AutoLaws] -> AutoLaws
+combineAutos [] = nullAutoLaws
+combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
 \end{code}
 
 \subsection{Classifier Display}
@@ -87,20 +84,20 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
 \section{Classifier Top Level}
 
 \begin{code}
-addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
-addLawClassifier (nme, asser) au 
+addLawClassifier :: Law -> AutoLaws -> AutoLaws
+addLawClassifier ((nme, assn),provenance) au 
   = reconcileFoldSimps 
-      $ AutoLaws { simps   = simps au   ++ addSimp nme (assnT asser)
-                 , folds   = folds au   ++ addFold nme (assnT asser)
+      $ AutoLaws { simps   = simps au   ++ addSimp nme (assnT assn)
+                 , folds   = folds au   ++ addFold nme (assnT assn)
                  }
 \end{code}
 
 \begin{code}
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws
 addLawsClass [] au = au 
-addLawsClass (x:[]) au = (addLawClassifier (lawNamedAssn x) au)
+addLawsClass (x:[]) au = (addLawClassifier x au)
 addLawsClass (x:xs) au 
-  = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au)
+  = addLawsClass (xs) (addLawClassifier x au)
 \end{code}
 
 

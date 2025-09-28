@@ -209,8 +209,8 @@ The second and third capture the fact
 that implication is an complete lattice ordering.
 
 
-Right now, all three lasws above are classified as definitions,
-and  ``reconciliation'' just removes simplification status
+Right now, all three laws above are classified as definitions,
+and ``reconciliation'' just removes simplification status
 from anything judged to be a definition.
 What we need to do is to let the one used as an axiom be the definition,
 while the other get classified as simplifiers.

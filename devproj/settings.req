@@ -4,6 +4,6 @@ MS = 6
 BD = False
 TM = False
 TL = False
-TS = True
+TS = False
 FV = True
 END PRFSET

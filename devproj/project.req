@@ -3,36 +3,9 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Closure","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Proto","Sets","UBase","UTCP","UWhile"]
 SDAG = [[("UTCP",["Designs","UWhile","Sets","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("Closure",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("Proto",[]),("EQV",[])]]
 END THEORIES
-CURRTHEORY = EQV
+CURRTHEORY = Impl
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("EQV","eqv_id")
-BEGIN LIVE-PROOF
-TH-NAME: EQV
-CJ-NAME: eqv_id
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = True
-TL = True
-TS = True
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.eqv_id", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

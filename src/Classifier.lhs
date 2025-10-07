@@ -44,6 +44,9 @@ nullAutoLaws  = AutoLaws { simps = [], folds = [] }
 
 \newpage
 \subsection{Classifier Top-Level Operations}
+
+\subsubsection{Combining Classifications}
+
 \begin{code}
 combineTwoAuto :: AutoLaws -> AutoLaws -> AutoLaws
 combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
@@ -55,7 +58,7 @@ combineAutos [] = nullAutoLaws
 combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
 \end{code}
 
-\subsection{Classifier Display}
+\subsubsection{Classifier Display}
 
 \begin{code}
 showDir :: Direction -> String
@@ -99,7 +102,7 @@ addLawsClass (x:xs) au
   = addLawsClass (xs) (addLawClassifier x au)
 \end{code}
 
-
+\newpage
 \section{Identify Simplifiers}
 
 Given a law $P \equiv Q$ (or $e = f$),
@@ -114,36 +117,28 @@ This could also be based on either absolute or relative differences.
 It might make sense for this to be a setting at the level of individual theories.
 }
 \begin{code}
-addSimp :: String -> Term -> [(String, Direction)]
-addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))
-  = checkSimp nme p q
-addSimp nme (Cons _ _ (Identifier "eq" 0) (e:f:[]))
-  = checkSimp nme e f
-addSimp _ _ = []
+isSimp :: String -> Term -> Term -> (Bool,Direction)
+isSimp nme p q 
+  = let sizeP = termSize p
+        sizeQ = termSize q
+    in   if sizeP > sizeQ then (True, Leftwards) 
+    else if sizeP < sizeQ then (True, Rightwards)
+    else (False,error "isSimp: direction undefined if not a simplifier")
 
+checkSimp :: String -> Term -> Term -> [(String,Direction)]
 checkSimp nme p q
-  = do  let sizeP = termSize p
-        let sizeQ = termSize q
-        if sizeP > sizeQ
-          then [(nme, Leftwards)] 
-        else if sizeP < sizeQ
-          then [(nme, Rightwards)]
-        else []
+  = let (issimp,direction) = isSimp nme p q 
+    in if issimp then [(nme,direction)] else  []
+
+addSimp :: String -> Term -> [(String, Direction)]
+addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))  =  checkSimp nme p q
+addSimp nme (Cons _ _ (Identifier "eq" 0) (e:f:[]))   =  checkSimp nme e f
+addSimp _   _                                         =  []
 \end{code}
 
 
+\newpage
 \section{Identify Folds}
-
-\begin{code}
-addFold :: String -> Term -> [(String)]
-addFold nme (Cons _ sb (Identifier "eqv" 0) (p:q:[])) 
-  =  if isFold p
-     then if checkQ q (getN p)
-          then [nme] 
-          else []
-     else []
-addFold nme _ = []
-\end{code}
 
 \begin{code}
 isFold :: Term -> Bool
@@ -155,6 +150,17 @@ isFold _ = False
 allUnique :: (Eq a) => [a] -> Bool
 allUnique []     = True
 allUnique (x:xs) = x `notElem` xs && allUnique xs
+\end{code}
+
+\begin{code}
+addFold :: String -> Term -> [String]
+addFold nme (Cons _ sb (Identifier "eqv" 0) (p:q:[])) 
+  =  if isFold p
+     then if checkQ q (getN p)
+          then [nme] 
+          else []
+     else []
+addFold nme _ = []
 
 getN :: Term -> Identifier
 getN (Cons _ _ n _) = n

@@ -5,6 +5,12 @@
 
 ## PLAN
 
+### Proof Automation
+
+Add in hooks to `ProverTUI` and `AbstracUI` for proof automation
+
+### Classifier
+
 Add a theory-level setting for simplifier 
 (relative/absolute) difference thresholds?
 

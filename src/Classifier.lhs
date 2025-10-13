@@ -220,6 +220,11 @@ and ``reconciliation'' just removes simplification status
 from anything judged to be a definition.
 What we need to do is to let the one used as an axiom be the definition,
 while the other get classified as simplifiers.
+
+Another aspect is that the law-name could be used 
+to distinguish \emph{the} definition from other laws of similar structure
+(``def`` vs. ``altdef''?).
+
 \begin{code}
 -- needs rework!
 reconcileFoldSimps :: AutoLaws -> AutoLaws

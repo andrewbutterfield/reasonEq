@@ -45,6 +45,8 @@ Should we have the unit type `()` with the sole value `()` ?
 We need to extend the `Closure` theory to make it easier to prove
 things like `[P ⟹  Q] ⟹  [ok ∧ P ⟹  Q]`.
 
+In fact, we need a `Refinement` theory!
+
 
 * Add a  `DWhile` theory based on designs (created but not yet design-based)
 

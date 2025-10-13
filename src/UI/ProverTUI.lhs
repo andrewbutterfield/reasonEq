@@ -64,16 +64,16 @@ type ProofState
   = ( REqState   -- reasonEq state
     , LiveProof )  -- current proof state
 \end{code}
+
+
 From this we can define most of the REPL configuration.
 \begin{code}
-proofREPLprompt justHelped (reqs,liveProof)
-  | justHelped  =  unlines' [ dispLiveProof liveProof
-                            , "proof: "]
+proofREPLdisplay justHelped ww (reqs,liveProof)
+  | justHelped  =  unlines' [ dispLiveProof liveProof ]
   | otherwise   =  unlines' [ clear -- clear screen, move to top-left
-                            , dispLiveProof liveProof
-                            , "proof: "]
-  where prfSet = prfSettings reqs
-              -- maxMatchDisplay $ prfSettings reqs
+                            , dispLiveProof liveProof ]
+
+proofREPLprompt (reqs,liveProof) =  "proof:"
 
 proofEOFReplacement = []
 
@@ -106,6 +106,7 @@ The proof configuration
 \begin{code}
 proofREPLConfig
   = REPLC
+      proofREPLdisplay
       proofREPLprompt
       proofEOFReplacement
       proofREPLParser

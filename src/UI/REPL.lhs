@@ -107,8 +107,10 @@ that does not change during its lifetime:
 \begin{code}
 data REPLConfig state
   = REPLC {
-      replPrompt :: Bool -> state -> String
+      replDisplay :: Bool -> Int -> state -> String
             -- justHelped :: Bool, true if help messages have just been printed
+            -- windowWidth :: Int, current window width if available, else 80
+    , replPrompt :: state -> String
     , replEOFReplacement :: [String]
     , replParser :: REPLParser
     , replQuitCmds :: [String]
@@ -125,7 +127,8 @@ A default REPL configuration for test purposes
 \begin{code}
 defConfig
   = REPLC
-      (const $ const "repl: ")
+      (const $ const $ const "Default REPL\n")
+      (const "repl: ")
       ["ignoring EOF"]
       charTypeParse
       ["quit","x"]
@@ -193,10 +196,16 @@ and then checks and transforms
 \begin{code}
 inputREPL :: REPLConfig state -> Bool -> state -> InputT IO [String]
 inputREPL config justHelped s
-  = do minput <- getInputLine (replPrompt config justHelped s)
+  = do ww <- liftIO getDisplayWidth 
+       let display = replDisplay config justHelped ww s
+       liftIO $ putStrLn display
+       minput <- getInputLine (replPrompt config s)
        case minput of
          Nothing     ->  return $ replEOFReplacement config
          Just input  ->  return $ replParser config input
+  where 
+    getDisplayWidth :: IO Int
+    getDisplayWidth = return 80
 \end{code}
 
 Dispatch first checks input to see if it requires exiting,

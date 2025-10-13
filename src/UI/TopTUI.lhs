@@ -71,10 +71,13 @@ type REqConfig    =  REPLConfig   REqState
 
 Now we work down through the configuration components.
 \begin{code}
-reqPrompt :: Bool -> REqState -> String
-reqPrompt _ reqs = devMk ++ takeBaseName (projectDir reqs)++ "."
-                         ++ currTheory reqs
-                         ++ chgd ++ "> "
+reqDisplay :: Bool -> Int -> REqState -> String
+reqDisplay _ _ reqs = ""
+
+reqPrompt :: REqState -> String
+reqPrompt reqs = devMk ++ takeBaseName (projectDir reqs)++ "."
+                       ++ currTheory reqs
+                       ++ chgd ++ "> "
  where
    chgd = if modified reqs then "*" else ""
    devMk = if inDevMode reqs then "\x1f6e0 " else ""
@@ -120,7 +123,7 @@ reqEndTidy _ reqs = return reqs
 The configuration:
 \begin{code}
 reqConfig
-  = REPLC reqPrompt reqEOFreplacmement reqParser
+  = REPLC reqDisplay reqPrompt reqEOFreplacmement reqParser
           reqQuitCmds reqQuit reqHelpCmds
           reqCommands
           reqEndCondition reqEndTidy

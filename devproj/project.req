@@ -3,9 +3,36 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Closure","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Proto","Sets","UBase","UTCP","UWhile"]
 SDAG = [[("UTCP",["Designs","UWhile","Sets","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("Closure",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("Proto",[]),("EQV",[])]]
 END THEORIES
-CURRTHEORY = Impl
+CURRTHEORY = UTCP
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTCP","ls_union_N")
+BEGIN LIVE-PROOF
+TH-NAME: UTCP
+CJ-NAME: ls_union_N
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "sdiff" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TL = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "sdiff" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.ls_union_N", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

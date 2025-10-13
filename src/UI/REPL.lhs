@@ -209,7 +209,8 @@ inputREPL config justHelped s
     getDisplayWidth = do
       system ( "tput cols > " ++ tpc )
       colstxt <- readFile tpc
-      return $ read colstxt
+      let dw = readNat $ trim colstxt
+      return $ if dw > 0 then dw else 80
     tpc = ".tput_cols"
 \end{code}
 

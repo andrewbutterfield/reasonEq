@@ -69,9 +69,11 @@ type ProofState
 From this we can define most of the REPL configuration.
 \begin{code}
 proofREPLdisplay justHelped ww (reqs,liveProof)
-  | justHelped  =  unlines' [ dispLiveProof liveProof ]
-  | otherwise   =  unlines' [ clear -- clear screen, move to top-left
-                            , dispLiveProof liveProof ]
+  | justHelped  =  unlines' disp
+  | otherwise   =  unlines' ( clear -- clear screen, move to top-left
+                              : disp )
+  where
+    disp = [ "WINDOW-WIDTH="++show ww, dispLiveProof liveProof ]
 
 proofREPLprompt (reqs,liveProof) =  "proof:"
 

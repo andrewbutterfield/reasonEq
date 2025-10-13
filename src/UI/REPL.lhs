@@ -26,6 +26,7 @@ where
 
 import System.Console.Haskeline
 import System.IO
+import System.Process
 import Control.Monad.IO.Class
 import Data.List
 import Data.Char
@@ -205,7 +206,11 @@ inputREPL config justHelped s
          Just input  ->  return $ replParser config input
   where 
     getDisplayWidth :: IO Int
-    getDisplayWidth = return 80
+    getDisplayWidth = do
+      system ( "tput cols > " ++ tpc )
+      colstxt <- readFile tpc
+      return $ read colstxt
+    tpc = ".tput_cols"
 \end{code}
 
 Dispatch first checks input to see if it requires exiting,

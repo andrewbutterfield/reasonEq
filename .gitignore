@@ -17,7 +17,7 @@ tgraph.png
 *.o
 temp.txt
 *.out
-*.code-workspace
+.tput_cols
 
 settings.json
 scratch.*

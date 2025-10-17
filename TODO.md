@@ -9,6 +9,8 @@
 
 Add in hooks to `ProverTUI` and `AbstracUI` for proof automation
 
+Setup Module for this and a test theory.
+
 ### Classifier
 
 Add a theory-level setting for simplifier 

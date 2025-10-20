@@ -729,8 +729,9 @@ autoCommand args state@(reqs, liveProof)
                     do putStrLn ("No successful matching fold applys")
                        return (reqs, liveProof)
               False -> 
-                do  let f = if input == "c" then checkIsComp else checkIsSimp
-                    case applySimps' f autos (reqs, liveProof) of
+                do let isApplicable = if input == "c" 
+                                      then checkIsComp else checkIsSimp
+                   case applySimps' isApplicable autos (reqs, liveProof) of
                       Yes liveProof' -> return (reqs, liveProof')
                       But nothing -> 
                         do putStrLn ("No successful matching simp applys")
@@ -762,27 +763,27 @@ Applying Simplifiers
 applySimps' :: MonadFail m 
             => ((String, Direction) -> MatchClass -> Bool) -> AutoLaws 
             -> (REqState, LiveProof) -> m LiveProof
-applySimps' f autos (reqs, liveProof) 
-  = applySimps f (simps autos) (reqs, liveProof)
+applySimps' isApplicable autos (reqs, liveProof) 
+  = applySimps isApplicable (simps autos) (reqs, liveProof)
 
 applySimps :: MonadFail m 
            => ((String, Direction) -> MatchClass -> Bool) 
            -> [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
-applySimps f [] (reqs, liveProof) 
+applySimps isApplicable [] (reqs, liveProof) 
   = fail ("No successful matching simp appliess")
-applySimps f (x:xs) (reqs, liveProof)
+applySimps isApplicable (x:xs) (reqs, liveProof)
   = case matchFocusAgainst (fst x) liveProof of
       Yes liveProof' ->  
         case applyMatchToFocus1 1 liveProof' of
-          Nothing -> applySimps f xs (reqs, liveProof)
+          Nothing -> applySimps isApplicable xs (reqs, liveProof)
           Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
-            case f x (mClass mtch) of 
-              False -> applySimps f xs (reqs, liveProof')
+            case isApplicable x (mClass mtch) of 
+              False -> applySimps isApplicable xs (reqs, liveProof')
               True  -> 
                 case applyMatchToFocus2 vts mtch [] [] liveProof' of
                   Yes liveProof'' -> return liveProof''
-                  But msgs -> applySimps f xs (reqs, liveProof)
-      But msgs  ->  applySimps f xs (reqs, liveProof)
+                  But msgs -> applySimps isApplicable xs (reqs, liveProof)
+      But msgs  ->  applySimps isApplicable xs (reqs, liveProof)
   where vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 
@@ -791,29 +792,29 @@ Applying Fold/Unfolds
 applyFolds' :: MonadFail m 
             => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
 applyFolds' input autos (reqs, liveProof) 
-  = do  let match = if input == "f" then checkIsFold else checkIsUnFold
+  = do  let isApplicable = if input == "f" then checkIsFold else checkIsUnFold
         let lws = folds autos 
         -- if input == "f" then folds autos else unfolds autos
-        applyFolds match lws (reqs, liveProof)
+        applyFolds isApplicable lws (reqs, liveProof)
 
 applyFolds :: MonadFail m 
            => (MatchClass -> Bool) -> [String] 
            -> (REqState, LiveProof) -> m LiveProof
 applyFolds _ [] (reqs, liveProof) 
   = fail ("No successful matching fold/unfold applies")
-applyFolds f (x:xs) (reqs, liveProof)
+applyFolds isApplicable (x:xs) (reqs, liveProof)
   = case matchFocusAgainst x liveProof of
       Yes liveProof' ->  
         case applyMatchToFocus1 1 liveProof' of
-          Nothing -> applyFolds f xs (reqs, liveProof)
+          Nothing -> applyFolds isApplicable xs (reqs, liveProof)
           Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
-            case f (mClass mtch) of 
-              False -> applyFolds f xs (reqs, liveProof')
+            case isApplicable (mClass mtch) of 
+              False -> applyFolds isApplicable xs (reqs, liveProof')
               True  -> 
                 case applyMatchToFocus2 vts mtch [] [] liveProof' of
                   Yes liveProof'' -> return liveProof''
-                  But msgs        -> applyFolds f xs (reqs, liveProof)
-      But msgs       ->  applyFolds f xs (reqs, liveProof)
+                  But msgs        -> applyFolds isApplicable xs (reqs, liveProof)
+      But msgs       ->  applyFolds isApplicable xs (reqs, liveProof)
   where vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 

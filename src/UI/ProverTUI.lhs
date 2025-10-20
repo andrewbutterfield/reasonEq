@@ -686,7 +686,7 @@ Apply SAT-solver
 \begin{code}
 applySATDescr = ("sat"
               , "Apply SAT-solver"
-              , ""
+              , "applies SAT-solver to focus"
               , applySATCommand)
 
 applySATCommand :: REPLCmd (REqState, LiveProof)

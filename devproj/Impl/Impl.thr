@@ -27,13 +27,33 @@ BEGIN LIST LAWS
 (("ante_and_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Assumed)
 (("cnsq_and_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Assumed)
 (("cnsq_and_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Assumed)
-(("ante_as_imp",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Assumed)
 (("imp_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TG (Id "B" 0)) True (Id "imp" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 (("conj_imp_conj",ASN (C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "S" 0,VP,WS))]],([],fromList []))),Assumed)
+(("ante_as_imp",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Proven "ante_as_imp")
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("contrapositive",Rightwards)
+("imp_eqv_distr",Rightwards)
+("GS3_66",Leftwards)
+("GS3_67",Leftwards)
+("GS3_68",Leftwards)
+("GS3_69",Leftwards)
+("GS3_70",Leftwards)
+("imp_refl",Leftwards)
+("imp_r_zero",Leftwards)
+("imp_l_unit",Leftwards)
+("not_def2",Leftwards)
+("GS3_75",Leftwards)
+("ante_or_distr",Rightwards)
+("ante_and_distr",Rightwards)
+("cnsq_and_distr",Rightwards)
+("cnsq_and_distr",Rightwards)
+("imp_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+imp_def
+imp_def2
+imp_meet
 END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

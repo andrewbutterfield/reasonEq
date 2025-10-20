@@ -31,7 +31,7 @@ module UI.AbstractUI
 , substituteFocus
 , tryFocusAgainst
 , tryAlphaEquiv
-, observeLawsInScope, observeKnownsInScope
+, observeLawsInScope, observeTheoriesInScope, observeKnownsInScope
 , flattenAssociative, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
@@ -153,16 +153,13 @@ observeTheoryNames reqs
 
 \begin{code}
 observeLaws :: REqState -> [String] -> String
-observeLaws reqs ["-u"]
-  = let thrys = getAllTheories $ theories reqs
-    in hdr ++ (intercalate hdr $ map (showTheoryLaws ud) $ reverse thrys)
+observeLaws reqs ["-u"]  =  observe_laws reqs (trTermU 0, trSideCondU)
+observeLaws reqs _       =  observe_laws reqs (trTerm 0,  trSideCond )
+observe_laws reqs renderers
+  -- = let thrys = getAllTheories $ theories reqs
+  = let thrys = getTheoryDeps' (currTheory reqs) $ theories reqs
+    in hdr ++ (intercalate hdr $ map (showTheoryLaws renderers) $ reverse thrys)
   where hdr = "\n---\n"
-        ud = (trTermU 0, trSideCondU)
-observeLaws reqs _
-  = let thrys = getAllTheories $ theories reqs
-    in hdr ++ (intercalate hdr $ map (showTheoryLaws nd) $ reverse thrys)
-  where hdr = "\n---\n"
-        nd = (trTerm 0, trSideCond)
 \end{code}
 
 \subsection{Observing Known Names}
@@ -917,16 +914,31 @@ renderContextLaws mctxts
   where hdr = "\n---\n"
 \end{code}
 
-\subsection{Observing Knowns Names in Scope}
-
 \textbf{NOTE: }
 \textsf{
  The top level match-context has all the knowns from dependent theories,
 to avoid doing lookups down through the chain of theories.
-It means there is no point in adding the facility provided for laws for 
+It means there is no point in adding the facility(*) provided for laws for 
 specifying the theories of interest.
-Perhaps this is all over-engineered?  
+Perhaps this is all over-engineered?
+\textbf{(*) what facility?}  
 }
+
+
+\subsection{Observing Knowns Names in Scope}
+
+
+\begin{code}
+observeTheoriesInScope :: LiveProof -> String
+observeTheoriesInScope liveProof
+  | null mctxts  =  "*Nothing* in scope!!!"
+  | otherwise    =  intercalate " " $ map fst3 mctxts
+  where mctxts   =  mtchCtxts liveProof
+
+\end{code}
+
+\subsection{Observing Knowns Names in Scope}
+
 
 \begin{code}
 observeKnownsInScope :: LiveProof -> String

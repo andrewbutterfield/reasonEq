@@ -5,11 +5,21 @@
 
 ## PLAN
 
+###
+
+
+
 ### Proof Automation
 
 Add in hooks to `ProverTUI` and `AbstracUI` for proof automation
 
 Setup Module for this and a test theory.
+
+  1. Fixing "sh L" to only show laws visible from the current theory.
+  2. Adding feature in `ProverTUI` to list dependent theory names.
+
+
+
 
 ### Classifier
 
@@ -35,6 +45,9 @@ we select one to be *the* definition, and remove it from the simplication list,
 while the other definitions are removed, and their simplification 
 (if it exists) is kept.
 
+### Displaying unique Ids in live proofs
+
+Need a "-u" proof-setting for toggling the display of identifier uniqueness numbers in the proof goal.
 
 ### Types
 

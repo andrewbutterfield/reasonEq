@@ -117,6 +117,7 @@ proofREPLConfig
       proofREPLHelpCmds
       ( map clearLong
             [ listScopeLawsDescr
+            , listScopeTheoriesDescr
             , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
@@ -249,6 +250,20 @@ listScopeLawsDescr = ( "ll"
 listScopeLaws :: REPLCmd (REqState, LiveProof)
 listScopeLaws args state@( _, liveProof)
   = do putStrLn $ observeLawsInScope args liveProof
+       userPause
+       return state
+\end{code}
+
+Listing dependent theories for the current live proof.
+\begin{code}
+listScopeTheoriesDescr = ( "ld"
+                         , "list dependencies"
+                         , "ld -- list all dependent theories"
+                         , listScopeTheories )
+
+listScopeTheories :: REPLCmd (REqState, LiveProof)
+listScopeTheories _ state@( reqs, liveProof)
+  = do putStrLn $ observeTheoriesInScope liveProof
        userPause
        return state
 \end{code}

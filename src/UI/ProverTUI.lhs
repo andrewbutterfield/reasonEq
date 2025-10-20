@@ -136,6 +136,7 @@ proofREPLConfig
             , lawInstantiateDescr
             , applySATDescr
             , autoDescr
+            , applyCDADescr
             , switchConsequentDescr
             , switchHypothesisDescr
             , leaveHypothesisDescr
@@ -346,6 +347,8 @@ goBack args  =  tryDelta (stepBack (args2int args))
 \newpage
 \section{Matching}
 
+\subsection{Standard Law Matching}
+
 Law Matching
 \begin{code}
 matchLawDescr = ( "m"
@@ -377,6 +380,8 @@ matchLawCommand args state@(reqs, liveProof)
     lawnm = filter (not . isSpace) $ unwords args
 \end{code}
 
+\subsection{Show Match Replacements}
+
 Showing match details (dev-mode)
 \begin{code}
 showMatchesDescr = ( "shr"
@@ -400,7 +405,8 @@ showMatchesCommand args (reqs, liveProof)
 \end{code}
 
 \newpage
-Applying a match.
+\subsection{Applying a Match}
+
 \begin{code}
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch )
@@ -493,6 +499,79 @@ with one floating variable. Is this too restrictive?  \textbf{Yes}):
                     fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
             else return (False,lvvls)
 \end{code}
+
+\newpage
+\subsection{In-Proof Test Commands}
+
+Try matching focus against a specific law, to see what outcome arises
+\begin{code}
+tryMatchDescr = ( "tm"
+                , "try match focus"
+                , unlines
+                   [ "tm             -- try match focus..."
+                   , "tm nm          -- ... against law 'nm'"
+                   , "tm n1 .. nk nm -- ... against parts n1..nk of law"
+                   , "               --     n1..nk :  numbers of parts"
+                   , "               --     we count from 1"
+                   , "  -- n1..nk used in increasing order (sorted!)"
+                   ]
+                , tryMatch)
+
+tryMatch :: REPLCmd (REqState, LiveProof)
+tryMatch [] state = return state
+tryMatch args state@( reqs, liveProof)
+  = do  case tryFocusAgainst lawnm parts liveProof of
+          Yes (bind,scP,tPasC,scC',scP') ->
+            putStrLn $ unlines
+              [ banner ++ " was successful"
+              , "Binding:\n  " ++ trBinding bind
+              , "Instantiated Replacement:\n  " ++ trTerm 0 tPasC
+              , "Instantiated Variables: "  ++ trVSet (mentionedVars tPasC)
+              , "Floating Vars?: " 
+                ++ show (any isFloatingGVar $ mentionedVars tPasC)
+              , "Law S.C.:\n  " ++ trSideCond scP 
+              , "Instantiated Law S.C.:\n  " ++ trSideCond scC'
+              , "Goal S.C.:\n  " ++ trSideCond (xpndSC liveProof)
+              , "Discharged Law S.C.:\n  " ++ trSideCond scP']
+          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+        userPause
+        return state
+  where
+    (nums,rest) = span (all isDigit) args
+    parts = sort $ filter (>0) $ map read nums
+    lawnm = filter (not . isSpace) $ unwords rest
+    banner = "Match against '"++lawnm++"'"++show parts
+\end{code}
+
+\newpage
+\subsection{Checking Alpha-equivalence}
+
+
+Test $\alpha$-equivalence of both sides of the sequent
+\begin{code}
+tryAlphaDescr = ( "ta"
+                , "test LHS/RHS alpha-equivalence"
+                , unlines
+                   [ "ta     -- test LHS/RHS alphaequiv"
+                   ]
+                , tryAlpha)
+
+tryAlpha :: REPLCmd (REqState, LiveProof)
+tryAlpha _ state@( reqs, liveProof)
+  = do  case tryAlphaEquiv liveProof of
+          Yes varmap ->
+            putStrLn $ unlines
+              [ banner
+              , "Alpha-Equiv reports " ++ show varmap
+              ]
+          But msgs -> 
+            putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+        userPause
+        return state
+  where
+    banner = "Alpha Equivalence Check"
+\end{code}
+
 
 \section{High-Level Operations}
 
@@ -819,72 +898,30 @@ applyFolds isApplicable (x:xs) (reqs, liveProof)
   where vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 
+\newpage
+\subsection{Classifier-Driven Automation (CDA)}
 
-
-\subsection{In-Proof Test Commands}
-
-Try matching focus against a specific law, to see what outcome arises
 \begin{code}
-tryMatchDescr = ( "tm"
-                , "try match focus"
-                , unlines
-                   [ "tm             -- try match focus..."
-                   , "tm nm          -- ... against law 'nm'"
-                   , "tm n1 .. nk nm -- ... against parts n1..nk of law"
-                   , "               --     n1..nk :  numbers of parts"
-                   , "               --     we count from 1"
-                   , "  -- n1..nk used in increasing order (sorted!)"
-                   ]
-                , tryMatch)
+acl = "Apply Classified Laws"
+applyCDADescr = ("cda"
+                , acl
+                , "applies CDA to focus"
+                , doClassDrivenAutomation)
 
-tryMatch :: REPLCmd (REqState, LiveProof)
-tryMatch [] state = return state
-tryMatch args state@( reqs, liveProof)
-  = do  case tryFocusAgainst lawnm parts liveProof of
-          Yes (bind,scP,tPasC,scC',scP') ->
-            putStrLn $ unlines
-              [ banner ++ " was successful"
-              , "Binding:\n  " ++ trBinding bind
-              , "Instantiated Replacement:\n  " ++ trTerm 0 tPasC
-              , "Instantiated Variables: "  ++ trVSet (mentionedVars tPasC)
-              , "Floating Vars?: " 
-                ++ show (any isFloatingGVar $ mentionedVars tPasC)
-              , "Law S.C.:\n  " ++ trSideCond scP 
-              , "Instantiated Law S.C.:\n  " ++ trSideCond scC'
-              , "Goal S.C.:\n  " ++ trSideCond (xpndSC liveProof)
-              , "Discharged Law S.C.:\n  " ++ trSideCond scP']
-          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-        userPause
-        return state
-  where
-    (nums,rest) = span (all isDigit) args
-    parts = sort $ filter (>0) $ map read nums
-    lawnm = filter (not . isSpace) $ unwords rest
-    banner = "Match against '"++lawnm++"'"++show parts
+doClassDrivenAutomation :: REPLCmd (REqState, LiveProof)
+doClassDrivenAutomation _ (reqs,liveproof)
+  = case applyCDA liveproof of
+      Yes liveproof' -> return (reqs, liveproof')
+      But msgs -> do putStrLn $ unlines' msgs
+                     waitForReturn
+                     return (reqs, liveproof) 
+\end{code}
+
+Temporary location. To be moved to own module
+\begin{code}
+applyCDA liveproofs
+  = fail ("N.Y.I.: "++acl)
 \end{code}
 
 
-Test $\alpha$-equivalence of both sides of the sequent
-\begin{code}
-tryAlphaDescr = ( "ta"
-                , "test LHS/RHS alpha-equivalence"
-                , unlines
-                   [ "ta     -- test LHS/RHS alphaequiv"
-                   ]
-                , tryAlpha)
 
-tryAlpha :: REPLCmd (REqState, LiveProof)
-tryAlpha _ state@( reqs, liveProof)
-  = do  case tryAlphaEquiv liveProof of
-          Yes varmap ->
-            putStrLn $ unlines
-              [ banner
-              , "Alpha-Equiv reports " ++ show varmap
-              ]
-          But msgs -> 
-            putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-        userPause
-        return state
-  where
-    banner = "Alpha Equivalence Check"
-\end{code}

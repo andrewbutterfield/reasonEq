@@ -704,13 +704,14 @@ applySATCommand _ (reqs,liveproof)
 
 Automatically apply laws of a specified kind
 \begin{code}
-autoDescr = ( "au"
-            , "auto proof"
+autoDescr = ( "ala"
+            , "automatic law application"
             , unlines
-                [ "au -- auto proof simp"
-                , "au c -- auto proof comp"
-                , "au f -- auto proof fold"
-                , "au u -- auto proof unfold"]
+                [ "ala   -- apply simplification (default)"
+                , "ala s -- apply simplification"
+                , "ala c -- apply complexification"
+                , "ala u -- unfold (expand) definition"
+                , "ala f -- auto proof unfold"]
             , autoCommand )
 
 autoCommand :: REPLCmd (REqState, LiveProof)
@@ -726,7 +727,7 @@ autoCommand args state@(reqs, liveProof)
                 case applyFolds' input autos (reqs, liveProof) of
                   Yes liveProof' -> return (reqs, liveProof')
                   But nothing -> 
-                    do putStrLn ("No successful matching fold applys")
+                    do putStrLn ("No successful matching fold applies")
                        return (reqs, liveProof)
               False -> 
                 do let isApplicable = if input == "c" 
@@ -734,7 +735,7 @@ autoCommand args state@(reqs, liveProof)
                    case applySimps' isApplicable autos (reqs, liveProof) of
                       Yes liveProof' -> return (reqs, liveProof')
                       But nothing -> 
-                        do putStrLn ("No successful matching simp applys")
+                        do putStrLn ("No successful matching simp applies")
                            return (reqs, liveProof)
     where
       input = unwords args

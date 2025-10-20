@@ -1,0 +1,39 @@
+auto law application implementation
+
+ProverTUI (PT)
+Theories (TH)
+Classifier (CL)
+AbstractUI (AU)
+ProofMatch (PM)
+MatchContext (MC)
+
+Start:
+
+PT.autoDescr : PT.autoCommand
+
+PT.autoCommand : 
+    TH.getTheory ; PT.allAutos ; PT.whichApply ; applyFolds' ; 
+    PT.applySimps' PT.whichApply :
+
+PT.allAutos : TH.getTheoryDeps' ; PT.depAutos ; CL.combineAutos
+
+PT.depAutos : TH.autos 
+
+PT.applyFolds' : CL.checkIsFold ; CL.checkIsUnFold ; CL.folds ; PT.applyFolds
+
+PT.applyFolds : (list-recursive)
+    AU.matchFocusAgainst ; AU.applyMatchToFocus1 ; PM.mClass
+    MC.getVarTables ; AU.applyMatchToFocus2
+
+PT.applySimps' : CL.simps ; PT.applySimps
+
+PT.applySimps : (list-recursive)
+    AU.matchFocusAgainst ; AU.applyMatchToFocus1 ; PM.mClass
+    MC.getVarTables ; AU.applyMatchToFocus2
+
+
+AU.matchFocusAgainst :
+
+AU.applyMatchToFocus1 :
+
+AU.applyMatchToFocus2 :

@@ -31,9 +31,41 @@ PT.applySimps : (list-recursive)
     AU.matchFocusAgainst ; AU.applyMatchToFocus1 ; PM.mClass
     MC.getVarTables ; AU.applyMatchToFocus2
 
+AU - standard match preamble
 
-AU.matchFocusAgainst :
+AU.match arg :: MonadFail m => argtype -> LiveProof -> m LiveProof
+AU.match arg liveProof
+  = let (tz,_)      =  focus liveProof
+        goalt       =  getTZ tz
+        scC         =  xpndSC liveProof
+        ctxts       =  mtchCtxts liveProof
+        vts         =  getVarTables ctxts
+    in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
+          let fits  =  cSubType tvmap
+          ...  use arg to do something interesting
+ 
+AU.matchFocus ranking :
+          let mtchs = matchInContexts ctxts fits asn'
+          let rankedM = ranking ctxts mtchs
+          return $ matches_ (ldbg mshow "mF.rankedM" rankedM) liveProof
+ 
+AU.matchFocusAgainst lawnm :
+          case matchLawByName asn' lawnm ctxts fits of
+            Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
+            Yes mtchs -> return $ matches_ mtchs liveProof
+            But msgs  -> fail $ unlines msgs
 
-AU.applyMatchToFocus1 :
+AU.tryFocusAgainst lawnm parts :
+          tryLawByName asn' lawnm parts ctxts fits
 
-AU.applyMatchToFocus2 :
+AU.applyMatchToFocus1 i liveProof :
+  = ( mtch, stdVarsOf stdFloating, replTerms
+          , listVarsOf lstFloating, replGVars )
+
+AU.applyMatchToFocus2 vtbls mtch vts lvvls liveProof:
+  ...
+  = ( focus_ ((setTZ brepl tz),seq') $ matches_ [] $ conjSC_ scC'
+    $ xpndSC_ (expandSideCondKnownVars mctxts scC')
+    $ stepsSoFar__
+        (( UseLaw (ByMatch $ mClass mtch) (mName mtch) fbind dpath
+         , (asn') ) : ) liveProof )

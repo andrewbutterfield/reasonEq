@@ -136,7 +136,7 @@ proofREPLConfig
             , lawInstantiateDescr
             , applySATDescr
             , autoDescr
-            , applyCDADescr
+            , applyACLDescr
             , switchConsequentDescr
             , switchHypothesisDescr
             , leaveHypothesisDescr
@@ -902,15 +902,17 @@ applyFolds isApplicable (x:xs) (reqs, liveProof)
 \subsection{Classifier-Driven Automation (CDA)}
 
 \begin{code}
-acl = "Apply Classified Laws"
-applyCDADescr = ("cda"
+acl = "automate classified laws"
+applyACLDescr = ("acl"
                 , acl
-                , "applies CDA to focus"
+                , unlines'
+                   [ "Invokes automatic application of classified laws"
+                   , "to the focus and its sub-terms." ]
                 , doClassDrivenAutomation)
 
 doClassDrivenAutomation :: REPLCmd (REqState, LiveProof)
 doClassDrivenAutomation _ (reqs,liveproof)
-  = case applyCDA liveproof of
+  = case applyCLA liveproof of
       Yes liveproof' -> return (reqs, liveproof')
       But msgs -> do putStrLn $ unlines' msgs
                      waitForReturn
@@ -920,7 +922,7 @@ doClassDrivenAutomation _ (reqs,liveproof)
 Temporary location. 
 To be moved to own module (via \h{AbstractUI}).
 \begin{code}
-applyCDA liveproofs
+applyCLA liveproofs
   = fail ("N.Y.I.: "++acl)
 \end{code}
 

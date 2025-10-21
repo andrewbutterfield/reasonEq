@@ -825,6 +825,7 @@ applySAT liveproof
 \subsection{Automate Classifier Law Usage}
 
 \begin{code}
+applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
 applyCLA liveproofs
   = fail "Automating classifiers NYI"
 \end{code}

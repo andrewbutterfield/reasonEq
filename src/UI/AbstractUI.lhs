@@ -26,6 +26,7 @@ module UI.AbstractUI
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
 , applySAT
+, applyCLA
 -- , normQuantFocus
 , nestSimpFocus
 , substituteFocus
@@ -820,6 +821,14 @@ applySAT liveproof
         return (focus_ (setTZ (Val pred1 (Boolean tsat)) tz, seq)
                        $ stepsSoFar__ stepcons liveproof)
 \end{code}
+
+\subsection{Automate Classifier Law Usage}
+
+\begin{code}
+applyCLA liveproofs
+  = fail "Automating classifiers NYI"
+\end{code}
+
 
 \newpage
 \subsection{Normalise Quantifiers}

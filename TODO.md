@@ -18,6 +18,7 @@ Setup Module for this and a test theory.
   1. Fixing "sh L" to only show laws visible from the current theory.
   2. Adding feature in `ProverTUI` to list dependent theory names.
   3. Adds new `acl` command to prover with stub in `ProverTUI`.
+  4. Moves stub to `AbstractUI`.
 
 
 

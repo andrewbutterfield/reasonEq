@@ -919,12 +919,6 @@ doClassDrivenAutomation _ (reqs,liveproof)
                      return (reqs, liveproof) 
 \end{code}
 
-Temporary location. 
-To be moved to own module (via \h{AbstractUI}).
-\begin{code}
-applyCLA liveproofs
-  = fail ("N.Y.I.: "++acl)
-\end{code}
 
 
 

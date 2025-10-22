@@ -19,7 +19,8 @@ Setup Module for this and a test theory.
   2. Adding feature in `ProverTUI` to list dependent theory names (DONE).
   3. Adds new `acl` command to prover with stub in `ProverTUI` (DONE).
   4. Moves stub to `AbstractUI` (DONE).
-  5. Create new module to support law-classifier automation (next).
+  5. Create new module to support law-classifier automation, called `RunClassified` (DONE).
+  6. Flesh out the behaviour of `applyCLA`.
 
 
 

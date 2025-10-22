@@ -41,6 +41,7 @@ library
       ProofSettings
       Ranking
       REqState
+      RunClassified
       SAT
       Sequents
       SideCond

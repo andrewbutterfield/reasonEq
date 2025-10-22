@@ -72,6 +72,7 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
+import RunClassified
 import REqState
 import Persistence
 import ProofMatch
@@ -824,11 +825,6 @@ applySAT liveproof
 
 \subsection{Automate Classifier Law Usage}
 
-\begin{code}
-applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
-applyCLA liveproofs
-  = fail "Automating classifiers NYI"
-\end{code}
 
 
 \newpage

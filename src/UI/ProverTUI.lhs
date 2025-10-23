@@ -41,6 +41,7 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
+import UI.ClassifierTUI
 import UI.AbstractTop(observeSettings,modifyProofSettings)
 import UI.AbstractProver
 import Instantiate
@@ -910,14 +911,6 @@ applyACLDescr = ("acl"
                    [ "Invokes automatic application of classified laws"
                    , "to the focus and its sub-terms." ]
                 , doClassDrivenAutomation)
-
-doClassDrivenAutomation :: REPLCmd (REqState, LiveProof)
-doClassDrivenAutomation _ (reqs,liveproof)
-  = case applyCLA liveproof of
-      Yes liveproof' -> return (reqs, liveproof')
-      But msgs -> do putStrLn $ unlines' msgs
-                     waitForReturn
-                     return (reqs, liveproof) 
 \end{code}
 
 

@@ -64,7 +64,6 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
-import RunClassified
 import REqState
 import Persistence
 import ProofMatch

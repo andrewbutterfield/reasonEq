@@ -22,8 +22,6 @@ module UI.AbstractProver
 , applyMatchToFocus1 -- prover
 , applyMatchToFocus2 -- prover
 , applySAT -- prover
-, applyCLA -- prover
--- , normQuantFocus -- prover
 , nestSimpFocus -- prover
 , substituteFocus -- prover
 , tryFocusAgainst -- prover
@@ -73,7 +71,7 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
-import RunClassified
+import UI.ClassifierTUI
 import REqState
 import Persistence
 import ProofMatch

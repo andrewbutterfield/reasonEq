@@ -70,7 +70,7 @@ doClassDrivenAutomation _ (reqs,liveproof)
                      return (reqs, liveproof) 
 \end{code}
 
-
+This is \emph{very} tentative \dots
 \begin{code}
 applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
 applyCLA liveproofs

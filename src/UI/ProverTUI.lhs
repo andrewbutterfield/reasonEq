@@ -41,7 +41,8 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.AbstractUI
+import UI.AbstractTop(observeSettings,modifyProofSettings)
+import UI.AbstractProver
 import Instantiate
 import TestRendering
 import SourceHandling

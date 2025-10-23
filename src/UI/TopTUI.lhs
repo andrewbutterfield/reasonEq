@@ -41,7 +41,7 @@ import Assertions
 import Ranking
 import ProofSettings
 import REqState
-import UI.AbstractUI
+import UI.AbstractTop
 import Instantiate
 import TestRendering
 import SourceHandling

@@ -40,7 +40,7 @@ import SideCond
 import Assertions
 import Ranking
 import REqState
-import UI.AbstractUI
+import UI.AbstractTop
 import Instantiate
 import TestRendering
 import Dev

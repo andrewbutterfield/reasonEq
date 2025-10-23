@@ -54,7 +54,8 @@ library
       Theories
       Types
       Typing
-      UI.AbstractUI
+      UI.AbstractProver
+      UI.AbstractTop
       UI.ProverTUI
       UI.REPL
       UI.TopGUI

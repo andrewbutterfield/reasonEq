@@ -21,7 +21,7 @@ Setup Module for this and a test theory.
   4. Moves stub to `AbstractUI` (DONE).
   5. Create new module to support law-classifier automation, called `RunClassified` (DONE).
   6. Flesh out the behaviour of `applyCLA`. As it stands it returns `mf LiveProof` which makes interaction difficult at best. In fact is needs to live in a subset of `ProverTUI` and `AbstractTUI`. The former provides IO access, the latter does the `mf whatever` monadic computations. Another issue is that `AbstractUI` supports both `ProverTUI` and `TopTUI`. It really should be separated. This would then allow us to provide a `ClassifierTUI` as a seperate module extending `ProverTUI`, with its own abstract counterpart (DEFERRED).
-  7. Split `AbstractTUI` into `AbstractTop` and `AbstractProver`.
+  7. Split `AbstractTUI` into `AbstractTop` and `AbstractProver` (in progress).
   8. Create `ClassifierTUI` and `AbstractClassifier` that are imported by the `XProver` modules. The abstract one is basically `RunClassified` which is the seed for its development.
   9. Move `applyCLA` into `ClassifierTUI` with its support functions in `AbstractClassifier`.
   10. Now flesh out `applyCLA`'s behaviour.

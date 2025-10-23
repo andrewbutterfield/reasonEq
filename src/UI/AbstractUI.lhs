@@ -1,6 +1,6 @@
 \chapter{Abstract User-Interface}
 \begin{verbatim}
-Copyright (c) Andrew Butterfield 2017--2024
+Copyright (c) Andrew Butterfield 2017--2025
               Saqib Zardari     2023
               Aaron Bruce       2023
 
@@ -9,35 +9,57 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module UI.AbstractUI
 ( REqState
-, observeSettings
-, observeSig, observeTheories, observeTheoryNames, observeLaws
-, observeKnowns
-, observeCurrTheory, observeCurrConj
-, observeLiveProofs, observeCompleteProofs
-, modifyProofSettings
-, setCurrentTheory, showCurrentTheory
-, newConjecture
-, readConjecture
-, assumeConjecture, demoteLaw , classifyLaw
-, newProof1, newProof2, resumeProof
-, abandonProof, updateProof, completeProof
-, moveFocusDown, moveFocusUp, switchConsequentFocus
-, moveFocusToHypothesis, moveFocusFromHypothesis
-, matchFocus, matchFocusAgainst
-, applyMatchToFocus1, applyMatchToFocus2
-, applySAT
-, applyCLA
--- , normQuantFocus
-, nestSimpFocus
-, substituteFocus
-, tryFocusAgainst
-, tryAlphaEquiv
-, observeLawsInScope, observeTheoriesInScope, observeKnownsInScope
-, flattenAssociative, groupAssociative
-, stepBack
-, lawInstantiate1, lawInstantiate2, lawInstantiate3
-, cloneHypothesis
-, stepEquivalenceTheorem
+, observeSettings -- both       ----v ?
+, observeSig -- top
+, observeTheories -- top
+, observeTheoryNames -- top
+, observeLaws -- top
+, observeKnowns -- top
+, observeCurrTheory -- top
+, observeCurrConj -- top
+, observeLiveProofs -- top
+, observeCompleteProofs -- top
+, modifyProofSettings -- both    ----^ ?
+, setCurrentTheory -- top
+, showCurrentTheory -- top
+, newConjecture -- top
+, readConjecture -- top
+, assumeConjecture -- top
+, demoteLaw -- top
+, classifyLaw -- top
+, newProof1 -- top
+, newProof2 -- top
+, resumeProof -- UNUSED -- implemented directly in TopTUI
+, abandonProof -- prover
+, updateProof -- prover 
+, completeProof -- prover
+, moveFocusDown -- prover
+, moveFocusUp -- prover
+, switchConsequentFocus -- prover
+, moveFocusToHypothesis -- prover
+, moveFocusFromHypothesis -- prover
+, matchFocus -- prover
+, matchFocusAgainst -- prover
+, applyMatchToFocus1 -- prover
+, applyMatchToFocus2 -- prover
+, applySAT -- prover
+, applyCLA -- prover
+-- , normQuantFocus -- prover
+, nestSimpFocus -- prover
+, substituteFocus -- prover
+, tryFocusAgainst -- prover
+, tryAlphaEquiv -- prover
+, observeLawsInScope -- prover
+, observeTheoriesInScope -- prover
+, observeKnownsInScope -- prover
+, flattenAssociative -- prover
+, groupAssociative -- prover
+, stepBack -- prover
+, lawInstantiate1 -- prover
+, lawInstantiate2 -- prover
+, lawInstantiate3 -- prover
+, cloneHypothesis -- prover
+, stepEquivalenceTheorem -- prover
 )
 where
 

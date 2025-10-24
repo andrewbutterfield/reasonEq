@@ -47,6 +47,15 @@ that take the form:
   \item pack/fold some definitions
 \end{itemize}
 
+
+The original work that inspires this was reported in 
+\cite{DBLP:conf/utp/Butterfield16}. 
+That talks about 
+\emph{simplifiers}, 
+\emph{reducers}, 
+\emph{conditional-reducers}, 
+and \emph{loop-unrolling}.
+
 \section{Classifier Declarations}
 
 \subsection{Classifier Types}

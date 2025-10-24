@@ -24,6 +24,8 @@ import Debugger
 This module provides useful functions to support 
 the Terminal User Interfaces (TUI).
 
+\textbf{NEED TO ADD MORE HERE FROM THE OTHER UI MODULES}
+
 \section{Error Reporting}
 
 Sometimes we want to show an error before refreshing things:

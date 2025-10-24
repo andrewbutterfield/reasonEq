@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module UI.AbstractClassifier
-( ac 
+( applyCLA
 )
 where
 
@@ -57,9 +57,15 @@ import Debugger
 
 \section{Introduction}
 
-This module provides the abstract functions for implementing automated proving based on law classifications.
+This module provides the abstract functions for implementing automated proving 
+based on law classifications.
 
+\textbf{Important:} \emph{Nothing in this module should do IO of any kind}
+
+This is \emph{very} tentative \dots
 \begin{code}
-ac = "abstract classification automation will be supported here"
+applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
+applyCLA liveproofs = fail "Automating classifiers under development"
 \end{code}
+
 

@@ -55,10 +55,16 @@ import ProofMatch
 import Debugger
 \end{code}
 
-\newpage
+\section{Introduction}
 
 This module provides the text user interface for using automated proving based 
 on law classifications.
+
+
+
+\section{TUI Commands}
+
+For now there is one prover-level command:
 
 \begin{code}
 doClassDrivenAutomation :: REPLCmd (REqState, LiveProof)
@@ -70,12 +76,6 @@ doClassDrivenAutomation _ (reqs,liveproof)
                      return (reqs, liveproof) 
 \end{code}
 
-This is \emph{very} tentative \dots
-\begin{code}
-applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
-applyCLA liveproofs
-  = fail $ unlines
-      [ "Automating classifiers expected real soon now...."
-      , ac ]
-\end{code}
+(This may change)
 
+\textbf{Important:} \emph{Any steps requiring user input need to occur here}

@@ -23,6 +23,30 @@ import Proofs
 import Debugger
 \end{code}
 
+\section{Introduction}
+
+There are many ways to classify laws into groups.
+The most obvious one, 
+used in the structuring of theories in \reasonEq\
+is to group those about a particular logical operator,
+or some well-defined collection of such operators.
+This classification focusses on what the laws are \emph{about}.
+A different approach is to ignore what laws are about,
+and instead to focus on their \emph{structure}.
+A useful concept of structure distinguishes 
+between laws that \emph{define} things, 
+and laws that \emph{simplify} things.
+
+The reason this second classification is interesting is 
+that there are many proofs, 
+or segements of proofs, 
+that take the form:
+\begin{itemize}
+  \item expand/unfold some definitions
+  \item perform some simplifications
+  \item pack/fold some definitions
+\end{itemize}
+
 \section{Classifier Declarations}
 
 \subsection{Classifier Types}
@@ -34,8 +58,8 @@ data Direction
     deriving (Eq,Show,Read)
 
 data AutoLaws = AutoLaws
-  { simps    :: [(String, Direction)]
-  , folds    :: [String]
+  { simps    :: [(AssnName, Direction)]
+  , folds    :: [AssnName]
   }
   deriving (Eq,Show,Read)
 
@@ -129,7 +153,9 @@ checkSimp :: String -> Term -> Term -> [(String,Direction)]
 checkSimp nme p q
   = let (issimp,direction) = isSimp nme p q 
     in if issimp then [(nme,direction)] else  []
+\end{code}
 
+\begin{code}
 addSimp :: String -> Term -> [(String, Direction)]
 addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))  =  checkSimp nme p q
 addSimp nme (Cons _ _ (Identifier "eq" 0) (e:f:[]))   =  checkSimp nme e f
@@ -137,7 +163,7 @@ addSimp _   _                                         =  []
 \end{code}
 
 
-\newpage
+
 \section{Identify Folds}
 
 \begin{code}
@@ -170,7 +196,9 @@ checkQ (Cons _ _ n _) i  =  n /= i
 checkQ _ _ = True
 \end{code}
 
-Exported only:
+\newpage
+
+We export the following:
 \begin{code}
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
@@ -194,6 +222,7 @@ checkIsUnFold MatchEqvRHS = False
 checkIsUnFold _ = False 
 \end{code}
 
+\newpage
 \section{Reconcile Folds and  Simplifiers}
 
 Many definitions have the same shape as a 

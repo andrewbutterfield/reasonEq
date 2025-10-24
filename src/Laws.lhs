@@ -11,7 +11,7 @@ module Laws
  , flattenEquiv, flattenImp, flattenAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
- , NmdAssertion(..)
+ , AssnName, NmdAssertion(..)
  , Provenance(..)
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed
@@ -252,7 +252,8 @@ gSplit mOp i ts
 Conjectures, hypotheses and laws always have names,
 so we introduce the idea of a named-assertion:
 \begin{code}
-type NmdAssertion = (String,Assertion)
+type AssnName = String
+type NmdAssertion = (AssnName,Assertion)
 \end{code}
 
 However, we also want to specify the provenance of each law.
@@ -281,7 +282,7 @@ isProven (_,Proven _)  =  True
 isProven _ = False
 isAssumed (_,p)  =  p == Assumed
 
-lawName :: Law -> String
+lawName :: Law -> AssnName
 lawName ((lnm,_),_) = lnm
 
 

@@ -62,19 +62,19 @@ Andrew Butterfield, \it{et. al.}
 %   \item[Abstract Syntax] 
 % \end{description}
 
-% \part{\reasonEq\ Application}
+% \part{Application}
 % \input{app/Main.lhs}
 
 % \input{src/HiddenTypeDictionary.tex}
 
-\part{\reasonEq\ Libraries}
+\part{Libraries}
 
 %%% ABSTRACT SYNTAX
 
 % \newpage\input{src/LexBase.lhs}
 % \newpage\input{src/Variables.lhs}
 % \newpage\input{src/Types.lhs}
-% \newpage\input{src/AST.lhs}
+\newpage\input{src/AST.lhs}
 
 %%% 
 % \newpage\input{src/SideCond.lhs}
@@ -92,31 +92,35 @@ Andrew Butterfield, \it{et. al.}
 % \newpage\input{src/Laws.lhs}
 % \newpage\input{src/Proofs.lhs}
 % \newpage\input{src/SAT.lhs}
-% \newpage\input{src/Classifier.lhs}
 % \newpage\input{src/Theories.lhs}
 % \newpage\input{src/Sequents.lhs}
 % \newpage\input{src/MatchContext.lhs}
 % \newpage\input{src/ProofMatch.lhs}
 % \newpage\input{src/Ranking.lhs}
 % \newpage\input{src/ProofSettings.lhs}
-% \newpage\input{src/LiveProofs.lhs}
+\newpage\input{src/LiveProofs.lhs}
 % \newpage\input{src/REqState.lhs}
 % \newpage\input{src/Persistence.lhs}
-\newpage\input{src/UI/AbstractTop.lhs}
-\newpage\input{src/UI/AbstractProver.lhs}
-\newpage\input{src/UI/AbstractClassifier.lhs}
 % \newpage\input{src/TestRendering.lhs}
 % \newpage\input{src/SourceHandling.lhs}
-% \newpage\input{src/UI/REPL.lhs}
+\newpage\input{src/Classifier.lhs}
+
 % \newpage\input{src/Dev.lhs}
-\newpage\input{src/UI/ClassifierTUI.lhs}
-\newpage\input{src/UI/ProverTUI.lhs}
+
+\part{User Interfaces}
+
+% \newpage\input{src/UI/REPL.lhs}
 % \newpage\input{src/UI/TSupport.lhs}
-\newpage\input{src/UI/TopTUI.lhs}
+\newpage\input{src/UI/ClassifierTUI.lhs}
+\newpage\input{src/UI/AbstractClassifier.lhs}
+\newpage\input{src/UI/ProverTUI.lhs}
+\newpage\input{src/UI/AbstractProver.lhs}
+% \newpage\input{src/UI/TopTUI.lhs}
+% \newpage\input{src/UI/AbstractTop.lhs}
 % \newpage\input{src/UI/TopGUI.lhs}
 
 
-% \part{\reasonEq\ Built-in Theories}
+% \part{Built-in Theories}
 % %
 % \newpage\input{builtin/StdTypeSignature.lhs}
 % \newpage\input{builtin/StdSignature.lhs}
@@ -146,7 +150,7 @@ Andrew Butterfield, \it{et. al.}
 % \newpage\input{doc/Views.tex}
 % \newpage\input{builtin/UTP/UTCP.lhs}
 
-% \part{\reasonEq\ Tests}
+% \part{Tests}
 
 % \newpage\input{test/MatchScenarios.lhs}
 % \newpage\input{src/ShowPP.lhs}
@@ -160,7 +164,7 @@ Andrew Butterfield, \it{et. al.}
 % \newpage\input{src/StratifiedDAG.lhs}
 % \newpage\input{experiments/Acyclicity-code-snippet.lhs}
 %
-% \nocite{*}
+\nocite{*}
 \bibliographystyle{alpha}
 \bibliography{MAIN}
 %

@@ -28,10 +28,6 @@ Setup Module for this and a test theory.
   11. Now figure out what `doClassDrivenAutomation` does, and modify `applyCLA` and add other abstract helpers (which then get pushed over to `AbstractClassifier`).
 
 
-
-
-
-
 ### Classifier
 
 Add a theory-level setting for simplifier 
@@ -55,6 +51,10 @@ A more nuanced approach is that if we have multiple definitions as above,
 we select one to be *the* definition, and remove it from the simplication list,
 while the other definitions are removed, and their simplification 
 (if it exists) is kept.
+
+### TSupport
+
+**NEED TO ADD MORE HERE FROM THE OTHER UI MODULES**
 
 ### Displaying unique Ids in live proofs
 

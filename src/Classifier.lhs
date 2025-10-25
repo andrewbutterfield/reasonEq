@@ -138,43 +138,9 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
 \end{code}
 
 
-\subsection{Classifier Top-Level Operations}
+\section{Classifier Operations}
 
-\subsubsection{Combining Classifications}
-
-\begin{code}
-combineTwoAuto :: ClassifiedLaws -> ClassifiedLaws -> ClassifiedLaws
-combineTwoAuto a b = ClassifiedLaws {  simps = simps a ++ simps b
-                              , folds = folds a ++ folds b
-                              }
-
-combineAutos :: [ClassifiedLaws] -> ClassifiedLaws
-combineAutos [] = nullClassifiedLaws
-combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
-\end{code}
-
-
-\section{Classifier Top Level}
-
-\begin{code}
-addLawClassifier :: Law -> ClassifiedLaws -> ClassifiedLaws
-addLawClassifier ((nme, assn),provenance) au 
-  = reconcileFoldSimps 
-      $ ClassifiedLaws { simps   = simps au   ++ addSimp nme (assnT assn)
-                 , folds   = folds au   ++ addFold nme (assnT assn)
-                 }
-\end{code}
-
-\begin{code}
-addLawsClass :: [Law] -> ClassifiedLaws -> ClassifiedLaws
-addLawsClass [] au = au 
-addLawsClass (x:[]) au = (addLawClassifier x au)
-addLawsClass (x:xs) au 
-  = addLawsClass (xs) (addLawClassifier x au)
-\end{code}
-
-\newpage
-\section{Identify Simplifiers}
+\subsection{Identify Simplifiers}
 
 Given a law $P \equiv Q$ (or $e = f$),
 we compare the sizes of $P$ and $Q$.
@@ -209,9 +175,7 @@ addSimp nme (Cons _ _ (Identifier "eq" 0) (e:f:[]))   =  checkSimp nme e f
 addSimp _   _                                         =  []
 \end{code}
 
-
-
-\section{Identify Folds}
+\subsection{Identify Folds}
 
 \begin{code}
 isFold :: Term -> Bool
@@ -243,34 +207,8 @@ checkQ (Cons _ _ n _) i  =  n /= i
 checkQ _ _ = True
 \end{code}
 
-\newpage
 
-We export the following:
-\begin{code}
-checkIsSimp :: (String, Direction) -> MatchClass -> Bool
-checkIsSimp (_, Rightwards) MatchEqvRHS = True
-checkIsSimp (_, Leftwards) MatchEqvLHS = True
-checkIsSimp _ _ = False
-
-checkIsComp :: (String, Direction) -> MatchClass -> Bool
-checkIsComp (_, Rightwards) MatchEqvLHS = True
-checkIsComp (_, Leftwards) MatchEqvRHS = True
-checkIsComp (_, _) (MatchEqvVar _) = True
-checkIsComp _ _ = False
-
-checkIsFold :: MatchClass -> Bool
-checkIsFold  MatchEqvRHS = True
-checkIsFold  MatchEqvLHS = False
-checkIsFold  _ = False
-
-checkIsUnFold :: MatchClass -> Bool
-checkIsUnFold MatchEqvLHS = True
-checkIsUnFold MatchEqvRHS = False
-checkIsUnFold _ = False 
-\end{code}
-
-\newpage
-\section{Reconcile Folds and  Simplifiers}
+\subsection{Reconcile Folds and  Simplifiers}
 
 Many definitions have the same shape as a 
 (typically right-to-left) simplifier.
@@ -304,9 +242,9 @@ to distinguish \emph{the} definition from other laws of similar structure
 \begin{code}
 -- needs rework!
 reconcileFoldSimps :: ClassifiedLaws -> ClassifiedLaws
-reconcileFoldSimps au 
-  = ClassifiedLaws { simps = removeSimpsList (folds au) (simps au)
-             , folds = folds au
+reconcileFoldSimps cls 
+  = ClassifiedLaws { simps = removeSimpsList (folds cls) (simps cls)
+             , folds = folds cls
              }
 
 removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
@@ -319,3 +257,84 @@ removeSimp x (y:ys) | x == fst y    = removeSimp x ys
                     | otherwise = y : removeSimp x ys
 \end{code}
 
+
+\newpage
+\section{Combining Classifications}
+
+Some general code for collecting stuff together
+(too verbose --- needs rework!)
+
+\begin{code}
+combineTwoAuto :: ClassifiedLaws -> ClassifiedLaws -> ClassifiedLaws
+combineTwoAuto a b = ClassifiedLaws {  simps = simps a ++ simps b
+                              , folds = folds a ++ folds b
+                              }
+
+combineAutos :: [ClassifiedLaws] -> ClassifiedLaws
+combineAutos [] = nullClassifiedLaws
+combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
+\end{code}
+
+
+\subsection{Adding Classification}
+
+\begin{code}
+addLawClassifier :: Law -> ClassifiedLaws -> ClassifiedLaws
+addLawClassifier ((nme, assn),provenance) cls 
+  = reconcileFoldSimps 
+      $ ClassifiedLaws
+          {  simps   = simps cls  ++  addSimp nme (assnT assn)
+          ,  folds   = folds cls  ++  addFold nme (assnT assn)  }
+\end{code}
+
+\begin{code}
+addLawsClass :: [Law] -> ClassifiedLaws -> ClassifiedLaws
+addLawsClass [] cls = cls 
+addLawsClass (x:[]) cls = (addLawClassifier x cls)
+addLawsClass (x:xs) cls 
+  = addLawsClass (xs) (addLawClassifier x cls)
+\end{code}
+
+\newpage
+\section{Checking Classifier Matches}
+
+Given a match made against a classified law,
+we supply predicates that check that the match fits with what is being specified.
+
+\subsection{Checking Simplifiers}
+
+Given $P\equiv Q$, 
+we need to have matched either $P$ or $Q$,
+in a way that is  consistent with the specified direction.
+\begin{code}
+checkIsSimp :: (AssnName, Direction) -> MatchClass -> Bool
+checkIsSimp (_, Rightwards) MatchEqvRHS = True
+checkIsSimp (_, Leftwards) MatchEqvLHS = True
+checkIsSimp _ _ = False
+
+checkIsComp :: (AssnName, Direction) -> MatchClass -> Bool
+checkIsComp (_, Rightwards) MatchEqvLHS = True
+checkIsComp (_, Leftwards) MatchEqvRHS = True
+checkIsComp (_, _) (MatchEqvVar _) = True
+checkIsComp _ _ = False
+\end{code}
+
+
+\subsection{Checking Fold/Unfold}
+
+Given $N(v_1,\dots,v_n) \equiv Q$,
+we need to have matched $Q$ to do a fold, 
+and $N(v_1,\dots,v_n)$ to perform an unfold.
+\begin{code}
+checkIsFold :: MatchClass -> Bool
+checkIsFold  MatchEqvRHS = True
+checkIsFold  MatchEqvLHS = False
+checkIsFold  _ = False
+
+checkIsUnFold :: MatchClass -> Bool
+checkIsUnFold MatchEqvLHS = True
+checkIsUnFold MatchEqvRHS = False
+checkIsUnFold _ = False 
+\end{code}
+
+\newpage

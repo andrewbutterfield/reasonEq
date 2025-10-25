@@ -50,11 +50,24 @@ that take the form:
 
 The original work that inspires this was reported in 
 \cite{DBLP:conf/utp/Butterfield16}. 
-That talks about 
+This talks about 
 \emph{simplifiers}, 
 \emph{reducers}, 
 \emph{conditional-reducers}, 
 and \emph{loop-unrolling}.
+Reducers are steps that perform one or more definition unfolds 
+with perhaps a bit of simplification.
+Conditional reducers deal with cases where the precise outcome
+depends on some condition ($C$) over variables, 
+and what is returned is of the form
+ $(C\implies P) \land (\lnot C \implies Q)$.
+ Rather than automate the evaluation of $C$, 
+ the user is asked to do so, 
+ and hence determine which of $P$ or $Q$ should be chosen.
+ Loop unrolling allows a while-loop $\whl c P$ 
+ to be replaced by $(P;\whl c P) \cond c \Skip$,
+ and also specifies how many unrollings should be done.
+
 
 \section{Classifier Declarations}
 

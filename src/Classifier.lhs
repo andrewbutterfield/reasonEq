@@ -71,6 +71,30 @@ and what is returned is of the form
 
 \section{Classifier Declarations}
 
+For now we identify two kinds of laws:
+those that are simplifiers; 
+and those that represent definitions.
+For now, both have the general shape $P \equiv Q$ or $P = Q$.
+
+A simplifier is such a form where the ``size'' of $P$ and $Q$ are different%
+\footnote{Most laws are simplifiers by this definition!}%
+,
+and simplification involves matching against the larger, 
+and replacing it with the smaller.
+We also need to note in which direction the simplification occurs:
+is to left-to-right, or right-to-left?
+
+A definition is a law where the lefthand side $P$ itself 
+has the form $N(v_1,\dots,v_n)$ where $N$ is a name, 
+and the $v_i$ are variables of any class (observable, expression,predicate).
+Typically the righthand side $Q$ is a term involving the $v_i$.
+We always assume the thing being defined is the lefthand one,
+so working left-to-right is unfolding the definition,
+while the other direction as a fold.
+
+All laws are identified by the name associated with their assertion statement.
+
+
 \subsection{Classifier Types}
 
 \begin{code}

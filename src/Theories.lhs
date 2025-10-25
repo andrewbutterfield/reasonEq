@@ -89,7 +89,7 @@ data Theory
     , known       :: VarTable
     , laws        :: [Law]
     , proofs      :: [Proof]
-    , auto        :: AutoLaws
+    , auto        :: ClassifiedLaws
     , conjs       :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
@@ -112,7 +112,7 @@ nullTheory
            , known    =  newVarTable
            , laws     =  []
            , proofs   =  []
-           , auto     =  nullAutoLaws
+           , auto     =  nullClassifiedLaws
            , conjs    =  []
            }
 \end{code}
@@ -170,7 +170,7 @@ parseTheory (txts,ptxts)
                        , known    =  knwn
                        , laws     =  lws
                        , proofs   =  map read ptxts
-                       , auto     =  AutoLaws simp fold
+                       , auto     =  ClassifiedLaws simp fold
                        , conjs    =  conj
                        }
               , rest8 )
@@ -635,7 +635,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
-lawClassify lw thry = return $ auto_ (addLawsClass lw nullAutoLaws) thry
+lawClassify lw thry = return $ auto_ (addLawsClass lw nullClassifiedLaws) thry
 
 lawDepClassify :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 lawDepClassify thnm thys
@@ -682,7 +682,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
-      , "AutoLaws:", showAuto (auto thry)
+      , "ClassifiedLaws:", showAuto (auto thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -700,7 +700,7 @@ showTheoryLong dm thry
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry) 
-      , "AutoLaws:", showAuto (auto thry)]
+      , "ClassifiedLaws:", showAuto (auto thry)]
     )
   where deps = thDeps thry
 \end{code}

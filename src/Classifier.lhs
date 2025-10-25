@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Classifier 
-  ( Direction(..), AutoLaws(..), nullAutoLaws, showAuto
+  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws, showAuto
   , combineAutos
   , addLawsClass
   , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
@@ -79,29 +79,13 @@ data Direction
     | Rightwards 
     deriving (Eq,Show,Read)
 
-data AutoLaws = AutoLaws
+data ClassifiedLaws = ClassifiedLaws
   { simps    :: [(AssnName, Direction)]
   , folds    :: [AssnName]
   }
   deriving (Eq,Show,Read)
 
-nullAutoLaws  = AutoLaws { simps = [], folds = [] }
-\end{code}
-
-\newpage
-\subsection{Classifier Top-Level Operations}
-
-\subsubsection{Combining Classifications}
-
-\begin{code}
-combineTwoAuto :: AutoLaws -> AutoLaws -> AutoLaws
-combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
-                              , folds = folds a ++ folds b
-                              }
-
-combineAutos :: [AutoLaws] -> AutoLaws
-combineAutos [] = nullAutoLaws
-combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
+nullClassifiedLaws  = ClassifiedLaws { simps = [], folds = [] }
 \end{code}
 
 \subsubsection{Classifier Display}
@@ -129,19 +113,36 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
               ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
 \end{code}
 
+
+\subsection{Classifier Top-Level Operations}
+
+\subsubsection{Combining Classifications}
+
+\begin{code}
+combineTwoAuto :: ClassifiedLaws -> ClassifiedLaws -> ClassifiedLaws
+combineTwoAuto a b = ClassifiedLaws {  simps = simps a ++ simps b
+                              , folds = folds a ++ folds b
+                              }
+
+combineAutos :: [ClassifiedLaws] -> ClassifiedLaws
+combineAutos [] = nullClassifiedLaws
+combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
+\end{code}
+
+
 \section{Classifier Top Level}
 
 \begin{code}
-addLawClassifier :: Law -> AutoLaws -> AutoLaws
+addLawClassifier :: Law -> ClassifiedLaws -> ClassifiedLaws
 addLawClassifier ((nme, assn),provenance) au 
   = reconcileFoldSimps 
-      $ AutoLaws { simps   = simps au   ++ addSimp nme (assnT assn)
+      $ ClassifiedLaws { simps   = simps au   ++ addSimp nme (assnT assn)
                  , folds   = folds au   ++ addFold nme (assnT assn)
                  }
 \end{code}
 
 \begin{code}
-addLawsClass :: [Law] -> AutoLaws -> AutoLaws
+addLawsClass :: [Law] -> ClassifiedLaws -> ClassifiedLaws
 addLawsClass [] au = au 
 addLawsClass (x:[]) au = (addLawClassifier x au)
 addLawsClass (x:xs) au 
@@ -278,9 +279,9 @@ to distinguish \emph{the} definition from other laws of similar structure
 
 \begin{code}
 -- needs rework!
-reconcileFoldSimps :: AutoLaws -> AutoLaws
+reconcileFoldSimps :: ClassifiedLaws -> ClassifiedLaws
 reconcileFoldSimps au 
-  = AutoLaws { simps = removeSimpsList (folds au) (simps au)
+  = ClassifiedLaws { simps = removeSimpsList (folds au) (simps au)
              , folds = folds au
              }
 

@@ -828,12 +828,12 @@ whichApply "f" = True
 whichApply "u" = True
 whichApply _ = False
 
-allAutos :: Theory -> TheoryDAG -> AutoLaws
+allAutos :: Theory -> TheoryDAG -> ClassifiedLaws
 allAutos thry thys 
   = do  let depthys = getTheoryDeps' (thName thry) thys
         combineAutos ((depAutos [] depthys) ++ [auto thry])
 
-depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
+depAutos :: [ClassifiedLaws] -> [Theory] -> [ClassifiedLaws]
 depAutos autos [] = autos
 depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
 \end{code}
@@ -843,7 +843,7 @@ depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
 Applying Simplifiers
 \begin{code}
 applySimps' :: MonadFail m 
-            => ((String, Direction) -> MatchClass -> Bool) -> AutoLaws 
+            => ((String, Direction) -> MatchClass -> Bool) -> ClassifiedLaws 
             -> (REqState, LiveProof) -> m LiveProof
 applySimps' isApplicable autos (reqs, liveProof) 
   = applySimps isApplicable (simps autos) (reqs, liveProof)
@@ -872,7 +872,7 @@ applySimps isApplicable (x:xs) (reqs, liveProof)
 Applying Fold/Unfolds
 \begin{code}
 applyFolds' :: MonadFail m 
-            => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
+            => String -> ClassifiedLaws -> (REqState, LiveProof) -> m LiveProof
 applyFolds' input autos (reqs, liveProof) 
   = do  let isApplicable = if input == "f" then checkIsFold else checkIsUnFold
         let lws = folds autos 

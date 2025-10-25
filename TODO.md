@@ -2,6 +2,20 @@
 
 ## URGENT or NEXT
 
+```
+Proof for ante_as_imp
+	(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
+	⊤
+by red-All
+(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
+   = 'match-lhs ⟹  _def@[1]'
+((P ⟹  Q) ∨ R ≡ R) ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
+   = 'match-rhs ⟹  _def@[1]'     -- *******     ala c   command - correct!
+(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
+   = 'match-lhs contrapositive@[2,1]'
+⊢
+(P ⟹  Q) ⟹  R ≡ (¬R ⟹  ¬(¬P)) ∧ (Q ⟹  R)     -- ala s here fails !
+```
 
 ## PLAN
 

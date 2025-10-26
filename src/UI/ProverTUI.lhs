@@ -866,9 +866,11 @@ applySimp :: MonadFail m
            -> (String, Direction) 
            -> (REqState, LiveProof) -> m LiveProof
 applySimp isApplicable vts simp@(assnm,dir) (reqs, liveProof) = do
-  liveProof' <- matchFocusAgainst assnm liveProof
+  liveProof' <- matchFocusAgainst (pdbg "aS.assnm" assnm) liveProof
+  let mtchs' = match liveProof'
+  -- !!!! we need to map applyMatchToFocus1 across mtchs'
   (mtch,_,_,_,_) <- applyMatchToFocus1 1 liveProof'
-  if isApplicable simp (mClass mtch)
+  if isApplicable (pdbg "aS.simp" simp) (mClass $ pdbg "aS.mtch" mtch)
   then applyMatchToFocus2 vts mtch [] [] liveProof'
   else fail ("simplifer '"++assnm++"' does not apply here")
 \end{code}

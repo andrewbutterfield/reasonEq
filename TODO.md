@@ -2,20 +2,16 @@
 
 ## URGENT or NEXT
 
-```
-Proof for ante_as_imp
-	(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
-	⊤
-by red-All
-(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
-   = 'match-lhs ⟹  _def@[1]'
-((P ⟹  Q) ∨ R ≡ R) ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
-   = 'match-rhs ⟹  _def@[1]'     -- *******     ala c   command - correct!
-(P ⟹  Q) ⟹  R ≡ (¬P ⟹  R) ∧ (Q ⟹  R)
-   = 'match-lhs contrapositive@[2,1]'
-⊢
-(P ⟹  Q) ⟹  R ≡ (¬R ⟹  ¬(¬P)) ∧ (Q ⟹  R)     -- ala s here fails !
-```
+
+
+When we use `tcl s` with `(¬R ⟹  ¬(¬P))` we get both L2R and R2L matches
+on the `contrapositive` law. 
+
+However only the first match is used by `applySimp`:
+
+**Because it just does `applyMatchToFocus1 1 `**
+
+*Instead it should try all the returned matches.*
 
 ## PLAN
 

@@ -41,6 +41,7 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
+import UI.TSupport
 import UI.ClassifierTUI
 import UI.AbstractTop(observeSettings,modifyProofSettings)
 import UI.AbstractProver
@@ -137,7 +138,7 @@ proofREPLConfig
             , groupEquivDescr
             , lawInstantiateDescr
             , applySATDescr
-            , autoDescr
+            , tryCLDescr
             , applyACLDescr
             , switchConsequentDescr
             , switchHypothesisDescr
@@ -783,53 +784,60 @@ applySATCommand _ (reqs,liveproof)
 
 \subsection{Auto Law Application}
 
-Automatically apply laws of a specified kind
+Automatically try all laws of a specified kind
 \begin{code}
-autoDescr = ( "ala"
-            , "automatic law application"
+tryCLDescr = ( comm 
+            , "try classified law"
             , unlines
-                [ "ala   -- apply simplification (default)"
-                , "ala s -- apply simplification"
-                , "ala c -- apply complexification"
-                , "ala u -- unfold (expand) definition"
-                , "ala f -- auto proof unfold"]
-            , autoCommand )
+                [ comm ++ " [C] -- try law from class C"
+                , "C = 's' -- try simplification (default)"
+                , "C = 'c' -- try complexification"
+                , "C = 'u' -- try unfold"
+                , "C = 'f' -- try fold" ]
+            , tryCLCommand )
+  where comm = "tcl"
 
-autoCommand :: REPLCmd (REqState, LiveProof)
-autoCommand args state@(reqs, liveProof)
-  = case getTheory (currTheory reqs) $ theories reqs of
-      Nothing ->
-        do putStrLn ("Can't find current theory!!!\BEL")
-           return (reqs, liveProof)
-      Just thry ->
-        do  let autos = allAutos thry $ theories reqs
-            case whichApply input of
-              True ->  
-                case applyFolds' input autos (reqs, liveProof) of
-                  Yes liveProof' -> return (reqs, liveProof')
-                  But nothing -> 
-                    do putStrLn ("No successful matching fold applies")
-                       return (reqs, liveProof)
-              False -> 
-                do let isApplicable = if input == "c" 
-                                      then checkIsComp else checkIsSimp
-                   case applySimps' isApplicable autos (reqs, liveProof) of
-                      Yes liveProof' -> return (reqs, liveProof')
-                      But nothing -> 
-                        do putStrLn ("No successful matching simp applies")
-                           return (reqs, liveProof)
-    where
-      input = unwords args
+
+tryCLCommand :: REPLCmd (REqState, LiveProof)
+tryCLCommand args state@(reqs, liveProof) = do
+  thry <- getTheory (currTheory reqs) $ theories reqs
+  let classified = allClassified thry $ theories reqs
+  case dispatchTryCL args classified state of
+    Yes state'  ->  return state'
+    But msgs    ->  errorPause msgs state
+
+dispatchTryCL args classified state = 
+  case args of
+    []            ->  applySimpCommand checkIsSimp classified state
+    (w:_)
+      | w == "s"  ->  applySimpCommand checkIsSimp   classified state
+      | w == "c"  ->  applySimpCommand checkIsComp   classified state
+      | w == "f"  ->  applyFoldCommand checkIsFold   classified state
+      | w == "u"  ->  applyFoldCommand checkIsUnFold classified state
+    _ -> fail "acl: invalid argument"
+
+applySimpCommand :: MonadFail mf
+                 => ((String, Direction) -> MatchClass -> Bool) 
+                 -> ClassifiedLaws -> (REqState, LiveProof)
+                 -> mf (REqState, LiveProof)
+applySimpCommand check classified state@(reqs, liveProof) = do
+  liveProof' <- applySimps check (simps classified) state
+  return (reqs,liveProof')
+
+applyFoldCommand :: MonadFail mf
+                 => (MatchClass -> Bool) 
+                 -> ClassifiedLaws -> (REqState, LiveProof)
+                 -> mf (REqState, LiveProof)
+applyFoldCommand check classified state@(reqs, liveProof) = do
+  liveProof' <- applyFolds check (folds classified) state
+  return (reqs,liveProof')
 \end{code}
 
-\begin{code}
-whichApply :: String -> Bool
-whichApply "f" = True
-whichApply "u" = True
-whichApply _ = False
 
-allAutos :: Theory -> TheoryDAG -> ClassifiedLaws
-allAutos thry thys 
+
+\begin{code}
+allClassified :: Theory -> TheoryDAG -> ClassifiedLaws
+allClassified thry thys 
   = do  let depthys = getTheoryDeps' (thName thry) thys
         combineAutos ((depAutos [] depthys) ++ [auto thry])
 
@@ -842,12 +850,6 @@ depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
 
 Applying Simplifiers
 \begin{code}
-applySimps' :: MonadFail m 
-            => ((String, Direction) -> MatchClass -> Bool) -> ClassifiedLaws 
-            -> (REqState, LiveProof) -> m LiveProof
-applySimps' isApplicable autos (reqs, liveProof) 
-  = applySimps isApplicable (simps autos) (reqs, liveProof)
-
 applySimps :: MonadFail m 
            => ((String, Direction) -> MatchClass -> Bool) 
            -> [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
@@ -871,14 +873,6 @@ applySimps isApplicable (x:xs) (reqs, liveProof)
 
 Applying Fold/Unfolds
 \begin{code}
-applyFolds' :: MonadFail m 
-            => String -> ClassifiedLaws -> (REqState, LiveProof) -> m LiveProof
-applyFolds' input autos (reqs, liveProof) 
-  = do  let isApplicable = if input == "f" then checkIsFold else checkIsUnFold
-        let lws = folds autos 
-        -- if input == "f" then folds autos else unfolds autos
-        applyFolds isApplicable lws (reqs, liveProof)
-
 applyFolds :: MonadFail m 
            => (MatchClass -> Bool) -> [String] 
            -> (REqState, LiveProof) -> m LiveProof

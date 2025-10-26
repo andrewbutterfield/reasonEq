@@ -857,14 +857,17 @@ applySimp :: MonadFail m
            => ((String, Direction) -> MatchClass -> Bool) -> [VarTable]
            -> (String, Direction) 
            -> (REqState, LiveProof) -> m LiveProof
-applySimp isApplicable vts simp@(assnm,dir) (reqs, liveProof) = do
-  liveProof' <- matchFocusAgainst (pdbg "aS.assnm" assnm) liveProof
-  let mtchs' = match liveProof'
-  -- !!!! we need to map applyMatchToFocus1 across mtchs'
-  (mtch,_,_,_,_) <- applyMatchToFocus1 1 liveProof'
-  if isApplicable (pdbg "aS.simp" simp) (mClass $ pdbg "aS.mtch" mtch)
-  then applyMatchToFocus2 vts mtch [] [] liveProof'
-  else fail ("simplifer '"++assnm++"' does not apply here")
+applySimp isApplicable vts simp@(assnm,dir) (reqs, liveProof) 
+  = do liveProof' <- matchFocusAgainst (pdbg "aS.assnm" assnm) liveProof
+       trySimpMatches liveProof' 1
+  where
+    trySimpMatches liveproof i =
+      case applyMatchToFocus1 i liveproof of
+        Nothing -> fail ("simplifer '"++assnm++"' does not apply here")
+        Just (mtch,_,_,_,_) ->
+          if isApplicable (pdbg "aS.simp" simp) (mClass $ pdbg "aS.mtch" mtch)
+          then applyMatchToFocus2 vts mtch [] [] liveproof
+          else trySimpMatches liveproof (i+1)
 \end{code}
 
 Applying Fold/Unfolds
@@ -884,12 +887,17 @@ applyFold :: MonadFail m
           => (MatchClass -> Bool) -> [VarTable]
           -> String 
           -> (REqState, LiveProof) -> m LiveProof
-applyFold isApplicable vts fold (reqs, liveProof) = do
-  liveProof' <- matchFocusAgainst fold liveProof
-  (mtch,_,_,_,_) <- applyMatchToFocus1 1 liveProof'
-  if isApplicable (mClass mtch)
-  then applyMatchToFocus2 vts mtch [] [] liveProof'
-  else fail ("fold '"++fold++"' does not apply here")
+applyFold isApplicable vts fold (reqs, liveProof)
+  = do liveProof' <- matchFocusAgainst fold liveProof
+       tryFoldMatches liveProof' 1
+  where
+    tryFoldMatches liveproof i =
+      case applyMatchToFocus1 i liveproof of
+        Nothing -> fail ("fold '"++fold++"' does not apply here")
+        Just (mtch,_,_,_,_) ->
+          if isApplicable (mClass mtch)
+          then applyMatchToFocus2 vts mtch [] [] liveproof
+         else tryFoldMatches liveproof (i+1)
 \end{code}
 
 \newpage

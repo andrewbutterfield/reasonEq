@@ -262,7 +262,7 @@ matchFocusAgainst lawnm liveProof
         vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType tvmap
-          case pdbg ("AP.mLBN("++lawnm++")") $ matchLawByName asn' lawnm ctxts fits of
+          case matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
             But msgs  -> fail $ unlines msgs

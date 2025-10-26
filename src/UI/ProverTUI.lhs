@@ -853,22 +853,24 @@ Applying Simplifiers
 applySimps :: MonadFail m 
            => ((String, Direction) -> MatchClass -> Bool) 
            -> [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
-applySimps isApplicable [] (reqs, liveProof) 
-  = fail ("No successful matching simp appliess")
-applySimps isApplicable (x:xs) (reqs, liveProof)
-  = case matchFocusAgainst (fst x) liveProof of
-      Yes liveProof' ->  
-        case applyMatchToFocus1 1 liveProof' of
-          Nothing -> applySimps isApplicable xs (reqs, liveProof)
-          Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
-            case isApplicable x (mClass mtch) of 
-              False -> applySimps isApplicable xs (reqs, liveProof')
-              True  -> 
-                case applyMatchToFocus2 vts mtch [] [] liveProof' of
-                  Yes liveProof'' -> return liveProof''
-                  But msgs -> applySimps isApplicable xs (reqs, liveProof)
-      But msgs  ->  applySimps isApplicable xs (reqs, liveProof)
+applySimps isApplicable [] state
+  = fail ("No successful matching simp applies")
+applySimps isApplicable (simp:ss) state@(_, liveProof)
+  = case applySimp isApplicable vts simp state of
+      Just liveProof' ->  return liveProof'
+      Nothing -> applySimps isApplicable ss state 
   where vts = getVarTables $ mtchCtxts liveProof
+
+applySimp :: MonadFail m 
+           => ((String, Direction) -> MatchClass -> Bool) -> [VarTable]
+           -> (String, Direction) 
+           -> (REqState, LiveProof) -> m LiveProof
+applySimp isApplicable vts simp@(assnm,dir) (reqs, liveProof) = do
+  liveProof' <- matchFocusAgainst assnm liveProof
+  (mtch,_,_,_,_) <- applyMatchToFocus1 1 liveProof'
+  if isApplicable simp (mClass mtch)
+  then applyMatchToFocus2 vts mtch [] [] liveProof'
+  else fail ("simplifer '"++assnm++"' does not apply here")
 \end{code}
 
 Applying Fold/Unfolds
@@ -876,22 +878,24 @@ Applying Fold/Unfolds
 applyFolds :: MonadFail m 
            => (MatchClass -> Bool) -> [String] 
            -> (REqState, LiveProof) -> m LiveProof
-applyFolds _ [] (reqs, liveProof) 
+applyFolds _ [] state 
   = fail ("No successful matching fold/unfold applies")
-applyFolds isApplicable (x:xs) (reqs, liveProof)
-  = case matchFocusAgainst x liveProof of
-      Yes liveProof' ->  
-        case applyMatchToFocus1 1 liveProof' of
-          Nothing -> applyFolds isApplicable xs (reqs, liveProof)
-          Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
-            case isApplicable (mClass mtch) of 
-              False -> applyFolds isApplicable xs (reqs, liveProof')
-              True  -> 
-                case applyMatchToFocus2 vts mtch [] [] liveProof' of
-                  Yes liveProof'' -> return liveProof''
-                  But msgs        -> applyFolds isApplicable xs (reqs, liveProof)
-      But msgs       ->  applyFolds isApplicable xs (reqs, liveProof)
+applyFolds isApplicable (fold:fs) state@(reqs, liveProof)
+  = case applyFold isApplicable vts fold (reqs, liveProof) of
+      Just liveProof' ->  return liveProof'
+      Nothing -> applyFolds isApplicable fs state
   where vts = getVarTables $ mtchCtxts liveProof
+      
+applyFold :: MonadFail m 
+          => (MatchClass -> Bool) -> [VarTable]
+          -> String 
+          -> (REqState, LiveProof) -> m LiveProof
+applyFold isApplicable vts fold (reqs, liveProof) = do
+  liveProof' <- matchFocusAgainst fold liveProof
+  (mtch,_,_,_,_) <- applyMatchToFocus1 1 liveProof'
+  if isApplicable (mClass mtch)
+  then applyMatchToFocus2 vts mtch [] [] liveProof'
+  else fail ("fold '"++fold++"' does not apply here")
 \end{code}
 
 \newpage

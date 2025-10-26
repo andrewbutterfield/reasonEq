@@ -47,7 +47,6 @@ BEGIN LIST SIMPLIFIERS
 ("ante_and_distr",Rightwards)
 ("cnsq_and_distr",Rightwards)
 ("cnsq_and_distr",Rightwards)
-("ante_as_imp",Rightwards)
 ("imp_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD

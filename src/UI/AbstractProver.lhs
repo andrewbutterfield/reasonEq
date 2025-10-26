@@ -241,7 +241,7 @@ matchFocus ranking liveProof
           let fits  =  cSubType tvmap
           let mtchs = matchInContexts ctxts fits asn'
           let rankedM = ranking ctxts mtchs
-          return $ matches_ (ldbg mshow "mF.rankedM" rankedM) liveProof
+          return $ matches_ rankedM liveProof
   where 
     mshow m = 
       mName m 
@@ -262,7 +262,7 @@ matchFocusAgainst lawnm liveProof
         vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType tvmap
-          case matchLawByName asn' lawnm ctxts fits of
+          case pdbg ("AP.mLBN("++lawnm++")") $ matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
             But msgs  -> fail $ unlines msgs

@@ -71,7 +71,7 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  = let fms = filter (ff ctxts) $ ldbg mshow "fAS.ms" ms
+  = let fms = filter (ff ctxts) ms
     in remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) $ ldbg mshow "fAS.fms" fms
   where  
     mshow m = 

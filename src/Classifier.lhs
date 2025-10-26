@@ -7,13 +7,14 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Classifier 
-  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws, showAuto
-  , combineAutos
-  , addLawsClass
+  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws, showClassyLaws
+  , catClassyLaws
+  , addClassyLaws
   , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
   ) where
 
 import qualified Data.Set as S
+import Utilities
 import Laws
 import AST
 import Assertions
@@ -133,8 +134,9 @@ showFolds [] _ = ""
 showFolds (x:[]) n = "\n\t" ++ show n ++ ". " ++ x
 showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
 
-showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
-              ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
+showClassyLaws alaws = unlines'
+  [ "  simplifiers:"  ++ showSimps (simps alaws) 1
+  , "  folds/unfolds:"  ++ showFolds (folds alaws) 1 ]
 \end{code}
 
 
@@ -244,17 +246,17 @@ to distinguish \emph{the} definition from other laws of similar structure
 reconcileFoldSimps :: ClassifiedLaws -> ClassifiedLaws
 reconcileFoldSimps cls 
   = ClassifiedLaws { simps = removeSimpsList (folds cls) (simps cls)
-             , folds = folds cls
-             }
+                   , folds = folds cls }
 
-removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
-removeSimpsList [] ys = ys
-removeSimpsList (x:xs) ys = removeSimpsList xs $ removeSimp x ys
+removeSimpsList :: [AssnName] -> [(AssnName, Direction)] 
+                -> [(AssnName, Direction)]
+removeSimpsList [] nds = nds
+removeSimpsList (n:ns) nds = removeSimpsList ns $ removeSimp n nds
 
-removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
+removeSimp :: AssnName -> [(AssnName, Direction)] -> [(AssnName, Direction)]
 removeSimp _ [] = []
-removeSimp x (y:ys) | x == fst y    = removeSimp x ys
-                    | otherwise = y : removeSimp x ys
+removeSimp n (nd@(n',_):nds) | n == n'    =       removeSimp n nds
+                             | otherwise  =  nd : removeSimp n nds
 \end{code}
 
 
@@ -270,9 +272,9 @@ combineTwoAuto a b = ClassifiedLaws {  simps = simps a ++ simps b
                               , folds = folds a ++ folds b
                               }
 
-combineAutos :: [ClassifiedLaws] -> ClassifiedLaws
-combineAutos [] = nullClassifiedLaws
-combineAutos (alws:alwss) = combineTwoAuto alws (combineAutos alwss)
+catClassyLaws :: [ClassifiedLaws] -> ClassifiedLaws
+catClassyLaws [] = nullClassifiedLaws
+catClassyLaws (alws:alwss) = combineTwoAuto alws (catClassyLaws alwss)
 \end{code}
 
 
@@ -288,11 +290,9 @@ addLawClassifier ((nme, assn),provenance) cls
 \end{code}
 
 \begin{code}
-addLawsClass :: [Law] -> ClassifiedLaws -> ClassifiedLaws
-addLawsClass [] cls = cls 
-addLawsClass (x:[]) cls = (addLawClassifier x cls)
-addLawsClass (x:xs) cls 
-  = addLawsClass (xs) (addLawClassifier x cls)
+addClassyLaws :: [Law] -> ClassifiedLaws -> ClassifiedLaws
+addClassyLaws []     cls  =  cls 
+addClassyLaws (x:xs) cls  =  addClassyLaws (xs) (addLawClassifier x cls)
 \end{code}
 
 \newpage
@@ -309,14 +309,14 @@ in a way that is  consistent with the specified direction.
 \begin{code}
 checkIsSimp :: (AssnName, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
-checkIsSimp (_, Leftwards) MatchEqvLHS = True
-checkIsSimp _ _ = False
+checkIsSimp (_, Leftwards)  MatchEqvLHS = True
+checkIsSimp _               _           = False
 
 checkIsComp :: (AssnName, Direction) -> MatchClass -> Bool
-checkIsComp (_, Rightwards) MatchEqvLHS = True
-checkIsComp (_, Leftwards) MatchEqvRHS = True
-checkIsComp (_, _) (MatchEqvVar _) = True
-checkIsComp _ _ = False
+checkIsComp (_, Rightwards) MatchEqvLHS  = True
+checkIsComp (_, Leftwards)  MatchEqvRHS  = True
+checkIsComp (_, _)      (MatchEqvVar _)  = True
+checkIsComp _            _               = False
 \end{code}
 
 

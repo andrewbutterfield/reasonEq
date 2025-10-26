@@ -635,7 +635,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
-lawClassify lw thry = return $ auto_ (addLawsClass lw nullClassifiedLaws) thry
+lawClassify lw thry = return $ auto_ (addClassyLaws lw nullClassifiedLaws) thry
 
 lawDepClassify :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 lawDepClassify thnm thys
@@ -682,7 +682,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
-      , "ClassifiedLaws:", showAuto (auto thry)
+      , "ClassifiedLaws:", showClassyLaws (auto thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -700,7 +700,7 @@ showTheoryLong dm thry
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry) 
-      , "ClassifiedLaws:", showAuto (auto thry)]
+      , "ClassifiedLaws:", showClassyLaws (auto thry)]
     )
   where deps = thDeps thry
 \end{code}

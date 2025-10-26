@@ -370,7 +370,8 @@ matchLawCommand [] (reqs, liveProof)
              waitForReturn
              return (reqs, matches_ [] liveProof)
   where
-    ranking = filterAndSort (matchFilter $ rdbn showPrfSettings "prfSttngs" $ liveSettings liveProof, favourDefLHSOrd)
+    ranking = filterAndSort ( matchFilter  $ liveSettings liveProof
+                            , favourDefLHSOrd )
 
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm liveProof of
@@ -797,7 +798,6 @@ tryCLDescr = ( comm
             , tryCLCommand )
   where comm = "tcl"
 
-
 tryCLCommand :: REPLCmd (REqState, LiveProof)
 tryCLCommand args state@(reqs, liveProof) = do
   thry <- getTheory (currTheory reqs) $ theories reqs
@@ -805,6 +805,10 @@ tryCLCommand args state@(reqs, liveProof) = do
   case dispatchTryCL args classified state of
     Yes state'  ->  return state'
     But msgs    ->  errorPause msgs state
+
+allClassified :: Theory -> TheoryDAG -> ClassifiedLaws
+allClassified thry thys 
+  = catClassyLaws $ map auto $ getTheoryDeps' (thName thry) thys
 
 dispatchTryCL args classified state = 
   case args of
@@ -833,18 +837,6 @@ applyFoldCommand check classified state@(reqs, liveProof) = do
   return (reqs,liveProof')
 \end{code}
 
-
-
-\begin{code}
-allClassified :: Theory -> TheoryDAG -> ClassifiedLaws
-allClassified thry thys 
-  = do  let depthys = getTheoryDeps' (thName thry) thys
-        combineAutos ((depAutos [] depthys) ++ [auto thry])
-
-depAutos :: [ClassifiedLaws] -> [Theory] -> [ClassifiedLaws]
-depAutos autos [] = autos
-depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
-\end{code}
 
 \newpage
 

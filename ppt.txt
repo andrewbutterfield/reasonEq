@@ -1,14 +1,29 @@
-@tFA.tvmap:  {A1 ⟼  A1,A2 ⟼  A1,A3 ⟼  A3,A4 ⟼  A3,A5 ⟼  A5,A6 ⟼  A6,A7 ⟼  A7}
-@iSC.vsps: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, ls,ls',s,s'⋔R, s,s'⊇ₐa
-@iSC.vsps': ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
-@iSC.vsps2: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
-@iSC.vscs2:  
-[VSC (GV (VR (Id "E" 0,VE,WS))) 
-     (The (fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])) 
-     NA NA
-,VSC (GV (VR (Id "N" 0,VE,WS))) 
-     (The (fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])) 
-     NA NA
-,VSC (GV (VR (Id "a" 0,VP,WS))) 
-     NA NA 
-     (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))]
+@GOAL: (¬R ⟹  ¬(¬P))
+
+@aS.assnm:  "contrapositive"
+@mLBN(contrapositive).domatch:
+[ MT { mName = "contrapositive"   
+     , mAsn =  P ⟹  Q ≡ ¬Q ⟹  ¬P
+     , mClass = MEL
+     , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬R, Q  ⟼ ¬(¬P), ⟹   ⟼ ⟹  }
+     , mLawPart = ¬Q ⟹  ¬P
+     , mRepl = ¬(¬(¬P)) ⟹  ¬(¬R) }
+, MT { mName = "contrapositive"
+     , mAsn = P ⟹  Q ≡ ¬Q ⟹  ¬P
+     , mClass = MER
+     , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬P, Q  ⟼ R, ⟹   ⟼ ⟹ , ¬  ⟼ ¬ }
+     , mLawPart = P ⟹  Q
+     , mRepl = ¬P ⟹  R } 
+]
+
+@aS.simp:  ( "contrapositive", Rightwards )
+
+@aS.mtch:  
+MT { mName = "contrapositive"   
+   , mAsn =  P ⟹  Q ≡ ¬Q ⟹  ¬P
+   , mClass = MEL
+   , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬R, Q  ⟼ ¬(¬P), ⟹   ⟼ ⟹  }
+   , mLawPart = ¬Q ⟹  ¬P
+   , mRepl = ¬(¬(¬P)) ⟹  ¬(¬R) }
+
+@cIS.other:  False

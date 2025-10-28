@@ -58,7 +58,20 @@ import Debugger
 \section{Introduction}
 
 This module provides the abstract functions for implementing automated proving 
-based on law classifications.
+based on law classifications (\textit{a.k.a.} kinds).
+
+The overall task breaks down into two main components:
+\begin{itemize}
+    \item 
+      The first implements taking a law 
+      and searching through the current proof goal 
+      to find a sub-term to which it applies (if any).
+    \item 
+      The second is about having various collections of laws, 
+      grouped by kinds, 
+      and how to automate their use in some systematic way 
+      to make progress in proofs.
+\end{itemize}
 
 \textbf{Important:} \emph{Nothing in this module should do IO of any kind}
 
@@ -67,5 +80,9 @@ This is \emph{very} tentative \dots
 applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
 applyCLA liveproofs = fail "Automating classifiers under development"
 \end{code}
+
+\section{Law Application within a term}
+
+\section{Applying Law Collections}
 
 

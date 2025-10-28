@@ -1,11 +1,11 @@
-\chapter{Abstract Classifier}
+\chapter{Abstract Law-Kinds}
 \begin{verbatim}
 Copyright (c) Andrew Butterfield 2025
  
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module UI.AbstractClassifier
+module UI.AbstractLawKinds
 ( applyCLA
 )
 where

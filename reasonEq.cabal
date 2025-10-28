@@ -53,10 +53,10 @@ library
       Theories
       Types
       Typing
-      UI.AbstractClassifier
+      UI.AbstractLawKinds
       UI.AbstractProver
       UI.AbstractTop
-      UI.ClassifierTUI
+      UI.LawKindTUI
       UI.ProverTUI
       UI.REPL
       UI.TopGUI

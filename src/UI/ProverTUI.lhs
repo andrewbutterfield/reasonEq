@@ -42,7 +42,7 @@ import ProofSettings
 import REqState
 import MatchContext
 import UI.TSupport
-import UI.ClassifierTUI
+import UI.LawKindTUI
 import UI.AbstractTop(observeSettings,modifyProofSettings)
 import UI.AbstractProver
 import Instantiate

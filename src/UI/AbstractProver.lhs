@@ -71,7 +71,7 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
-import UI.ClassifierTUI
+import UI.LawKindTUI
 import REqState
 import Persistence
 import ProofMatch

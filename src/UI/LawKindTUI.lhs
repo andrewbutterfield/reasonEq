@@ -1,11 +1,11 @@
-\chapter{Classifier TUI}
+\chapter{Law-Kind TUI}
 \begin{verbatim}
 Copyright (c) Andrew Butterfield 2025
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module UI.ClassifierTUI (
+module UI.LawKindTUI (
   doClassDrivenAutomation
 ) 
 where
@@ -42,7 +42,7 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.AbstractClassifier
+import UI.AbstractLawKinds
 import Instantiate
 import TestRendering
 import SourceHandling

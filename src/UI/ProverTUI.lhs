@@ -808,7 +808,7 @@ tryCLCommand args state@(reqs, liveProof) = do
 
 allClassified :: Theory -> TheoryDAG -> ClassifiedLaws
 allClassified thry thys 
-  = catClassyLaws $ map auto $ getTheoryDeps' (thName thry) thys
+  = catClassyLaws $ map lwkinds $ getTheoryDeps' (thName thry) thys
 
 dispatchTryCL args classified state = 
   case args of

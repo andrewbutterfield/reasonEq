@@ -15,7 +15,7 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
- , auto__, auto_
+ , lwkinds__, lwkinds_
  , nullTheory
  , renderTheory, parseTheory
  , TheoryMap, TheoryDAG(..)
@@ -89,7 +89,7 @@ data Theory
     , known       :: VarTable
     , laws        :: [Law]
     , proofs      :: [Proof]
-    , auto        :: ClassifiedLaws
+    , lwkinds     :: ClassifiedLaws
     , conjs       :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
@@ -100,7 +100,7 @@ thDeps__ f r = r{thDeps = f $ thDeps r}    ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r}       ; known_ = known__ . const
 laws__ f r = r{laws = f $ laws r}          ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r}    ; proofs_ = proofs__ . const
-auto__ f r = r{auto = f $ auto r}          ; auto_ = auto__ . const
+lwkinds__ f r = r{lwkinds = f $ lwkinds r} ; lwkinds_ = lwkinds__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
 \end{code}
 
@@ -112,7 +112,7 @@ nullTheory
            , known    =  newVarTable
            , laws     =  []
            , proofs   =  []
-           , auto     =  nullClassifiedLaws
+           , lwkinds     =  nullClassifiedLaws
            , conjs    =  []
            }
 \end{code}
@@ -142,8 +142,8 @@ renderTheory thry
       , depsKEY ++ show (thDeps thry)
       , knwnKEY ++ show (known thry) ] ++
       writePerLine lawsKEY show (laws thry) ++
-      writePerLine simpKEY show (simps $ auto thry) ++
-      writePerLine foldKEY id (folds $ auto thry) ++
+      writePerLine simpKEY show (simps $ lwkinds thry) ++
+      writePerLine foldKEY id (folds $ lwkinds thry) ++
       writePerLine conjKEY show (conjs thry) ++
       [ thryTRL nm ]
     , map showproof $ proofs thry )
@@ -170,7 +170,7 @@ parseTheory (txts,ptxts)
                        , known    =  knwn
                        , laws     =  lws
                        , proofs   =  map read ptxts
-                       , auto     =  ClassifiedLaws simp fold
+                       , lwkinds     =  ClassifiedLaws simp fold
                        , conjs    =  conj
                        }
               , rest8 )
@@ -635,7 +635,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
-lawClassify lw thry = return $ auto_ (addClassyLaws lw nullClassifiedLaws) thry
+lawClassify lw thry = return $ lwkinds_ (addClassyLaws lw nullClassifiedLaws) thry
 
 lawDepClassify :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 lawDepClassify thnm thys
@@ -682,7 +682,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
-      , "ClassifiedLaws:", showClassyLaws (auto thry)
+      , "ClassifiedLaws:", showClassyLaws (lwkinds thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -700,7 +700,7 @@ showTheoryLong dm thry
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry) 
-      , "ClassifiedLaws:", showClassyLaws (auto thry)]
+      , "ClassifiedLaws:", showClassyLaws (lwkinds thry)]
     )
   where deps = thDeps thry
 \end{code}

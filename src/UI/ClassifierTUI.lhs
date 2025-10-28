@@ -60,6 +60,37 @@ import Debugger
 This module provides the text user interface for using automated proving based 
 on law classifications.
 
+The key idea is that we have collections of different kinds of laws
+(\textit{e.g.}, simplifiers, fold/unfold, \dots),
+and we want some form of automation that will try to 
+use laws of a given kind to make progress.
+When one law kind stops making progress, we will choose another kind.
+We keep repeating this until no laws of any kind have any effect.
+
+In a little more detail:
+\begin{itemize}
+  \item 
+    Applying a law to a proof goal will involve searching the proof goal
+    to find a sub-term of the goal where the law matches.
+    If such a term is found, 
+    we then return the proof goal with that sub-term replaced by the result of
+    the match.
+  \item
+    Given a collection of laws of the same kind,
+    we simply try to apply each such law to the proof goal.
+    We terminate if a law suceeds in making a change,
+    or if we have tried all laws in the collection.
+  \item
+    Given several such collections, we try each collection in turn.
+    Whenever a collection fails to change the goal, 
+    we switch to the next collection.
+    When a complete run through of all laws in all collections 
+    results in no change, we terminate.
+\end{itemize}
+
+
+
+
 
 
 \section{TUI Commands}
@@ -75,7 +106,14 @@ doClassDrivenAutomation _ (reqs,liveproof)
                      waitForReturn
                      return (reqs, liveproof) 
 \end{code}
-
 (This may change)
 
 \textbf{Important:} \emph{Any steps requiring user input need to occur here}
+
+It might help to several commands here
+\begin{itemize}
+  \item Apply one law to the proof goal
+  \item Apply a collection of laws to the proof goal
+  \item Apply several law collections to the proof goal
+\end{itemize}
+

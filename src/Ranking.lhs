@@ -72,7 +72,7 @@ filterAndSort :: Ord ord
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
   = let fms = filter (ff ctxts) ms
-    in remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) $ ldbg fms
+    in remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
   where  
     mshow m = 
       mName m 

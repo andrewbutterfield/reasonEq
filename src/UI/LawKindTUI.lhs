@@ -89,6 +89,17 @@ In a little more detail:
 \end{itemize}
 
 
+\newpage
+\section{Basic TUI Steps}
+
+All have type \h{REPLCmd (REqState, LiveProof)},
+and are defined in \h{ProverTUI}.
+\begin{verbatim}
+tryDelta . moveFocusDown
+tryDelta moveFocusUp 
+matchLawCommand
+applyMatch
+\end{verbatim}
 
 
 

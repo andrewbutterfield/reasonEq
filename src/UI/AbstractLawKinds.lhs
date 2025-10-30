@@ -73,6 +73,31 @@ The overall task breaks down into two main components:
       to make progress in proofs.
 \end{itemize}
 
+\section{Basic Abstract Steps}
+
+\begin{verbatim}
+moveFocusDown :: MonadFail m => Int -> LiveProof -> m LiveProof
+moveFocusUp :: MonadFail m => LiveProof -> m LiveProof
+
+matchFocusAgainst :: MonadFail m => String -> LiveProof -> m LiveProof
+
+applyMatchToFocus1 :: MonadFail m => 
+  Int -> LiveProof -> m (ProofMatch,[Variable],[Term],[ListVar],VarList)
+
+applyMatchToFocus2 :: MonadFail m => 
+  [VarTable] -> ProofMatch ->
+  [(Variable,Term)] -> [(ListVar,VarList)] -> VarList -> 
+  LiveProof -> m LiveProof
+\end{verbatim}
+Function \h{applyMatchToFocus1} is run first,
+then the user may be asked to make some choices,
+and finally \h{applyMatchToFocus1} is called with the resulting choices.
+The overall effect has type 
+\verb"MonadFail m => Int -> LiveProof -> m LiveProof".
+
+
+\section{Abstract Commands}
+
 \textbf{Important:} \emph{Nothing in this module should do IO of any kind}
 
 This is \emph{very} tentative \dots

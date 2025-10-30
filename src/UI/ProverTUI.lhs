@@ -900,18 +900,7 @@ applyFold isApplicable vts fold (reqs, liveProof)
          else tryFoldMatches liveproof (i+1)
 \end{code}
 
-\newpage
-\subsection{Classifier-Driven Automation (CDA)}
 
-\begin{code}
-acl = "automate classified laws"
-applyACLDescr = ("acl"
-                , acl
-                , unlines'
-                   [ "Invokes automatic application of classified laws"
-                   , "to the focus and its sub-terms." ]
-                , doClassDrivenAutomation)
-\end{code}
 
 
 

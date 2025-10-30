@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module UI.LawKindTUI (
-  doClassDrivenAutomation
+  doClassDrivenAutomation, applyACLDescr
 ) 
 where
 
@@ -107,6 +107,20 @@ doClassDrivenAutomation _ (reqs,liveproof)
                      return (reqs, liveproof) 
 \end{code}
 (This may change)
+
+\begin{code}
+acl = "automate classified laws"
+applyACLDescr = ("acl"
+                , acl
+                , unlines'
+                   [ "Invokes automatic application of classified laws"
+                   , "to the focus and its sub-terms." ]
+                , doClassDrivenAutomation)
+\end{code}
+\textbf{NOTE:}
+Any new commands need to have their equivalent \h{applyACLDescr}
+added to the long list in \h{ProverTUI.proofREPLConfig}.
+
 
 \textbf{Important:} \emph{Any steps requiring user input need to occur here}
 

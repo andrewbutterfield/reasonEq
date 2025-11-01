@@ -106,7 +106,7 @@ reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
               , cmdLoad, cmdGenerate
-              , cmdDump, cmdGrab
+              , cmdDump, cmdRestore
               , cmdGenerateConj, cmdLoadConj
               , cmdParseConj
               , cmdAssume, cmdDemote
@@ -221,21 +221,56 @@ cnjObj = "cnj"
 \end{code}
 
 \textbf{We are introducing a simple text syntax for theories and related
-artefacts, and we will ``load'' form and ``generate'' to those.
+artefacts, and we will ``generate'' to  and ``load'' from those.
 These files will also be how we DEFINE theories, 
-and will replace all the Haskell modules currently used
+and will replace all/most(?) of the Haskell modules currently used
 (the contents of \h{builtin/}).}
+\begin{code}
+genCmd  = "gen"  ; genSpc  = map (const ' ') genCmd
+loadCmd = "load" ; loadSpc = map (const ' ') loadCmd
+genLoadFormat
+  = [ ( genSpc ++ " -- Theory source file: <thryname>.src" )
+    , ( genSpc ++ " -- File format: plain text" ) ]
+\end{code}
+
+\begin{code}
+cmdGenerate :: REqCmdDescr
+cmdGenerate
+  = ( genCmd
+    , "generate theory source file"
+    , unlines 
+        ( (genCmd ++ " -- save current theory to source file")
+        : genLoadFormat )
+    , generateState )
+
+generateState _ reqs = do
+  let nm = currTheory reqs
+  case getTheory nm $ theories reqs of
+    Nothing    ->  generateState2 (thName_ nm nullTheory) reqs
+    Just thry  ->  generateState2 thry reqs
+
+generateState2 theory reqs = do
+  let thnm = thName theory
+  let fname = projectDir reqs </> thnm </> thnm <.> "src"
+  putStrLn("generating to "++fname)
+  putStrLn ("saving "++fname)
+  let theory_text = genTheory theory
+  putStrLn ("Contents of "++fname++":\n"++theory_text)
+  writeFile fname theory_text
+  return reqs
+\end{code}
+
 
 \begin{code}
 cmdLoad :: REqCmdDescr
 cmdLoad
-  = ( "load"
-    , "loads prover state from file"
+  = ( loadCmd
+    , "loads theory from text file"
     , unlines
-        [ "load <thry> -- load theory <thry>.src from current workspace"
-        , "            -- warns if it modifies an existing theory"
-        , "            -- creates a new theory if none exists"
-        ]
+        ( (loadCmd ++ " <thry> -- load theory from <thry>.src")
+        : (loadSpc ++ "        -- warns if it modifies an existing theory" )
+        : (loadSpc ++ "        -- creates a new theory if none exists" )
+        : genLoadFormat )
     , loadTheoryFile )
 
 loadTheoryFile [thName] reqs = do
@@ -257,48 +292,28 @@ loadTheoryFile args reqs = do
 \end{code}
 
 \begin{code}
-cmdGenerate :: REqCmdDescr
-cmdGenerate
-  = ( "generate"
-    , "generate theory source file"
-    , unlines
-        [ "generate -- save current theory to '<thName>.src'"
-        ]
-    , generateState )
-
-generateState _ reqs = do
-  let nm = currTheory reqs
-  case getTheory nm $ theories reqs of
-    Nothing    ->  generateState2 (thName_ nm nullTheory) reqs
-    Just thry  ->  generateState2 thry reqs
-
-generateState2 theory reqs = do
-  let thnm = thName theory
-  let fname = projectDir reqs </> thnm </> thnm <.> "src"
-  putStrLn("generating to "++fname)
-  putStrLn ("saving "++fname)
-  let theory_text = genTheory theory
-  putStrLn ("Contents of "++fname++":\n"++theory_text)
-  writeFile fname theory_text
-  return reqs
+saveCmd = "save"
+resCmd = "restore"
+saveResWhat = "Prover artifacts: theories, proofs, conjectures, axioms."
+saveRestoreFormat
+  = [ " -- Theory source file: <thryname>.thr" 
+    , " -- File format: sequences of Haskell datastructures" ]
 \end{code}
-
 
 
 \begin{code}
 cmdDump :: REqCmdDescr
 cmdDump
-  = ( "save"
-    , "save prover state to file"
+  = ( saveCmd
+    , "save prover artefacts to file"
     , unlines
-        [ "save          -- save all prover state to current workspace"
-        , "save .        -- save current theory to current workspace"
-        , "save <thry>   -- save theory <thry> to current workspace"
-        , "save " ++ prfObj
-                  ++" <proof>  -- save proof <proof> to current workspace"
+        [ ( saveCmd ++ "              -- save all prover" )
+        , ( saveCmd ++ " .            -- save current theory" )
+        , ( saveCmd ++ " <thry>       -- save theory <thry>" )
+        , ( saveCmd ++ " "++prfObj++" <proof>  -- save proof <proof>" )
         , "To come:"
-        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
-        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        , ( saveCmd ++ " cnj <conj>   -- save conjecture <cnj>" )
+        , ( saveCmd ++ " ax <axiom>   -- save axiom <axiom>" )
         ]
     , saveState )
 
@@ -333,21 +348,21 @@ saveState _ reqs  =  doshow reqs "unknown 'save' option."
 \newpage
 
 \begin{code}
-cmdGrab :: REqCmdDescr
-cmdGrab
-  = ( "restore"
-    , "restore prover state from file"
+cmdRestore :: REqCmdDescr
+cmdRestore
+  = ( resCmd
+    , "restore prover artefacts from file"
     , unlines
 
-        [ "restore -- restore prover state from current workspace"
-        , "restore <thry> -- restore theory <thry> from current workspace"
-        , "            -- warns if it modifies an existing theory"
-        , "restore " ++ prfObj 
-                  ++ " <proof>  -- restore proof <proof> from current workspace"
-        , "      CAUTION (will search for and restore into current theory (!))"
+        [ ( resCmd ++ "             -- restore prover state" )
+        , ( resCmd ++ " <thry>      -- restore theory <thry>" )
+        , "   -- warns if it modifies an existing theory" 
+        , ( resCmd ++ " " ++ prfObj 
+                  ++ " <proof>      -- restore proof <proof>" )
+        , "  CAUTION: will search for and restore into current theory (!)"
         , "To come:"
-        , "restore cnj <conj>  -- restore conjecture <cnj> from current workspace"
-        , "restore ax <axiom>  -- restore axiom <axiom> from current workspace"
+        , ( resCmd ++ " cnj <conj>  -- restore conjecture <cnj>" )
+        , ( resCmd ++ " ax <axiom>  -- restore axiom <axiom>" )
         ]
     , restoreState )
 
@@ -395,6 +410,7 @@ cmdGenerateConj
     , "save conjectures"
     , unlines
         [ "svc -- save all laws in current theory as conjectures"
+        , "    -- saved to <currthry>/Conjectures.cnj"
         ]
     , saveAsConjectures )
 
@@ -420,9 +436,8 @@ cmdLoadConj
   = ( "resc"
     , "restore conjectures"
     , unlines
-        [ "resc     -- display conjectures in current theory"
-        , "resc <nm> -- display conjectures in <nm>.cnj "
-        , "         -- Probably obsolete !!!"
+        [ "resc      -- display conjectures in current theory"
+        , "resc <nm> -- display conjectures in <nm>/Conjectures.cnj "
         ]
     , displayConjectures )
 

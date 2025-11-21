@@ -165,18 +165,6 @@ proofREPL reqs liveProof
       return reqs'
 \end{code}
 
-We have a common pattern:
-try to update a second component of a two-part state,
-in a monadic context.
-Accept if it succeeds, otherwise no change
-\begin{code}
-tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
-tryDelta delta pstate@(reqs, liveProof)
-  = case delta liveProof of
-       Nothing          ->  return pstate
-       Just liveProof'  ->  return (reqs, liveProof')
-\end{code}
-
 \section{Proof Settings}
 
 Showing proof settings:

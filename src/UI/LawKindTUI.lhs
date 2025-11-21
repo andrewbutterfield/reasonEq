@@ -42,17 +42,18 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.AbstractLawKinds
 import Instantiate
 import TestRendering
 import SourceHandling
-import UI.REPL
 import Dev
 import SAT
 import Classifier
 import ProofMatch
--- import UI.AbstractProver
--- import UI.ProverTUI
+import UI.REPL
+import UI.TSupport
+import UI.AbstractProver
+import UI.AbstractLawKinds
+--import UI.ProverTUI
 
 import Debugger
 \end{code}
@@ -98,11 +99,21 @@ All have type \h{REPLCmd (REqState, LiveProof)},
 and are defined in \h{ProverTUI}.
 \begin{verbatim}
 tryDelta . moveFocusDown
-tryDelta moveFocusUp 
-matchLawCommand
-applyMatch
+tryDelta . moveFocusUp 
+tryDelta . (matchFocus ranking) -- matchLawCommand + ranking
+applyMatchToFocus1
 \end{verbatim}
 
+The follwing shows that these are visible here:
+\begin{code}
+tD_mFD :: Monad m => Int -> (a,LiveProof) -> m (a,LiveProof)
+tD_mFD i s = tryDelta (moveFocusDown i) s
+
+tD_mFU :: Monad m => (a,LiveProof) -> m (a,LiveProof)
+tD_mFU s = tryDelta (moveFocusUp) s
+
+-- mLC = matchLawCommand
+\end{code}
 
 
 
@@ -129,10 +140,6 @@ applyACLDescr = ("acl"
                    [ "Invokes automatic application of classified laws"
                    , "to the focus and its sub-terms." ]
                 , doClassDrivenAutomation)
-
--- tests that we can call `tryDelta . moveFocusDown` here
--- tD_mFD = tryDelta . moveFocusDown
--- right now we can't (tryDelta is in ProverTUI)
 \end{code}
 \textbf{NOTE:}
 Any new commands need to have their equivalent \h{applyACLDescr}

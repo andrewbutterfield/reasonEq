@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module UI.TSupport
   ( selectByNumber
   , errorPause
+  , tryDelta
   ) 
 where
 import System.IO
@@ -74,4 +75,18 @@ test what xs = do
 
 display what Nothing = putStrLn (what++" NO")
 display what (Just x) = putStrLn (what++" "++show x)
+\end{code}
+
+\subsection{Partial Updating}
+
+We have a common pattern:
+try to update a second component of a two-part state,
+in a monadic context.
+Accept if it succeeds, otherwise no change
+\begin{code}
+tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
+tryDelta delta pstate@(reqs, liveProof)
+  = case delta liveProof of
+       Nothing          ->  return pstate
+       Just liveProof'  ->  return (reqs, liveProof')
 \end{code}

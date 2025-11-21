@@ -46,6 +46,7 @@ import Persistence
 import ProofMatch
 import Ranking
 import SAT
+import UI.AbstractProver
 
 import TestRendering
 import SourceHandling
@@ -104,6 +105,10 @@ This is \emph{very} tentative \dots
 \begin{code}
 applyCLA :: MonadFail mf => LiveProof -> mf LiveProof
 applyCLA liveproofs = fail "Automating classifiers under development"
+
+-- this tests that we can call reference `moveFocusDown` from here
+mFD :: MonadFail mf => Int -> LiveProof -> mf LiveProof
+mFD = moveFocusDown 
 \end{code}
 
 \section{Law Application within a term}

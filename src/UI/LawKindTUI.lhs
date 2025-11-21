@@ -51,6 +51,8 @@ import Dev
 import SAT
 import Classifier
 import ProofMatch
+-- import UI.AbstractProver
+-- import UI.ProverTUI
 
 import Debugger
 \end{code}
@@ -127,6 +129,10 @@ applyACLDescr = ("acl"
                    [ "Invokes automatic application of classified laws"
                    , "to the focus and its sub-terms." ]
                 , doClassDrivenAutomation)
+
+-- tests that we can call `tryDelta . moveFocusDown` here
+-- tD_mFD = tryDelta . moveFocusDown
+-- right now we can't (tryDelta is in ProverTUI)
 \end{code}
 \textbf{NOTE:}
 Any new commands need to have their equivalent \h{applyACLDescr}

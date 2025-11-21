@@ -71,7 +71,6 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
-import UI.LawKindTUI
 import REqState
 import Persistence
 import ProofMatch

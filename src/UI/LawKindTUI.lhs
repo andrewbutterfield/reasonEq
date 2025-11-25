@@ -49,11 +49,10 @@ import Dev
 import SAT
 import Classifier
 import ProofMatch
-import UI.REPL
-import UI.TSupport
 import UI.AbstractProver
 import UI.AbstractLawKinds
---import UI.ProverTUI
+import UI.REPL
+import UI.TSupport
 
 import Debugger
 \end{code}

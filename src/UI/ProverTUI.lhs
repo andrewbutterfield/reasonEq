@@ -41,18 +41,18 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.TSupport
-import UI.LawKindTUI
 import UI.AbstractTop(observeSettings,modifyProofSettings)
-import UI.AbstractProver
 import Instantiate
 import TestRendering
 import SourceHandling
-import UI.REPL
 import Dev
 import SAT
 import Classifier
 import ProofMatch
+import UI.AbstractProver
+import UI.REPL
+import UI.TSupport
+import UI.LawKindTUI
 
 import Debugger
 \end{code}

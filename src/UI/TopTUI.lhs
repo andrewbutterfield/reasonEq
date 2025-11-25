@@ -41,15 +41,15 @@ import Assertions
 import Ranking
 import ProofSettings
 import REqState
-import UI.AbstractTop
 import Instantiate
 import TestRendering
 import SourceHandling
-import UI.REPL
 import Dev
 import SAT
 import Classifier
 import LiveProofs
+import UI.AbstractTop
+import UI.REPL
 import UI.TSupport
 import UI.ProverTUI
 

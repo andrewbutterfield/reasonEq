@@ -563,7 +563,7 @@ pShowTree toks
 \end{code}
 
 Here we accumulate lists within lists.
-Internal list contents are sperated by (imaginary) whitespace,
+Internal list contents are separated by (imaginary) whitespace,
 while external lists have internal lists as components,
 separated by commas.
 \begin{code}
@@ -626,7 +626,8 @@ and complain if any are empty.
 A consequence of this is that all \texttt{STapp}
 will have length greater than one.
 \begin{code}
-stapp [] = error "stapp: empty application!"
+stapp :: [ShowTree] -> ShowTree
+stapp [] = STtext "stapp: empty application!"
 stapp [STapp sts] = stapp sts
 stapp [st] = st
 stapp sts = STapp sts

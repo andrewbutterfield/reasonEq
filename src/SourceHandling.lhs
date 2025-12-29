@@ -523,7 +523,7 @@ scanBlock tEnd sofar ((lno,pos,tok):rest)
 scanBlock tEnd sofar (tok:rest)  =  scanBlock tEnd (tok:sofar) rest
 \end{code}
 
-Laws, Conjectures and know Terms use \h{BEGIN} \dots \h{END} blocks:
+Laws, Conjectures and known Terms use \h{BEGIN} \dots \h{END} blocks:
 \begin{code}
 beBlock = (TVar "BEGIN" Static,TVar "END" Static)
 \end{code}
@@ -733,7 +733,7 @@ kIter = "ITER"
 kCS = "CS"
 kNS = "NS"
 kLstVar = '$'
-kSep = ','
+kSep = " , "
 kQBody = "@"
 term_syntax = syntax_bits ++ term_definition ++ key_names
 \end{code}
@@ -750,9 +750,9 @@ genTerm _ (Val typ (Integer n)) = show n
 genTerm _ (Var typ var) = genVariable var
 genTerm i (Cons typ _ (Identifier consi _) terms) 
   = consi ++ " " --  ++ (genSBBL subable) ++ " "
-      ++ "("
-      ++ intercalate [kSep] (map (genTerm (i+2)) terms)
-      ++ ")"
+      ++ "( "
+      ++ intercalate kSep (map (genTerm (i+2)) terms)
+      ++ " )"
 genTerm i (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
     ++ " " ++ intercalate " " (S.toList (S.map genGenVar vs))
@@ -766,7 +766,7 @@ genTerm i (Lam typ (Identifier lambda _) vl term)
 genTerm i (Cls (Identifier kind _) term) 
   = kClosure ++ " "++kind++"\n  "++genTerm (i+2) term
 genTerm i (Sub typ term (Substn vts lvlvs))
-  = kSubst ++ " [" ++ genTermVarSubs 0 (S.toList vts) ++ " "
+  = kSubst ++ " [" ++ genTermVarSubs 0 (S.toList vts)
                    ++ genLVarSubs (S.toList lvlvs) ++ "] "
     ++ genTerm (i+2) term
 genTerm _ (Iter typ sa na si ni lvs)
@@ -778,10 +778,12 @@ genTerm _ (VTyp typ var) = "VT-stuff?"
 \end{code}
 
 \begin{code}
-genTermVarSubs i vts   = intercalate " " $ map (genTermVarSub i) vts
+genTermVarSubs i vts   = concat $ map (genTermVarSub i) vts
+-- genTermVarSubs i vts   = intercalate " " $ map (genTermVarSub i) vts
 genTermVarSub  i (v,t) = "("++genVariable v++","++genTerm (i+2) t++")"
 
-genLVarSubs lvlvs = intercalate " " $ map genLVarSub lvlvs
+genLVarSubs lvlvs = concat $ map genLVarSub lvlvs
+-- genLVarSubs lvlvs = intercalate " " $ map genLVarSub lvlvs
 genLVarSub (tlv,rlv) 
   = "("++genListVariable tlv++","++genListVariable rlv++")"
 \end{code}

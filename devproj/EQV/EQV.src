@@ -15,43 +15,43 @@ END
 Law eqv_refl BEGIN
  axiom
  ,
-eqv (P,P)
+eqv ( P , P )
 END
 
 Law eqv_assoc BEGIN
  axiom
  ,
-eqv (eqv (eqv (P,Q),R),eqv (P,eqv (Q,R)))
+eqv ( eqv ( eqv ( P , Q ) , R ) , eqv ( P , eqv ( Q , R ) ) )
 END
 
 Law eqv_symm BEGIN
  axiom
  ,
-eqv (P,Q,Q,P)
+eqv ( P , Q , Q , P )
 END
 
 Law id_subst BEGIN
  axiom
  ,
-eqv (SUB [ (x$,x$)] P,P)
+eqv ( SUB [(x$,x$)] P , P )
 END
 
 Law non_subst BEGIN
  axiom
  ,
-eqv (SUB [ (x$,e$)] P,P)
+eqv ( SUB [(x$,e$)] P , P )
 ,
 VREL (DISJ P FROM x$)
 END
 
 Conjecture eqv_id BEGIN
-  eqv (eqv (true,Q),Q)
+  eqv ( eqv ( true , Q ) , Q )
 END
 
 Conjecture true_subst BEGIN
-  eqv (SUB [ (x$,e$)] true,true)
+  eqv ( SUB [(x$,e$)] true , true )
 END
 
 Conjecture eqv_subst BEGIN
-  eqv (SUB [ (x$,e$)] eqv (P,Q),eqv (SUB [ (x$,e$)] P,SUB [ (x$,e$)] Q))
+  eqv ( SUB [(x$,e$)] eqv ( P , Q ) , eqv ( SUB [(x$,e$)] P , SUB [(x$,e$)] Q ) )
 END

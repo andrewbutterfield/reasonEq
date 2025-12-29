@@ -1,4 +1,4 @@
--- file Calc.bnfc
+-- file UTP.bnfc
 
 EAdd.      Exp  ::= Exp  "+" Exp1 ;
 ESub.      Exp  ::= Exp  "-" Exp1 ;

@@ -21,7 +21,7 @@ Integer literals //Integer// are nonempty sequences of digits.
 
 
 
-Bool literals are recognized by the regular expression
+Boolean literals are recognized by the regular expression
 `````{"false"} | {"true"}`````
 
 
@@ -33,8 +33,9 @@ The reserved words used in UTP are the following:
 There are no reserved words in UTP.
 
 The symbols used in UTP are the following:
-  | + | - | * | /
-  | ( | ) |  |
+  | === | ==> | \/ | /\
+  | ~ | ( | ) | +
+  | - | * | / |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -45,6 +46,18 @@ The symbols -> (production),  **|**  (union)
 and **eps** (empty rule) belong to the BNF notation.
 All other symbols are terminals.
 
+  | //Pred// | -> | //Pred// ``===`` //Pred1//
+  |  |  **|**  | //Pred1//
+  | //Pred1// | -> | //Pred2// ``==>`` //Pred1//
+  |  |  **|**  | //Pred2//
+  | //Pred2// | -> | //Pred2// ``\/`` //Pred3//
+  |  |  **|**  | //Pred3//
+  | //Pred3// | -> | //Pred3// ``/\`` //Pred4//
+  |  |  **|**  | //Pred4//
+  | //Pred4// | -> | ``~`` //Pred5//
+  |  |  **|**  | //Pred5//
+  | //Pred5// | -> | //Exp//
+  |  |  **|**  | ``(`` //Pred// ``)``
   | //Exp// | -> | //Exp// ``+`` //Exp1//
   |  |  **|**  | //Exp// ``-`` //Exp1//
   |  |  **|**  | //Exp1//
@@ -53,7 +66,7 @@ All other symbols are terminals.
   |  |  **|**  | //Exp2//
   | //Exp2// | -> | //Integer//
   |  |  **|**  | //Ident//
-  |  |  **|**  | //Bool//
+  |  |  **|**  | //Boolean//
   |  |  **|**  | ``(`` //Exp// ``)``
 
 

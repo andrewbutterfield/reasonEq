@@ -13,7 +13,18 @@
 -}
 
 -- we want to add a boolean type
-token Bool ( {"false"} | {"true"} ) ;
+token Boolean ( {"false"} | {"true"} ) ;
+
+-- we next add a predicate type (expressions of type Bool)
+PEqv.    Pred  ::= Pred "===" Pred1   ;
+PImpl.   Pred1 ::= Pred2 "==>" Pred1  ;
+POr.     Pred2 ::= Pred2 "\\/" Pred3  ;
+PAnd.    Pred3 ::= Pred3 "/\\" Pred4  ;
+PNot.    Pred4 ::= "~" Pred5          ;
+PAtomic. Pred5 ::= Exp                ; -- Exp should be type Bool
+
+coercions Pred 5                      ;
+
 
 -- We then define a generic expression type
 EAdd.      Exp  ::= Exp  "+" Exp1 ;
@@ -22,9 +33,7 @@ EMul.      Exp1 ::= Exp1 "*" Exp2 ;
 EDiv.      Exp1 ::= Exp1 "/" Exp2 ;
 EInt.      Exp2 ::= Integer       ;
 EVar.      Exp2 ::= Ident         ;
-EBool.     Exp2 ::= Bool          ;
+EBool.     Exp2 ::= Boolean       ;
 
 coercions  Exp  2                 ;
-
--- we next plan to add a predicate type (expressions of type Bool)
 

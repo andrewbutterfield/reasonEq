@@ -8,6 +8,12 @@
 module UTP.Par
   ( happyError
   , myLexer
+  , pPred
+  , pPred1
+  , pPred2
+  , pPred3
+  , pPred4
+  , pPred5
   , pExp
   , pExp1
   , pExp2
@@ -20,6 +26,12 @@ import UTP.Lex
 
 }
 
+%name pPred Pred
+%name pPred1 Pred1
+%name pPred2 Pred2
+%name pPred3 Pred3
+%name pPred4 Pred4
+%name pPred5 Pred5
 %name pExp Exp
 %name pExp1 Exp1
 %name pExp2 Exp2
@@ -27,15 +39,20 @@ import UTP.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '('      { PT _ (TS _ 1)    }
-  ')'      { PT _ (TS _ 2)    }
-  '*'      { PT _ (TS _ 3)    }
-  '+'      { PT _ (TS _ 4)    }
-  '-'      { PT _ (TS _ 5)    }
-  '/'      { PT _ (TS _ 6)    }
-  L_Ident  { PT _ (TV $$)     }
-  L_integ  { PT _ (TI $$)     }
-  L_Bool   { PT _ (T_Bool $$) }
+  '('       { PT _ (TS _ 1)       }
+  ')'       { PT _ (TS _ 2)       }
+  '*'       { PT _ (TS _ 3)       }
+  '+'       { PT _ (TS _ 4)       }
+  '-'       { PT _ (TS _ 5)       }
+  '/'       { PT _ (TS _ 6)       }
+  '/\\'     { PT _ (TS _ 7)       }
+  '==='     { PT _ (TS _ 8)       }
+  '==>'     { PT _ (TS _ 9)       }
+  '\\/'     { PT _ (TS _ 10)      }
+  '~'       { PT _ (TS _ 11)      }
+  L_Ident   { PT _ (TV $$)        }
+  L_integ   { PT _ (TI $$)        }
+  L_Boolean { PT _ (T_Boolean $$) }
 
 %%
 
@@ -45,8 +62,26 @@ Ident  : L_Ident { UTP.Abs.Ident $1 }
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
-Bool :: { UTP.Abs.Bool }
-Bool  : L_Bool { UTP.Abs.Bool $1 }
+Boolean :: { UTP.Abs.Boolean }
+Boolean  : L_Boolean { UTP.Abs.Boolean $1 }
+
+Pred :: { UTP.Abs.Pred }
+Pred : Pred '===' Pred1 { UTP.Abs.PEqv $1 $3 } | Pred1 { $1 }
+
+Pred1 :: { UTP.Abs.Pred }
+Pred1 : Pred2 '==>' Pred1 { UTP.Abs.PImpl $1 $3 } | Pred2 { $1 }
+
+Pred2 :: { UTP.Abs.Pred }
+Pred2 : Pred2 '\\/' Pred3 { UTP.Abs.POr $1 $3 } | Pred3 { $1 }
+
+Pred3 :: { UTP.Abs.Pred }
+Pred3 : Pred3 '/\\' Pred4 { UTP.Abs.PAnd $1 $3 } | Pred4 { $1 }
+
+Pred4 :: { UTP.Abs.Pred }
+Pred4 : '~' Pred5 { UTP.Abs.PNot $2 } | Pred5 { $1 }
+
+Pred5 :: { UTP.Abs.Pred }
+Pred5 : Exp { UTP.Abs.PAtomic $1 } | '(' Pred ')' { $2 }
 
 Exp :: { UTP.Abs.Exp }
 Exp
@@ -64,7 +99,7 @@ Exp2 :: { UTP.Abs.Exp }
 Exp2
   : Integer { UTP.Abs.EInt $1 }
   | Ident { UTP.Abs.EVar $1 }
-  | Bool { UTP.Abs.EBool $1 }
+  | Boolean { UTP.Abs.EBool $1 }
   | '(' Exp ')' { $2 }
 
 {

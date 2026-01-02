@@ -10,6 +10,15 @@ import Prelude (Integer, String)
 import qualified Prelude as C (Eq, Ord, Show, Read)
 import qualified Data.String
 
+data Pred
+    = PEqv Pred Pred
+    | PImpl Pred Pred
+    | POr Pred Pred
+    | PAnd Pred Pred
+    | PNot Pred
+    | PAtomic Exp
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
 data Exp
     = EAdd Exp Exp
     | ESub Exp Exp
@@ -17,12 +26,12 @@ data Exp
     | EDiv Exp Exp
     | EInt Integer
     | EVar Ident
-    | EBool Bool
+    | EBool Boolean
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Ident = Ident String
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 
-newtype Bool = Bool String
+newtype Boolean = Boolean String
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 

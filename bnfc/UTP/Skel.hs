@@ -19,9 +19,18 @@ transIdent :: UTP.Abs.Ident -> Result
 transIdent x = case x of
   UTP.Abs.Ident string -> failure x
 
-transBool :: UTP.Abs.Bool -> Result
-transBool x = case x of
-  UTP.Abs.Bool string -> failure x
+transBoolean :: UTP.Abs.Boolean -> Result
+transBoolean x = case x of
+  UTP.Abs.Boolean string -> failure x
+
+transPred :: UTP.Abs.Pred -> Result
+transPred x = case x of
+  UTP.Abs.PEqv pred1 pred2 -> failure x
+  UTP.Abs.PImpl pred1 pred2 -> failure x
+  UTP.Abs.POr pred1 pred2 -> failure x
+  UTP.Abs.PAnd pred1 pred2 -> failure x
+  UTP.Abs.PNot pred -> failure x
+  UTP.Abs.PAtomic exp -> failure x
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
@@ -31,4 +40,4 @@ transExp x = case x of
   UTP.Abs.EDiv exp1 exp2 -> failure x
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar ident -> failure x
-  UTP.Abs.EBool bool -> failure x
+  UTP.Abs.EBool boolean -> failure x

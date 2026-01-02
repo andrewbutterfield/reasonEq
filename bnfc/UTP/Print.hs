@@ -136,8 +136,17 @@ instance Print Double where
 
 instance Print UTP.Abs.Ident where
   prt _ (UTP.Abs.Ident i) = doc $ showString i
-instance Print UTP.Abs.Bool where
-  prt _ (UTP.Abs.Bool i) = doc $ showString i
+instance Print UTP.Abs.Boolean where
+  prt _ (UTP.Abs.Boolean i) = doc $ showString i
+instance Print UTP.Abs.Pred where
+  prt i = \case
+    UTP.Abs.PEqv pred1 pred2 -> prPrec i 0 (concatD [prt 0 pred1, doc (showString "==="), prt 1 pred2])
+    UTP.Abs.PImpl pred1 pred2 -> prPrec i 1 (concatD [prt 2 pred1, doc (showString "==>"), prt 1 pred2])
+    UTP.Abs.POr pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "\\/"), prt 3 pred2])
+    UTP.Abs.PAnd pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "/\\"), prt 4 pred2])
+    UTP.Abs.PNot pred -> prPrec i 4 (concatD [doc (showString "~"), prt 5 pred])
+    UTP.Abs.PAtomic exp -> prPrec i 5 (concatD [prt 0 exp])
+
 instance Print UTP.Abs.Exp where
   prt i = \case
     UTP.Abs.EAdd exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "+"), prt 1 exp2])
@@ -146,4 +155,4 @@ instance Print UTP.Abs.Exp where
     UTP.Abs.EDiv exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "/"), prt 2 exp2])
     UTP.Abs.EInt n -> prPrec i 2 (concatD [prt 0 n])
     UTP.Abs.EVar id_ -> prPrec i 2 (concatD [prt 0 id_])
-    UTP.Abs.EBool bool -> prPrec i 2 (concatD [prt 0 bool])
+    UTP.Abs.EBool boolean -> prPrec i 2 (concatD [prt 0 boolean])

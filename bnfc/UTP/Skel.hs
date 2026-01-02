@@ -4,10 +4,10 @@
 
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 
-module SkelUTP where
+module UTP.Skel where
 
 import Prelude (($), Either(..), String, (++), Show, show)
-import qualified AbsUTP
+import qualified UTP.Abs
 
 type Err = Either String
 type Result = Err String
@@ -15,10 +15,10 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Left $ "Undefined case: " ++ show x
 
-transExp :: AbsUTP.Exp -> Result
+transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
-  AbsUTP.EAdd exp1 exp2 -> failure x
-  AbsUTP.ESub exp1 exp2 -> failure x
-  AbsUTP.EMul exp1 exp2 -> failure x
-  AbsUTP.EDiv exp1 exp2 -> failure x
-  AbsUTP.EInt integer -> failure x
+  UTP.Abs.EAdd exp1 exp2 -> failure x
+  UTP.Abs.ESub exp1 exp2 -> failure x
+  UTP.Abs.EMul exp1 exp2 -> failure x
+  UTP.Abs.EDiv exp1 exp2 -> failure x
+  UTP.Abs.EInt integer -> failure x

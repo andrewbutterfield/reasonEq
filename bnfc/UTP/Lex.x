@@ -7,7 +7,7 @@
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module LexUTP where
+module UTP.Lex where
 
 import Prelude
 

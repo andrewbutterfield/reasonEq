@@ -18,11 +18,11 @@ import System.Environment ( getArgs )
 import System.Exit        ( exitFailure )
 import Control.Monad      ( when )
 
-import AbsUTP   ()
-import LexUTP   ( Token, mkPosToken )
-import ParUTP   ( pExp, myLexer )
-import PrintUTP ( Print, printTree )
-import SkelUTP  ()
+import UTP.Abs   ()
+import UTP.Lex   ( Token, mkPosToken )
+import UTP.Par   ( pExp, myLexer )
+import UTP.Print ( Print, printTree )
+import UTP.Skel  ()
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a

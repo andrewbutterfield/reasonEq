@@ -2,7 +2,7 @@
 
 -- | The abstract syntax of language UTP.
 
-module AbsUTP where
+module UTP.Abs where
 
 import Prelude (Integer)
 import qualified Prelude as C (Eq, Ord, Show, Read)

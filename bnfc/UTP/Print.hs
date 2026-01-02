@@ -4,9 +4,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 
--- | Pretty-printer for PrintUTP.
+-- | Pretty-printer for UTP.
 
-module PrintUTP where
+module UTP.Print where
 
 import Prelude
   ( ($), (.)
@@ -17,7 +17,7 @@ import Prelude
   , all, elem, foldr, id, map, null, replicate, shows, span
   )
 import Data.Char ( Char, isSpace )
-import qualified AbsUTP
+import qualified UTP.Abs
 
 -- | The top-level printing method.
 
@@ -134,10 +134,10 @@ instance Print Integer where
 instance Print Double where
   prt _ x = doc (shows x)
 
-instance Print AbsUTP.Exp where
+instance Print UTP.Abs.Exp where
   prt i = \case
-    AbsUTP.EAdd exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "+"), prt 1 exp2])
-    AbsUTP.ESub exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "-"), prt 1 exp2])
-    AbsUTP.EMul exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "*"), prt 2 exp2])
-    AbsUTP.EDiv exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "/"), prt 2 exp2])
-    AbsUTP.EInt n -> prPrec i 2 (concatD [prt 0 n])
+    UTP.Abs.EAdd exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "+"), prt 1 exp2])
+    UTP.Abs.ESub exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "-"), prt 1 exp2])
+    UTP.Abs.EMul exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "*"), prt 2 exp2])
+    UTP.Abs.EDiv exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "/"), prt 2 exp2])
+    UTP.Abs.EInt n -> prPrec i 2 (concatD [prt 0 n])

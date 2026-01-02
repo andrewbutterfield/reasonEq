@@ -5,7 +5,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns -Wno-overlapping-patterns #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module ParUTP
+module UTP.Par
   ( happyError
   , myLexer
   , pExp
@@ -15,8 +15,8 @@ module ParUTP
 
 import Prelude
 
-import qualified AbsUTP
-import LexUTP
+import qualified UTP.Abs
+import UTP.Lex
 
 }
 
@@ -40,20 +40,20 @@ import LexUTP
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
-Exp :: { AbsUTP.Exp }
+Exp :: { UTP.Abs.Exp }
 Exp
-  : Exp '+' Exp1 { AbsUTP.EAdd $1 $3 }
-  | Exp '-' Exp1 { AbsUTP.ESub $1 $3 }
+  : Exp '+' Exp1 { UTP.Abs.EAdd $1 $3 }
+  | Exp '-' Exp1 { UTP.Abs.ESub $1 $3 }
   | Exp1 { $1 }
 
-Exp1 :: { AbsUTP.Exp }
+Exp1 :: { UTP.Abs.Exp }
 Exp1
-  : Exp1 '*' Exp2 { AbsUTP.EMul $1 $3 }
-  | Exp1 '/' Exp2 { AbsUTP.EDiv $1 $3 }
+  : Exp1 '*' Exp2 { UTP.Abs.EMul $1 $3 }
+  | Exp1 '/' Exp2 { UTP.Abs.EDiv $1 $3 }
   | Exp2 { $1 }
 
-Exp2 :: { AbsUTP.Exp }
-Exp2 : Integer { AbsUTP.EInt $1 } | '(' Exp ')' { $2 }
+Exp2 :: { UTP.Abs.Exp }
+Exp2 : Integer { UTP.Abs.EInt $1 } | '(' Exp ')' { $2 }
 
 {
 

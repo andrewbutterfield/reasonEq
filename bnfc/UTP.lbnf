@@ -1,0 +1,27 @@
+{-
+  LBNF Syntax for reasonEq Terms and Theories,
+  with an emphasis on Unifying Theories of Programming
+
+  We envisage the following sequence of increasingly complex syntaxes:
+    Expressions
+    Predicates
+    Programs
+
+  We are targetting the following Term data-structures:
+
+  Value
+  Variable
+  VarSet
+  VarList
+  Type
+  Substn
+  ListVar
+-}
+
+EAdd.      Exp  ::= Exp  "+" Exp1 ;
+ESub.      Exp  ::= Exp  "-" Exp1 ;
+EMul.      Exp1 ::= Exp1 "*" Exp2 ;
+EDiv.      Exp1 ::= Exp1 "/" Exp2 ;
+EInt.      Exp2 ::= Integer       ;
+coercions  Exp  2                 ;
+

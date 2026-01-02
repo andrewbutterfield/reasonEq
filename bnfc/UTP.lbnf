@@ -16,6 +16,7 @@
   Type
   Substn
   ListVar
+  Term
 -}
 
 EAdd.      Exp  ::= Exp  "+" Exp1 ;

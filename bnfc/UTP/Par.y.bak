@@ -8,6 +8,7 @@
 module UTP.Par
   ( happyError
   , myLexer
+  , pBool
   , pExp
   , pExp1
   , pExp2
@@ -20,6 +21,7 @@ import UTP.Lex
 
 }
 
+%name pBool Bool
 %name pExp Exp
 %name pExp1 Exp1
 %name pExp2 Exp2
@@ -27,15 +29,16 @@ import UTP.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '('      { PT _ (TS _ 1)    }
-  ')'      { PT _ (TS _ 2)    }
-  '*'      { PT _ (TS _ 3)    }
-  '+'      { PT _ (TS _ 4)    }
-  '-'      { PT _ (TS _ 5)    }
-  '/'      { PT _ (TS _ 6)    }
-  L_Ident  { PT _ (TV $$)     }
-  L_integ  { PT _ (TI $$)     }
-  L_Bool   { PT _ (T_Bool $$) }
+  '('      { PT _ (TS _ 1) }
+  ')'      { PT _ (TS _ 2) }
+  '*'      { PT _ (TS _ 3) }
+  '+'      { PT _ (TS _ 4) }
+  '-'      { PT _ (TS _ 5) }
+  '/'      { PT _ (TS _ 6) }
+  'false'  { PT _ (TS _ 7) }
+  'true'   { PT _ (TS _ 8) }
+  L_Ident  { PT _ (TV $$)  }
+  L_integ  { PT _ (TI $$)  }
 
 %%
 
@@ -46,7 +49,7 @@ Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
 Bool :: { UTP.Abs.Bool }
-Bool  : L_Bool { UTP.Abs.Bool $1 }
+Bool : 'false' { UTP.Abs.BFalse } | 'true' { UTP.Abs.BTrue }
 
 Exp :: { UTP.Abs.Exp }
 Exp

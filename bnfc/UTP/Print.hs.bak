@@ -137,7 +137,10 @@ instance Print Double where
 instance Print UTP.Abs.Ident where
   prt _ (UTP.Abs.Ident i) = doc $ showString i
 instance Print UTP.Abs.Bool where
-  prt _ (UTP.Abs.Bool i) = doc $ showString i
+  prt i = \case
+    UTP.Abs.BFalse -> prPrec i 0 (concatD [doc (showString "false")])
+    UTP.Abs.BTrue -> prPrec i 0 (concatD [doc (showString "true")])
+
 instance Print UTP.Abs.Exp where
   prt i = \case
     UTP.Abs.EAdd exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "+"), prt 1 exp2])

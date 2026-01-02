@@ -8,21 +8,18 @@
     Programs
 
   We are targetting the following Term data-structures:
-
-  Value
-  Variable
-  VarSet
-  VarList
-  Type
-  Substn
-  ListVar
-  Term
+   Value; Variable; VarSet; VarList; Type; Substn; ListVar; Term
 -}
+
+token Bool ( {"false"} | {"true"} ) ;
 
 EAdd.      Exp  ::= Exp  "+" Exp1 ;
 ESub.      Exp  ::= Exp  "-" Exp1 ;
 EMul.      Exp1 ::= Exp1 "*" Exp2 ;
 EDiv.      Exp1 ::= Exp1 "/" Exp2 ;
 EInt.      Exp2 ::= Integer       ;
+EVar.      Exp2 ::= Ident         ;
+EBool.     Exp2 ::= Bool          ;
+
 coercions  Exp  2                 ;
 

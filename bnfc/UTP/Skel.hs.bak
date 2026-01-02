@@ -21,7 +21,8 @@ transIdent x = case x of
 
 transBool :: UTP.Abs.Bool -> Result
 transBool x = case x of
-  UTP.Abs.Bool string -> failure x
+  UTP.Abs.BFalse -> failure x
+  UTP.Abs.BTrue -> failure x
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of

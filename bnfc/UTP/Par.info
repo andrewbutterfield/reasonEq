@@ -39,13 +39,14 @@ Grammar
 	Exp1 -> Exp1 '-' Exp2                              (29)
 	Exp1 -> Exp2                                       (30)
 	Exp2 -> Exp2 '*' Exp3                              (31)
-	Exp2 -> Exp2 '/' Exp3                              (32)
-	Exp2 -> Exp3                                       (33)
-	Exp3 -> Integer                                    (34)
-	Exp3 -> Ident                                      (35)
-	Exp3 -> Boolean                                    (36)
-	Exp3 -> 'nil'                                      (37)
-	Exp3 -> '(' Exp ')'                                (38)
+	Exp2 -> Exp2 'div' Exp3                            (32)
+	Exp2 -> Exp2 'mod' Exp3                            (33)
+	Exp2 -> Exp3                                       (34)
+	Exp3 -> Integer                                    (35)
+	Exp3 -> Ident                                      (36)
+	Exp3 -> Boolean                                    (37)
+	Exp3 -> 'nil'                                      (38)
+	Exp3 -> '(' Exp ')'                                (39)
 
 -----------------------------------------------------------------------------
 Terminals
@@ -56,14 +57,15 @@ Terminals
 	'+'            { PT _ (TS _ 4) }
 	'++'           { PT _ (TS _ 5) }
 	'-'            { PT _ (TS _ 6) }
-	'/'            { PT _ (TS _ 7) }
-	'/\\'          { PT _ (TS _ 8) }
-	':'            { PT _ (TS _ 9) }
-	'==='          { PT _ (TS _ 10) }
-	'==>'          { PT _ (TS _ 11) }
-	'\\/'          { PT _ (TS _ 12) }
-	'nil'          { PT _ (TS _ 13) }
-	'~'            { PT _ (TS _ 14) }
+	'/\\'          { PT _ (TS _ 7) }
+	':'            { PT _ (TS _ 8) }
+	'==='          { PT _ (TS _ 9) }
+	'==>'          { PT _ (TS _ 10) }
+	'\\/'          { PT _ (TS _ 11) }
+	'div'          { PT _ (TS _ 12) }
+	'mod'          { PT _ (TS _ 13) }
+	'nil'          { PT _ (TS _ 14) }
+	'~'            { PT _ (TS _ 15) }
 	L_Ident        { PT _ (TV $$) }
 	L_integ        { PT _ (TI $$) }
 	L_Boolean      { PT _ (T_Boolean $$) }
@@ -92,8 +94,8 @@ Non-terminals
 	Pred5           rules 23, 24
 	Exp             rules 25, 26, 27
 	Exp1            rules 28, 29, 30
-	Exp2            rules 31, 32, 33
-	Exp3            rules 34, 35, 36, 37, 38
+	Exp2            rules 31, 32, 33, 34
+	Exp3            rules 35, 36, 37, 38, 39
 
 -----------------------------------------------------------------------------
 States
@@ -314,67 +316,71 @@ State 11
 	'+'            reduce using rule 10
 	'++'           reduce using rule 10
 	'-'            reduce using rule 10
-	'/'            reduce using rule 10
 	'/\\'          reduce using rule 10
 	':'            reduce using rule 10
 	'==='          reduce using rule 10
 	'==>'          reduce using rule 10
 	'\\/'          reduce using rule 10
+	'div'          reduce using rule 10
+	'mod'          reduce using rule 10
 	%eof           reduce using rule 10
 
 
 State 12
 
-	Exp3 -> Ident .                                     (rule 35)
-
-	')'            reduce using rule 35
-	'*'            reduce using rule 35
-	'+'            reduce using rule 35
-	'++'           reduce using rule 35
-	'-'            reduce using rule 35
-	'/'            reduce using rule 35
-	'/\\'          reduce using rule 35
-	':'            reduce using rule 35
-	'==='          reduce using rule 35
-	'==>'          reduce using rule 35
-	'\\/'          reduce using rule 35
-	%eof           reduce using rule 35
-
-
-State 13
-
-	Exp3 -> Integer .                                   (rule 34)
-
-	')'            reduce using rule 34
-	'*'            reduce using rule 34
-	'+'            reduce using rule 34
-	'++'           reduce using rule 34
-	'-'            reduce using rule 34
-	'/'            reduce using rule 34
-	'/\\'          reduce using rule 34
-	':'            reduce using rule 34
-	'==='          reduce using rule 34
-	'==>'          reduce using rule 34
-	'\\/'          reduce using rule 34
-	%eof           reduce using rule 34
-
-
-State 14
-
-	Exp3 -> Boolean .                                   (rule 36)
+	Exp3 -> Ident .                                     (rule 36)
 
 	')'            reduce using rule 36
 	'*'            reduce using rule 36
 	'+'            reduce using rule 36
 	'++'           reduce using rule 36
 	'-'            reduce using rule 36
-	'/'            reduce using rule 36
 	'/\\'          reduce using rule 36
 	':'            reduce using rule 36
 	'==='          reduce using rule 36
 	'==>'          reduce using rule 36
 	'\\/'          reduce using rule 36
+	'div'          reduce using rule 36
+	'mod'          reduce using rule 36
 	%eof           reduce using rule 36
+
+
+State 13
+
+	Exp3 -> Integer .                                   (rule 35)
+
+	')'            reduce using rule 35
+	'*'            reduce using rule 35
+	'+'            reduce using rule 35
+	'++'           reduce using rule 35
+	'-'            reduce using rule 35
+	'/\\'          reduce using rule 35
+	':'            reduce using rule 35
+	'==='          reduce using rule 35
+	'==>'          reduce using rule 35
+	'\\/'          reduce using rule 35
+	'div'          reduce using rule 35
+	'mod'          reduce using rule 35
+	%eof           reduce using rule 35
+
+
+State 14
+
+	Exp3 -> Boolean .                                   (rule 37)
+
+	')'            reduce using rule 37
+	'*'            reduce using rule 37
+	'+'            reduce using rule 37
+	'++'           reduce using rule 37
+	'-'            reduce using rule 37
+	'/\\'          reduce using rule 37
+	':'            reduce using rule 37
+	'==='          reduce using rule 37
+	'==>'          reduce using rule 37
+	'\\/'          reduce using rule 37
+	'div'          reduce using rule 37
+	'mod'          reduce using rule 37
+	%eof           reduce using rule 37
 
 
 State 15
@@ -386,7 +392,7 @@ State 15
 
 State 16
 
-	Exp3 -> '(' . Exp ')'                               (rule 38)
+	Exp3 -> '(' . Exp ')'                               (rule 39)
 
 	'('            shift, and enter state 16
 	'nil'          shift, and enter state 17
@@ -397,27 +403,28 @@ State 16
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp            goto state 53
+	Exp            goto state 54
 	Exp1           goto state 25
 	Exp2           goto state 23
 	Exp3           goto state 21
 
 State 17
 
-	Exp3 -> 'nil' .                                     (rule 37)
+	Exp3 -> 'nil' .                                     (rule 38)
 
-	')'            reduce using rule 37
-	'*'            reduce using rule 37
-	'+'            reduce using rule 37
-	'++'           reduce using rule 37
-	'-'            reduce using rule 37
-	'/'            reduce using rule 37
-	'/\\'          reduce using rule 37
-	':'            reduce using rule 37
-	'==='          reduce using rule 37
-	'==>'          reduce using rule 37
-	'\\/'          reduce using rule 37
-	%eof           reduce using rule 37
+	')'            reduce using rule 38
+	'*'            reduce using rule 38
+	'+'            reduce using rule 38
+	'++'           reduce using rule 38
+	'-'            reduce using rule 38
+	'/\\'          reduce using rule 38
+	':'            reduce using rule 38
+	'==='          reduce using rule 38
+	'==>'          reduce using rule 38
+	'\\/'          reduce using rule 38
+	'div'          reduce using rule 38
+	'mod'          reduce using rule 38
+	%eof           reduce using rule 38
 
 
 State 18
@@ -429,12 +436,13 @@ State 18
 	'+'            reduce using rule 11
 	'++'           reduce using rule 11
 	'-'            reduce using rule 11
-	'/'            reduce using rule 11
 	'/\\'          reduce using rule 11
 	':'            reduce using rule 11
 	'==='          reduce using rule 11
 	'==>'          reduce using rule 11
 	'\\/'          reduce using rule 11
+	'div'          reduce using rule 11
+	'mod'          reduce using rule 11
 	%eof           reduce using rule 11
 
 
@@ -447,12 +455,13 @@ State 19
 	'+'            reduce using rule 12
 	'++'           reduce using rule 12
 	'-'            reduce using rule 12
-	'/'            reduce using rule 12
 	'/\\'          reduce using rule 12
 	':'            reduce using rule 12
 	'==='          reduce using rule 12
 	'==>'          reduce using rule 12
 	'\\/'          reduce using rule 12
+	'div'          reduce using rule 12
+	'mod'          reduce using rule 12
 	%eof           reduce using rule 12
 
 
@@ -460,29 +469,32 @@ State 20
 
 	%start_pExp2 -> Exp2 .                              (rule 8)
 	Exp2 -> Exp2 . '*' Exp3                             (rule 31)
-	Exp2 -> Exp2 . '/' Exp3                             (rule 32)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 32)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 33)
 
 	'*'            shift, and enter state 51
-	'/'            shift, and enter state 52
+	'div'          shift, and enter state 52
+	'mod'          shift, and enter state 53
 	%eof           accept
 
 
 State 21
 
-	Exp2 -> Exp3 .                                      (rule 33)
+	Exp2 -> Exp3 .                                      (rule 34)
 
-	')'            reduce using rule 33
-	'*'            reduce using rule 33
-	'+'            reduce using rule 33
-	'++'           reduce using rule 33
-	'-'            reduce using rule 33
-	'/'            reduce using rule 33
-	'/\\'          reduce using rule 33
-	':'            reduce using rule 33
-	'==='          reduce using rule 33
-	'==>'          reduce using rule 33
-	'\\/'          reduce using rule 33
-	%eof           reduce using rule 33
+	')'            reduce using rule 34
+	'*'            reduce using rule 34
+	'+'            reduce using rule 34
+	'++'           reduce using rule 34
+	'-'            reduce using rule 34
+	'/\\'          reduce using rule 34
+	':'            reduce using rule 34
+	'==='          reduce using rule 34
+	'==>'          reduce using rule 34
+	'\\/'          reduce using rule 34
+	'div'          reduce using rule 34
+	'mod'          reduce using rule 34
+	%eof           reduce using rule 34
 
 
 State 22
@@ -500,19 +512,21 @@ State 23
 
 	Exp1 -> Exp2 .                                      (rule 30)
 	Exp2 -> Exp2 . '*' Exp3                             (rule 31)
-	Exp2 -> Exp2 . '/' Exp3                             (rule 32)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 32)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 33)
 
 	')'            reduce using rule 30
 	'*'            shift, and enter state 51
 	'+'            reduce using rule 30
 	'++'           reduce using rule 30
 	'-'            reduce using rule 30
-	'/'            shift, and enter state 52
 	'/\\'          reduce using rule 30
 	':'            reduce using rule 30
 	'==='          reduce using rule 30
 	'==>'          reduce using rule 30
 	'\\/'          reduce using rule 30
+	'div'          shift, and enter state 52
+	'mod'          shift, and enter state 53
 	%eof           reduce using rule 30
 
 
@@ -565,7 +579,7 @@ State 27
 State 28
 
 	Pred5 -> '(' . Pred ')'                             (rule 24)
-	Exp3 -> '(' . Exp ')'                               (rule 38)
+	Exp3 -> '(' . Exp ')'                               (rule 39)
 
 	'('            shift, and enter state 28
 	'nil'          shift, and enter state 17
@@ -721,7 +735,7 @@ State 40
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Pred1          goto state 65
+	Pred1          goto state 67
 	Pred2          goto state 37
 	Pred3          goto state 35
 	Pred4          goto state 33
@@ -745,7 +759,7 @@ State 41
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Pred1          goto state 64
+	Pred1          goto state 66
 	Pred2          goto state 37
 	Pred3          goto state 35
 	Pred4          goto state 33
@@ -769,7 +783,7 @@ State 42
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Pred3          goto state 63
+	Pred3          goto state 65
 	Pred4          goto state 33
 	Pred5          goto state 30
 	Exp            goto state 27
@@ -791,7 +805,7 @@ State 43
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Pred4          goto state 62
+	Pred4          goto state 64
 	Pred5          goto state 30
 	Exp            goto state 27
 	Exp1           goto state 25
@@ -815,16 +829,16 @@ State 45
 	Pred -> Pred . '===' Pred1                          (rule 13)
 	Pred5 -> '(' Pred . ')'                             (rule 24)
 
-	')'            shift, and enter state 61
+	')'            shift, and enter state 63
 	'==='          shift, and enter state 40
 
 
 State 46
 
 	Pred5 -> Exp .                                      (rule 23)
-	Exp3 -> '(' Exp . ')'                               (rule 38)
+	Exp3 -> '(' Exp . ')'                               (rule 39)
 
-	')'            shift, and enter state 54
+	')'            shift, and enter state 55
 			(reduce using rule 23)
 
 	'/\\'          reduce using rule 23
@@ -846,7 +860,7 @@ State 47
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp2           goto state 60
+	Exp2           goto state 62
 	Exp3           goto state 21
 
 State 48
@@ -862,7 +876,7 @@ State 48
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp            goto state 59
+	Exp            goto state 61
 	Exp1           goto state 25
 	Exp2           goto state 23
 	Exp3           goto state 21
@@ -880,7 +894,7 @@ State 49
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp2           goto state 58
+	Exp2           goto state 60
 	Exp3           goto state 21
 
 State 50
@@ -896,7 +910,7 @@ State 50
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp            goto state 57
+	Exp            goto state 59
 	Exp1           goto state 25
 	Exp2           goto state 23
 	Exp3           goto state 21
@@ -914,11 +928,11 @@ State 51
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp3           goto state 56
+	Exp3           goto state 58
 
 State 52
 
-	Exp2 -> Exp2 '/' . Exp3                             (rule 32)
+	Exp2 -> Exp2 'div' . Exp3                           (rule 32)
 
 	'('            shift, and enter state 16
 	'nil'          shift, and enter state 17
@@ -929,52 +943,88 @@ State 52
 	Ident          goto state 12
 	Integer        goto state 13
 	Boolean        goto state 14
-	Exp3           goto state 55
+	Exp3           goto state 57
 
 State 53
 
-	Exp3 -> '(' Exp . ')'                               (rule 38)
+	Exp2 -> Exp2 'mod' . Exp3                           (rule 33)
 
-	')'            shift, and enter state 54
+	'('            shift, and enter state 16
+	'nil'          shift, and enter state 17
+	L_Ident        shift, and enter state 11
+	L_integ        shift, and enter state 18
+	L_Boolean      shift, and enter state 19
 
+	Ident          goto state 12
+	Integer        goto state 13
+	Boolean        goto state 14
+	Exp3           goto state 56
 
 State 54
 
-	Exp3 -> '(' Exp ')' .                               (rule 38)
+	Exp3 -> '(' Exp . ')'                               (rule 39)
 
-	')'            reduce using rule 38
-	'*'            reduce using rule 38
-	'+'            reduce using rule 38
-	'++'           reduce using rule 38
-	'-'            reduce using rule 38
-	'/'            reduce using rule 38
-	'/\\'          reduce using rule 38
-	':'            reduce using rule 38
-	'==='          reduce using rule 38
-	'==>'          reduce using rule 38
-	'\\/'          reduce using rule 38
-	%eof           reduce using rule 38
+	')'            shift, and enter state 55
 
 
 State 55
 
-	Exp2 -> Exp2 '/' Exp3 .                             (rule 32)
+	Exp3 -> '(' Exp ')' .                               (rule 39)
+
+	')'            reduce using rule 39
+	'*'            reduce using rule 39
+	'+'            reduce using rule 39
+	'++'           reduce using rule 39
+	'-'            reduce using rule 39
+	'/\\'          reduce using rule 39
+	':'            reduce using rule 39
+	'==='          reduce using rule 39
+	'==>'          reduce using rule 39
+	'\\/'          reduce using rule 39
+	'div'          reduce using rule 39
+	'mod'          reduce using rule 39
+	%eof           reduce using rule 39
+
+
+State 56
+
+	Exp2 -> Exp2 'mod' Exp3 .                           (rule 33)
+
+	')'            reduce using rule 33
+	'*'            reduce using rule 33
+	'+'            reduce using rule 33
+	'++'           reduce using rule 33
+	'-'            reduce using rule 33
+	'/\\'          reduce using rule 33
+	':'            reduce using rule 33
+	'==='          reduce using rule 33
+	'==>'          reduce using rule 33
+	'\\/'          reduce using rule 33
+	'div'          reduce using rule 33
+	'mod'          reduce using rule 33
+	%eof           reduce using rule 33
+
+
+State 57
+
+	Exp2 -> Exp2 'div' Exp3 .                           (rule 32)
 
 	')'            reduce using rule 32
 	'*'            reduce using rule 32
 	'+'            reduce using rule 32
 	'++'           reduce using rule 32
 	'-'            reduce using rule 32
-	'/'            reduce using rule 32
 	'/\\'          reduce using rule 32
 	':'            reduce using rule 32
 	'==='          reduce using rule 32
 	'==>'          reduce using rule 32
 	'\\/'          reduce using rule 32
+	'div'          reduce using rule 32
+	'mod'          reduce using rule 32
 	%eof           reduce using rule 32
 
 
-State 56
+State 58
 
 	Exp2 -> Exp2 '*' Exp3 .                             (rule 31)
 
@@ -983,16 +1033,17 @@ State 56
 	'+'            reduce using rule 31
 	'++'           reduce using rule 31
 	'-'            reduce using rule 31
-	'/'            reduce using rule 31
 	'/\\'          reduce using rule 31
 	':'            reduce using rule 31
 	'==='          reduce using rule 31
 	'==>'          reduce using rule 31
 	'\\/'          reduce using rule 31
+	'div'          reduce using rule 31
+	'mod'          reduce using rule 31
 	%eof           reduce using rule 31
 
 
-State 57
+State 59
 
 	Exp -> Exp1 ':' Exp .                               (rule 26)
 
@@ -1004,27 +1055,29 @@ State 57
 	%eof           reduce using rule 26
 
 
-State 58
+State 60
 
 	Exp1 -> Exp1 '-' Exp2 .                             (rule 29)
 	Exp2 -> Exp2 . '*' Exp3                             (rule 31)
-	Exp2 -> Exp2 . '/' Exp3                             (rule 32)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 32)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 33)
 
 	')'            reduce using rule 29
 	'*'            shift, and enter state 51
 	'+'            reduce using rule 29
 	'++'           reduce using rule 29
 	'-'            reduce using rule 29
-	'/'            shift, and enter state 52
 	'/\\'          reduce using rule 29
 	':'            reduce using rule 29
 	'==='          reduce using rule 29
 	'==>'          reduce using rule 29
 	'\\/'          reduce using rule 29
+	'div'          shift, and enter state 52
+	'mod'          shift, and enter state 53
 	%eof           reduce using rule 29
 
 
-State 59
+State 61
 
 	Exp -> Exp1 '++' Exp .                              (rule 25)
 
@@ -1036,27 +1089,29 @@ State 59
 	%eof           reduce using rule 25
 
 
-State 60
+State 62
 
 	Exp1 -> Exp1 '+' Exp2 .                             (rule 28)
 	Exp2 -> Exp2 . '*' Exp3                             (rule 31)
-	Exp2 -> Exp2 . '/' Exp3                             (rule 32)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 32)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 33)
 
 	')'            reduce using rule 28
 	'*'            shift, and enter state 51
 	'+'            reduce using rule 28
 	'++'           reduce using rule 28
 	'-'            reduce using rule 28
-	'/'            shift, and enter state 52
 	'/\\'          reduce using rule 28
 	':'            reduce using rule 28
 	'==='          reduce using rule 28
 	'==>'          reduce using rule 28
 	'\\/'          reduce using rule 28
+	'div'          shift, and enter state 52
+	'mod'          shift, and enter state 53
 	%eof           reduce using rule 28
 
 
-State 61
+State 63
 
 	Pred5 -> '(' Pred ')' .                             (rule 24)
 
@@ -1068,7 +1123,7 @@ State 61
 	%eof           reduce using rule 24
 
 
-State 62
+State 64
 
 	Pred3 -> Pred3 '/\\' Pred4 .                        (rule 19)
 
@@ -1080,7 +1135,7 @@ State 62
 	%eof           reduce using rule 19
 
 
-State 63
+State 65
 
 	Pred2 -> Pred2 '\\/' Pred3 .                        (rule 17)
 	Pred3 -> Pred3 . '/\\' Pred4                        (rule 19)
@@ -1093,7 +1148,7 @@ State 63
 	%eof           reduce using rule 17
 
 
-State 64
+State 66
 
 	Pred1 -> Pred2 '==>' Pred1 .                        (rule 15)
 
@@ -1102,7 +1157,7 @@ State 64
 	%eof           reduce using rule 15
 
 
-State 65
+State 67
 
 	Pred -> Pred '===' Pred1 .                          (rule 13)
 
@@ -1114,7 +1169,7 @@ State 65
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 39
-Number of terminals: 17
+Number of rules: 40
+Number of terminals: 18
 Number of non-terminals: 23
-Number of states: 66
+Number of states: 68

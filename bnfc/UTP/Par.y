@@ -47,14 +47,15 @@ import UTP.Lex
   '+'       { PT _ (TS _ 4)       }
   '++'      { PT _ (TS _ 5)       }
   '-'       { PT _ (TS _ 6)       }
-  '/'       { PT _ (TS _ 7)       }
-  '/\\'     { PT _ (TS _ 8)       }
-  ':'       { PT _ (TS _ 9)       }
-  '==='     { PT _ (TS _ 10)      }
-  '==>'     { PT _ (TS _ 11)      }
-  '\\/'     { PT _ (TS _ 12)      }
-  'nil'     { PT _ (TS _ 13)      }
-  '~'       { PT _ (TS _ 14)      }
+  '/\\'     { PT _ (TS _ 7)       }
+  ':'       { PT _ (TS _ 8)       }
+  '==='     { PT _ (TS _ 9)       }
+  '==>'     { PT _ (TS _ 10)      }
+  '\\/'     { PT _ (TS _ 11)      }
+  'div'     { PT _ (TS _ 12)      }
+  'mod'     { PT _ (TS _ 13)      }
+  'nil'     { PT _ (TS _ 14)      }
+  '~'       { PT _ (TS _ 15)      }
   L_Ident   { PT _ (TV $$)        }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
@@ -103,7 +104,8 @@ Exp1
 Exp2 :: { UTP.Abs.Exp }
 Exp2
   : Exp2 '*' Exp3 { UTP.Abs.EMul $1 $3 }
-  | Exp2 '/' Exp3 { UTP.Abs.EDiv $1 $3 }
+  | Exp2 'div' Exp3 { UTP.Abs.EDiv $1 $3 }
+  | Exp2 'mod' Exp3 { UTP.Abs.EMod $1 $3 }
   | Exp3 { $1 }
 
 Exp3 :: { UTP.Abs.Exp }

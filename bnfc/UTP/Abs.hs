@@ -26,6 +26,7 @@ data Exp
     | ESub Exp Exp
     | EMul Exp Exp
     | EDiv Exp Exp
+    | EMod Exp Exp
     | EInt Integer
     | EVar Ident
     | EBool Boolean

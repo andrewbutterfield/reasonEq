@@ -40,6 +40,7 @@ transExp x = case x of
   UTP.Abs.ESub exp1 exp2 -> failure x
   UTP.Abs.EMul exp1 exp2 -> failure x
   UTP.Abs.EDiv exp1 exp2 -> failure x
+  UTP.Abs.EMod exp1 exp2 -> failure x
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar ident -> failure x
   UTP.Abs.EBool boolean -> failure x

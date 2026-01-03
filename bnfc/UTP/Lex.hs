@@ -51,16 +51,16 @@ alex_deflt = AlexA#
 
 alex_accept = listArray (0 :: Int, 17)
   [ AlexAccNone
-  , AlexAcc 11
   , AlexAcc 10
   , AlexAcc 9
   , AlexAcc 8
   , AlexAcc 7
   , AlexAcc 6
   , AlexAcc 5
+  , AlexAcc 4
   , AlexAccSkip
   , AlexAccNone
-  , AlexAcc 4
+  , AlexAccNone
   , AlexAccNone
   , AlexAccNone
   , AlexAccNone
@@ -70,14 +70,13 @@ alex_accept = listArray (0 :: Int, 17)
   , AlexAcc 0
   ]
 
-alex_actions = array (0 :: Int, 12)
-  [ (11,alex_action_3)
-  , (10,alex_action_3)
+alex_actions = array (0 :: Int, 11)
+  [ (10,alex_action_3)
   , (9,alex_action_3)
   , (8,alex_action_3)
   , (7,alex_action_3)
-  , (6,alex_action_2)
-  , (5,alex_action_1)
+  , (6,alex_action_3)
+  , (5,alex_action_2)
   , (4,alex_action_1)
   , (3,alex_action_1)
   , (2,alex_action_4)
@@ -188,13 +187,13 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "/\\" 8
+  b ":" 8
     (b "+" 4
        (b ")" 2 (b "(" 1 N N) (b "*" 3 N N))
-       (b "-" 6 (b "++" 5 N N) (b "/" 7 N N)))
-    (b "\\/" 12
-       (b "===" 10 (b ":" 9 N N) (b "==>" 11 N N))
-       (b "~" 14 (b "nil" 13 N N) N))
+       (b "-" 6 (b "++" 5 N N) (b "/\\" 7 N N)))
+    (b "div" 12
+       (b "==>" 10 (b "===" 9 N N) (b "\\/" 11 N N))
+       (b "nil" 14 (b "mod" 13 N N) (b "~" 15 N N)))
   where
   b s n = B bs (TS bs n)
     where

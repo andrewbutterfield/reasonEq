@@ -25,6 +25,7 @@ transBoolean x = case x of
 
 transPred :: UTP.Abs.Pred -> Result
 transPred x = case x of
+  UTP.Abs.PEqv pred1 pred2 -> failure x
   UTP.Abs.PImpl pred1 pred2 -> failure x
   UTP.Abs.POr pred1 pred2 -> failure x
   UTP.Abs.PAnd pred1 pred2 -> failure x
@@ -33,6 +34,8 @@ transPred x = case x of
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
+  UTP.Abs.ECat exp1 exp2 -> failure x
+  UTP.Abs.ECons exp1 exp2 -> failure x
   UTP.Abs.EAdd exp1 exp2 -> failure x
   UTP.Abs.ESub exp1 exp2 -> failure x
   UTP.Abs.EMul exp1 exp2 -> failure x

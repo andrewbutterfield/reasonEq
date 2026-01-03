@@ -149,10 +149,13 @@ instance Print UTP.Abs.Pred where
 
 instance Print UTP.Abs.Exp where
   prt i = \case
-    UTP.Abs.EAdd exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "+"), prt 1 exp2])
-    UTP.Abs.ESub exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "-"), prt 1 exp2])
-    UTP.Abs.EMul exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "*"), prt 2 exp2])
-    UTP.Abs.EDiv exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "/"), prt 2 exp2])
-    UTP.Abs.EInt n -> prPrec i 2 (concatD [prt 0 n])
-    UTP.Abs.EVar id_ -> prPrec i 2 (concatD [prt 0 id_])
-    UTP.Abs.EBool boolean -> prPrec i 2 (concatD [prt 0 boolean])
+    UTP.Abs.ECat exp1 exp2 -> prPrec i 0 (concatD [prt 1 exp1, doc (showString "++"), prt 0 exp2])
+    UTP.Abs.ECons exp1 exp2 -> prPrec i 0 (concatD [prt 1 exp1, doc (showString ":"), prt 0 exp2])
+    UTP.Abs.EAdd exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "+"), prt 2 exp2])
+    UTP.Abs.ESub exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "-"), prt 2 exp2])
+    UTP.Abs.EMul exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "*"), prt 3 exp2])
+    UTP.Abs.EDiv exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "/"), prt 3 exp2])
+    UTP.Abs.EInt n -> prPrec i 3 (concatD [prt 0 n])
+    UTP.Abs.EVar id_ -> prPrec i 3 (concatD [prt 0 id_])
+    UTP.Abs.EBool boolean -> prPrec i 3 (concatD [prt 0 boolean])
+    UTP.Abs.ENil -> prPrec i 3 (concatD [doc (showString "nil")])

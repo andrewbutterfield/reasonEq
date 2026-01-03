@@ -34,6 +34,8 @@ transPred x = case x of
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
+  UTP.Abs.ECat exp1 exp2 -> failure x
+  UTP.Abs.ECons exp1 exp2 -> failure x
   UTP.Abs.EAdd exp1 exp2 -> failure x
   UTP.Abs.ESub exp1 exp2 -> failure x
   UTP.Abs.EMul exp1 exp2 -> failure x
@@ -41,3 +43,4 @@ transExp x = case x of
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar ident -> failure x
   UTP.Abs.EBool boolean -> failure x
+  UTP.Abs.ENil -> failure x

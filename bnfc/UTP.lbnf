@@ -15,7 +15,11 @@
 -- we want to add a boolean type
 token Boolean ( {"false"} | {"true"} ) ;
 
--- we next add a predicate type (expressions of type Bool)
+{- 
+   We define a predicate type (expressions of type Bool)
+
+   Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
+-}
 PEqv.    Pred  ::= Pred "===" Pred1   ;
 PImpl.   Pred1 ::= Pred2 "==>" Pred1  ;
 POr.     Pred2 ::= Pred2 "\\/" Pred3  ;
@@ -26,14 +30,34 @@ PAtomic. Pred5 ::= Exp                ; -- Exp should be type Bool
 coercions Pred 5                      ;
 
 
--- We then define a generic expression type
-EAdd.      Exp  ::= Exp  "+" Exp1 ;
-ESub.      Exp  ::= Exp  "-" Exp1 ;
-EMul.      Exp1 ::= Exp1 "*" Exp2 ;
-EDiv.      Exp1 ::= Exp1 "/" Exp2 ;
-EInt.      Exp2 ::= Integer       ;
-EVar.      Exp2 ::= Ident         ;
-EBool.     Exp2 ::= Boolean       ;
+{- 
+    We then define a generic expression type.
 
-coercions  Exp  2                 ;
+    Haskell operators:
+   Prc | Left-Assoc           |         Non-Assoc            | Right-Assoc
+    9  | !!                   |                              | . 
+    8  |                      |                              | ^ ^^ **
+    7  | * / div mod rem quot |                              | 
+    6  | + -                  |                              |
+    5  |                      |                              | : ++
+    4  |                      | == /= < <= > >= elem notElem | 
+    3  |                      |                              | &&
+    2  |                      |                              | ||
+    1  | >> >>=               |                              |
+    0  |                      |                              | $ $! seq
+    
+-}
+
+ECat.      Exp  ::= Exp1 "++" Exp  ;
+ECons.     Exp  ::= Exp1 ":" Exp   ;
+EAdd.      Exp1 ::= Exp1  "+" Exp2 ;
+ESub.      Exp1 ::= Exp1  "-" Exp2 ;
+EMul.      Exp2 ::= Exp2 "*" Exp3  ;
+EDiv.      Exp2 ::= Exp2 "/" Exp3  ;
+EInt.      Exp3 ::= Integer        ;
+EVar.      Exp3 ::= Ident          ;
+EBool.     Exp3 ::= Boolean        ;
+ENil.      Exp3 ::= "nil"          ;
+
+coercions  Exp  3                  ;
 

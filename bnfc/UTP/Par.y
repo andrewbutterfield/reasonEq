@@ -17,6 +17,7 @@ module UTP.Par
   , pExp
   , pExp1
   , pExp2
+  , pExp3
   ) where
 
 import Prelude
@@ -35,6 +36,7 @@ import UTP.Lex
 %name pExp Exp
 %name pExp1 Exp1
 %name pExp2 Exp2
+%name pExp3 Exp3
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -43,13 +45,16 @@ import UTP.Lex
   ')'       { PT _ (TS _ 2)       }
   '*'       { PT _ (TS _ 3)       }
   '+'       { PT _ (TS _ 4)       }
-  '-'       { PT _ (TS _ 5)       }
-  '/'       { PT _ (TS _ 6)       }
-  '/\\'     { PT _ (TS _ 7)       }
-  '==='     { PT _ (TS _ 8)       }
-  '==>'     { PT _ (TS _ 9)       }
-  '\\/'     { PT _ (TS _ 10)      }
-  '~'       { PT _ (TS _ 11)      }
+  '++'      { PT _ (TS _ 5)       }
+  '-'       { PT _ (TS _ 6)       }
+  '/'       { PT _ (TS _ 7)       }
+  '/\\'     { PT _ (TS _ 8)       }
+  ':'       { PT _ (TS _ 9)       }
+  '==='     { PT _ (TS _ 10)      }
+  '==>'     { PT _ (TS _ 11)      }
+  '\\/'     { PT _ (TS _ 12)      }
+  'nil'     { PT _ (TS _ 13)      }
+  '~'       { PT _ (TS _ 14)      }
   L_Ident   { PT _ (TV $$)        }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
@@ -85,21 +90,28 @@ Pred5 : Exp { UTP.Abs.PAtomic $1 } | '(' Pred ')' { $2 }
 
 Exp :: { UTP.Abs.Exp }
 Exp
-  : Exp '+' Exp1 { UTP.Abs.EAdd $1 $3 }
-  | Exp '-' Exp1 { UTP.Abs.ESub $1 $3 }
+  : Exp1 '++' Exp { UTP.Abs.ECat $1 $3 }
+  | Exp1 ':' Exp { UTP.Abs.ECons $1 $3 }
   | Exp1 { $1 }
 
 Exp1 :: { UTP.Abs.Exp }
 Exp1
-  : Exp1 '*' Exp2 { UTP.Abs.EMul $1 $3 }
-  | Exp1 '/' Exp2 { UTP.Abs.EDiv $1 $3 }
+  : Exp1 '+' Exp2 { UTP.Abs.EAdd $1 $3 }
+  | Exp1 '-' Exp2 { UTP.Abs.ESub $1 $3 }
   | Exp2 { $1 }
 
 Exp2 :: { UTP.Abs.Exp }
 Exp2
+  : Exp2 '*' Exp3 { UTP.Abs.EMul $1 $3 }
+  | Exp2 '/' Exp3 { UTP.Abs.EDiv $1 $3 }
+  | Exp3 { $1 }
+
+Exp3 :: { UTP.Abs.Exp }
+Exp3
   : Integer { UTP.Abs.EInt $1 }
   | Ident { UTP.Abs.EVar $1 }
   | Boolean { UTP.Abs.EBool $1 }
+  | 'nil' { UTP.Abs.ENil }
   | '(' Exp ')' { $2 }
 
 {

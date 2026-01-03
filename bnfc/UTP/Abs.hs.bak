@@ -11,7 +11,8 @@ import qualified Prelude as C (Eq, Ord, Show, Read)
 import qualified Data.String
 
 data Pred
-    = PImpl Pred Pred
+    = PEqv Pred Pred
+    | PImpl Pred Pred
     | POr Pred Pred
     | PAnd Pred Pred
     | PNot Pred
@@ -19,7 +20,9 @@ data Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
-    = EAdd Exp Exp
+    = ECat Exp Exp
+    | ECons Exp Exp
+    | EAdd Exp Exp
     | ESub Exp Exp
     | EMul Exp Exp
     | EDiv Exp Exp

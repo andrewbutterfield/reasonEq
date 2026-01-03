@@ -20,13 +20,16 @@ data Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
-    = EAdd Exp Exp
+    = ECat Exp Exp
+    | ECons Exp Exp
+    | EAdd Exp Exp
     | ESub Exp Exp
     | EMul Exp Exp
     | EDiv Exp Exp
     | EInt Integer
     | EVar Ident
     | EBool Boolean
+    | ENil
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Ident = Ident String

@@ -33,9 +33,10 @@ The reserved words used in UTP are the following:
 There are no reserved words in UTP.
 
 The symbols used in UTP are the following:
-  | => | \/ | /\ | ~
-  | ( | ) | + | -
-  | * | / |  |
+  | === | ==> | \/ | /\
+  | ~ | ( | ) | ++
+  | : | + | - | *
+  | / |  |  |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -46,23 +47,28 @@ The symbols -> (production),  **|**  (union)
 and **eps** (empty rule) belong to the BNF notation.
 All other symbols are terminals.
 
-  | //Pred// | -> | //Pred1// ``=>`` //Pred//
+  | //Pred// | -> | //Pred// ``===`` //Pred1//
   |  |  **|**  | //Pred1//
-  | //Pred1// | -> | //Pred1// ``\/`` //Pred2//
-  |  |  **|**  | //Pred2// ``/\`` //Pred3//
+  | //Pred1// | -> | //Pred2// ``==>`` //Pred1//
   |  |  **|**  | //Pred2//
-  | //Pred3// | -> | ``~`` //Pred4//
+  | //Pred2// | -> | //Pred2// ``\/`` //Pred3//
+  |  |  **|**  | //Pred3//
+  | //Pred3// | -> | //Pred3// ``/\`` //Pred4//
   |  |  **|**  | //Pred4//
-  | //Pred4// | -> | //Exp//
+  | //Pred4// | -> | ``~`` //Pred5//
+  |  |  **|**  | //Pred5//
+  | //Pred5// | -> | //Exp//
   |  |  **|**  | ``(`` //Pred// ``)``
-  | //Pred2// | -> | //Pred3//
-  | //Exp// | -> | //Exp// ``+`` //Exp1//
-  |  |  **|**  | //Exp// ``-`` //Exp1//
+  | //Exp// | -> | //Exp1// ``++`` //Exp//
+  |  |  **|**  | //Exp1// ``:`` //Exp//
   |  |  **|**  | //Exp1//
-  | //Exp1// | -> | //Exp1// ``*`` //Exp2//
-  |  |  **|**  | //Exp1// ``/`` //Exp2//
+  | //Exp1// | -> | //Exp1// ``+`` //Exp2//
+  |  |  **|**  | //Exp1// ``-`` //Exp2//
   |  |  **|**  | //Exp2//
-  | //Exp2// | -> | //Integer//
+  | //Exp2// | -> | //Exp2// ``*`` //Exp3//
+  |  |  **|**  | //Exp2// ``/`` //Exp3//
+  |  |  **|**  | //Exp3//
+  | //Exp3// | -> | //Integer//
   |  |  **|**  | //Ident//
   |  |  **|**  | //Boolean//
   |  |  **|**  | ``(`` //Exp// ``)``

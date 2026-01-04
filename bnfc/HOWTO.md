@@ -25,7 +25,7 @@ Lexing for variables like `'varA` (Before `varA`),
 The comparisons (== and friends) are now part of  `Pred`, 
 which also has its own identifiers.
 
-
+Need to introduce 1-ary predicates over expressions (e.g. `even`).
 
 
 

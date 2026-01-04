@@ -16,17 +16,23 @@ data Pred
     | POr Pred Pred
     | PAnd Pred Pred
     | PNot Pred
-    | PAtomic Exp
+    | PEQ Exp Exp
+    | PNEq Exp Exp
+    | PLT Exp Exp
+    | PLE Exp Exp
+    | PGT Exp Exp
+    | PGE Exp Exp
+    | PVar Ident
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
-    = EEq Exp Exp
-    | ECat Exp Exp
+    = ECat Exp Exp
     | ECons Exp Exp
     | EAdd Exp Exp
     | ESub Exp Exp
     | EMul Exp Exp
     | EDiv Exp Exp
+    | EMod Exp Exp
     | EInt Integer
     | EVar Ident
     | EBool Boolean

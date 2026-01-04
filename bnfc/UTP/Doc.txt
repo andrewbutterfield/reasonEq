@@ -33,8 +33,10 @@ The reserved words used in UTP are the following:
 
 The symbols used in UTP are the following:
   | === | ==> | \/ | /\
-  | ~ | ( | ) | ++
-  | : | + | - | *
+  | ~ | == | != | <
+  | <= | > | >= | (
+  | ) | ++ | : | +
+  | - | * |  |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -55,7 +57,14 @@ All other symbols are terminals.
   |  |  **|**  | //Pred4//
   | //Pred4// | -> | ``~`` //Pred5//
   |  |  **|**  | //Pred5//
-  | //Pred5// | -> | //Exp//
+  | //Pred5// | -> | //Exp// ``==`` //Exp//
+  |  |  **|**  | //Exp// ``!=`` //Exp//
+  |  |  **|**  | //Exp// ``<`` //Exp//
+  |  |  **|**  | //Exp// ``<=`` //Exp//
+  |  |  **|**  | //Exp// ``>`` //Exp//
+  |  |  **|**  | //Exp// ``>=`` //Exp//
+  |  |  **|**  | //Pred6//
+  | //Pred6// | -> | //Ident//
   |  |  **|**  | ``(`` //Pred// ``)``
   | //Exp// | -> | //Exp1// ``++`` //Exp//
   |  |  **|**  | //Exp1// ``:`` //Exp//

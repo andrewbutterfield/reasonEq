@@ -25,9 +25,15 @@ PImpl.   Pred1 ::= Pred2 "==>" Pred1  ;
 POr.     Pred2 ::= Pred2 "\\/" Pred3  ;
 PAnd.    Pred3 ::= Pred3 "/\\" Pred4  ;
 PNot.    Pred4 ::= "~" Pred5          ;
-PAtomic. Pred5 ::= Exp                ; -- Exp should be type Bool
+EQ.     Pred5 ::= Exp "==" Exp        ; 
+NE.    Pred5 ::= Exp "!=" Exp         ; 
+LT.     Pred5 ::= Exp "<" Exp         ; 
+LE.     Pred5 ::= Exp "<=" Exp        ; 
+GT.     Pred5 ::= Exp ">" Exp         ; 
+GE.     Pred5 ::= Exp ">=" Exp        ; 
+PVar.    Pred6 ::= Ident              ;
 
-coercions Pred 5                      ;
+coercions Pred 6                      ;
 
 
 {- 
@@ -60,5 +66,5 @@ EVar.  Exp3 ::= Ident           ;
 EBool. Exp3 ::= Boolean         ;
 ENil.  Exp3 ::= "nil"           ;
 
-coercions  Exp  3               ;
+coercions Exp 3               ;
 

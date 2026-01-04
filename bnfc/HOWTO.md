@@ -22,10 +22,10 @@ Lexing for variables like `'varA` (Before `varA`),
  `b_varA`, `varB_a`, and `varC_m`, where `m` will be numeric. 
 
 
-The comparisons (== and friends) should be part of `Pred`, not `Exp`,
-or perhaps a separate `Compare` category?
+The comparisons (== and friends) are now part of  `Pred`, 
+which also has its own identifiers.
 
-Also, where do set/list comparisons fit in?
+
 
 
 

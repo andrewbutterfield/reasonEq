@@ -145,7 +145,13 @@ instance Print UTP.Abs.Pred where
     UTP.Abs.POr pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "\\/"), prt 3 pred2])
     UTP.Abs.PAnd pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "/\\"), prt 4 pred2])
     UTP.Abs.PNot pred -> prPrec i 4 (concatD [doc (showString "~"), prt 5 pred])
-    UTP.Abs.PAtomic exp -> prPrec i 5 (concatD [prt 0 exp])
+    UTP.Abs.EQ exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString "=="), prt 0 exp2])
+    UTP.Abs.NE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString "!="), prt 0 exp2])
+    UTP.Abs.LT exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString "<"), prt 0 exp2])
+    UTP.Abs.LE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString "<="), prt 0 exp2])
+    UTP.Abs.GT exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">"), prt 0 exp2])
+    UTP.Abs.GE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">="), prt 0 exp2])
+    UTP.Abs.PVar id_ -> prPrec i 6 (concatD [prt 0 id_])
 
 instance Print UTP.Abs.Exp where
   prt i = \case

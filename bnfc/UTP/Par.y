@@ -14,6 +14,7 @@ module UTP.Par
   , pPred3
   , pPred4
   , pPred5
+  , pPred6
   , pExp
   , pExp1
   , pExp2
@@ -33,6 +34,7 @@ import UTP.Lex
 %name pPred3 Pred3
 %name pPred4 Pred4
 %name pPred5 Pred5
+%name pPred6 Pred6
 %name pExp Exp
 %name pExp1 Exp1
 %name pExp2 Exp2
@@ -41,21 +43,27 @@ import UTP.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '('       { PT _ (TS _ 1)       }
-  ')'       { PT _ (TS _ 2)       }
-  '*'       { PT _ (TS _ 3)       }
-  '+'       { PT _ (TS _ 4)       }
-  '++'      { PT _ (TS _ 5)       }
-  '-'       { PT _ (TS _ 6)       }
-  '/\\'     { PT _ (TS _ 7)       }
-  ':'       { PT _ (TS _ 8)       }
-  '==='     { PT _ (TS _ 9)       }
-  '==>'     { PT _ (TS _ 10)      }
-  '\\/'     { PT _ (TS _ 11)      }
-  'div'     { PT _ (TS _ 12)      }
-  'mod'     { PT _ (TS _ 13)      }
-  'nil'     { PT _ (TS _ 14)      }
-  '~'       { PT _ (TS _ 15)      }
+  '!='      { PT _ (TS _ 1)       }
+  '('       { PT _ (TS _ 2)       }
+  ')'       { PT _ (TS _ 3)       }
+  '*'       { PT _ (TS _ 4)       }
+  '+'       { PT _ (TS _ 5)       }
+  '++'      { PT _ (TS _ 6)       }
+  '-'       { PT _ (TS _ 7)       }
+  '/\\'     { PT _ (TS _ 8)       }
+  ':'       { PT _ (TS _ 9)       }
+  '<'       { PT _ (TS _ 10)      }
+  '<='      { PT _ (TS _ 11)      }
+  '=='      { PT _ (TS _ 12)      }
+  '==='     { PT _ (TS _ 13)      }
+  '==>'     { PT _ (TS _ 14)      }
+  '>'       { PT _ (TS _ 15)      }
+  '>='      { PT _ (TS _ 16)      }
+  '\\/'     { PT _ (TS _ 17)      }
+  'div'     { PT _ (TS _ 18)      }
+  'mod'     { PT _ (TS _ 19)      }
+  'nil'     { PT _ (TS _ 20)      }
+  '~'       { PT _ (TS _ 21)      }
   L_Ident   { PT _ (TV $$)        }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
@@ -87,7 +95,17 @@ Pred4 :: { UTP.Abs.Pred }
 Pred4 : '~' Pred5 { UTP.Abs.PNot $2 } | Pred5 { $1 }
 
 Pred5 :: { UTP.Abs.Pred }
-Pred5 : Exp { UTP.Abs.PAtomic $1 } | '(' Pred ')' { $2 }
+Pred5
+  : Exp '==' Exp { UTP.Abs.EQ $1 $3 }
+  | Exp '!=' Exp { UTP.Abs.NE $1 $3 }
+  | Exp '<' Exp { UTP.Abs.LT $1 $3 }
+  | Exp '<=' Exp { UTP.Abs.LE $1 $3 }
+  | Exp '>' Exp { UTP.Abs.GT $1 $3 }
+  | Exp '>=' Exp { UTP.Abs.GE $1 $3 }
+  | Pred6 { $1 }
+
+Pred6 :: { UTP.Abs.Pred }
+Pred6 : Ident { UTP.Abs.PVar $1 } | '(' Pred ')' { $2 }
 
 Exp :: { UTP.Abs.Exp }
 Exp

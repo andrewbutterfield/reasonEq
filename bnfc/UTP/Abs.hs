@@ -16,7 +16,13 @@ data Pred
     | POr Pred Pred
     | PAnd Pred Pred
     | PNot Pred
-    | PAtomic Exp
+    | EQ Exp Exp
+    | NE Exp Exp
+    | LT Exp Exp
+    | LE Exp Exp
+    | GT Exp Exp
+    | GE Exp Exp
+    | PVar Ident
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp

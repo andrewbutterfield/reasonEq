@@ -30,17 +30,23 @@ transPred x = case x of
   UTP.Abs.POr pred1 pred2 -> failure x
   UTP.Abs.PAnd pred1 pred2 -> failure x
   UTP.Abs.PNot pred -> failure x
-  UTP.Abs.PAtomic exp -> failure x
+  UTP.Abs.PEQ exp1 exp2 -> failure x
+  UTP.Abs.PNEq exp1 exp2 -> failure x
+  UTP.Abs.PLT exp1 exp2 -> failure x
+  UTP.Abs.PLE exp1 exp2 -> failure x
+  UTP.Abs.PGT exp1 exp2 -> failure x
+  UTP.Abs.PGE exp1 exp2 -> failure x
+  UTP.Abs.PVar ident -> failure x
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
-  UTP.Abs.EEq exp1 exp2 -> failure x
   UTP.Abs.ECat exp1 exp2 -> failure x
   UTP.Abs.ECons exp1 exp2 -> failure x
   UTP.Abs.EAdd exp1 exp2 -> failure x
   UTP.Abs.ESub exp1 exp2 -> failure x
   UTP.Abs.EMul exp1 exp2 -> failure x
   UTP.Abs.EDiv exp1 exp2 -> failure x
+  UTP.Abs.EMod exp1 exp2 -> failure x
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar ident -> failure x
   UTP.Abs.EBool boolean -> failure x

@@ -38,9 +38,9 @@ coercions Pred 6                    ;
 
 
 {- 
-    We then define a generic expression type.
+  We then define a generic expression type.
 
-    Haskell operators:
+  Haskell operators:
    Prc | Left-Assoc           |         Non-Assoc            | Right-Assoc
     9  | !!                   |                              | . 
     8  |                      |                              | ^ ^^ **

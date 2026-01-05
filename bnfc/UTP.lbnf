@@ -62,10 +62,12 @@ ESub.  Exp1 ::= Exp1  "-"  Exp2 ;
 EMul.  Exp2 ::= Exp2  "*"  Exp3 ;
 EDiv.  Exp2 ::= Exp2 "div" Exp3 ;
 EMod.  Exp2 ::= Exp2 "mod" Exp3 ;
+ENeg.  Exp2 ::= "neg" Exp3      ;
 EInt.  Exp3 ::= Integer         ;
 EVar.  Exp3 ::= Ident           ;
 EBool. Exp3 ::= Boolean         ;
 ENil.  Exp3 ::= "nil"           ;
+
 
 coercions Exp 3               ;
 

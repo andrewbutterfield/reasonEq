@@ -20,20 +20,21 @@ token Boolean ( {"false"} | {"true"} ) ;
 
    Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
 -}
-PEqv.    Pred  ::= Pred "===" Pred1   ;
-PImpl.   Pred1 ::= Pred2 "==>" Pred1  ;
-POr.     Pred2 ::= Pred2 "\\/" Pred3  ;
-PAnd.    Pred3 ::= Pred3 "/\\" Pred4  ;
-PNot.    Pred4 ::= "~" Pred5          ;
-EQ.     Pred5 ::= Exp "==" Exp        ; 
-NE.    Pred5 ::= Exp "!=" Exp         ; 
-LT.     Pred5 ::= Exp "<" Exp         ; 
-LE.     Pred5 ::= Exp "<=" Exp        ; 
-GT.     Pred5 ::= Exp ">" Exp         ; 
-GE.     Pred5 ::= Exp ">=" Exp        ; 
-PVar.    Pred6 ::= Ident              ;
+PEqv.  Pred  ::= Pred "===" Pred1   ;
+PImpl. Pred1 ::= Pred2 "==>" Pred1  ;
+POr.   Pred2 ::= Pred2 "\\/" Pred3  ;
+PAnd.  Pred3 ::= Pred3 "/\\" Pred4  ;
+PNot.  Pred4 ::= "~" Pred5          ;
+EQ.    Pred5 ::= Exp "==" Exp       ; 
+NE.    Pred5 ::= Exp "!=" Exp       ; 
+LT.    Pred5 ::= Exp "<" Exp        ; 
+LE.    Pred5 ::= Exp "<=" Exp       ; 
+GT.    Pred5 ::= Exp ">" Exp        ; 
+GE.    Pred5 ::= Exp ">=" Exp       ; 
+PVar.  Pred6 ::= Ident              ;
+PLift. Pred6 ::= "E" Exp            ;
 
-coercions Pred 6                      ;
+coercions Pred 6                    ;
 
 
 {- 

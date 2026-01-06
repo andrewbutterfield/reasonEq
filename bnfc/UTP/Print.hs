@@ -152,7 +152,8 @@ instance Print UTP.Abs.Pred where
     UTP.Abs.GT exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">"), prt 0 exp2])
     UTP.Abs.GE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">="), prt 0 exp2])
     UTP.Abs.PVar dynvar -> prPrec i 6 (concatD [prt 0 dynvar])
-    UTP.Abs.PLift exp -> prPrec i 6 (concatD [doc (showString "E"), prt 0 exp])
+    UTP.Abs.PExpr exp -> prPrec i 6 (concatD [doc (showString "E"), prt 0 exp])
+    UTP.Abs.PType type_ -> prPrec i 6 (concatD [doc (showString "T"), prt 0 type_])
     UTP.Abs.PredTX dynvar preds -> prPrec i 6 (concatD [prt 0 dynvar, doc (showString "(."), prt 0 preds, doc (showString ".)")])
 
 instance Print [UTP.Abs.Pred] where
@@ -180,3 +181,15 @@ instance Print [UTP.Abs.Exp] where
   prt _ [] = concatD []
   prt _ [x] = concatD [prt 0 x]
   prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print UTP.Abs.Type where
+  prt i = \case
+    UTP.Abs.TFun type_1 type_2 -> prPrec i 0 (concatD [prt 1 type_1, doc (showString "->"), prt 0 type_2])
+    UTP.Abs.TData dynvar types -> prPrec i 1 (concatD [prt 0 dynvar, prt 2 types])
+    UTP.Abs.TArb -> prPrec i 2 (concatD [doc (showString "ttop")])
+    UTP.Abs.TVar dynvar -> prPrec i 2 (concatD [prt 0 dynvar])
+    UTP.Abs.TBot -> prPrec i 2 (concatD [doc (showString "tbot")])
+
+instance Print [UTP.Abs.Type] where
+  prt _ [] = concatD []
+  prt _ (x:xs) = concatD [prt 2 x, prt 2 xs]

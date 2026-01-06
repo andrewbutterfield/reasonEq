@@ -28,8 +28,8 @@ DynVar literals are recognized by the regular expression
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in UTP are the following:
-  | ``E`` | ``div`` | ``mod`` | ``neg``
-  | ``nil`` |  |  |
+  | ``E`` | ``T`` | ``div`` | ``mod``
+  | ``neg`` | ``nil`` | ``tbot`` | ``ttop``
 
 The symbols used in UTP are the following:
   | === | ==> | \/ | /\
@@ -37,7 +37,7 @@ The symbols used in UTP are the following:
   | <= | > | >= | (.
   | .) | ( | ) | ,
   | ++ | : | + | -
-  | * |  |  |
+  | * | -> |  |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -67,6 +67,7 @@ All other symbols are terminals.
   |  |  **|**  | //Pred6//
   | //Pred6// | -> | //DynVar//
   |  |  **|**  | ``E`` //Exp//
+  |  |  **|**  | ``T`` //Type//
   |  |  **|**  | //DynVar// ``(.`` //[Pred]// ``.)``
   |  |  **|**  | ``(`` //Pred// ``)``
   | //[Pred]// | -> | **eps**
@@ -92,6 +93,16 @@ All other symbols are terminals.
   | //[Exp]// | -> | **eps**
   |  |  **|**  | //Exp//
   |  |  **|**  | //Exp// ``,`` //[Exp]//
+  | //Type// | -> | //Type1// ``->`` //Type//
+  |  |  **|**  | //Type1//
+  | //Type1// | -> | //DynVar// //[Type2]//
+  |  |  **|**  | //Type2//
+  | //Type2// | -> | ``ttop``
+  |  |  **|**  | //DynVar//
+  |  |  **|**  | ``tbot``
+  |  |  **|**  | ``(`` //Type// ``)``
+  | //[Type2]// | -> | **eps**
+  |  |  **|**  | //Type2// //[Type2]//
 
 
 

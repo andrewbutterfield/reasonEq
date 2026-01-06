@@ -44,8 +44,7 @@ token Boolean ( {"false"} | {"true"} ) ;
 token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
 
 
-{- 
-   We define a predicate type (expressions of type Bool)
+{- Predicates
 
    Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
 -}
@@ -61,15 +60,15 @@ LE.    Pred5 ::= Exp "<=" Exp       ;
 GT.    Pred5 ::= Exp ">" Exp        ; 
 GE.    Pred5 ::= Exp ">=" Exp       ; 
 PVar.  Pred6 ::= DynVar              ;
-PLift. Pred6 ::= "E" Exp            ;
+PExpr. Pred6 ::= "E" Exp            ;
+PType. Pred6 ::= "T" Type ;
 PredTX. Pred6 ::= DynVar "(." [Pred] ".)" ;
 coercions Pred 6                    ;
 
 separator Pred "," ;
 
 
-{- 
-  We then define a generic expression type.
+{- Expressions  
 
   Haskell operators:
    Prc | Left-Assoc           |         Non-Assoc            | Right-Assoc
@@ -103,3 +102,30 @@ ENmdTuple. Exp3 ::= DynVar "(" [Exp] ")" ;
 coercions Exp 3                 ;
 
 separator Exp "," ;
+
+{- Types
+
+  reasonEq Type(s)
+
+  ArbType
+  TypeVar i  
+  TypeCons i ts 
+  AlgType i fs 
+  FunType td tr 
+  GivenType i  - here we treat these as TypeVar
+  BottomType
+  ts = [t1,..,tN]
+  fs = [(i_1,ts_1),..,(i_M,ts_M)]
+
+  t1 -> t2 -> t3   is  t1 -> (t2 -> t3)
+
+-}
+
+TFun. Type ::= Type1 "->" Type ;
+TData. Type1 ::= DynVar [Type2] ;
+TArb. Type2 ::= "ttop" ;
+TVar. Type2 ::= DynVar ; 
+TBot. Type2 ::= "tbot" ;
+coercions Type 2 ;
+
+separator Type2 "" ;

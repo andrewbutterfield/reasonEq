@@ -23,7 +23,8 @@ data Pred
     | GT Exp Exp
     | GE Exp Exp
     | PVar DynVar
-    | PLift Exp
+    | PExpr Exp
+    | PType Type
     | PredTX DynVar [Pred]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
@@ -41,6 +42,10 @@ data Exp
     | EBool Boolean
     | ENil
     | ENmdTuple DynVar [Exp]
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data Type
+    = TFun Type Type | TData DynVar [Type] | TArb | TVar DynVar | TBot
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Boolean = Boolean String

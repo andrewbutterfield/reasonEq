@@ -21,6 +21,10 @@ module UTP.Par
   , pExp2
   , pExp3
   , pListExp
+  , pType
+  , pType1
+  , pType2
+  , pListType
   ) where
 
 import Prelude
@@ -43,6 +47,10 @@ import UTP.Lex
 %name pExp2 Exp2
 %name pExp3 Exp3
 %name pListExp ListExp
+%name pType Type
+%name pType1 Type1
+%name pType2 Type2
+%name pListType ListType
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -56,32 +64,32 @@ import UTP.Lex
   '++'      { PT _ (TS _ 7)       }
   ','       { PT _ (TS _ 8)       }
   '-'       { PT _ (TS _ 9)       }
-  '.)'      { PT _ (TS _ 10)      }
-  '/\\'     { PT _ (TS _ 11)      }
-  ':'       { PT _ (TS _ 12)      }
-  '<'       { PT _ (TS _ 13)      }
-  '<='      { PT _ (TS _ 14)      }
-  '=='      { PT _ (TS _ 15)      }
-  '==='     { PT _ (TS _ 16)      }
-  '==>'     { PT _ (TS _ 17)      }
-  '>'       { PT _ (TS _ 18)      }
-  '>='      { PT _ (TS _ 19)      }
-  'E'       { PT _ (TS _ 20)      }
-  '\\/'     { PT _ (TS _ 21)      }
-  'div'     { PT _ (TS _ 22)      }
-  'mod'     { PT _ (TS _ 23)      }
-  'neg'     { PT _ (TS _ 24)      }
-  'nil'     { PT _ (TS _ 25)      }
-  '~'       { PT _ (TS _ 26)      }
-  L_Ident   { PT _ (TV $$)        }
+  '->'      { PT _ (TS _ 10)      }
+  '.)'      { PT _ (TS _ 11)      }
+  '/\\'     { PT _ (TS _ 12)      }
+  ':'       { PT _ (TS _ 13)      }
+  '<'       { PT _ (TS _ 14)      }
+  '<='      { PT _ (TS _ 15)      }
+  '=='      { PT _ (TS _ 16)      }
+  '==='     { PT _ (TS _ 17)      }
+  '==>'     { PT _ (TS _ 18)      }
+  '>'       { PT _ (TS _ 19)      }
+  '>='      { PT _ (TS _ 20)      }
+  'E'       { PT _ (TS _ 21)      }
+  'T'       { PT _ (TS _ 22)      }
+  '\\/'     { PT _ (TS _ 23)      }
+  'div'     { PT _ (TS _ 24)      }
+  'mod'     { PT _ (TS _ 25)      }
+  'neg'     { PT _ (TS _ 26)      }
+  'nil'     { PT _ (TS _ 27)      }
+  'tbot'    { PT _ (TS _ 28)      }
+  'ttop'    { PT _ (TS _ 29)      }
+  '~'       { PT _ (TS _ 30)      }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
   L_DynVar  { PT _ (T_DynVar $$)  }
 
 %%
-
-Ident :: { UTP.Abs.Ident }
-Ident  : L_Ident { UTP.Abs.Ident $1 }
 
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
@@ -119,9 +127,10 @@ Pred5
 
 Pred6 :: { UTP.Abs.Pred }
 Pred6
-  : Ident { UTP.Abs.PVar $1 }
-  | 'E' Exp { UTP.Abs.PLift $2 }
-  | Ident '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
+  : DynVar { UTP.Abs.PVar $1 }
+  | 'E' Exp { UTP.Abs.PExpr $2 }
+  | 'T' Type { UTP.Abs.PType $2 }
+  | DynVar '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
   | '(' Pred ')' { $2 }
 
 ListPred :: { [UTP.Abs.Pred] }
@@ -164,6 +173,22 @@ ListExp
   : {- empty -} { [] }
   | Exp { (:[]) $1 }
   | Exp ',' ListExp { (:) $1 $3 }
+
+Type :: { UTP.Abs.Type }
+Type : Type1 '->' Type { UTP.Abs.TFun $1 $3 } | Type1 { $1 }
+
+Type1 :: { UTP.Abs.Type }
+Type1 : DynVar ListType { UTP.Abs.TData $1 $2 } | Type2 { $1 }
+
+Type2 :: { UTP.Abs.Type }
+Type2
+  : 'ttop' { UTP.Abs.TArb }
+  | DynVar { UTP.Abs.TVar $1 }
+  | 'tbot' { UTP.Abs.TBot }
+  | '(' Type ')' { $2 }
+
+ListType :: { [UTP.Abs.Type] }
+ListType : {- empty -} { [] } | Type ListType { (:) $1 $2 }
 
 {
 

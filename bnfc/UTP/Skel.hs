@@ -15,13 +15,13 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Left $ "Undefined case: " ++ show x
 
-transIdent :: UTP.Abs.Ident -> Result
-transIdent x = case x of
-  UTP.Abs.Ident string -> failure x
-
 transBoolean :: UTP.Abs.Boolean -> Result
 transBoolean x = case x of
   UTP.Abs.Boolean string -> failure x
+
+transDynVar :: UTP.Abs.DynVar -> Result
+transDynVar x = case x of
+  UTP.Abs.DynVar string -> failure x
 
 transPred :: UTP.Abs.Pred -> Result
 transPred x = case x of
@@ -36,9 +36,9 @@ transPred x = case x of
   UTP.Abs.LE exp1 exp2 -> failure x
   UTP.Abs.GT exp1 exp2 -> failure x
   UTP.Abs.GE exp1 exp2 -> failure x
-  UTP.Abs.PVar ident -> failure x
+  UTP.Abs.PVar dynvar -> failure x
   UTP.Abs.PLift exp -> failure x
-  UTP.Abs.PredTX ident preds -> failure x
+  UTP.Abs.PredTX dynvar preds -> failure x
 
 transExp :: UTP.Abs.Exp -> Result
 transExp x = case x of
@@ -51,7 +51,7 @@ transExp x = case x of
   UTP.Abs.EMod exp1 exp2 -> failure x
   UTP.Abs.ENeg exp -> failure x
   UTP.Abs.EInt integer -> failure x
-  UTP.Abs.EVar ident -> failure x
+  UTP.Abs.EVar dynvar -> failure x
   UTP.Abs.EBool boolean -> failure x
   UTP.Abs.ENil -> failure x
-  UTP.Abs.ENmdTuple ident exps -> failure x
+  UTP.Abs.ENmdTuple dynvar exps -> failure x

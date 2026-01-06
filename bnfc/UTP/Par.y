@@ -73,20 +73,20 @@ import UTP.Lex
   'neg'     { PT _ (TS _ 24)      }
   'nil'     { PT _ (TS _ 25)      }
   '~'       { PT _ (TS _ 26)      }
-  L_Ident   { PT _ (TV $$)        }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
+  L_DynVar  { PT _ (T_DynVar $$)  }
 
 %%
-
-Ident :: { UTP.Abs.Ident }
-Ident  : L_Ident { UTP.Abs.Ident $1 }
 
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
 Boolean :: { UTP.Abs.Boolean }
 Boolean  : L_Boolean { UTP.Abs.Boolean $1 }
+
+DynVar :: { UTP.Abs.DynVar }
+DynVar  : L_DynVar { UTP.Abs.DynVar $1 }
 
 Pred :: { UTP.Abs.Pred }
 Pred : Pred '===' Pred1 { UTP.Abs.PEqv $1 $3 } | Pred1 { $1 }
@@ -115,9 +115,9 @@ Pred5
 
 Pred6 :: { UTP.Abs.Pred }
 Pred6
-  : Ident { UTP.Abs.PVar $1 }
+  : DynVar { UTP.Abs.PVar $1 }
   | 'E' Exp { UTP.Abs.PLift $2 }
-  | Ident '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
+  | DynVar '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
   | '(' Pred ')' { $2 }
 
 ListPred :: { [UTP.Abs.Pred] }
@@ -149,10 +149,10 @@ Exp2
 Exp3 :: { UTP.Abs.Exp }
 Exp3
   : Integer { UTP.Abs.EInt $1 }
-  | Ident { UTP.Abs.EVar $1 }
+  | DynVar { UTP.Abs.EVar $1 }
   | Boolean { UTP.Abs.EBool $1 }
   | 'nil' { UTP.Abs.ENil }
-  | Ident '(' ListExp ')' { UTP.Abs.ENmdTuple $1 $3 }
+  | DynVar '(' ListExp ')' { UTP.Abs.ENmdTuple $1 $3 }
   | '(' Exp ')' { $2 }
 
 ListExp :: { [UTP.Abs.Exp] }

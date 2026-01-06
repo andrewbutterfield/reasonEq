@@ -20,9 +20,9 @@ Grammar
 	%start_pExp2 -> Exp2                               (10)
 	%start_pExp3 -> Exp3                               (11)
 	%start_pListExp -> ListExp                         (12)
-	Ident -> L_Ident                                   (13)
-	Integer -> L_integ                                 (14)
-	Boolean -> L_Boolean                               (15)
+	Integer -> L_integ                                 (13)
+	Boolean -> L_Boolean                               (14)
+	DynVar -> L_DynVar                                 (15)
 	Pred -> Pred '===' Pred1                           (16)
 	Pred -> Pred1                                      (17)
 	Pred1 -> Pred2 '==>' Pred1                         (18)
@@ -40,9 +40,9 @@ Grammar
 	Pred5 -> Exp '>' Exp                               (30)
 	Pred5 -> Exp '>=' Exp                              (31)
 	Pred5 -> Pred6                                     (32)
-	Pred6 -> Ident                                     (33)
+	Pred6 -> DynVar                                    (33)
 	Pred6 -> 'E' Exp                                   (34)
-	Pred6 -> Ident '(.' ListPred '.)'                  (35)
+	Pred6 -> DynVar '(.' ListPred '.)'                 (35)
 	Pred6 -> '(' Pred ')'                              (36)
 	ListPred ->                                        (37)
 	ListPred -> Pred                                   (38)
@@ -59,10 +59,10 @@ Grammar
 	Exp2 -> 'neg' Exp3                                 (49)
 	Exp2 -> Exp3                                       (50)
 	Exp3 -> Integer                                    (51)
-	Exp3 -> Ident                                      (52)
+	Exp3 -> DynVar                                     (52)
 	Exp3 -> Boolean                                    (53)
 	Exp3 -> 'nil'                                      (54)
-	Exp3 -> Ident '(' ListExp ')'                      (55)
+	Exp3 -> DynVar '(' ListExp ')'                     (55)
 	Exp3 -> '(' Exp ')'                                (56)
 	ListExp ->                                         (57)
 	ListExp -> Exp                                     (58)
@@ -97,9 +97,9 @@ Terminals
 	'neg'          { PT _ (TS _ 24) }
 	'nil'          { PT _ (TS _ 25) }
 	'~'            { PT _ (TS _ 26) }
-	L_Ident        { PT _ (TV $$) }
 	L_integ        { PT _ (TI $$) }
 	L_Boolean      { PT _ (T_Boolean $$) }
+	L_DynVar       { PT _ (T_DynVar $$) }
 
 -----------------------------------------------------------------------------
 Non-terminals
@@ -117,9 +117,9 @@ Non-terminals
 	%start_pExp2    rule  10
 	%start_pExp3    rule  11
 	%start_pListExp rule  12
-	Ident           rule  13
-	Integer         rule  14
-	Boolean         rule  15
+	Integer         rule  13
+	Boolean         rule  14
+	DynVar          rule  15
 	Pred            rules 16, 17
 	Pred1           rules 18, 19
 	Pred2           rules 20, 21
@@ -146,13 +146,13 @@ State 0
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 53
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -174,13 +174,13 @@ State 1
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred1          goto state 52
 	Pred2          goto state 35
 	Pred3          goto state 36
@@ -201,13 +201,13 @@ State 2
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred2          goto state 51
 	Pred3          goto state 36
 	Pred4          goto state 37
@@ -227,13 +227,13 @@ State 3
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred3          goto state 50
 	Pred4          goto state 37
 	Pred5          goto state 38
@@ -252,13 +252,13 @@ State 4
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred4          goto state 49
 	Pred5          goto state 38
 	Pred6          goto state 39
@@ -275,13 +275,13 @@ State 5
 	'E'            shift, and enter state 43
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred5          goto state 48
 	Pred6          goto state 39
 	Exp            goto state 41
@@ -295,9 +295,9 @@ State 6
 
 	'('            shift, and enter state 47
 	'E'            shift, and enter state 43
-	L_Ident        shift, and enter state 14
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 45
+	DynVar         goto state 45
 	Pred6          goto state 46
 
 State 7
@@ -309,14 +309,14 @@ State 7
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 	%eof           reduce using rule 37
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 33
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -337,13 +337,13 @@ State 8
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 31
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -356,13 +356,13 @@ State 9
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp1           goto state 30
 	Exp2           goto state 20
 	Exp3           goto state 21
@@ -374,13 +374,13 @@ State 10
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp2           goto state 29
 	Exp3           goto state 21
 
@@ -390,13 +390,13 @@ State 11
 
 	'('            shift, and enter state 23
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp3           goto state 28
 
 State 12
@@ -406,14 +406,14 @@ State 12
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 	%eof           reduce using rule 57
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 18
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -422,18 +422,16 @@ State 12
 
 State 13
 
-	Ident -> . L_Ident                                  (rule 13)
+	Integer -> . L_integ                                (rule 13)
 
-	L_Ident        shift, and enter state 14
+	L_integ        shift, and enter state 14
 
 
 State 14
 
-	Ident -> L_Ident .                                  (rule 13)
+	Integer -> L_integ .                                (rule 13)
 
 	'!='           reduce using rule 13
-	'('            reduce using rule 13
-	'(.'           reduce using rule 13
 	')'            reduce using rule 13
 	'*'            reduce using rule 13
 	'+'            reduce using rule 13
@@ -457,35 +455,6 @@ State 14
 
 
 State 15
-
-	Exp3 -> Ident .                                     (rule 52)
-	Exp3 -> Ident . '(' ListExp ')'                     (rule 55)
-
-	'!='           reduce using rule 52
-	'('            shift, and enter state 70
-	')'            reduce using rule 52
-	'*'            reduce using rule 52
-	'+'            reduce using rule 52
-	'++'           reduce using rule 52
-	','            reduce using rule 52
-	'-'            reduce using rule 52
-	'.)'           reduce using rule 52
-	'/\\'          reduce using rule 52
-	':'            reduce using rule 52
-	'<'            reduce using rule 52
-	'<='           reduce using rule 52
-	'=='           reduce using rule 52
-	'==='          reduce using rule 52
-	'==>'          reduce using rule 52
-	'>'            reduce using rule 52
-	'>='           reduce using rule 52
-	'\\/'          reduce using rule 52
-	'div'          reduce using rule 52
-	'mod'          reduce using rule 52
-	%eof           reduce using rule 52
-
-
-State 16
 
 	Exp3 -> Integer .                                   (rule 51)
 
@@ -512,7 +481,7 @@ State 16
 	%eof           reduce using rule 51
 
 
-State 17
+State 16
 
 	Exp3 -> Boolean .                                   (rule 53)
 
@@ -537,6 +506,35 @@ State 17
 	'div'          reduce using rule 53
 	'mod'          reduce using rule 53
 	%eof           reduce using rule 53
+
+
+State 17
+
+	Exp3 -> DynVar .                                    (rule 52)
+	Exp3 -> DynVar . '(' ListExp ')'                    (rule 55)
+
+	'!='           reduce using rule 52
+	'('            shift, and enter state 70
+	')'            reduce using rule 52
+	'*'            reduce using rule 52
+	'+'            reduce using rule 52
+	'++'           reduce using rule 52
+	','            reduce using rule 52
+	'-'            reduce using rule 52
+	'.)'           reduce using rule 52
+	'/\\'          reduce using rule 52
+	':'            reduce using rule 52
+	'<'            reduce using rule 52
+	'<='           reduce using rule 52
+	'=='           reduce using rule 52
+	'==='          reduce using rule 52
+	'==>'          reduce using rule 52
+	'>'            reduce using rule 52
+	'>='           reduce using rule 52
+	'\\/'          reduce using rule 52
+	'div'          reduce using rule 52
+	'mod'          reduce using rule 52
+	%eof           reduce using rule 52
 
 
 State 18
@@ -648,13 +646,13 @@ State 23
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 77
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -666,13 +664,13 @@ State 24
 
 	'('            shift, and enter state 23
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp3           goto state 76
 
 State 25
@@ -704,7 +702,7 @@ State 25
 
 State 26
 
-	Integer -> L_integ .                                (rule 14)
+	Boolean -> L_Boolean .                              (rule 14)
 
 	'!='           reduce using rule 14
 	')'            reduce using rule 14
@@ -731,9 +729,11 @@ State 26
 
 State 27
 
-	Boolean -> L_Boolean .                              (rule 15)
+	DynVar -> L_DynVar .                                (rule 15)
 
 	'!='           reduce using rule 15
+	'('            reduce using rule 15
+	'(.'           reduce using rule 15
 	')'            reduce using rule 15
 	'*'            reduce using rule 15
 	'+'            reduce using rule 15
@@ -796,10 +796,10 @@ State 31
 
 State 32
 
-	Pred6 -> Ident .                                    (rule 33)
-	Pred6 -> Ident . '(.' ListPred '.)'                 (rule 35)
-	Exp3 -> Ident .                                     (rule 52)
-	Exp3 -> Ident . '(' ListExp ')'                     (rule 55)
+	Pred6 -> DynVar .                                   (rule 33)
+	Pred6 -> DynVar . '(.' ListPred '.)'                (rule 35)
+	Exp3 -> DynVar .                                    (rule 52)
+	Exp3 -> DynVar . '(' ListExp ')'                    (rule 55)
 
 	'!='           reduce using rule 52
 	'('            shift, and enter state 70
@@ -957,13 +957,13 @@ State 42
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 57
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -983,13 +983,13 @@ State 43
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 60
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1003,13 +1003,13 @@ State 44
 	'E'            shift, and enter state 43
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred5          goto state 59
 	Pred6          goto state 39
 	Exp            goto state 41
@@ -1019,8 +1019,8 @@ State 44
 
 State 45
 
-	Pred6 -> Ident .                                    (rule 33)
-	Pred6 -> Ident . '(.' ListPred '.)'                 (rule 35)
+	Pred6 -> DynVar .                                   (rule 33)
+	Pred6 -> DynVar . '(.' ListPred '.)'                (rule 35)
 
 	'(.'           shift, and enter state 58
 	%eof           reduce using rule 33
@@ -1042,13 +1042,13 @@ State 47
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 57
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -1118,13 +1118,13 @@ State 54
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred1          goto state 103
 	Pred2          goto state 35
 	Pred3          goto state 36
@@ -1145,13 +1145,13 @@ State 55
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred3          goto state 102
 	Pred4          goto state 37
 	Pred5          goto state 38
@@ -1170,13 +1170,13 @@ State 56
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred4          goto state 101
 	Pred5          goto state 38
 	Pred6          goto state 39
@@ -1196,7 +1196,7 @@ State 57
 
 State 58
 
-	Pred6 -> Ident '(.' . ListPred '.)'                 (rule 35)
+	Pred6 -> DynVar '(.' . ListPred '.)'                (rule 35)
 
 	'('            shift, and enter state 42
 	'.)'           reduce using rule 37
@@ -1204,13 +1204,13 @@ State 58
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 33
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -1278,13 +1278,13 @@ State 62
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 98
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1297,13 +1297,13 @@ State 63
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 97
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1316,13 +1316,13 @@ State 64
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 96
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1335,13 +1335,13 @@ State 65
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 95
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1354,13 +1354,13 @@ State 66
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 94
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1373,13 +1373,13 @@ State 67
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 93
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1394,13 +1394,13 @@ State 68
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred1          goto state 92
 	Pred2          goto state 35
 	Pred3          goto state 36
@@ -1422,14 +1422,14 @@ State 69
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
 	'~'            shift, and enter state 44
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 	%eof           reduce using rule 37
 
-	Ident          goto state 32
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 32
 	Pred           goto state 33
 	Pred1          goto state 34
 	Pred2          goto state 35
@@ -1445,19 +1445,19 @@ State 69
 
 State 70
 
-	Exp3 -> Ident '(' . ListExp ')'                     (rule 55)
+	Exp3 -> DynVar '(' . ListExp ')'                    (rule 55)
 
 	'('            shift, and enter state 23
 	')'            reduce using rule 57
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 18
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1471,13 +1471,13 @@ State 71
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp2           goto state 89
 	Exp3           goto state 21
 
@@ -1488,13 +1488,13 @@ State 72
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp2           goto state 88
 	Exp3           goto state 21
 
@@ -1504,13 +1504,13 @@ State 73
 
 	'('            shift, and enter state 23
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp3           goto state 87
 
 State 74
@@ -1519,13 +1519,13 @@ State 74
 
 	'('            shift, and enter state 23
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp3           goto state 86
 
 State 75
@@ -1534,13 +1534,13 @@ State 75
 
 	'('            shift, and enter state 23
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp3           goto state 85
 
 State 76
@@ -1584,13 +1584,13 @@ State 78
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 83
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1603,13 +1603,13 @@ State 79
 	'('            shift, and enter state 23
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 82
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1623,14 +1623,14 @@ State 80
 	')'            reduce using rule 57
 	'neg'          shift, and enter state 24
 	'nil'          shift, and enter state 25
-	L_Ident        shift, and enter state 14
-	L_integ        shift, and enter state 26
-	L_Boolean      shift, and enter state 27
+	L_integ        shift, and enter state 14
+	L_Boolean      shift, and enter state 26
+	L_DynVar       shift, and enter state 27
 	%eof           reduce using rule 57
 
-	Ident          goto state 15
-	Integer        goto state 16
-	Boolean        goto state 17
+	Integer        goto state 15
+	Boolean        goto state 16
+	DynVar         goto state 17
 	Exp            goto state 18
 	Exp1           goto state 19
 	Exp2           goto state 20
@@ -1855,7 +1855,7 @@ State 89
 
 State 90
 
-	Exp3 -> Ident '(' ListExp . ')'                     (rule 55)
+	Exp3 -> DynVar '(' ListExp . ')'                    (rule 55)
 
 	')'            shift, and enter state 105
 
@@ -1965,7 +1965,7 @@ State 98
 
 State 99
 
-	Pred6 -> Ident '(.' ListPred . '.)'                 (rule 35)
+	Pred6 -> DynVar '(.' ListPred . '.)'                (rule 35)
 
 	'.)'           shift, and enter state 104
 
@@ -2026,7 +2026,7 @@ State 103
 
 State 104
 
-	Pred6 -> Ident '(.' ListPred '.)' .                 (rule 35)
+	Pred6 -> DynVar '(.' ListPred '.)' .                (rule 35)
 
 	')'            reduce using rule 35
 	','            reduce using rule 35
@@ -2040,7 +2040,7 @@ State 104
 
 State 105
 
-	Exp3 -> Ident '(' ListExp ')' .                     (rule 55)
+	Exp3 -> DynVar '(' ListExp ')' .                    (rule 55)
 
 	'!='           reduce using rule 55
 	')'            reduce using rule 55

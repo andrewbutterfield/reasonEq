@@ -2,18 +2,47 @@
   LBNF Syntax for reasonEq Terms and Theories,
   with an emphasis on Unifying Theories of Programming
 
-  We envisage the following sequence of increasingly complex syntaxes:
+  The plan is to replace the current editable syntax in UTP
+  (Theory.src) with a nicer syntax.
+
+  Currently a theory file has the format:
+
+  Theory <thryname>
+  Needs
+    <importnm1> <importnm2> ... <importnmN>
+  END
+  Known A {O NS} : ( ( P LE ) -> ( B -> ( ( P LE ) -> B ) ) ) .
+  Known 'ls {O} : ( P LE ) .
+  Known ls' {O} : ( P LE ) .
+  Known 'O$ = < 's,'ls >
+  Law <lawname> BEGIN
+    axiom ,
+    <predicate> ,
+  VREL (DISJ E FROM 'O$ O$') ... (DYNCOV a BY 's s')
+  END
+  Conjecture <conjname> BEGIN
+    <predicate>
+  , VREL <atomicSc1> ... <atomicScN>
+  END
+
+  We need (bottom-up)
+    Types
     Expressions
     Predicates
-    Programs
+    Side-Conditions
+    Named-Assertions
+    Known-Declarations
+    Theory-Imports
+    Named-Theory
 
-  We are targetting the following Term data-structures:
-   Value; Variable; VarSet; VarList; Type; Substn; ListVar; Term
-  Ultimately both Expressions and Predicates will become Terms.
 -}
 
 -- we want to add a boolean type
 token Boolean ( {"false"} | {"true"} ) ;
+
+-- we want identifiers to start with letters and underscores
+token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
+
 
 {- 
    We define a predicate type (expressions of type Bool)
@@ -31,9 +60,9 @@ LT.    Pred5 ::= Exp "<" Exp        ;
 LE.    Pred5 ::= Exp "<=" Exp       ; 
 GT.    Pred5 ::= Exp ">" Exp        ; 
 GE.    Pred5 ::= Exp ">=" Exp       ; 
-PVar.  Pred6 ::= Ident              ;
+PVar.  Pred6 ::= DynVar              ;
 PLift. Pred6 ::= "E" Exp            ;
-PredTX. Pred6 ::= Ident "(." [Pred] ".)" ;
+PredTX. Pred6 ::= DynVar "(." [Pred] ".)" ;
 coercions Pred 6                    ;
 
 separator Pred "," ;
@@ -57,6 +86,7 @@ separator Pred "," ;
     
 -}
 
+
 ECat.  Exp  ::= Exp1  "++" Exp  ;
 ECons. Exp  ::= Exp1  ":"  Exp  ;
 EAdd.  Exp1 ::= Exp1  "+"  Exp2 ;
@@ -66,10 +96,10 @@ EDiv.  Exp2 ::= Exp2 "div" Exp3 ;
 EMod.  Exp2 ::= Exp2 "mod" Exp3 ;
 ENeg.  Exp2 ::= "neg" Exp3      ;
 EInt.  Exp3 ::= Integer         ;
-EVar.  Exp3 ::= Ident           ;
+EVar.  Exp3 ::= DynVar           ;
 EBool. Exp3 ::= Boolean         ;
 ENil.  Exp3 ::= "nil"           ;
-ENmdTuple. Exp3 ::= Ident "(" [Exp] ")" ;
+ENmdTuple. Exp3 ::= DynVar "(" [Exp] ")" ;
 coercions Exp 3                 ;
 
 separator Exp "," ;

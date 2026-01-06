@@ -43,6 +43,10 @@ $white+ ;
 f a l s e | t r u e
     { tok (eitherResIdent T_Boolean) }
 
+-- token DynVar
+(\_ | $l)(\_ | ($d | $l)) *
+    { tok (eitherResIdent T_DynVar) }
+
 -- Keywords and Ident
 $l $i*
     { tok (eitherResIdent TV) }
@@ -65,6 +69,7 @@ data Tok
   | TD !String                    -- ^ Float literal.
   | TC !String                    -- ^ Character literal.
   | T_Boolean !String
+  | T_DynVar !String
   deriving (Eq, Show, Ord)
 
 -- | Smart constructor for 'Tok' for the sake of backwards compatibility.
@@ -128,6 +133,7 @@ tokenText t = case t of
   PT _ (TC s)   -> s
   Err _         -> "#error"
   PT _ (T_Boolean s) -> s
+  PT _ (T_DynVar s) -> s
 
 -- | Convert a token to a string.
 prToken :: Token -> String

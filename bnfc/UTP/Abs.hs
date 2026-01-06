@@ -22,9 +22,9 @@ data Pred
     | LE Exp Exp
     | GT Exp Exp
     | GE Exp Exp
-    | PVar Ident
+    | PVar DynVar
     | PLift Exp
-    | PredTX Ident [Pred]
+    | PredTX DynVar [Pred]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
@@ -37,15 +37,15 @@ data Exp
     | EMod Exp Exp
     | ENeg Exp
     | EInt Integer
-    | EVar Ident
+    | EVar DynVar
     | EBool Boolean
     | ENil
-    | ENmdTuple Ident [Exp]
+    | ENmdTuple DynVar [Exp]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-newtype Ident = Ident String
+newtype Boolean = Boolean String
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 
-newtype Boolean = Boolean String
+newtype DynVar = DynVar String
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 

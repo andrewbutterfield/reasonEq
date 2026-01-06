@@ -19,13 +19,13 @@ Lexing for variables like `'varA` (Before `varA`),
  `varB'` (After `varB`),
  and `varC_m` (During `var_C`) is too difficult.
  The plan is to encode those as follows:
- `b_varA`, `varB_a`, and `varC_m`, where `m` will be numeric. 
+ `_varA`, `varB_`, and `varC_m`, where `m` will be numeric. 
 
 
 The comparisons (== and friends) are now part of  `Pred`, 
 which also has its own identifiers.
 
-Need to introduce 1-ary predicates over expressions (e.g. `even`).
+
 
 
 

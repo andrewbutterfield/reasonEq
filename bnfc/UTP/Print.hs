@@ -134,10 +134,10 @@ instance Print Integer where
 instance Print Double where
   prt _ x = doc (shows x)
 
-instance Print UTP.Abs.Ident where
-  prt _ (UTP.Abs.Ident i) = doc $ showString i
 instance Print UTP.Abs.Boolean where
   prt _ (UTP.Abs.Boolean i) = doc $ showString i
+instance Print UTP.Abs.DynVar where
+  prt _ (UTP.Abs.DynVar i) = doc $ showString i
 instance Print UTP.Abs.Pred where
   prt i = \case
     UTP.Abs.PEqv pred1 pred2 -> prPrec i 0 (concatD [prt 0 pred1, doc (showString "==="), prt 1 pred2])
@@ -151,9 +151,9 @@ instance Print UTP.Abs.Pred where
     UTP.Abs.LE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString "<="), prt 0 exp2])
     UTP.Abs.GT exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">"), prt 0 exp2])
     UTP.Abs.GE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">="), prt 0 exp2])
-    UTP.Abs.PVar id_ -> prPrec i 6 (concatD [prt 0 id_])
+    UTP.Abs.PVar dynvar -> prPrec i 6 (concatD [prt 0 dynvar])
     UTP.Abs.PLift exp -> prPrec i 6 (concatD [doc (showString "E"), prt 0 exp])
-    UTP.Abs.PredTX id_ preds -> prPrec i 6 (concatD [prt 0 id_, doc (showString "(."), prt 0 preds, doc (showString ".)")])
+    UTP.Abs.PredTX dynvar preds -> prPrec i 6 (concatD [prt 0 dynvar, doc (showString "(."), prt 0 preds, doc (showString ".)")])
 
 instance Print [UTP.Abs.Pred] where
   prt _ [] = concatD []
@@ -171,10 +171,10 @@ instance Print UTP.Abs.Exp where
     UTP.Abs.EMod exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "mod"), prt 3 exp2])
     UTP.Abs.ENeg exp -> prPrec i 2 (concatD [doc (showString "neg"), prt 3 exp])
     UTP.Abs.EInt n -> prPrec i 3 (concatD [prt 0 n])
-    UTP.Abs.EVar id_ -> prPrec i 3 (concatD [prt 0 id_])
+    UTP.Abs.EVar dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
     UTP.Abs.EBool boolean -> prPrec i 3 (concatD [prt 0 boolean])
     UTP.Abs.ENil -> prPrec i 3 (concatD [doc (showString "nil")])
-    UTP.Abs.ENmdTuple id_ exps -> prPrec i 3 (concatD [prt 0 id_, doc (showString "("), prt 0 exps, doc (showString ")")])
+    UTP.Abs.ENmdTuple dynvar exps -> prPrec i 3 (concatD [prt 0 dynvar, doc (showString "("), prt 0 exps, doc (showString ")")])
 
 instance Print [UTP.Abs.Exp] where
   prt _ [] = concatD []

@@ -15,10 +15,12 @@ module UTP.Par
   , pPred4
   , pPred5
   , pPred6
+  , pListPred
   , pExp
   , pExp1
   , pExp2
   , pExp3
+  , pListExp
   ) where
 
 import Prelude
@@ -35,35 +37,42 @@ import UTP.Lex
 %name pPred4 Pred4
 %name pPred5 Pred5
 %name pPred6 Pred6
+%name pListPred ListPred
 %name pExp Exp
 %name pExp1 Exp1
 %name pExp2 Exp2
 %name pExp3 Exp3
+%name pListExp ListExp
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
   '!='      { PT _ (TS _ 1)       }
   '('       { PT _ (TS _ 2)       }
-  ')'       { PT _ (TS _ 3)       }
-  '*'       { PT _ (TS _ 4)       }
-  '+'       { PT _ (TS _ 5)       }
-  '++'      { PT _ (TS _ 6)       }
-  '-'       { PT _ (TS _ 7)       }
-  '/\\'     { PT _ (TS _ 8)       }
-  ':'       { PT _ (TS _ 9)       }
-  '<'       { PT _ (TS _ 10)      }
-  '<='      { PT _ (TS _ 11)      }
-  '=='      { PT _ (TS _ 12)      }
-  '==='     { PT _ (TS _ 13)      }
-  '==>'     { PT _ (TS _ 14)      }
-  '>'       { PT _ (TS _ 15)      }
-  '>='      { PT _ (TS _ 16)      }
-  '\\/'     { PT _ (TS _ 17)      }
-  'div'     { PT _ (TS _ 18)      }
-  'mod'     { PT _ (TS _ 19)      }
-  'nil'     { PT _ (TS _ 20)      }
-  '~'       { PT _ (TS _ 21)      }
+  '(.'      { PT _ (TS _ 3)       }
+  ')'       { PT _ (TS _ 4)       }
+  '*'       { PT _ (TS _ 5)       }
+  '+'       { PT _ (TS _ 6)       }
+  '++'      { PT _ (TS _ 7)       }
+  ','       { PT _ (TS _ 8)       }
+  '-'       { PT _ (TS _ 9)       }
+  '.)'      { PT _ (TS _ 10)      }
+  '/\\'     { PT _ (TS _ 11)      }
+  ':'       { PT _ (TS _ 12)      }
+  '<'       { PT _ (TS _ 13)      }
+  '<='      { PT _ (TS _ 14)      }
+  '=='      { PT _ (TS _ 15)      }
+  '==='     { PT _ (TS _ 16)      }
+  '==>'     { PT _ (TS _ 17)      }
+  '>'       { PT _ (TS _ 18)      }
+  '>='      { PT _ (TS _ 19)      }
+  'E'       { PT _ (TS _ 20)      }
+  '\\/'     { PT _ (TS _ 21)      }
+  'div'     { PT _ (TS _ 22)      }
+  'mod'     { PT _ (TS _ 23)      }
+  'neg'     { PT _ (TS _ 24)      }
+  'nil'     { PT _ (TS _ 25)      }
+  '~'       { PT _ (TS _ 26)      }
   L_Ident   { PT _ (TV $$)        }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
@@ -105,7 +114,17 @@ Pred5
   | Pred6 { $1 }
 
 Pred6 :: { UTP.Abs.Pred }
-Pred6 : Ident { UTP.Abs.PVar $1 } | '(' Pred ')' { $2 }
+Pred6
+  : Ident { UTP.Abs.PVar $1 }
+  | 'E' Exp { UTP.Abs.PLift $2 }
+  | Ident '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
+  | '(' Pred ')' { $2 }
+
+ListPred :: { [UTP.Abs.Pred] }
+ListPred
+  : {- empty -} { [] }
+  | Pred { (:[]) $1 }
+  | Pred ',' ListPred { (:) $1 $3 }
 
 Exp :: { UTP.Abs.Exp }
 Exp
@@ -124,6 +143,7 @@ Exp2
   : Exp2 '*' Exp3 { UTP.Abs.EMul $1 $3 }
   | Exp2 'div' Exp3 { UTP.Abs.EDiv $1 $3 }
   | Exp2 'mod' Exp3 { UTP.Abs.EMod $1 $3 }
+  | 'neg' Exp3 { UTP.Abs.ENeg $2 }
   | Exp3 { $1 }
 
 Exp3 :: { UTP.Abs.Exp }
@@ -132,7 +152,14 @@ Exp3
   | Ident { UTP.Abs.EVar $1 }
   | Boolean { UTP.Abs.EBool $1 }
   | 'nil' { UTP.Abs.ENil }
+  | Ident '(' ListExp ')' { UTP.Abs.ENmdTuple $1 $3 }
   | '(' Exp ')' { $2 }
+
+ListExp :: { [UTP.Abs.Exp] }
+ListExp
+  : {- empty -} { [] }
+  | Exp { (:[]) $1 }
+  | Exp ',' ListExp { (:) $1 $3 }
 
 {
 

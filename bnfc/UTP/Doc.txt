@@ -29,14 +29,16 @@ Boolean literals are recognized by the regular expression
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in UTP are the following:
-  | ``div`` | ``mod`` | ``nil`` |
+  | ``E`` | ``div`` | ``mod`` | ``neg``
+  | ``nil`` |  |  |
 
 The symbols used in UTP are the following:
   | === | ==> | \/ | /\
   | ~ | == | != | <
-  | <= | > | >= | (
-  | ) | ++ | : | +
-  | - | * |  |
+  | <= | > | >= | (.
+  | .) | ( | ) | ,
+  | ++ | : | + | -
+  | * |  |  |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -65,7 +67,12 @@ All other symbols are terminals.
   |  |  **|**  | //Exp// ``>=`` //Exp//
   |  |  **|**  | //Pred6//
   | //Pred6// | -> | //Ident//
+  |  |  **|**  | ``E`` //Exp//
+  |  |  **|**  | //Ident// ``(.`` //[Pred]// ``.)``
   |  |  **|**  | ``(`` //Pred// ``)``
+  | //[Pred]// | -> | **eps**
+  |  |  **|**  | //Pred//
+  |  |  **|**  | //Pred// ``,`` //[Pred]//
   | //Exp// | -> | //Exp1// ``++`` //Exp//
   |  |  **|**  | //Exp1// ``:`` //Exp//
   |  |  **|**  | //Exp1//
@@ -75,12 +82,17 @@ All other symbols are terminals.
   | //Exp2// | -> | //Exp2// ``*`` //Exp3//
   |  |  **|**  | //Exp2// ``div`` //Exp3//
   |  |  **|**  | //Exp2// ``mod`` //Exp3//
+  |  |  **|**  | ``neg`` //Exp3//
   |  |  **|**  | //Exp3//
   | //Exp3// | -> | //Integer//
   |  |  **|**  | //Ident//
   |  |  **|**  | //Boolean//
   |  |  **|**  | ``nil``
+  |  |  **|**  | //Ident// ``(`` //[Exp]// ``)``
   |  |  **|**  | ``(`` //Exp// ``)``
+  | //[Exp]// | -> | **eps**
+  |  |  **|**  | //Exp//
+  |  |  **|**  | //Exp// ``,`` //[Exp]//
 
 
 

@@ -152,6 +152,13 @@ instance Print UTP.Abs.Pred where
     UTP.Abs.GT exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">"), prt 0 exp2])
     UTP.Abs.GE exp1 exp2 -> prPrec i 5 (concatD [prt 0 exp1, doc (showString ">="), prt 0 exp2])
     UTP.Abs.PVar id_ -> prPrec i 6 (concatD [prt 0 id_])
+    UTP.Abs.PLift exp -> prPrec i 6 (concatD [doc (showString "E"), prt 0 exp])
+    UTP.Abs.PredTX id_ preds -> prPrec i 6 (concatD [prt 0 id_, doc (showString "(."), prt 0 preds, doc (showString ".)")])
+
+instance Print [UTP.Abs.Pred] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print UTP.Abs.Exp where
   prt i = \case
@@ -162,7 +169,14 @@ instance Print UTP.Abs.Exp where
     UTP.Abs.EMul exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "*"), prt 3 exp2])
     UTP.Abs.EDiv exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "div"), prt 3 exp2])
     UTP.Abs.EMod exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "mod"), prt 3 exp2])
+    UTP.Abs.ENeg exp -> prPrec i 2 (concatD [doc (showString "neg"), prt 3 exp])
     UTP.Abs.EInt n -> prPrec i 3 (concatD [prt 0 n])
     UTP.Abs.EVar id_ -> prPrec i 3 (concatD [prt 0 id_])
     UTP.Abs.EBool boolean -> prPrec i 3 (concatD [prt 0 boolean])
     UTP.Abs.ENil -> prPrec i 3 (concatD [doc (showString "nil")])
+    UTP.Abs.ENmdTuple id_ exps -> prPrec i 3 (concatD [prt 0 id_, doc (showString "("), prt 0 exps, doc (showString ")")])
+
+instance Print [UTP.Abs.Exp] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]

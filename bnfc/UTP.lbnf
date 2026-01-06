@@ -33,8 +33,10 @@ GT.    Pred5 ::= Exp ">" Exp        ;
 GE.    Pred5 ::= Exp ">=" Exp       ; 
 PVar.  Pred6 ::= Ident              ;
 PLift. Pred6 ::= "E" Exp            ;
-
+PredTX. Pred6 ::= Ident "(." [Pred] ".)" ;
 coercions Pred 6                    ;
+
+separator Pred "," ;
 
 
 {- 
@@ -67,7 +69,7 @@ EInt.  Exp3 ::= Integer         ;
 EVar.  Exp3 ::= Ident           ;
 EBool. Exp3 ::= Boolean         ;
 ENil.  Exp3 ::= "nil"           ;
+ENmdTuple. Exp3 ::= Ident "(" [Exp] ")" ;
+coercions Exp 3                 ;
 
-
-coercions Exp 3               ;
-
+separator Exp "," ;

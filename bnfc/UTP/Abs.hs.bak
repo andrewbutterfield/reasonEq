@@ -16,13 +16,15 @@ data Pred
     | POr Pred Pred
     | PAnd Pred Pred
     | PNot Pred
-    | PEQ Exp Exp
-    | PNEq Exp Exp
-    | PLT Exp Exp
-    | PLE Exp Exp
-    | PGT Exp Exp
-    | PGE Exp Exp
+    | EQ Exp Exp
+    | NE Exp Exp
+    | LT Exp Exp
+    | LE Exp Exp
+    | GT Exp Exp
+    | GE Exp Exp
     | PVar Ident
+    | PLift Exp
+    | PredTX [Pred]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
@@ -33,10 +35,12 @@ data Exp
     | EMul Exp Exp
     | EDiv Exp Exp
     | EMod Exp Exp
+    | ENeg Exp
     | EInt Integer
     | EVar Ident
     | EBool Boolean
     | ENil
+    | ENmdTuple Ident [Exp]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Ident = Ident String

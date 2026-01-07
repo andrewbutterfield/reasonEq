@@ -26,10 +26,16 @@
   END
 
   We need (bottom-up)
-    Types
-    Expressions
-    Predicates
+    Types  -- done
+    Expressions -- covers arithmetic and cons-lists
+    Predicates 
+      -- covers propositions, equality, ordering, predicate transformers
+    Here: we have enough to represent the propositional theories
+
+    Once quantifiers are introduced we need:
     Side-Conditions
+
+    Top-level theory structuring:
     Named-Assertions
     Known-Declarations
     Theory-Imports

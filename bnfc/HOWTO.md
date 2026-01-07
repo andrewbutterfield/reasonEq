@@ -13,6 +13,9 @@ UTP/Test
 ^D
 ```
 
+Now we need to move to having a test program. 
+We will add a new top-level application, to be built using stack.
+
 ## Issues
 
 Lexing for variables like `'varA` (Before `varA`),

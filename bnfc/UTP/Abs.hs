@@ -45,7 +45,12 @@ data Exp
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Type
-    = TFun Type Type | TData DynVar [Type] | TArb | TVar DynVar | TBot
+    = TFun Type Type
+    | TRec DynVar [Type]
+    | TProd DynVar [Type]
+    | TArb
+    | TVar DynVar
+    | TBot
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Boolean = Boolean String

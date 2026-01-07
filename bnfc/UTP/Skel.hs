@@ -60,7 +60,8 @@ transExp x = case x of
 transType :: UTP.Abs.Type -> Result
 transType x = case x of
   UTP.Abs.TFun type_1 type_2 -> failure x
-  UTP.Abs.TData dynvar types -> failure x
+  UTP.Abs.TRec dynvar types -> failure x
+  UTP.Abs.TProd dynvar types -> failure x
   UTP.Abs.TArb -> failure x
   UTP.Abs.TVar dynvar -> failure x
   UTP.Abs.TBot -> failure x

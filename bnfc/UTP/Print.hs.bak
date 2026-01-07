@@ -185,11 +185,15 @@ instance Print [UTP.Abs.Exp] where
 instance Print UTP.Abs.Type where
   prt i = \case
     UTP.Abs.TFun type_1 type_2 -> prPrec i 0 (concatD [prt 1 type_1, doc (showString "->"), prt 0 type_2])
-    UTP.Abs.TData dynvar types -> prPrec i 1 (concatD [prt 0 dynvar, prt 0 types])
-    UTP.Abs.TArb -> prPrec i 2 (concatD [doc (showString "ttop")])
-    UTP.Abs.TVar dynvar -> prPrec i 2 (concatD [prt 0 dynvar])
-    UTP.Abs.TBot -> prPrec i 2 (concatD [doc (showString "tbot")])
+    UTP.Abs.TRec dynvar types -> prPrec i 1 (concatD [prt 0 dynvar, doc (showString "::"), doc (showString "(:"), prt 2 types, doc (showString ":)")])
+    UTP.Abs.TProd dynvar types -> prPrec i 2 (concatD [prt 0 dynvar, prt 3 types])
+    UTP.Abs.TArb -> prPrec i 3 (concatD [doc (showString "ttop")])
+    UTP.Abs.TVar dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
+    UTP.Abs.TBot -> prPrec i 3 (concatD [doc (showString "tbot")])
 
 instance Print [UTP.Abs.Type] where
+  prt 3 [] = concatD []
+  prt 3 (x:xs) = concatD [prt 3 x, prt 3 xs]
   prt _ [] = concatD []
-  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+  prt _ [x] = concatD [prt 2 x]
+  prt _ (x:xs) = concatD [prt 2 x, doc (showString "|"), prt 2 xs]

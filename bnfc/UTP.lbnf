@@ -121,11 +121,13 @@ separator Exp "," ;
 
 -}
 
-TFun. Type ::= Type1 "->" Type ;
-TData. Type1 ::= DynVar [Type2] ;
-TArb. Type2 ::= "ttop" ;
-TVar. Type2 ::= DynVar ; 
-TBot. Type2 ::= "tbot" ;
-coercions Type 2 ;
+TFun.  Type ::= Type1 "->" Type ;
+TRec.  Type1 ::= DynVar "(:" [Type2] ":)" ;
+TProd. Type2 ::= DynVar [Type3] ;
+TArb.  Type3 ::= "ttop" ;
+TVar.  Type3 ::= DynVar ; 
+TBot.  Type3 ::= "tbot" ;
+coercions Type 3 ;
 
-separator Type2 "" ;
+separator Type2 "|" ;
+separator Type3 "" ;

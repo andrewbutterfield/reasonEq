@@ -74,25 +74,24 @@ import UTP.Lex
   '/\\'     { PT _ (TS _ 13)      }
   ':'       { PT _ (TS _ 14)      }
   ':)'      { PT _ (TS _ 15)      }
-  '::'      { PT _ (TS _ 16)      }
-  '<'       { PT _ (TS _ 17)      }
-  '<='      { PT _ (TS _ 18)      }
-  '=='      { PT _ (TS _ 19)      }
-  '==='     { PT _ (TS _ 20)      }
-  '==>'     { PT _ (TS _ 21)      }
-  '>'       { PT _ (TS _ 22)      }
-  '>='      { PT _ (TS _ 23)      }
-  'E'       { PT _ (TS _ 24)      }
-  'T'       { PT _ (TS _ 25)      }
-  '\\/'     { PT _ (TS _ 26)      }
-  'div'     { PT _ (TS _ 27)      }
-  'mod'     { PT _ (TS _ 28)      }
-  'neg'     { PT _ (TS _ 29)      }
-  'nil'     { PT _ (TS _ 30)      }
-  'tbot'    { PT _ (TS _ 31)      }
-  'ttop'    { PT _ (TS _ 32)      }
-  '|'       { PT _ (TS _ 33)      }
-  '~'       { PT _ (TS _ 34)      }
+  '<'       { PT _ (TS _ 16)      }
+  '<='      { PT _ (TS _ 17)      }
+  '=='      { PT _ (TS _ 18)      }
+  '==='     { PT _ (TS _ 19)      }
+  '==>'     { PT _ (TS _ 20)      }
+  '>'       { PT _ (TS _ 21)      }
+  '>='      { PT _ (TS _ 22)      }
+  'E'       { PT _ (TS _ 23)      }
+  'T'       { PT _ (TS _ 24)      }
+  '\\/'     { PT _ (TS _ 25)      }
+  'div'     { PT _ (TS _ 26)      }
+  'mod'     { PT _ (TS _ 27)      }
+  'neg'     { PT _ (TS _ 28)      }
+  'nil'     { PT _ (TS _ 29)      }
+  'tbot'    { PT _ (TS _ 30)      }
+  'ttop'    { PT _ (TS _ 31)      }
+  '|'       { PT _ (TS _ 32)      }
+  '~'       { PT _ (TS _ 33)      }
   L_integ   { PT _ (TI $$)        }
   L_Boolean { PT _ (T_Boolean $$) }
   L_DynVar  { PT _ (T_DynVar $$)  }
@@ -187,8 +186,7 @@ Type : Type1 '->' Type { UTP.Abs.TFun $1 $3 } | Type1 { $1 }
 
 Type1 :: { UTP.Abs.Type }
 Type1
-  : DynVar '::' '(:' ListType2 ':)' { UTP.Abs.TRec $1 $4 }
-  | Type2 { $1 }
+  : DynVar '(:' ListType2 ':)' { UTP.Abs.TRec $1 $3 } | Type2 { $1 }
 
 Type2 :: { UTP.Abs.Type }
 Type2 : DynVar ListType3 { UTP.Abs.TProd $1 $2 } | Type3 { $1 }

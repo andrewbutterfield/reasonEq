@@ -9,24 +9,8 @@ module UTP.Par
   ( happyError
   , myLexer
   , pPred
-  , pPred1
-  , pPred2
-  , pPred3
-  , pPred4
-  , pPred5
-  , pPred6
-  , pListPred
   , pExp
-  , pExp1
-  , pExp2
-  , pExp3
-  , pListExp
   , pType
-  , pType1
-  , pType2
-  , pType3
-  , pListType2
-  , pListType3
   ) where
 
 import Prelude
@@ -37,24 +21,8 @@ import UTP.Lex
 }
 
 %name pPred Pred
-%name pPred1 Pred1
-%name pPred2 Pred2
-%name pPred3 Pred3
-%name pPred4 Pred4
-%name pPred5 Pred5
-%name pPred6 Pred6
-%name pListPred ListPred
 %name pExp Exp
-%name pExp1 Exp1
-%name pExp2 Exp2
-%name pExp3 Exp3
-%name pListExp ListExp
 %name pType Type
-%name pType1 Type1
-%name pType2 Type2
-%name pType3 Type3
-%name pListType2 ListType2
-%name pListType3 ListType3
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}

@@ -137,3 +137,5 @@ coercions Type 3 ;
 
 separator Type2 "|" ;
 separator Type3 "" ;
+
+entrypoints Pred, Exp, Type ;

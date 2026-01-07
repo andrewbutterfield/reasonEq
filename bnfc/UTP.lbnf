@@ -30,9 +30,10 @@
     Expressions -- covers arithmetic and cons-lists
     Predicates 
       -- covers propositions, equality, ordering, predicate transformers
-    Here: we have enough to represent the propositional theories
+    Here: we have enough to represent most of the propositional theories
 
     Once quantifiers are introduced we need:
+    Substitutions
     Side-Conditions
 
     Top-level theory structuring:
@@ -49,9 +50,46 @@ token Boolean ( {"false"} | {"true"} ) ;
 -- we want identifiers to start with letters and underscores
 token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
 
+{- Theories
+   SourceHandling syntex (.src)
+
+   Theory EQV
+   Known eqv {O CS} : ( B -> ( B -> B ) ) .
+   Law true BEGIN axiom, true END
+   Law eqv_refl BEGIN axiom, eqv ( P , P ) END
+   Law non_subst 
+     BEGIN axiom
+       , eqv ( SUB [(x$,e$)] P , P )
+       , VREL (DISJ P FROM x$)
+     END
+   Conjecture eqv_id BEGIN eqv ( eqv ( true , Q ) , Q ) END
+
+   So, a theory has:
+     a name;
+     a list of zero or more dependent theories;
+     a list of one of more theory items.
+   Theory items are:
+     Known variable declarations;
+     Conjectures;
+     Laws.
+-}
+
+Thry. Theory ::= "Theory" DynVar "." [DynVar] "." [Item] ;
+
+separator DynVar "" ;
+
+ItemKnown. Item ::= "Known" DynVar "." Type "." ;
+ItemConj.  Item ::= "Conjecture" DynVar "." Pred "." ;
+ItemLaw.   Item ::= "Law" LawType DynVar "." Pred "." ;
+
+LAxiom.  LawType ::= "axiom" ;
+LProof.  LawType ::= "proven" ;
+LAssume. LawType ::= "assumed" ;
+
+separator Item "" ;
+
 
 {- Predicates
-
    Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
 -}
 PEqv.  Pred  ::= Pred "===" Pred1   ;
@@ -65,17 +103,14 @@ LT.    Pred5 ::= Exp "<" Exp        ;
 LE.    Pred5 ::= Exp "<=" Exp       ; 
 GT.    Pred5 ::= Exp ">" Exp        ; 
 GE.    Pred5 ::= Exp ">=" Exp       ; 
-PVar.  Pred6 ::= DynVar              ;
+PVar.  Pred6 ::= DynVar             ;
 PExpr. Pred6 ::= "E" Exp            ;
 PType. Pred6 ::= "T" Type ;
 PredTX. Pred6 ::= DynVar "(." [Pred] ".)" ;
 coercions Pred 6                    ;
-
 separator Pred "," ;
 
-
 {- Expressions  
-
   Haskell operators:
    Prc | Left-Assoc           |         Non-Assoc            | Right-Assoc
     9  | !!                   |                              | . 
@@ -87,8 +122,7 @@ separator Pred "," ;
     3  |                      |                              | &&
     2  |                      |                              | ||
     1  | >> >>=               |                              |
-    0  |                      |                              | $ $! seq
-    
+    0  |                      |                              | $ $! seq    
 -}
 
 
@@ -101,30 +135,25 @@ EDiv.  Exp2 ::= Exp2 "div" Exp3 ;
 EMod.  Exp2 ::= Exp2 "mod" Exp3 ;
 ENeg.  Exp2 ::= "neg" Exp3      ;
 EInt.  Exp3 ::= Integer         ;
-EVar.  Exp3 ::= DynVar           ;
+EVar.  Exp3 ::= DynVar          ;
 EBool. Exp3 ::= Boolean         ;
 ENil.  Exp3 ::= "nil"           ;
 ENmdTuple. Exp3 ::= DynVar "(" [Exp] ")" ;
 coercions Exp 3                 ;
-
 separator Exp "," ;
 
 {- Types
-
   reasonEq Type(s)
-
-  ArbType
-  TypeVar i  
-  TypeCons i ts 
-  AlgType i fs 
-  FunType td tr 
-  GivenType i  - here we treat these as TypeVar
-  BottomType
-  ts = [t1,..,tN]
-  fs = [(i_1,ts_1),..,(i_M,ts_M)]
-
-  t1 -> t2 -> t3   is  t1 -> (t2 -> t3)
-
+    ArbType
+    TypeVar i  
+    TypeCons i ts 
+    AlgType i fs 
+    FunType td tr 
+    GivenType i  - here we treat these as TypeVar
+    BottomType
+    ts = [t1,..,tN]
+    fs = [(i_1,ts_1),..,(i_M,ts_M)]
+    t1 -> t2 -> t3   is  t1 -> (t2 -> t3)
 -}
 
 TFun.  Type ::= Type1 "->" Type ;
@@ -134,8 +163,7 @@ TArb.  Type3 ::= "ttop" ;
 TVar.  Type3 ::= DynVar ; 
 TBot.  Type3 ::= "tbot" ;
 coercions Type 3 ;
-
 separator Type2 "|" ;
 separator Type3 "" ;
 
-entrypoints Pred, Exp, Type ;
+entrypoints Theory, Pred, Exp, Type ;

@@ -15,6 +15,7 @@ UTP/Test
 
 Now we need to move to having a test program. 
 We will add a new top-level application, to be built using stack.
+Currently standalone.
 
 ## Issues
 

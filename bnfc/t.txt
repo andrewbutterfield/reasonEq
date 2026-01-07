@@ -1,0 +1,6 @@
+Theory A . X Y .
+ Known d . t .
+ Conjecture c . A===B .
+ Law axiom a . B==>A .
+ Law proven p . C /\ D .
+ Law assumed q . Q \/ P .

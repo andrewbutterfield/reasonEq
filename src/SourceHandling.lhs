@@ -53,6 +53,9 @@ The plan is that we will use this as the main way to create
 new theories,
 so we don't have to use Haskell modules.
 
+\textbf{The plan now is to use LBNF to define a nicer grammar}
+\textsl{See \texttt{reasonEq/bnfc}}.
+
 \newpage
 \section{Theories}
 

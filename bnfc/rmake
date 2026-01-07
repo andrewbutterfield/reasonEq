@@ -14,7 +14,7 @@ ALEX_OPTS  = --ghc
 
 # Default goal.
 
-all : UTP/Test
+all : Runner
 
 # Rules for building the parser.
 
@@ -30,7 +30,7 @@ UTP/Abs.hs UTP/Lex.x UTP/Par.y UTP/Print.hs UTP/Test.hs : UTP.lbnf
 UTP/Test : UTP/Abs.hs UTP/Lex.hs UTP/Par.hs UTP/Print.hs UTP/Test.hs
 	${GHC} ${GHC_OPTS} $@
 
-Runner : UTP/Abs.hs UTP/Lex.hs UTP/Par.hs UTP/Print.hs Runner.hs
+Runner : UTP/Abs.hs UTP/Lex.hs UTP/Par.hs UTP/Print.hs Runner.lhs
 	${GHC} ${GHC_OPTS} $@
 
 # Rules for cleaning generated files.

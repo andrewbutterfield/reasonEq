@@ -50,6 +50,8 @@ We have the following type expressions:
   \item [Variables] $n$.
   \item [Constructors] $n(\tau,\dots)$.
   \item [Algebraic] $n\seqof{n(\tau,\dots)}$, can be recursive.
+    $$n_0 \defs n_1(\tau,\dots,\tau) \mid \dots \mid n_k(\tau,\dots,\tau)$$
+    Here $n_0$ can occur as one of more of the $\tau$s.
   \item [Given] $\gg g$.
   \item [Bottom] $\bot$, the empty type.
 \end{description}

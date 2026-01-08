@@ -66,9 +66,9 @@ transPred x = case x of
   UTP.Abs.LE exp1 exp2 -> failure x
   UTP.Abs.GT exp1 exp2 -> failure x
   UTP.Abs.GE exp1 exp2 -> failure x
+  UTP.Abs.PTrue -> failure x
+  UTP.Abs.PFalse -> failure x
   UTP.Abs.PVar dynvar -> failure x
-  UTP.Abs.PExpr exp -> failure x
-  UTP.Abs.PType type_ -> failure x
   UTP.Abs.PredTX dynvar preds -> failure x
 
 transExp :: UTP.Abs.Exp -> Result

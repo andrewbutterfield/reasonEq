@@ -25,9 +25,9 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in UTP are the following:
   | ``Conjecture`` | ``DclASet`` | ``DclDLVar`` | ``DclVar``
-  | ``E`` | ``Exp`` | ``Law`` | ``NA``
+  | ``Exp`` | ``False`` | ``Law`` | ``NA``
   | ``NS`` | ``Obs`` | ``Prd`` | ``SB``
-  | ``T`` | ``Theory`` | ``assumed`` | ``axiom``
+  | ``Theory`` | ``True`` | ``assumed`` | ``axiom``
   | ``div`` | ``false`` | ``mod`` | ``neg``
   | ``nil`` | ``proven`` | ``tbot`` | ``true``
   | ``ttop`` | ``var`` |  |
@@ -77,21 +77,21 @@ All other symbols are terminals.
   | //Pred2// | -> | //Pred2// ``\/`` //Pred3//
   |  |  **|**  | //Pred3//
   | //Pred3// | -> | //Pred3// ``/\`` //Pred4//
+  |  |  **|**  | ``~`` //Pred4//
   |  |  **|**  | //Pred4//
-  | //Pred4// | -> | ``~`` //Pred5//
-  |  |  **|**  | //Pred5//
-  | //Pred5// | -> | //Exp// ``==`` //Exp//
+  | //Pred4// | -> | //Exp// ``==`` //Exp//
   |  |  **|**  | //Exp// ``!=`` //Exp//
   |  |  **|**  | //Exp// ``<`` //Exp//
   |  |  **|**  | //Exp// ``<=`` //Exp//
   |  |  **|**  | //Exp// ``>`` //Exp//
   |  |  **|**  | //Exp// ``>=`` //Exp//
+  |  |  **|**  | ``True``
+  |  |  **|**  | ``False``
+  |  |  **|**  | //DynVar//
+  |  |  **|**  | //Pred5//
+  | //Pred5// | -> | //DynVar// ``(.`` //[Pred]// ``.)``
   |  |  **|**  | //Pred6//
-  | //Pred6// | -> | //DynVar//
-  |  |  **|**  | ``E`` //Exp//
-  |  |  **|**  | ``T`` //Type//
-  |  |  **|**  | //DynVar// ``(.`` //[Pred]// ``.)``
-  |  |  **|**  | ``(`` //Pred// ``)``
+  | //Pred6// | -> | ``(`` //Pred// ``)``
   | //[Pred]// | -> | **eps**
   |  |  **|**  | //Pred//
   |  |  **|**  | //Pred// ``,`` //[Pred]//

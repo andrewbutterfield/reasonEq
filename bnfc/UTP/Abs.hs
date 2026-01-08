@@ -45,9 +45,9 @@ data Pred
     | LE Exp Exp
     | GT Exp Exp
     | GE Exp Exp
+    | PTrue
+    | PFalse
     | PVar DynVar
-    | PExpr Exp
-    | PType Type
     | PredTX DynVar [Pred]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 

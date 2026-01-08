@@ -172,10 +172,11 @@ resWords =
     (b "axiom" 40
        (b "Prd" 34
           (b "NA" 31
-             (b "Exp" 29 (b "E" 28 N N) (b "Law" 30 N N))
+             (b "False" 29 (b "Exp" 28 N N) (b "Law" 30 N N))
              (b "Obs" 33 (b "NS" 32 N N) N))
-          (b "Theory" 37
-             (b "T" 36 (b "SB" 35 N N) N) (b "assumed" 39 (b "\\/" 38 N N) N)))
+          (b "True" 37
+             (b "Theory" 36 (b "SB" 35 N N) N)
+             (b "assumed" 39 (b "\\/" 38 N N) N)))
        (b "tbot" 47
           (b "neg" 44
              (b "false" 42 (b "div" 41 N N) (b "mod" 43 N N))

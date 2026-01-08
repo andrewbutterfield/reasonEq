@@ -152,22 +152,24 @@ separator Item "" ;
 {- Predicates
    Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
 -}
-PEqv.  Pred  ::= Pred "===" Pred1   ;
+PEqv.  Pred  ::= Pred "===" Pred1  ;
 PImpl. Pred1 ::= Pred2 "==>" Pred1  ;
 POr.   Pred2 ::= Pred2 "\\/" Pred3  ;
 PAnd.  Pred3 ::= Pred3 "/\\" Pred4  ;
-PNot.  Pred4 ::= "~" Pred5          ;
-EQ.    Pred5 ::= Exp "==" Exp       ; 
-NE.    Pred5 ::= Exp "!=" Exp       ; 
-LT.    Pred5 ::= Exp "<" Exp        ; 
-LE.    Pred5 ::= Exp "<=" Exp       ; 
-GT.    Pred5 ::= Exp ">" Exp        ; 
-GE.    Pred5 ::= Exp ">=" Exp       ; 
-PVar.  Pred6 ::= DynVar             ;
-PExpr. Pred6 ::= "E" Exp            ;
-PType. Pred6 ::= "T" Type ;
-PredTX. Pred6 ::= DynVar "(." [Pred] ".)" ;
-coercions Pred 6                    ;
+PNot.  Pred3 ::= "~" Pred4          ;
+EQ.    Pred4 ::= Exp "==" Exp       ; 
+NE.    Pred4 ::= Exp "!=" Exp       ; 
+LT.    Pred4 ::= Exp "<" Exp        ; 
+LE.    Pred4 ::= Exp "<=" Exp       ; 
+GT.    Pred4 ::= Exp ">" Exp        ; 
+GE.    Pred4 ::= Exp ">=" Exp       ; 
+PTrue. Pred4 ::= "True"             ;
+PFalse. Pred4 ::= "False"           ;
+PVar.  Pred4 ::= DynVar             ;
+-- PExpr. Pred6 ::= "E" Exp            ;
+-- PType. Pred6 ::= "T" Type ;
+PredTX. Pred5 ::= DynVar "(." [Pred] ".)" ;
+coercions Pred 6                   ;
 separator Pred "," ;
 
 {- Expressions  

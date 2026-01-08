@@ -25,15 +25,15 @@ transTheory x = case x of
 
 transItem :: UTP.Abs.Item -> Result
 transItem x = case x of
-  UTP.Abs.DeclVar dynvar varrole -> failure x
-  UTP.Abs.DeclDLVar dynvar dynvars -> failure x
-  UTP.Abs.DeclASet dynvar -> failure x
+  UTP.Abs.DeclVar varclass dynvar varrole -> failure x
+  UTP.Abs.DeclDLVar varclass dynvar dynvars -> failure x
+  UTP.Abs.DeclASet varclass dynvar -> failure x
   UTP.Abs.Conj dynvar pred -> failure x
   UTP.Abs.Law lawtype dynvar pred -> failure x
 
 transVarRole :: UTP.Abs.VarRole -> Result
 transVarRole x = case x of
-  UTP.Abs.VMR_KV varclass sbbl type_ -> failure x
+  UTP.Abs.VMR_KV sbbl type_ -> failure x
 
 transVarClass :: UTP.Abs.VarClass -> Result
 transVarClass x = case x of
@@ -59,16 +59,16 @@ transPred x = case x of
   UTP.Abs.PImpl pred1 pred2 -> failure x
   UTP.Abs.POr pred1 pred2 -> failure x
   UTP.Abs.PAnd pred1 pred2 -> failure x
-  UTP.Abs.PNot pred -> failure x
   UTP.Abs.EQ exp1 exp2 -> failure x
   UTP.Abs.NE exp1 exp2 -> failure x
   UTP.Abs.LT exp1 exp2 -> failure x
   UTP.Abs.LE exp1 exp2 -> failure x
   UTP.Abs.GT exp1 exp2 -> failure x
   UTP.Abs.GE exp1 exp2 -> failure x
+  UTP.Abs.PTrue -> failure x
+  UTP.Abs.PFalse -> failure x
   UTP.Abs.PVar dynvar -> failure x
-  UTP.Abs.PExpr exp -> failure x
-  UTP.Abs.PType type_ -> failure x
+  UTP.Abs.PNot pred -> failure x
   UTP.Abs.PredTX dynvar preds -> failure x
 
 transExp :: UTP.Abs.Exp -> Result

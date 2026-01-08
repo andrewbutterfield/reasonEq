@@ -18,7 +18,7 @@ module Main where
 import Prelude
   ( ($), (.)
   , Either(..)
-  , Int, (>)
+  , Int, (>), (==)
   , String, (++), concat, unlines
   , Show, show
   , IO, (>>), (>>=), mapM_, putStrLn
@@ -27,12 +27,13 @@ import Prelude
   )
 import System.Environment ( getArgs )
 import System.Exit        ( exitFailure )
+import System.FilePath    ( takeExtension, (<.>) )
 import Control.Monad      ( when )
 
 
 import UTP.Abs   ()
 import UTP.Lex   ( Token, mkPosToken )
-import UTP.Par   ( pTheory, myLexer )
+import UTP.Par   ( pTheory, pPred, pExp, myLexer )
 import UTP.Print ( Print, printTree )
 import UTP.Skel  ()
 
@@ -43,8 +44,14 @@ type Verbosity  = Int
 putStrV :: Verbosity -> String -> IO ()
 putStrV v s = when (v > 1) $ putStrLn s
 
+-- if a file extension is missing we add .utp
 runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
-runFile v p f = putStrLn f >> readFile f >>= run v p
+runFile v p f 
+   = putStrLn f' >> readFile f' >>= run v p
+   where f' = completeFileName "utp" f
+
+completeFileName ext f
+   = if takeExtension f == "" then f <.> ext else f
 
 run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
 run v p s =
@@ -72,7 +79,9 @@ usage = do
   putStrLn $ unlines
     [ "usage: Call with one of the following argument combinations:"
     , "  --help          Display this help message."
-    , "  (no arguments)  Parse stdin verbosely."
+    , "  (no arguments)  Parse theory from stdin verbosely."
+    , "  -p              Parse predicate from stdin verbosely"
+    , "  -e              Parse expression from stdin verbosely"
     , "  (files)         Parse content of files verbosely."
     , "  -s (files)      Silent mode. Parse content of files silently."
     ]
@@ -83,6 +92,8 @@ main = do
   case args of
     ["--help"] -> usage
     []         -> getContents >>= run 2 pTheory
+    ["-p"]     -> getContents >>= run 2 pPred
+    ["-e"]     -> getContents >>= run 2 pExp
     "-s":fs    -> mapM_ (runFile 0 pTheory) fs
     fs         -> mapM_ (runFile 2 pTheory) fs
 \end{code}

@@ -56,16 +56,16 @@ import UTP.Lex
   'DclASet'    { PT _ (TS _ 25)     }
   'DclDLVar'   { PT _ (TS _ 26)     }
   'DclVar'     { PT _ (TS _ 27)     }
-  'E'          { PT _ (TS _ 28)     }
-  'Exp'        { PT _ (TS _ 29)     }
+  'Exp'        { PT _ (TS _ 28)     }
+  'False'      { PT _ (TS _ 29)     }
   'Law'        { PT _ (TS _ 30)     }
   'NA'         { PT _ (TS _ 31)     }
   'NS'         { PT _ (TS _ 32)     }
   'Obs'        { PT _ (TS _ 33)     }
   'Prd'        { PT _ (TS _ 34)     }
   'SB'         { PT _ (TS _ 35)     }
-  'T'          { PT _ (TS _ 36)     }
-  'Theory'     { PT _ (TS _ 37)     }
+  'Theory'     { PT _ (TS _ 36)     }
+  'True'       { PT _ (TS _ 37)     }
   '\\/'        { PT _ (TS _ 38)     }
   'assumed'    { PT _ (TS _ 39)     }
   'axiom'      { PT _ (TS _ 40)     }
@@ -141,28 +141,30 @@ Pred2 :: { UTP.Abs.Pred }
 Pred2 : Pred2 '\\/' Pred3 { UTP.Abs.POr $1 $3 } | Pred3 { $1 }
 
 Pred3 :: { UTP.Abs.Pred }
-Pred3 : Pred3 '/\\' Pred4 { UTP.Abs.PAnd $1 $3 } | Pred4 { $1 }
+Pred3
+  : Pred3 '/\\' Pred4 { UTP.Abs.PAnd $1 $3 }
+  | '~' Pred4 { UTP.Abs.PNot $2 }
+  | Pred4 { $1 }
 
 Pred4 :: { UTP.Abs.Pred }
-Pred4 : '~' Pred5 { UTP.Abs.PNot $2 } | Pred5 { $1 }
-
-Pred5 :: { UTP.Abs.Pred }
-Pred5
+Pred4
   : Exp '==' Exp { UTP.Abs.EQ $1 $3 }
   | Exp '!=' Exp { UTP.Abs.NE $1 $3 }
   | Exp '<' Exp { UTP.Abs.LT $1 $3 }
   | Exp '<=' Exp { UTP.Abs.LE $1 $3 }
   | Exp '>' Exp { UTP.Abs.GT $1 $3 }
   | Exp '>=' Exp { UTP.Abs.GE $1 $3 }
-  | Pred6 { $1 }
+  | 'True' { UTP.Abs.PTrue }
+  | 'False' { UTP.Abs.PFalse }
+  | DynVar { UTP.Abs.PVar $1 }
+  | Pred5 { $1 }
+
+Pred5 :: { UTP.Abs.Pred }
+Pred5
+  : DynVar '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 } | Pred6 { $1 }
 
 Pred6 :: { UTP.Abs.Pred }
-Pred6
-  : DynVar { UTP.Abs.PVar $1 }
-  | 'E' Exp { UTP.Abs.PExpr $2 }
-  | 'T' Type { UTP.Abs.PType $2 }
-  | DynVar '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
-  | '(' Pred ')' { $2 }
+Pred6 : '(' Pred ')' { $2 }
 
 ListPred :: { [UTP.Abs.Pred] }
 ListPred

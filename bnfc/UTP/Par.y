@@ -57,27 +57,30 @@ import UTP.Lex
   'DclDLVar'   { PT _ (TS _ 26)     }
   'DclVar'     { PT _ (TS _ 27)     }
   'E'          { PT _ (TS _ 28)     }
-  'Law'        { PT _ (TS _ 29)     }
-  'NA'         { PT _ (TS _ 30)     }
-  'NS'         { PT _ (TS _ 31)     }
-  'SB'         { PT _ (TS _ 32)     }
-  'T'          { PT _ (TS _ 33)     }
-  'Theory'     { PT _ (TS _ 34)     }
-  '\\/'        { PT _ (TS _ 35)     }
-  'assumed'    { PT _ (TS _ 36)     }
-  'axiom'      { PT _ (TS _ 37)     }
-  'div'        { PT _ (TS _ 38)     }
-  'false'      { PT _ (TS _ 39)     }
-  'mod'        { PT _ (TS _ 40)     }
-  'neg'        { PT _ (TS _ 41)     }
-  'nil'        { PT _ (TS _ 42)     }
-  'proven'     { PT _ (TS _ 43)     }
-  'tbot'       { PT _ (TS _ 44)     }
-  'true'       { PT _ (TS _ 45)     }
-  'ttop'       { PT _ (TS _ 46)     }
-  'var'        { PT _ (TS _ 47)     }
-  '|'          { PT _ (TS _ 48)     }
-  '~'          { PT _ (TS _ 49)     }
+  'Exp'        { PT _ (TS _ 29)     }
+  'Law'        { PT _ (TS _ 30)     }
+  'NA'         { PT _ (TS _ 31)     }
+  'NS'         { PT _ (TS _ 32)     }
+  'Obs'        { PT _ (TS _ 33)     }
+  'Prd'        { PT _ (TS _ 34)     }
+  'SB'         { PT _ (TS _ 35)     }
+  'T'          { PT _ (TS _ 36)     }
+  'Theory'     { PT _ (TS _ 37)     }
+  '\\/'        { PT _ (TS _ 38)     }
+  'assumed'    { PT _ (TS _ 39)     }
+  'axiom'      { PT _ (TS _ 40)     }
+  'div'        { PT _ (TS _ 41)     }
+  'false'      { PT _ (TS _ 42)     }
+  'mod'        { PT _ (TS _ 43)     }
+  'neg'        { PT _ (TS _ 44)     }
+  'nil'        { PT _ (TS _ 45)     }
+  'proven'     { PT _ (TS _ 46)     }
+  'tbot'       { PT _ (TS _ 47)     }
+  'true'       { PT _ (TS _ 48)     }
+  'ttop'       { PT _ (TS _ 49)     }
+  'var'        { PT _ (TS _ 50)     }
+  '|'          { PT _ (TS _ 51)     }
+  '~'          { PT _ (TS _ 52)     }
   L_integ      { PT _ (TI $$)       }
   L_DynVar     { PT _ (T_DynVar $$) }
 
@@ -98,14 +101,20 @@ ListDynVar : {- empty -} { [] } | DynVar ListDynVar { (:) $1 $2 }
 
 Item :: { UTP.Abs.Item }
 Item
-  : 'DclVar' DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $4 }
-  | 'DclDLVar' DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $4 }
-  | 'DclASet' DynVar '.' { UTP.Abs.DeclASet $2 }
+  : 'DclVar' VarClass DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $3 $5 }
+  | 'DclDLVar' VarClass DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $3 $5 }
+  | 'DclASet' VarClass DynVar '.' { UTP.Abs.DeclASet $2 $3 }
   | 'Conjecture' DynVar '.' Pred '.' { UTP.Abs.Conj $2 $4 }
   | 'Law' LawType DynVar '.' Pred '.' { UTP.Abs.Law $2 $3 $5 }
 
 VarRole :: { UTP.Abs.VarRole }
 VarRole : 'var' SBBL Type { UTP.Abs.VMR_KV $2 $3 }
+
+VarClass :: { UTP.Abs.VarClass }
+VarClass
+  : 'Obs' { UTP.Abs.VarObs }
+  | 'Exp' { UTP.Abs.VarExp }
+  | 'Prd' { UTP.Abs.VarPred }
 
 SBBL :: { UTP.Abs.SBBL }
 SBBL

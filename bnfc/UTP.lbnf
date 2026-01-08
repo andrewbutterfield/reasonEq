@@ -127,15 +127,17 @@ separator DynVar "" ;
   This is  KV DL DAS 
 -}
 
-
-DeclVar.   Item ::= "DclVar" DynVar "." VarRole "."    ;  -- KV
-DeclDLVar. Item ::= "DclDLVar" DynVar "." [DynVar] "." ;  -- DL
-DeclASet.  Item ::= "DclASet" DynVar "."               ;  -- DAS
+DeclVar.   Item ::= "DclVar" VarClass DynVar "." VarRole "."    ;  -- KV
+DeclDLVar. Item ::= "DclDLVar" VarClass DynVar "." [DynVar] "." ;  -- DL
+DeclASet.  Item ::= "DclASet" VarClass DynVar "."               ;  -- DAS
 Conj.      Item ::= "Conjecture" DynVar "." Pred "."   ;
 Law.       Item ::= "Law" LawType DynVar "." Pred "."  ;
 
-
 VMR_KV. VarRole ::= "var" SBBL Type ;
+
+VarObs. VarClass ::= "Obs" ;
+VarExp. VarClass ::= "Exp" ;
+VarPred. VarClass ::= "Prd" ;
 
 SBBL_NA. SBBL ::= "NA" ;
 SBBL_SB. SBBL ::= "SB" ;
@@ -146,7 +148,6 @@ LProof.  LawType ::= "proven" ;
 LAssume. LawType ::= "assumed" ;
 
 separator Item "" ;
-
 
 {- Predicates
    Propositional precedence:  tight..loose: ~ /\ \/ ==> ===

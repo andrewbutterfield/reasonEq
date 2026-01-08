@@ -25,15 +25,21 @@ transTheory x = case x of
 
 transItem :: UTP.Abs.Item -> Result
 transItem x = case x of
-  UTP.Abs.DeclVar dynvar varrole -> failure x
-  UTP.Abs.DeclDLVar dynvar dynvars -> failure x
-  UTP.Abs.DeclASet dynvar -> failure x
+  UTP.Abs.DeclVar varclass dynvar varrole -> failure x
+  UTP.Abs.DeclDLVar varclass dynvar dynvars -> failure x
+  UTP.Abs.DeclASet varclass dynvar -> failure x
   UTP.Abs.Conj dynvar pred -> failure x
   UTP.Abs.Law lawtype dynvar pred -> failure x
 
 transVarRole :: UTP.Abs.VarRole -> Result
 transVarRole x = case x of
   UTP.Abs.VMR_KV sbbl type_ -> failure x
+
+transVarClass :: UTP.Abs.VarClass -> Result
+transVarClass x = case x of
+  UTP.Abs.VarObs -> failure x
+  UTP.Abs.VarExp -> failure x
+  UTP.Abs.VarPred -> failure x
 
 transSBBL :: UTP.Abs.SBBL -> Result
 transSBBL x = case x of

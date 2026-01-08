@@ -146,15 +146,21 @@ instance Print [UTP.Abs.DynVar] where
 
 instance Print UTP.Abs.Item where
   prt i = \case
-    UTP.Abs.DeclVar dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
-    UTP.Abs.DeclDLVar dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
-    UTP.Abs.DeclASet dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 dynvar, doc (showString ".")])
+    UTP.Abs.DeclVar varclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
+    UTP.Abs.DeclDLVar varclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
+    UTP.Abs.DeclASet varclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 varclass, prt 0 dynvar, doc (showString ".")])
     UTP.Abs.Conj dynvar pred -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
     UTP.Abs.Law lawtype dynvar pred -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
 
 instance Print UTP.Abs.VarRole where
   prt i = \case
     UTP.Abs.VMR_KV sbbl type_ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 type_])
+
+instance Print UTP.Abs.VarClass where
+  prt i = \case
+    UTP.Abs.VarObs -> prPrec i 0 (concatD [doc (showString "Obs")])
+    UTP.Abs.VarExp -> prPrec i 0 (concatD [doc (showString "Exp")])
+    UTP.Abs.VarPred -> prPrec i 0 (concatD [doc (showString "Prd")])
 
 instance Print UTP.Abs.SBBL where
   prt i = \case

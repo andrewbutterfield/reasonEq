@@ -25,11 +25,12 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in UTP are the following:
   | ``Conjecture`` | ``DclASet`` | ``DclDLVar`` | ``DclVar``
-  | ``E`` | ``Law`` | ``NA`` | ``NS``
-  | ``SB`` | ``T`` | ``Theory`` | ``assumed``
-  | ``axiom`` | ``div`` | ``false`` | ``mod``
-  | ``neg`` | ``nil`` | ``proven`` | ``tbot``
-  | ``true`` | ``ttop`` | ``var`` |
+  | ``E`` | ``Exp`` | ``Law`` | ``NA``
+  | ``NS`` | ``Obs`` | ``Prd`` | ``SB``
+  | ``T`` | ``Theory`` | ``assumed`` | ``axiom``
+  | ``div`` | ``false`` | ``mod`` | ``neg``
+  | ``nil`` | ``proven`` | ``tbot`` | ``true``
+  | ``ttop`` | ``var`` |  |
 
 The symbols used in UTP are the following:
   | . | === | ==> | \/
@@ -52,12 +53,15 @@ All other symbols are terminals.
   | //Theory// | -> | ``Theory`` //DynVar// ``.`` //[DynVar]// ``.`` //[Item]//
   | //[DynVar]// | -> | **eps**
   |  |  **|**  | //DynVar// //[DynVar]//
-  | //Item// | -> | ``DclVar`` //DynVar// ``.`` //VarRole// ``.``
-  |  |  **|**  | ``DclDLVar`` //DynVar// ``.`` //[DynVar]// ``.``
-  |  |  **|**  | ``DclASet`` //DynVar// ``.``
+  | //Item// | -> | ``DclVar`` //VarClass// //DynVar// ``.`` //VarRole// ``.``
+  |  |  **|**  | ``DclDLVar`` //VarClass// //DynVar// ``.`` //[DynVar]// ``.``
+  |  |  **|**  | ``DclASet`` //VarClass// //DynVar// ``.``
   |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Pred// ``.``
   |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Pred// ``.``
   | //VarRole// | -> | ``var`` //SBBL// //Type//
+  | //VarClass// | -> | ``Obs``
+  |  |  **|**  | ``Exp``
+  |  |  **|**  | ``Prd``
   | //SBBL// | -> | ``NA``
   |  |  **|**  | ``SB``
   |  |  **|**  | ``NS``

@@ -16,11 +16,15 @@ data Theory = Thry DynVar [DynVar] [Item]
 data Item
     = DeclVar DynVar VarRole
     | DeclDLVar DynVar [DynVar]
+    | DeclASet DynVar
     | Conj DynVar Pred
     | Law LawType DynVar Pred
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data VarRole = VMR_KV SBBL Type
+data VarRole = VMR_KV VarClass SBBL Type
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data VarClass = VarObs | VarExp | VarPred
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data SBBL = SBBL_NA | SBBL_SB | SBBL_NS

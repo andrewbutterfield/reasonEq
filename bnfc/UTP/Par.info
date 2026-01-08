@@ -18,81 +18,84 @@ Grammar
 	Theory -> 'Theory' DynVar '.' ListDynVar '.' ListItem   (6)
 	ListDynVar ->                                      (7)
 	ListDynVar -> DynVar ListDynVar                    (8)
-	Item -> 'DclVar' DynVar '.' VarRole '.'            (9)
-	Item -> 'DclDLVar' DynVar '.' ListDynVar '.'       (10)
-	Item -> 'DclASet' DynVar '.'                       (11)
+	Item -> 'DclVar' VarClass DynVar '.' VarRole '.'   (9)
+	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar '.'   (10)
+	Item -> 'DclASet' VarClass DynVar '.'              (11)
 	Item -> 'Conjecture' DynVar '.' Pred '.'           (12)
 	Item -> 'Law' LawType DynVar '.' Pred '.'          (13)
 	VarRole -> 'var' SBBL Type                         (14)
-	SBBL -> 'NA'                                       (15)
-	SBBL -> 'SB'                                       (16)
-	SBBL -> 'NS'                                       (17)
-	LawType -> 'axiom'                                 (18)
-	LawType -> 'proven'                                (19)
-	LawType -> 'assumed'                               (20)
-	ListItem ->                                        (21)
-	ListItem -> Item ListItem                          (22)
-	Pred -> Pred '===' Pred1                           (23)
-	Pred -> Pred1                                      (24)
-	Pred1 -> Pred2 '==>' Pred1                         (25)
-	Pred1 -> Pred2                                     (26)
-	Pred2 -> Pred2 '\\/' Pred3                         (27)
-	Pred2 -> Pred3                                     (28)
-	Pred3 -> Pred3 '/\\' Pred4                         (29)
-	Pred3 -> Pred4                                     (30)
-	Pred4 -> '~' Pred5                                 (31)
-	Pred4 -> Pred5                                     (32)
-	Pred5 -> Exp '==' Exp                              (33)
-	Pred5 -> Exp '!=' Exp                              (34)
-	Pred5 -> Exp '<' Exp                               (35)
-	Pred5 -> Exp '<=' Exp                              (36)
-	Pred5 -> Exp '>' Exp                               (37)
-	Pred5 -> Exp '>=' Exp                              (38)
-	Pred5 -> Pred6                                     (39)
-	Pred6 -> DynVar                                    (40)
-	Pred6 -> 'E' Exp                                   (41)
-	Pred6 -> 'T' Type                                  (42)
-	Pred6 -> DynVar '(.' ListPred '.)'                 (43)
-	Pred6 -> '(' Pred ')'                              (44)
-	ListPred ->                                        (45)
-	ListPred -> Pred                                   (46)
-	ListPred -> Pred ',' ListPred                      (47)
-	Exp -> Exp1 '++' Exp                               (48)
-	Exp -> Exp1 ':' Exp                                (49)
-	Exp -> Exp1                                        (50)
-	Exp1 -> Exp1 '+' Exp2                              (51)
-	Exp1 -> Exp1 '-' Exp2                              (52)
-	Exp1 -> Exp2                                       (53)
-	Exp2 -> Exp2 '*' Exp3                              (54)
-	Exp2 -> Exp2 'div' Exp3                            (55)
-	Exp2 -> Exp2 'mod' Exp3                            (56)
-	Exp2 -> 'neg' Exp3                                 (57)
-	Exp2 -> Exp3                                       (58)
-	Exp3 -> Integer                                    (59)
-	Exp3 -> DynVar                                     (60)
-	Exp3 -> 'true'                                     (61)
-	Exp3 -> 'false'                                    (62)
-	Exp3 -> 'nil'                                      (63)
-	Exp3 -> DynVar '(' ListExp ')'                     (64)
-	Exp3 -> '(' Exp ')'                                (65)
-	ListExp ->                                         (66)
-	ListExp -> Exp                                     (67)
-	ListExp -> Exp ',' ListExp                         (68)
-	Type -> Type1 '->' Type                            (69)
-	Type -> Type1                                      (70)
-	Type1 -> DynVar '(:' ListType2 ':)'                (71)
-	Type1 -> Type2                                     (72)
-	Type2 -> DynVar ListType3                          (73)
-	Type2 -> Type3                                     (74)
-	Type3 -> 'ttop'                                    (75)
-	Type3 -> DynVar                                    (76)
-	Type3 -> 'tbot'                                    (77)
-	Type3 -> '(' Type ')'                              (78)
-	ListType2 ->                                       (79)
-	ListType2 -> Type2                                 (80)
-	ListType2 -> Type2 '|' ListType2                   (81)
-	ListType3 ->                                       (82)
-	ListType3 -> Type3 ListType3                       (83)
+	VarClass -> 'Obs'                                  (15)
+	VarClass -> 'Exp'                                  (16)
+	VarClass -> 'Prd'                                  (17)
+	SBBL -> 'NA'                                       (18)
+	SBBL -> 'SB'                                       (19)
+	SBBL -> 'NS'                                       (20)
+	LawType -> 'axiom'                                 (21)
+	LawType -> 'proven'                                (22)
+	LawType -> 'assumed'                               (23)
+	ListItem ->                                        (24)
+	ListItem -> Item ListItem                          (25)
+	Pred -> Pred '===' Pred1                           (26)
+	Pred -> Pred1                                      (27)
+	Pred1 -> Pred2 '==>' Pred1                         (28)
+	Pred1 -> Pred2                                     (29)
+	Pred2 -> Pred2 '\\/' Pred3                         (30)
+	Pred2 -> Pred3                                     (31)
+	Pred3 -> Pred3 '/\\' Pred4                         (32)
+	Pred3 -> Pred4                                     (33)
+	Pred4 -> '~' Pred5                                 (34)
+	Pred4 -> Pred5                                     (35)
+	Pred5 -> Exp '==' Exp                              (36)
+	Pred5 -> Exp '!=' Exp                              (37)
+	Pred5 -> Exp '<' Exp                               (38)
+	Pred5 -> Exp '<=' Exp                              (39)
+	Pred5 -> Exp '>' Exp                               (40)
+	Pred5 -> Exp '>=' Exp                              (41)
+	Pred5 -> Pred6                                     (42)
+	Pred6 -> DynVar                                    (43)
+	Pred6 -> 'E' Exp                                   (44)
+	Pred6 -> 'T' Type                                  (45)
+	Pred6 -> DynVar '(.' ListPred '.)'                 (46)
+	Pred6 -> '(' Pred ')'                              (47)
+	ListPred ->                                        (48)
+	ListPred -> Pred                                   (49)
+	ListPred -> Pred ',' ListPred                      (50)
+	Exp -> Exp1 '++' Exp                               (51)
+	Exp -> Exp1 ':' Exp                                (52)
+	Exp -> Exp1                                        (53)
+	Exp1 -> Exp1 '+' Exp2                              (54)
+	Exp1 -> Exp1 '-' Exp2                              (55)
+	Exp1 -> Exp2                                       (56)
+	Exp2 -> Exp2 '*' Exp3                              (57)
+	Exp2 -> Exp2 'div' Exp3                            (58)
+	Exp2 -> Exp2 'mod' Exp3                            (59)
+	Exp2 -> 'neg' Exp3                                 (60)
+	Exp2 -> Exp3                                       (61)
+	Exp3 -> Integer                                    (62)
+	Exp3 -> DynVar                                     (63)
+	Exp3 -> 'true'                                     (64)
+	Exp3 -> 'false'                                    (65)
+	Exp3 -> 'nil'                                      (66)
+	Exp3 -> DynVar '(' ListExp ')'                     (67)
+	Exp3 -> '(' Exp ')'                                (68)
+	ListExp ->                                         (69)
+	ListExp -> Exp                                     (70)
+	ListExp -> Exp ',' ListExp                         (71)
+	Type -> Type1 '->' Type                            (72)
+	Type -> Type1                                      (73)
+	Type1 -> DynVar '(:' ListType2 ':)'                (74)
+	Type1 -> Type2                                     (75)
+	Type2 -> DynVar ListType3                          (76)
+	Type2 -> Type3                                     (77)
+	Type3 -> 'ttop'                                    (78)
+	Type3 -> DynVar                                    (79)
+	Type3 -> 'tbot'                                    (80)
+	Type3 -> '(' Type ')'                              (81)
+	ListType2 ->                                       (82)
+	ListType2 -> Type2                                 (83)
+	ListType2 -> Type2 '|' ListType2                   (84)
+	ListType3 ->                                       (85)
+	ListType3 -> Type3 ListType3                       (86)
 
 -----------------------------------------------------------------------------
 Terminals
@@ -125,27 +128,30 @@ Terminals
 	'DclDLVar'     { PT _ (TS _ 26) }
 	'DclVar'       { PT _ (TS _ 27) }
 	'E'            { PT _ (TS _ 28) }
-	'Law'          { PT _ (TS _ 29) }
-	'NA'           { PT _ (TS _ 30) }
-	'NS'           { PT _ (TS _ 31) }
-	'SB'           { PT _ (TS _ 32) }
-	'T'            { PT _ (TS _ 33) }
-	'Theory'       { PT _ (TS _ 34) }
-	'\\/'          { PT _ (TS _ 35) }
-	'assumed'      { PT _ (TS _ 36) }
-	'axiom'        { PT _ (TS _ 37) }
-	'div'          { PT _ (TS _ 38) }
-	'false'        { PT _ (TS _ 39) }
-	'mod'          { PT _ (TS _ 40) }
-	'neg'          { PT _ (TS _ 41) }
-	'nil'          { PT _ (TS _ 42) }
-	'proven'       { PT _ (TS _ 43) }
-	'tbot'         { PT _ (TS _ 44) }
-	'true'         { PT _ (TS _ 45) }
-	'ttop'         { PT _ (TS _ 46) }
-	'var'          { PT _ (TS _ 47) }
-	'|'            { PT _ (TS _ 48) }
-	'~'            { PT _ (TS _ 49) }
+	'Exp'          { PT _ (TS _ 29) }
+	'Law'          { PT _ (TS _ 30) }
+	'NA'           { PT _ (TS _ 31) }
+	'NS'           { PT _ (TS _ 32) }
+	'Obs'          { PT _ (TS _ 33) }
+	'Prd'          { PT _ (TS _ 34) }
+	'SB'           { PT _ (TS _ 35) }
+	'T'            { PT _ (TS _ 36) }
+	'Theory'       { PT _ (TS _ 37) }
+	'\\/'          { PT _ (TS _ 38) }
+	'assumed'      { PT _ (TS _ 39) }
+	'axiom'        { PT _ (TS _ 40) }
+	'div'          { PT _ (TS _ 41) }
+	'false'        { PT _ (TS _ 42) }
+	'mod'          { PT _ (TS _ 43) }
+	'neg'          { PT _ (TS _ 44) }
+	'nil'          { PT _ (TS _ 45) }
+	'proven'       { PT _ (TS _ 46) }
+	'tbot'         { PT _ (TS _ 47) }
+	'true'         { PT _ (TS _ 48) }
+	'ttop'         { PT _ (TS _ 49) }
+	'var'          { PT _ (TS _ 50) }
+	'|'            { PT _ (TS _ 51) }
+	'~'            { PT _ (TS _ 52) }
 	L_integ        { PT _ (TI $$) }
 	L_DynVar       { PT _ (T_DynVar $$) }
 
@@ -162,28 +168,29 @@ Non-terminals
 	ListDynVar      rules 7, 8
 	Item            rules 9, 10, 11, 12, 13
 	VarRole         rule  14
-	SBBL            rules 15, 16, 17
-	LawType         rules 18, 19, 20
-	ListItem        rules 21, 22
-	Pred            rules 23, 24
-	Pred1           rules 25, 26
-	Pred2           rules 27, 28
-	Pred3           rules 29, 30
-	Pred4           rules 31, 32
-	Pred5           rules 33, 34, 35, 36, 37, 38, 39
-	Pred6           rules 40, 41, 42, 43, 44
-	ListPred        rules 45, 46, 47
-	Exp             rules 48, 49, 50
-	Exp1            rules 51, 52, 53
-	Exp2            rules 54, 55, 56, 57, 58
-	Exp3            rules 59, 60, 61, 62, 63, 64, 65
-	ListExp         rules 66, 67, 68
-	Type            rules 69, 70
-	Type1           rules 71, 72
-	Type2           rules 73, 74
-	Type3           rules 75, 76, 77, 78
-	ListType2       rules 79, 80, 81
-	ListType3       rules 82, 83
+	VarClass        rules 15, 16, 17
+	SBBL            rules 18, 19, 20
+	LawType         rules 21, 22, 23
+	ListItem        rules 24, 25
+	Pred            rules 26, 27
+	Pred1           rules 28, 29
+	Pred2           rules 30, 31
+	Pred3           rules 32, 33
+	Pred4           rules 34, 35
+	Pred5           rules 36, 37, 38, 39, 40, 41, 42
+	Pred6           rules 43, 44, 45, 46, 47
+	ListPred        rules 48, 49, 50
+	Exp             rules 51, 52, 53
+	Exp1            rules 54, 55, 56
+	Exp2            rules 57, 58, 59, 60, 61
+	Exp3            rules 62, 63, 64, 65, 66, 67, 68
+	ListExp         rules 69, 70, 71
+	Type            rules 72, 73
+	Type1           rules 74, 75
+	Type2           rules 76, 77
+	Type3           rules 78, 79, 80, 81
+	ListType2       rules 82, 83, 84
+	ListType3       rules 85, 86
 
 -----------------------------------------------------------------------------
 States
@@ -296,44 +303,44 @@ State 5
 
 State 6
 
-	Type1 -> DynVar . '(:' ListType2 ':)'               (rule 71)
-	Type2 -> DynVar . ListType3                         (rule 73)
-	Type3 -> DynVar .                                   (rule 76)
+	Type1 -> DynVar . '(:' ListType2 ':)'               (rule 74)
+	Type2 -> DynVar . ListType3                         (rule 76)
+	Type3 -> DynVar .                                   (rule 79)
 
 	'('            shift, and enter state 11
 	'(:'           shift, and enter state 73
-	')'            reduce using rule 82
-			(reduce using rule 76)
+	')'            reduce using rule 85
+			(reduce using rule 79)
 
-	','            reduce using rule 82
-			(reduce using rule 76)
+	','            reduce using rule 85
+			(reduce using rule 79)
 
-	'->'           reduce using rule 82
-			(reduce using rule 76)
+	'->'           reduce using rule 85
+			(reduce using rule 79)
 
-	'.'            reduce using rule 82
-			(reduce using rule 76)
+	'.'            reduce using rule 85
+			(reduce using rule 79)
 
-	'.)'           reduce using rule 82
-			(reduce using rule 76)
+	'.)'           reduce using rule 85
+			(reduce using rule 79)
 
-	'/\\'          reduce using rule 82
-			(reduce using rule 76)
+	'/\\'          reduce using rule 85
+			(reduce using rule 79)
 
-	'==='          reduce using rule 82
-			(reduce using rule 76)
+	'==='          reduce using rule 85
+			(reduce using rule 79)
 
-	'==>'          reduce using rule 82
-			(reduce using rule 76)
+	'==>'          reduce using rule 85
+			(reduce using rule 79)
 
-	'\\/'          reduce using rule 82
-			(reduce using rule 76)
+	'\\/'          reduce using rule 85
+			(reduce using rule 79)
 
 	'tbot'         shift, and enter state 12
 	'ttop'         shift, and enter state 13
 	L_DynVar       shift, and enter state 14
-	%eof           reduce using rule 82
-			(reduce using rule 76)
+	%eof           reduce using rule 85
+			(reduce using rule 79)
 
 
 	DynVar         goto state 70
@@ -349,58 +356,58 @@ State 7
 
 State 8
 
-	Type -> Type1 . '->' Type                           (rule 69)
-	Type -> Type1 .                                     (rule 70)
+	Type -> Type1 . '->' Type                           (rule 72)
+	Type -> Type1 .                                     (rule 73)
 
-	')'            reduce using rule 70
-	','            reduce using rule 70
+	')'            reduce using rule 73
+	','            reduce using rule 73
 	'->'           shift, and enter state 69
-	'.'            reduce using rule 70
-	'.)'           reduce using rule 70
-	'/\\'          reduce using rule 70
-	'==='          reduce using rule 70
-	'==>'          reduce using rule 70
-	'\\/'          reduce using rule 70
-	%eof           reduce using rule 70
+	'.'            reduce using rule 73
+	'.)'           reduce using rule 73
+	'/\\'          reduce using rule 73
+	'==='          reduce using rule 73
+	'==>'          reduce using rule 73
+	'\\/'          reduce using rule 73
+	%eof           reduce using rule 73
 
 
 State 9
 
-	Type1 -> Type2 .                                    (rule 72)
+	Type1 -> Type2 .                                    (rule 75)
 
-	')'            reduce using rule 72
-	','            reduce using rule 72
-	'->'           reduce using rule 72
-	'.'            reduce using rule 72
-	'.)'           reduce using rule 72
-	'/\\'          reduce using rule 72
-	'==='          reduce using rule 72
-	'==>'          reduce using rule 72
-	'\\/'          reduce using rule 72
-	%eof           reduce using rule 72
+	')'            reduce using rule 75
+	','            reduce using rule 75
+	'->'           reduce using rule 75
+	'.'            reduce using rule 75
+	'.)'           reduce using rule 75
+	'/\\'          reduce using rule 75
+	'==='          reduce using rule 75
+	'==>'          reduce using rule 75
+	'\\/'          reduce using rule 75
+	%eof           reduce using rule 75
 
 
 State 10
 
-	Type2 -> Type3 .                                    (rule 74)
+	Type2 -> Type3 .                                    (rule 77)
 
-	')'            reduce using rule 74
-	','            reduce using rule 74
-	'->'           reduce using rule 74
-	'.'            reduce using rule 74
-	'.)'           reduce using rule 74
-	'/\\'          reduce using rule 74
-	':)'           reduce using rule 74
-	'==='          reduce using rule 74
-	'==>'          reduce using rule 74
-	'\\/'          reduce using rule 74
-	'|'            reduce using rule 74
-	%eof           reduce using rule 74
+	')'            reduce using rule 77
+	','            reduce using rule 77
+	'->'           reduce using rule 77
+	'.'            reduce using rule 77
+	'.)'           reduce using rule 77
+	'/\\'          reduce using rule 77
+	':)'           reduce using rule 77
+	'==='          reduce using rule 77
+	'==>'          reduce using rule 77
+	'\\/'          reduce using rule 77
+	'|'            reduce using rule 77
+	%eof           reduce using rule 77
 
 
 State 11
 
-	Type3 -> '(' . Type ')'                             (rule 78)
+	Type3 -> '(' . Type ')'                             (rule 81)
 
 	'('            shift, and enter state 11
 	'tbot'         shift, and enter state 12
@@ -415,46 +422,46 @@ State 11
 
 State 12
 
-	Type3 -> 'tbot' .                                   (rule 77)
+	Type3 -> 'tbot' .                                   (rule 80)
 
-	'('            reduce using rule 77
-	')'            reduce using rule 77
-	','            reduce using rule 77
-	'->'           reduce using rule 77
-	'.'            reduce using rule 77
-	'.)'           reduce using rule 77
-	'/\\'          reduce using rule 77
-	':)'           reduce using rule 77
-	'==='          reduce using rule 77
-	'==>'          reduce using rule 77
-	'\\/'          reduce using rule 77
-	'tbot'         reduce using rule 77
-	'ttop'         reduce using rule 77
-	'|'            reduce using rule 77
-	L_DynVar       reduce using rule 77
-	%eof           reduce using rule 77
+	'('            reduce using rule 80
+	')'            reduce using rule 80
+	','            reduce using rule 80
+	'->'           reduce using rule 80
+	'.'            reduce using rule 80
+	'.)'           reduce using rule 80
+	'/\\'          reduce using rule 80
+	':)'           reduce using rule 80
+	'==='          reduce using rule 80
+	'==>'          reduce using rule 80
+	'\\/'          reduce using rule 80
+	'tbot'         reduce using rule 80
+	'ttop'         reduce using rule 80
+	'|'            reduce using rule 80
+	L_DynVar       reduce using rule 80
+	%eof           reduce using rule 80
 
 
 State 13
 
-	Type3 -> 'ttop' .                                   (rule 75)
+	Type3 -> 'ttop' .                                   (rule 78)
 
-	'('            reduce using rule 75
-	')'            reduce using rule 75
-	','            reduce using rule 75
-	'->'           reduce using rule 75
-	'.'            reduce using rule 75
-	'.)'           reduce using rule 75
-	'/\\'          reduce using rule 75
-	':)'           reduce using rule 75
-	'==='          reduce using rule 75
-	'==>'          reduce using rule 75
-	'\\/'          reduce using rule 75
-	'tbot'         reduce using rule 75
-	'ttop'         reduce using rule 75
-	'|'            reduce using rule 75
-	L_DynVar       reduce using rule 75
-	%eof           reduce using rule 75
+	'('            reduce using rule 78
+	')'            reduce using rule 78
+	','            reduce using rule 78
+	'->'           reduce using rule 78
+	'.'            reduce using rule 78
+	'.)'           reduce using rule 78
+	'/\\'          reduce using rule 78
+	':)'           reduce using rule 78
+	'==='          reduce using rule 78
+	'==>'          reduce using rule 78
+	'\\/'          reduce using rule 78
+	'tbot'         reduce using rule 78
+	'ttop'         reduce using rule 78
+	'|'            reduce using rule 78
+	L_DynVar       reduce using rule 78
+	%eof           reduce using rule 78
 
 
 State 14
@@ -496,179 +503,7 @@ State 14
 
 State 15
 
-	Exp3 -> Integer .                                   (rule 59)
-
-	'!='           reduce using rule 59
-	')'            reduce using rule 59
-	'*'            reduce using rule 59
-	'+'            reduce using rule 59
-	'++'           reduce using rule 59
-	','            reduce using rule 59
-	'-'            reduce using rule 59
-	'.'            reduce using rule 59
-	'.)'           reduce using rule 59
-	'/\\'          reduce using rule 59
-	':'            reduce using rule 59
-	'<'            reduce using rule 59
-	'<='           reduce using rule 59
-	'=='           reduce using rule 59
-	'==='          reduce using rule 59
-	'==>'          reduce using rule 59
-	'>'            reduce using rule 59
-	'>='           reduce using rule 59
-	'\\/'          reduce using rule 59
-	'div'          reduce using rule 59
-	'mod'          reduce using rule 59
-	%eof           reduce using rule 59
-
-
-State 16
-
-	Exp3 -> DynVar .                                    (rule 60)
-	Exp3 -> DynVar . '(' ListExp ')'                    (rule 64)
-
-	'!='           reduce using rule 60
-	'('            shift, and enter state 57
-	')'            reduce using rule 60
-	'*'            reduce using rule 60
-	'+'            reduce using rule 60
-	'++'           reduce using rule 60
-	','            reduce using rule 60
-	'-'            reduce using rule 60
-	'.'            reduce using rule 60
-	'.)'           reduce using rule 60
-	'/\\'          reduce using rule 60
-	':'            reduce using rule 60
-	'<'            reduce using rule 60
-	'<='           reduce using rule 60
-	'=='           reduce using rule 60
-	'==='          reduce using rule 60
-	'==>'          reduce using rule 60
-	'>'            reduce using rule 60
-	'>='           reduce using rule 60
-	'\\/'          reduce using rule 60
-	'div'          reduce using rule 60
-	'mod'          reduce using rule 60
-	%eof           reduce using rule 60
-
-
-State 17
-
-	%start_pExp -> Exp .                                (rule 2)
-
-	%eof           accept
-
-
-State 18
-
-	Exp -> Exp1 . '++' Exp                              (rule 48)
-	Exp -> Exp1 . ':' Exp                               (rule 49)
-	Exp -> Exp1 .                                       (rule 50)
-	Exp1 -> Exp1 . '+' Exp2                             (rule 51)
-	Exp1 -> Exp1 . '-' Exp2                             (rule 52)
-
-	'!='           reduce using rule 50
-	')'            reduce using rule 50
-	'+'            shift, and enter state 64
-	'++'           shift, and enter state 65
-	','            reduce using rule 50
-	'-'            shift, and enter state 66
-	'.'            reduce using rule 50
-	'.)'           reduce using rule 50
-	'/\\'          reduce using rule 50
-	':'            shift, and enter state 67
-	'<'            reduce using rule 50
-	'<='           reduce using rule 50
-	'=='           reduce using rule 50
-	'==='          reduce using rule 50
-	'==>'          reduce using rule 50
-	'>'            reduce using rule 50
-	'>='           reduce using rule 50
-	'\\/'          reduce using rule 50
-	%eof           reduce using rule 50
-
-
-State 19
-
-	Exp1 -> Exp2 .                                      (rule 53)
-	Exp2 -> Exp2 . '*' Exp3                             (rule 54)
-	Exp2 -> Exp2 . 'div' Exp3                           (rule 55)
-	Exp2 -> Exp2 . 'mod' Exp3                           (rule 56)
-
-	'!='           reduce using rule 53
-	')'            reduce using rule 53
-	'*'            shift, and enter state 61
-	'+'            reduce using rule 53
-	'++'           reduce using rule 53
-	','            reduce using rule 53
-	'-'            reduce using rule 53
-	'.'            reduce using rule 53
-	'.)'           reduce using rule 53
-	'/\\'          reduce using rule 53
-	':'            reduce using rule 53
-	'<'            reduce using rule 53
-	'<='           reduce using rule 53
-	'=='           reduce using rule 53
-	'==='          reduce using rule 53
-	'==>'          reduce using rule 53
-	'>'            reduce using rule 53
-	'>='           reduce using rule 53
-	'\\/'          reduce using rule 53
-	'div'          shift, and enter state 62
-	'mod'          shift, and enter state 63
-	%eof           reduce using rule 53
-
-
-State 20
-
-	Exp2 -> Exp3 .                                      (rule 58)
-
-	'!='           reduce using rule 58
-	')'            reduce using rule 58
-	'*'            reduce using rule 58
-	'+'            reduce using rule 58
-	'++'           reduce using rule 58
-	','            reduce using rule 58
-	'-'            reduce using rule 58
-	'.'            reduce using rule 58
-	'.)'           reduce using rule 58
-	'/\\'          reduce using rule 58
-	':'            reduce using rule 58
-	'<'            reduce using rule 58
-	'<='           reduce using rule 58
-	'=='           reduce using rule 58
-	'==='          reduce using rule 58
-	'==>'          reduce using rule 58
-	'>'            reduce using rule 58
-	'>='           reduce using rule 58
-	'\\/'          reduce using rule 58
-	'div'          reduce using rule 58
-	'mod'          reduce using rule 58
-	%eof           reduce using rule 58
-
-
-State 21
-
-	Exp3 -> '(' . Exp ')'                               (rule 65)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'neg'          shift, and enter state 23
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp            goto state 60
-	Exp1           goto state 18
-	Exp2           goto state 19
-	Exp3           goto state 20
-
-State 22
-
-	Exp3 -> 'false' .                                   (rule 62)
+	Exp3 -> Integer .                                   (rule 62)
 
 	'!='           reduce using rule 62
 	')'            reduce using rule 62
@@ -694,26 +529,13 @@ State 22
 	%eof           reduce using rule 62
 
 
-State 23
+State 16
 
-	Exp2 -> 'neg' . Exp3                                (rule 57)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp3           goto state 59
-
-State 24
-
-	Exp3 -> 'nil' .                                     (rule 63)
+	Exp3 -> DynVar .                                    (rule 63)
+	Exp3 -> DynVar . '(' ListExp ')'                    (rule 67)
 
 	'!='           reduce using rule 63
+	'('            shift, and enter state 57
 	')'            reduce using rule 63
 	'*'            reduce using rule 63
 	'+'            reduce using rule 63
@@ -737,9 +559,76 @@ State 24
 	%eof           reduce using rule 63
 
 
-State 25
+State 17
 
-	Exp3 -> 'true' .                                    (rule 61)
+	%start_pExp -> Exp .                                (rule 2)
+
+	%eof           accept
+
+
+State 18
+
+	Exp -> Exp1 . '++' Exp                              (rule 51)
+	Exp -> Exp1 . ':' Exp                               (rule 52)
+	Exp -> Exp1 .                                       (rule 53)
+	Exp1 -> Exp1 . '+' Exp2                             (rule 54)
+	Exp1 -> Exp1 . '-' Exp2                             (rule 55)
+
+	'!='           reduce using rule 53
+	')'            reduce using rule 53
+	'+'            shift, and enter state 64
+	'++'           shift, and enter state 65
+	','            reduce using rule 53
+	'-'            shift, and enter state 66
+	'.'            reduce using rule 53
+	'.)'           reduce using rule 53
+	'/\\'          reduce using rule 53
+	':'            shift, and enter state 67
+	'<'            reduce using rule 53
+	'<='           reduce using rule 53
+	'=='           reduce using rule 53
+	'==='          reduce using rule 53
+	'==>'          reduce using rule 53
+	'>'            reduce using rule 53
+	'>='           reduce using rule 53
+	'\\/'          reduce using rule 53
+	%eof           reduce using rule 53
+
+
+State 19
+
+	Exp1 -> Exp2 .                                      (rule 56)
+	Exp2 -> Exp2 . '*' Exp3                             (rule 57)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 58)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 59)
+
+	'!='           reduce using rule 56
+	')'            reduce using rule 56
+	'*'            shift, and enter state 61
+	'+'            reduce using rule 56
+	'++'           reduce using rule 56
+	','            reduce using rule 56
+	'-'            reduce using rule 56
+	'.'            reduce using rule 56
+	'.)'           reduce using rule 56
+	'/\\'          reduce using rule 56
+	':'            reduce using rule 56
+	'<'            reduce using rule 56
+	'<='           reduce using rule 56
+	'=='           reduce using rule 56
+	'==='          reduce using rule 56
+	'==>'          reduce using rule 56
+	'>'            reduce using rule 56
+	'>='           reduce using rule 56
+	'\\/'          reduce using rule 56
+	'div'          shift, and enter state 62
+	'mod'          shift, and enter state 63
+	%eof           reduce using rule 56
+
+
+State 20
+
+	Exp2 -> Exp3 .                                      (rule 61)
 
 	'!='           reduce using rule 61
 	')'            reduce using rule 61
@@ -765,45 +654,163 @@ State 25
 	%eof           reduce using rule 61
 
 
+State 21
+
+	Exp3 -> '(' . Exp ')'                               (rule 68)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'neg'          shift, and enter state 23
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp            goto state 60
+	Exp1           goto state 18
+	Exp2           goto state 19
+	Exp3           goto state 20
+
+State 22
+
+	Exp3 -> 'false' .                                   (rule 65)
+
+	'!='           reduce using rule 65
+	')'            reduce using rule 65
+	'*'            reduce using rule 65
+	'+'            reduce using rule 65
+	'++'           reduce using rule 65
+	','            reduce using rule 65
+	'-'            reduce using rule 65
+	'.'            reduce using rule 65
+	'.)'           reduce using rule 65
+	'/\\'          reduce using rule 65
+	':'            reduce using rule 65
+	'<'            reduce using rule 65
+	'<='           reduce using rule 65
+	'=='           reduce using rule 65
+	'==='          reduce using rule 65
+	'==>'          reduce using rule 65
+	'>'            reduce using rule 65
+	'>='           reduce using rule 65
+	'\\/'          reduce using rule 65
+	'div'          reduce using rule 65
+	'mod'          reduce using rule 65
+	%eof           reduce using rule 65
+
+
+State 23
+
+	Exp2 -> 'neg' . Exp3                                (rule 60)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp3           goto state 59
+
+State 24
+
+	Exp3 -> 'nil' .                                     (rule 66)
+
+	'!='           reduce using rule 66
+	')'            reduce using rule 66
+	'*'            reduce using rule 66
+	'+'            reduce using rule 66
+	'++'           reduce using rule 66
+	','            reduce using rule 66
+	'-'            reduce using rule 66
+	'.'            reduce using rule 66
+	'.)'           reduce using rule 66
+	'/\\'          reduce using rule 66
+	':'            reduce using rule 66
+	'<'            reduce using rule 66
+	'<='           reduce using rule 66
+	'=='           reduce using rule 66
+	'==='          reduce using rule 66
+	'==>'          reduce using rule 66
+	'>'            reduce using rule 66
+	'>='           reduce using rule 66
+	'\\/'          reduce using rule 66
+	'div'          reduce using rule 66
+	'mod'          reduce using rule 66
+	%eof           reduce using rule 66
+
+
+State 25
+
+	Exp3 -> 'true' .                                    (rule 64)
+
+	'!='           reduce using rule 64
+	')'            reduce using rule 64
+	'*'            reduce using rule 64
+	'+'            reduce using rule 64
+	'++'           reduce using rule 64
+	','            reduce using rule 64
+	'-'            reduce using rule 64
+	'.'            reduce using rule 64
+	'.)'           reduce using rule 64
+	'/\\'          reduce using rule 64
+	':'            reduce using rule 64
+	'<'            reduce using rule 64
+	'<='           reduce using rule 64
+	'=='           reduce using rule 64
+	'==='          reduce using rule 64
+	'==>'          reduce using rule 64
+	'>'            reduce using rule 64
+	'>='           reduce using rule 64
+	'\\/'          reduce using rule 64
+	'div'          reduce using rule 64
+	'mod'          reduce using rule 64
+	%eof           reduce using rule 64
+
+
 State 26
 
-	Pred6 -> DynVar .                                   (rule 40)
-	Pred6 -> DynVar . '(.' ListPred '.)'                (rule 43)
-	Exp3 -> DynVar .                                    (rule 60)
-	Exp3 -> DynVar . '(' ListExp ')'                    (rule 64)
+	Pred6 -> DynVar .                                   (rule 43)
+	Pred6 -> DynVar . '(.' ListPred '.)'                (rule 46)
+	Exp3 -> DynVar .                                    (rule 63)
+	Exp3 -> DynVar . '(' ListExp ')'                    (rule 67)
 
-	'!='           reduce using rule 60
+	'!='           reduce using rule 63
 	'('            shift, and enter state 57
 	'(.'           shift, and enter state 58
-	')'            reduce using rule 60
-			(reduce using rule 40)
+	')'            reduce using rule 63
+			(reduce using rule 43)
 
-	'*'            reduce using rule 60
-	'+'            reduce using rule 60
-	'++'           reduce using rule 60
-	','            reduce using rule 40
-	'-'            reduce using rule 60
-	'.'            reduce using rule 40
-	'.)'           reduce using rule 40
-	'/\\'          reduce using rule 40
-	':'            reduce using rule 60
-	'<'            reduce using rule 60
-	'<='           reduce using rule 60
-	'=='           reduce using rule 60
-	'==='          reduce using rule 40
-	'==>'          reduce using rule 40
-	'>'            reduce using rule 60
-	'>='           reduce using rule 60
-	'\\/'          reduce using rule 40
-	'div'          reduce using rule 60
-	'mod'          reduce using rule 60
-	%eof           reduce using rule 40
+	'*'            reduce using rule 63
+	'+'            reduce using rule 63
+	'++'           reduce using rule 63
+	','            reduce using rule 43
+	'-'            reduce using rule 63
+	'.'            reduce using rule 43
+	'.)'           reduce using rule 43
+	'/\\'          reduce using rule 43
+	':'            reduce using rule 63
+	'<'            reduce using rule 63
+	'<='           reduce using rule 63
+	'=='           reduce using rule 63
+	'==='          reduce using rule 43
+	'==>'          reduce using rule 43
+	'>'            reduce using rule 63
+	'>='           reduce using rule 63
+	'\\/'          reduce using rule 43
+	'div'          reduce using rule 63
+	'mod'          reduce using rule 63
+	%eof           reduce using rule 43
 
 
 State 27
 
 	%start_pPred -> Pred .                              (rule 1)
-	Pred -> Pred . '===' Pred1                          (rule 23)
+	Pred -> Pred . '===' Pred1                          (rule 26)
 
 	'==='          shift, and enter state 56
 	%eof           accept
@@ -811,101 +818,101 @@ State 27
 
 State 28
 
-	Pred -> Pred1 .                                     (rule 24)
+	Pred -> Pred1 .                                     (rule 27)
 
-	')'            reduce using rule 24
-	','            reduce using rule 24
-	'.'            reduce using rule 24
-	'.)'           reduce using rule 24
-	'==='          reduce using rule 24
-	%eof           reduce using rule 24
+	')'            reduce using rule 27
+	','            reduce using rule 27
+	'.'            reduce using rule 27
+	'.)'           reduce using rule 27
+	'==='          reduce using rule 27
+	%eof           reduce using rule 27
 
 
 State 29
 
-	Pred1 -> Pred2 . '==>' Pred1                        (rule 25)
-	Pred1 -> Pred2 .                                    (rule 26)
-	Pred2 -> Pred2 . '\\/' Pred3                        (rule 27)
+	Pred1 -> Pred2 . '==>' Pred1                        (rule 28)
+	Pred1 -> Pred2 .                                    (rule 29)
+	Pred2 -> Pred2 . '\\/' Pred3                        (rule 30)
 
-	')'            reduce using rule 26
-	','            reduce using rule 26
-	'.'            reduce using rule 26
-	'.)'           reduce using rule 26
-	'==='          reduce using rule 26
+	')'            reduce using rule 29
+	','            reduce using rule 29
+	'.'            reduce using rule 29
+	'.)'           reduce using rule 29
+	'==='          reduce using rule 29
 	'==>'          shift, and enter state 54
 	'\\/'          shift, and enter state 55
-	%eof           reduce using rule 26
+	%eof           reduce using rule 29
 
 
 State 30
 
-	Pred2 -> Pred3 .                                    (rule 28)
-	Pred3 -> Pred3 . '/\\' Pred4                        (rule 29)
+	Pred2 -> Pred3 .                                    (rule 31)
+	Pred3 -> Pred3 . '/\\' Pred4                        (rule 32)
 
-	')'            reduce using rule 28
-	','            reduce using rule 28
-	'.'            reduce using rule 28
-	'.)'           reduce using rule 28
+	')'            reduce using rule 31
+	','            reduce using rule 31
+	'.'            reduce using rule 31
+	'.)'           reduce using rule 31
 	'/\\'          shift, and enter state 53
-	'==='          reduce using rule 28
-	'==>'          reduce using rule 28
-	'\\/'          reduce using rule 28
-	%eof           reduce using rule 28
+	'==='          reduce using rule 31
+	'==>'          reduce using rule 31
+	'\\/'          reduce using rule 31
+	%eof           reduce using rule 31
 
 
 State 31
 
-	Pred3 -> Pred4 .                                    (rule 30)
+	Pred3 -> Pred4 .                                    (rule 33)
 
-	')'            reduce using rule 30
-	','            reduce using rule 30
-	'.'            reduce using rule 30
-	'.)'           reduce using rule 30
-	'/\\'          reduce using rule 30
-	'==='          reduce using rule 30
-	'==>'          reduce using rule 30
-	'\\/'          reduce using rule 30
-	%eof           reduce using rule 30
+	')'            reduce using rule 33
+	','            reduce using rule 33
+	'.'            reduce using rule 33
+	'.)'           reduce using rule 33
+	'/\\'          reduce using rule 33
+	'==='          reduce using rule 33
+	'==>'          reduce using rule 33
+	'\\/'          reduce using rule 33
+	%eof           reduce using rule 33
 
 
 State 32
 
-	Pred4 -> Pred5 .                                    (rule 32)
+	Pred4 -> Pred5 .                                    (rule 35)
 
-	')'            reduce using rule 32
-	','            reduce using rule 32
-	'.'            reduce using rule 32
-	'.)'           reduce using rule 32
-	'/\\'          reduce using rule 32
-	'==='          reduce using rule 32
-	'==>'          reduce using rule 32
-	'\\/'          reduce using rule 32
-	%eof           reduce using rule 32
+	')'            reduce using rule 35
+	','            reduce using rule 35
+	'.'            reduce using rule 35
+	'.)'           reduce using rule 35
+	'/\\'          reduce using rule 35
+	'==='          reduce using rule 35
+	'==>'          reduce using rule 35
+	'\\/'          reduce using rule 35
+	%eof           reduce using rule 35
 
 
 State 33
 
-	Pred5 -> Pred6 .                                    (rule 39)
+	Pred5 -> Pred6 .                                    (rule 42)
 
-	')'            reduce using rule 39
-	','            reduce using rule 39
-	'.'            reduce using rule 39
-	'.)'           reduce using rule 39
-	'/\\'          reduce using rule 39
-	'==='          reduce using rule 39
-	'==>'          reduce using rule 39
-	'\\/'          reduce using rule 39
-	%eof           reduce using rule 39
+	')'            reduce using rule 42
+	','            reduce using rule 42
+	'.'            reduce using rule 42
+	'.)'           reduce using rule 42
+	'/\\'          reduce using rule 42
+	'==='          reduce using rule 42
+	'==>'          reduce using rule 42
+	'\\/'          reduce using rule 42
+	%eof           reduce using rule 42
 
 
 State 34
 
-	Pred5 -> Exp . '==' Exp                             (rule 33)
-	Pred5 -> Exp . '!=' Exp                             (rule 34)
-	Pred5 -> Exp . '<' Exp                              (rule 35)
-	Pred5 -> Exp . '<=' Exp                             (rule 36)
-	Pred5 -> Exp . '>' Exp                              (rule 37)
-	Pred5 -> Exp . '>=' Exp                             (rule 38)
+	Pred5 -> Exp . '==' Exp                             (rule 36)
+	Pred5 -> Exp . '!=' Exp                             (rule 37)
+	Pred5 -> Exp . '<' Exp                              (rule 38)
+	Pred5 -> Exp . '<=' Exp                             (rule 39)
+	Pred5 -> Exp . '>' Exp                              (rule 40)
+	Pred5 -> Exp . '>=' Exp                             (rule 41)
 
 	'!='           shift, and enter state 47
 	'<'            shift, and enter state 48
@@ -917,8 +924,8 @@ State 34
 
 State 35
 
-	Pred6 -> '(' . Pred ')'                             (rule 44)
-	Exp3 -> '(' . Exp ')'                               (rule 65)
+	Pred6 -> '(' . Pred ')'                             (rule 47)
+	Exp3 -> '(' . Exp ')'                               (rule 68)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -947,7 +954,7 @@ State 35
 
 State 36
 
-	Pred6 -> 'E' . Exp                                  (rule 41)
+	Pred6 -> 'E' . Exp                                  (rule 44)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -966,7 +973,7 @@ State 36
 
 State 37
 
-	Pred6 -> 'T' . Type                                 (rule 42)
+	Pred6 -> 'T' . Type                                 (rule 45)
 
 	'('            shift, and enter state 11
 	'tbot'         shift, and enter state 12
@@ -981,7 +988,7 @@ State 37
 
 State 38
 
-	Pred4 -> '~' . Pred5                                (rule 31)
+	Pred4 -> '~' . Pred5                                (rule 34)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -1026,53 +1033,53 @@ State 41
 
 State 42
 
-	Pred4 -> '~' Pred5 .                                (rule 31)
+	Pred4 -> '~' Pred5 .                                (rule 34)
 
-	')'            reduce using rule 31
-	','            reduce using rule 31
-	'.'            reduce using rule 31
-	'.)'           reduce using rule 31
-	'/\\'          reduce using rule 31
-	'==='          reduce using rule 31
-	'==>'          reduce using rule 31
-	'\\/'          reduce using rule 31
-	%eof           reduce using rule 31
+	')'            reduce using rule 34
+	','            reduce using rule 34
+	'.'            reduce using rule 34
+	'.)'           reduce using rule 34
+	'/\\'          reduce using rule 34
+	'==='          reduce using rule 34
+	'==>'          reduce using rule 34
+	'\\/'          reduce using rule 34
+	%eof           reduce using rule 34
 
 
 State 43
 
-	Pred6 -> 'T' Type .                                 (rule 42)
+	Pred6 -> 'T' Type .                                 (rule 45)
 
-	')'            reduce using rule 42
-	','            reduce using rule 42
-	'.'            reduce using rule 42
-	'.)'           reduce using rule 42
-	'/\\'          reduce using rule 42
-	'==='          reduce using rule 42
-	'==>'          reduce using rule 42
-	'\\/'          reduce using rule 42
-	%eof           reduce using rule 42
+	')'            reduce using rule 45
+	','            reduce using rule 45
+	'.'            reduce using rule 45
+	'.)'           reduce using rule 45
+	'/\\'          reduce using rule 45
+	'==='          reduce using rule 45
+	'==>'          reduce using rule 45
+	'\\/'          reduce using rule 45
+	%eof           reduce using rule 45
 
 
 State 44
 
-	Pred6 -> 'E' Exp .                                  (rule 41)
+	Pred6 -> 'E' Exp .                                  (rule 44)
 
-	')'            reduce using rule 41
-	','            reduce using rule 41
-	'.'            reduce using rule 41
-	'.)'           reduce using rule 41
-	'/\\'          reduce using rule 41
-	'==='          reduce using rule 41
-	'==>'          reduce using rule 41
-	'\\/'          reduce using rule 41
-	%eof           reduce using rule 41
+	')'            reduce using rule 44
+	','            reduce using rule 44
+	'.'            reduce using rule 44
+	'.)'           reduce using rule 44
+	'/\\'          reduce using rule 44
+	'==='          reduce using rule 44
+	'==>'          reduce using rule 44
+	'\\/'          reduce using rule 44
+	%eof           reduce using rule 44
 
 
 State 45
 
-	Pred -> Pred . '===' Pred1                          (rule 23)
-	Pred6 -> '(' Pred . ')'                             (rule 44)
+	Pred -> Pred . '===' Pred1                          (rule 26)
+	Pred6 -> '(' Pred . ')'                             (rule 47)
 
 	')'            shift, and enter state 102
 	'==='          shift, and enter state 56
@@ -1080,13 +1087,13 @@ State 45
 
 State 46
 
-	Pred5 -> Exp . '==' Exp                             (rule 33)
-	Pred5 -> Exp . '!=' Exp                             (rule 34)
-	Pred5 -> Exp . '<' Exp                              (rule 35)
-	Pred5 -> Exp . '<=' Exp                             (rule 36)
-	Pred5 -> Exp . '>' Exp                              (rule 37)
-	Pred5 -> Exp . '>=' Exp                             (rule 38)
-	Exp3 -> '(' Exp . ')'                               (rule 65)
+	Pred5 -> Exp . '==' Exp                             (rule 36)
+	Pred5 -> Exp . '!=' Exp                             (rule 37)
+	Pred5 -> Exp . '<' Exp                              (rule 38)
+	Pred5 -> Exp . '<=' Exp                             (rule 39)
+	Pred5 -> Exp . '>' Exp                              (rule 40)
+	Pred5 -> Exp . '>=' Exp                             (rule 41)
+	Exp3 -> '(' Exp . ')'                               (rule 68)
 
 	'!='           shift, and enter state 47
 	')'            shift, and enter state 87
@@ -1099,7 +1106,7 @@ State 46
 
 State 47
 
-	Pred5 -> Exp '!=' . Exp                             (rule 34)
+	Pred5 -> Exp '!=' . Exp                             (rule 37)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1118,7 +1125,7 @@ State 47
 
 State 48
 
-	Pred5 -> Exp '<' . Exp                              (rule 35)
+	Pred5 -> Exp '<' . Exp                              (rule 38)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1137,7 +1144,7 @@ State 48
 
 State 49
 
-	Pred5 -> Exp '<=' . Exp                             (rule 36)
+	Pred5 -> Exp '<=' . Exp                             (rule 39)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1156,7 +1163,7 @@ State 49
 
 State 50
 
-	Pred5 -> Exp '==' . Exp                             (rule 33)
+	Pred5 -> Exp '==' . Exp                             (rule 36)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1175,7 +1182,7 @@ State 50
 
 State 51
 
-	Pred5 -> Exp '>' . Exp                              (rule 37)
+	Pred5 -> Exp '>' . Exp                              (rule 40)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1194,7 +1201,7 @@ State 51
 
 State 52
 
-	Pred5 -> Exp '>=' . Exp                             (rule 38)
+	Pred5 -> Exp '>=' . Exp                             (rule 41)
 
 	'('            shift, and enter state 21
 	'false'        shift, and enter state 22
@@ -1213,7 +1220,7 @@ State 52
 
 State 53
 
-	Pred3 -> Pred3 '/\\' . Pred4                        (rule 29)
+	Pred3 -> Pred3 '/\\' . Pred4                        (rule 32)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -1238,7 +1245,7 @@ State 53
 
 State 54
 
-	Pred1 -> Pred2 '==>' . Pred1                        (rule 25)
+	Pred1 -> Pred2 '==>' . Pred1                        (rule 28)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -1266,7 +1273,7 @@ State 54
 
 State 55
 
-	Pred2 -> Pred2 '\\/' . Pred3                        (rule 27)
+	Pred2 -> Pred2 '\\/' . Pred3                        (rule 30)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -1292,7 +1299,7 @@ State 55
 
 State 56
 
-	Pred -> Pred '===' . Pred1                          (rule 23)
+	Pred -> Pred '===' . Pred1                          (rule 26)
 
 	'('            shift, and enter state 35
 	'E'            shift, and enter state 36
@@ -1320,10 +1327,10 @@ State 56
 
 State 57
 
-	Exp3 -> DynVar '(' . ListExp ')'                    (rule 64)
+	Exp3 -> DynVar '(' . ListExp ')'                    (rule 67)
 
 	'('            shift, and enter state 21
-	')'            reduce using rule 66
+	')'            reduce using rule 69
 	'false'        shift, and enter state 22
 	'neg'          shift, and enter state 23
 	'nil'          shift, and enter state 24
@@ -1341,10 +1348,10 @@ State 57
 
 State 58
 
-	Pred6 -> DynVar '(.' . ListPred '.)'                (rule 43)
+	Pred6 -> DynVar '(.' . ListPred '.)'                (rule 46)
 
 	'('            shift, and enter state 35
-	'.)'           reduce using rule 45
+	'.)'           reduce using rule 48
 	'E'            shift, and enter state 36
 	'T'            shift, and enter state 37
 	'false'        shift, and enter state 22
@@ -1372,7 +1379,512 @@ State 58
 
 State 59
 
-	Exp2 -> 'neg' Exp3 .                                (rule 57)
+	Exp2 -> 'neg' Exp3 .                                (rule 60)
+
+	'!='           reduce using rule 60
+	')'            reduce using rule 60
+	'*'            reduce using rule 60
+	'+'            reduce using rule 60
+	'++'           reduce using rule 60
+	','            reduce using rule 60
+	'-'            reduce using rule 60
+	'.'            reduce using rule 60
+	'.)'           reduce using rule 60
+	'/\\'          reduce using rule 60
+	':'            reduce using rule 60
+	'<'            reduce using rule 60
+	'<='           reduce using rule 60
+	'=='           reduce using rule 60
+	'==='          reduce using rule 60
+	'==>'          reduce using rule 60
+	'>'            reduce using rule 60
+	'>='           reduce using rule 60
+	'\\/'          reduce using rule 60
+	'div'          reduce using rule 60
+	'mod'          reduce using rule 60
+	%eof           reduce using rule 60
+
+
+State 60
+
+	Exp3 -> '(' Exp . ')'                               (rule 68)
+
+	')'            shift, and enter state 87
+
+
+State 61
+
+	Exp2 -> Exp2 '*' . Exp3                             (rule 57)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp3           goto state 86
+
+State 62
+
+	Exp2 -> Exp2 'div' . Exp3                           (rule 58)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp3           goto state 85
+
+State 63
+
+	Exp2 -> Exp2 'mod' . Exp3                           (rule 59)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp3           goto state 84
+
+State 64
+
+	Exp1 -> Exp1 '+' . Exp2                             (rule 54)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'neg'          shift, and enter state 23
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp2           goto state 83
+	Exp3           goto state 20
+
+State 65
+
+	Exp -> Exp1 '++' . Exp                              (rule 51)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'neg'          shift, and enter state 23
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp            goto state 82
+	Exp1           goto state 18
+	Exp2           goto state 19
+	Exp3           goto state 20
+
+State 66
+
+	Exp1 -> Exp1 '-' . Exp2                             (rule 55)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'neg'          shift, and enter state 23
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp2           goto state 81
+	Exp3           goto state 20
+
+State 67
+
+	Exp -> Exp1 ':' . Exp                               (rule 52)
+
+	'('            shift, and enter state 21
+	'false'        shift, and enter state 22
+	'neg'          shift, and enter state 23
+	'nil'          shift, and enter state 24
+	'true'         shift, and enter state 25
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 14
+
+	Integer        goto state 15
+	DynVar         goto state 16
+	Exp            goto state 80
+	Exp1           goto state 18
+	Exp2           goto state 19
+	Exp3           goto state 20
+
+State 68
+
+	Type3 -> '(' Type . ')'                             (rule 81)
+
+	')'            shift, and enter state 79
+
+
+State 69
+
+	Type -> Type1 '->' . Type                           (rule 72)
+
+	'('            shift, and enter state 11
+	'tbot'         shift, and enter state 12
+	'ttop'         shift, and enter state 13
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 6
+	Type           goto state 78
+	Type1          goto state 8
+	Type2          goto state 9
+	Type3          goto state 10
+
+State 70
+
+	Type3 -> DynVar .                                   (rule 79)
+
+	'('            reduce using rule 79
+	')'            reduce using rule 79
+	','            reduce using rule 79
+	'->'           reduce using rule 79
+	'.'            reduce using rule 79
+	'.)'           reduce using rule 79
+	'/\\'          reduce using rule 79
+	':)'           reduce using rule 79
+	'==='          reduce using rule 79
+	'==>'          reduce using rule 79
+	'\\/'          reduce using rule 79
+	'tbot'         reduce using rule 79
+	'ttop'         reduce using rule 79
+	'|'            reduce using rule 79
+	L_DynVar       reduce using rule 79
+	%eof           reduce using rule 79
+
+
+State 71
+
+	ListType3 -> Type3 . ListType3                      (rule 86)
+
+	'('            shift, and enter state 11
+	')'            reduce using rule 85
+	','            reduce using rule 85
+	'->'           reduce using rule 85
+	'.'            reduce using rule 85
+	'.)'           reduce using rule 85
+	'/\\'          reduce using rule 85
+	':)'           reduce using rule 85
+	'==='          reduce using rule 85
+	'==>'          reduce using rule 85
+	'\\/'          reduce using rule 85
+	'tbot'         shift, and enter state 12
+	'ttop'         shift, and enter state 13
+	'|'            reduce using rule 85
+	L_DynVar       shift, and enter state 14
+	%eof           reduce using rule 85
+
+	DynVar         goto state 70
+	Type3          goto state 71
+	ListType3      goto state 77
+
+State 72
+
+	Type2 -> DynVar ListType3 .                         (rule 76)
+
+	')'            reduce using rule 76
+	','            reduce using rule 76
+	'->'           reduce using rule 76
+	'.'            reduce using rule 76
+	'.)'           reduce using rule 76
+	'/\\'          reduce using rule 76
+	':)'           reduce using rule 76
+	'==='          reduce using rule 76
+	'==>'          reduce using rule 76
+	'\\/'          reduce using rule 76
+	'|'            reduce using rule 76
+	%eof           reduce using rule 76
+
+
+State 73
+
+	Type1 -> DynVar '(:' . ListType2 ':)'               (rule 74)
+
+	'('            shift, and enter state 11
+	':)'           reduce using rule 82
+	'tbot'         shift, and enter state 12
+	'ttop'         shift, and enter state 13
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 74
+	Type2          goto state 75
+	Type3          goto state 10
+	ListType2      goto state 76
+
+State 74
+
+	Type2 -> DynVar . ListType3                         (rule 76)
+	Type3 -> DynVar .                                   (rule 79)
+
+	'('            shift, and enter state 11
+	':)'           reduce using rule 85
+			(reduce using rule 79)
+
+	'tbot'         shift, and enter state 12
+	'ttop'         shift, and enter state 13
+	'|'            reduce using rule 85
+			(reduce using rule 79)
+
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 70
+	Type3          goto state 71
+	ListType3      goto state 72
+
+State 75
+
+	ListType2 -> Type2 .                                (rule 83)
+	ListType2 -> Type2 . '|' ListType2                  (rule 84)
+
+	':)'           reduce using rule 83
+	'|'            shift, and enter state 111
+
+
+State 76
+
+	Type1 -> DynVar '(:' ListType2 . ':)'               (rule 74)
+
+	':)'           shift, and enter state 110
+
+
+State 77
+
+	ListType3 -> Type3 ListType3 .                      (rule 86)
+
+	')'            reduce using rule 86
+	','            reduce using rule 86
+	'->'           reduce using rule 86
+	'.'            reduce using rule 86
+	'.)'           reduce using rule 86
+	'/\\'          reduce using rule 86
+	':)'           reduce using rule 86
+	'==='          reduce using rule 86
+	'==>'          reduce using rule 86
+	'\\/'          reduce using rule 86
+	'|'            reduce using rule 86
+	%eof           reduce using rule 86
+
+
+State 78
+
+	Type -> Type1 '->' Type .                           (rule 72)
+
+	')'            reduce using rule 72
+	','            reduce using rule 72
+	'.'            reduce using rule 72
+	'.)'           reduce using rule 72
+	'/\\'          reduce using rule 72
+	'==='          reduce using rule 72
+	'==>'          reduce using rule 72
+	'\\/'          reduce using rule 72
+	%eof           reduce using rule 72
+
+
+State 79
+
+	Type3 -> '(' Type ')' .                             (rule 81)
+
+	'('            reduce using rule 81
+	')'            reduce using rule 81
+	','            reduce using rule 81
+	'->'           reduce using rule 81
+	'.'            reduce using rule 81
+	'.)'           reduce using rule 81
+	'/\\'          reduce using rule 81
+	':)'           reduce using rule 81
+	'==='          reduce using rule 81
+	'==>'          reduce using rule 81
+	'\\/'          reduce using rule 81
+	'tbot'         reduce using rule 81
+	'ttop'         reduce using rule 81
+	'|'            reduce using rule 81
+	L_DynVar       reduce using rule 81
+	%eof           reduce using rule 81
+
+
+State 80
+
+	Exp -> Exp1 ':' Exp .                               (rule 52)
+
+	'!='           reduce using rule 52
+	')'            reduce using rule 52
+	','            reduce using rule 52
+	'.'            reduce using rule 52
+	'.)'           reduce using rule 52
+	'/\\'          reduce using rule 52
+	'<'            reduce using rule 52
+	'<='           reduce using rule 52
+	'=='           reduce using rule 52
+	'==='          reduce using rule 52
+	'==>'          reduce using rule 52
+	'>'            reduce using rule 52
+	'>='           reduce using rule 52
+	'\\/'          reduce using rule 52
+	%eof           reduce using rule 52
+
+
+State 81
+
+	Exp1 -> Exp1 '-' Exp2 .                             (rule 55)
+	Exp2 -> Exp2 . '*' Exp3                             (rule 57)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 58)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 59)
+
+	'!='           reduce using rule 55
+	')'            reduce using rule 55
+	'*'            shift, and enter state 61
+	'+'            reduce using rule 55
+	'++'           reduce using rule 55
+	','            reduce using rule 55
+	'-'            reduce using rule 55
+	'.'            reduce using rule 55
+	'.)'           reduce using rule 55
+	'/\\'          reduce using rule 55
+	':'            reduce using rule 55
+	'<'            reduce using rule 55
+	'<='           reduce using rule 55
+	'=='           reduce using rule 55
+	'==='          reduce using rule 55
+	'==>'          reduce using rule 55
+	'>'            reduce using rule 55
+	'>='           reduce using rule 55
+	'\\/'          reduce using rule 55
+	'div'          shift, and enter state 62
+	'mod'          shift, and enter state 63
+	%eof           reduce using rule 55
+
+
+State 82
+
+	Exp -> Exp1 '++' Exp .                              (rule 51)
+
+	'!='           reduce using rule 51
+	')'            reduce using rule 51
+	','            reduce using rule 51
+	'.'            reduce using rule 51
+	'.)'           reduce using rule 51
+	'/\\'          reduce using rule 51
+	'<'            reduce using rule 51
+	'<='           reduce using rule 51
+	'=='           reduce using rule 51
+	'==='          reduce using rule 51
+	'==>'          reduce using rule 51
+	'>'            reduce using rule 51
+	'>='           reduce using rule 51
+	'\\/'          reduce using rule 51
+	%eof           reduce using rule 51
+
+
+State 83
+
+	Exp1 -> Exp1 '+' Exp2 .                             (rule 54)
+	Exp2 -> Exp2 . '*' Exp3                             (rule 57)
+	Exp2 -> Exp2 . 'div' Exp3                           (rule 58)
+	Exp2 -> Exp2 . 'mod' Exp3                           (rule 59)
+
+	'!='           reduce using rule 54
+	')'            reduce using rule 54
+	'*'            shift, and enter state 61
+	'+'            reduce using rule 54
+	'++'           reduce using rule 54
+	','            reduce using rule 54
+	'-'            reduce using rule 54
+	'.'            reduce using rule 54
+	'.)'           reduce using rule 54
+	'/\\'          reduce using rule 54
+	':'            reduce using rule 54
+	'<'            reduce using rule 54
+	'<='           reduce using rule 54
+	'=='           reduce using rule 54
+	'==='          reduce using rule 54
+	'==>'          reduce using rule 54
+	'>'            reduce using rule 54
+	'>='           reduce using rule 54
+	'\\/'          reduce using rule 54
+	'div'          shift, and enter state 62
+	'mod'          shift, and enter state 63
+	%eof           reduce using rule 54
+
+
+State 84
+
+	Exp2 -> Exp2 'mod' Exp3 .                           (rule 59)
+
+	'!='           reduce using rule 59
+	')'            reduce using rule 59
+	'*'            reduce using rule 59
+	'+'            reduce using rule 59
+	'++'           reduce using rule 59
+	','            reduce using rule 59
+	'-'            reduce using rule 59
+	'.'            reduce using rule 59
+	'.)'           reduce using rule 59
+	'/\\'          reduce using rule 59
+	':'            reduce using rule 59
+	'<'            reduce using rule 59
+	'<='           reduce using rule 59
+	'=='           reduce using rule 59
+	'==='          reduce using rule 59
+	'==>'          reduce using rule 59
+	'>'            reduce using rule 59
+	'>='           reduce using rule 59
+	'\\/'          reduce using rule 59
+	'div'          reduce using rule 59
+	'mod'          reduce using rule 59
+	%eof           reduce using rule 59
+
+
+State 85
+
+	Exp2 -> Exp2 'div' Exp3 .                           (rule 58)
+
+	'!='           reduce using rule 58
+	')'            reduce using rule 58
+	'*'            reduce using rule 58
+	'+'            reduce using rule 58
+	'++'           reduce using rule 58
+	','            reduce using rule 58
+	'-'            reduce using rule 58
+	'.'            reduce using rule 58
+	'.)'           reduce using rule 58
+	'/\\'          reduce using rule 58
+	':'            reduce using rule 58
+	'<'            reduce using rule 58
+	'<='           reduce using rule 58
+	'=='           reduce using rule 58
+	'==='          reduce using rule 58
+	'==>'          reduce using rule 58
+	'>'            reduce using rule 58
+	'>='           reduce using rule 58
+	'\\/'          reduce using rule 58
+	'div'          reduce using rule 58
+	'mod'          reduce using rule 58
+	%eof           reduce using rule 58
+
+
+State 86
+
+	Exp2 -> Exp2 '*' Exp3 .                             (rule 57)
 
 	'!='           reduce using rule 57
 	')'            reduce using rule 57
@@ -1398,676 +1910,156 @@ State 59
 	%eof           reduce using rule 57
 
 
-State 60
-
-	Exp3 -> '(' Exp . ')'                               (rule 65)
-
-	')'            shift, and enter state 87
-
-
-State 61
-
-	Exp2 -> Exp2 '*' . Exp3                             (rule 54)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp3           goto state 86
-
-State 62
-
-	Exp2 -> Exp2 'div' . Exp3                           (rule 55)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp3           goto state 85
-
-State 63
-
-	Exp2 -> Exp2 'mod' . Exp3                           (rule 56)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp3           goto state 84
-
-State 64
-
-	Exp1 -> Exp1 '+' . Exp2                             (rule 51)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'neg'          shift, and enter state 23
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp2           goto state 83
-	Exp3           goto state 20
-
-State 65
-
-	Exp -> Exp1 '++' . Exp                              (rule 48)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'neg'          shift, and enter state 23
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp            goto state 82
-	Exp1           goto state 18
-	Exp2           goto state 19
-	Exp3           goto state 20
-
-State 66
-
-	Exp1 -> Exp1 '-' . Exp2                             (rule 52)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'neg'          shift, and enter state 23
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp2           goto state 81
-	Exp3           goto state 20
-
-State 67
-
-	Exp -> Exp1 ':' . Exp                               (rule 49)
-
-	'('            shift, and enter state 21
-	'false'        shift, and enter state 22
-	'neg'          shift, and enter state 23
-	'nil'          shift, and enter state 24
-	'true'         shift, and enter state 25
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 14
-
-	Integer        goto state 15
-	DynVar         goto state 16
-	Exp            goto state 80
-	Exp1           goto state 18
-	Exp2           goto state 19
-	Exp3           goto state 20
-
-State 68
-
-	Type3 -> '(' Type . ')'                             (rule 78)
-
-	')'            shift, and enter state 79
-
-
-State 69
-
-	Type -> Type1 '->' . Type                           (rule 69)
-
-	'('            shift, and enter state 11
-	'tbot'         shift, and enter state 12
-	'ttop'         shift, and enter state 13
-	L_DynVar       shift, and enter state 14
-
-	DynVar         goto state 6
-	Type           goto state 78
-	Type1          goto state 8
-	Type2          goto state 9
-	Type3          goto state 10
-
-State 70
-
-	Type3 -> DynVar .                                   (rule 76)
-
-	'('            reduce using rule 76
-	')'            reduce using rule 76
-	','            reduce using rule 76
-	'->'           reduce using rule 76
-	'.'            reduce using rule 76
-	'.)'           reduce using rule 76
-	'/\\'          reduce using rule 76
-	':)'           reduce using rule 76
-	'==='          reduce using rule 76
-	'==>'          reduce using rule 76
-	'\\/'          reduce using rule 76
-	'tbot'         reduce using rule 76
-	'ttop'         reduce using rule 76
-	'|'            reduce using rule 76
-	L_DynVar       reduce using rule 76
-	%eof           reduce using rule 76
-
-
-State 71
-
-	ListType3 -> Type3 . ListType3                      (rule 83)
-
-	'('            shift, and enter state 11
-	')'            reduce using rule 82
-	','            reduce using rule 82
-	'->'           reduce using rule 82
-	'.'            reduce using rule 82
-	'.)'           reduce using rule 82
-	'/\\'          reduce using rule 82
-	':)'           reduce using rule 82
-	'==='          reduce using rule 82
-	'==>'          reduce using rule 82
-	'\\/'          reduce using rule 82
-	'tbot'         shift, and enter state 12
-	'ttop'         shift, and enter state 13
-	'|'            reduce using rule 82
-	L_DynVar       shift, and enter state 14
-	%eof           reduce using rule 82
-
-	DynVar         goto state 70
-	Type3          goto state 71
-	ListType3      goto state 77
-
-State 72
-
-	Type2 -> DynVar ListType3 .                         (rule 73)
-
-	')'            reduce using rule 73
-	','            reduce using rule 73
-	'->'           reduce using rule 73
-	'.'            reduce using rule 73
-	'.)'           reduce using rule 73
-	'/\\'          reduce using rule 73
-	':)'           reduce using rule 73
-	'==='          reduce using rule 73
-	'==>'          reduce using rule 73
-	'\\/'          reduce using rule 73
-	'|'            reduce using rule 73
-	%eof           reduce using rule 73
-
-
-State 73
-
-	Type1 -> DynVar '(:' . ListType2 ':)'               (rule 71)
-
-	'('            shift, and enter state 11
-	':)'           reduce using rule 79
-	'tbot'         shift, and enter state 12
-	'ttop'         shift, and enter state 13
-	L_DynVar       shift, and enter state 14
-
-	DynVar         goto state 74
-	Type2          goto state 75
-	Type3          goto state 10
-	ListType2      goto state 76
-
-State 74
-
-	Type2 -> DynVar . ListType3                         (rule 73)
-	Type3 -> DynVar .                                   (rule 76)
-
-	'('            shift, and enter state 11
-	':)'           reduce using rule 82
-			(reduce using rule 76)
-
-	'tbot'         shift, and enter state 12
-	'ttop'         shift, and enter state 13
-	'|'            reduce using rule 82
-			(reduce using rule 76)
-
-	L_DynVar       shift, and enter state 14
-
-	DynVar         goto state 70
-	Type3          goto state 71
-	ListType3      goto state 72
-
-State 75
-
-	ListType2 -> Type2 .                                (rule 80)
-	ListType2 -> Type2 . '|' ListType2                  (rule 81)
-
-	':)'           reduce using rule 80
-	'|'            shift, and enter state 111
-
-
-State 76
-
-	Type1 -> DynVar '(:' ListType2 . ':)'               (rule 71)
-
-	':)'           shift, and enter state 110
-
-
-State 77
-
-	ListType3 -> Type3 ListType3 .                      (rule 83)
-
-	')'            reduce using rule 83
-	','            reduce using rule 83
-	'->'           reduce using rule 83
-	'.'            reduce using rule 83
-	'.)'           reduce using rule 83
-	'/\\'          reduce using rule 83
-	':)'           reduce using rule 83
-	'==='          reduce using rule 83
-	'==>'          reduce using rule 83
-	'\\/'          reduce using rule 83
-	'|'            reduce using rule 83
-	%eof           reduce using rule 83
-
-
-State 78
-
-	Type -> Type1 '->' Type .                           (rule 69)
-
-	')'            reduce using rule 69
-	','            reduce using rule 69
-	'.'            reduce using rule 69
-	'.)'           reduce using rule 69
-	'/\\'          reduce using rule 69
-	'==='          reduce using rule 69
-	'==>'          reduce using rule 69
-	'\\/'          reduce using rule 69
-	%eof           reduce using rule 69
-
-
-State 79
-
-	Type3 -> '(' Type ')' .                             (rule 78)
-
-	'('            reduce using rule 78
-	')'            reduce using rule 78
-	','            reduce using rule 78
-	'->'           reduce using rule 78
-	'.'            reduce using rule 78
-	'.)'           reduce using rule 78
-	'/\\'          reduce using rule 78
-	':)'           reduce using rule 78
-	'==='          reduce using rule 78
-	'==>'          reduce using rule 78
-	'\\/'          reduce using rule 78
-	'tbot'         reduce using rule 78
-	'ttop'         reduce using rule 78
-	'|'            reduce using rule 78
-	L_DynVar       reduce using rule 78
-	%eof           reduce using rule 78
-
-
-State 80
-
-	Exp -> Exp1 ':' Exp .                               (rule 49)
-
-	'!='           reduce using rule 49
-	')'            reduce using rule 49
-	','            reduce using rule 49
-	'.'            reduce using rule 49
-	'.)'           reduce using rule 49
-	'/\\'          reduce using rule 49
-	'<'            reduce using rule 49
-	'<='           reduce using rule 49
-	'=='           reduce using rule 49
-	'==='          reduce using rule 49
-	'==>'          reduce using rule 49
-	'>'            reduce using rule 49
-	'>='           reduce using rule 49
-	'\\/'          reduce using rule 49
-	%eof           reduce using rule 49
-
-
-State 81
-
-	Exp1 -> Exp1 '-' Exp2 .                             (rule 52)
-	Exp2 -> Exp2 . '*' Exp3                             (rule 54)
-	Exp2 -> Exp2 . 'div' Exp3                           (rule 55)
-	Exp2 -> Exp2 . 'mod' Exp3                           (rule 56)
-
-	'!='           reduce using rule 52
-	')'            reduce using rule 52
-	'*'            shift, and enter state 61
-	'+'            reduce using rule 52
-	'++'           reduce using rule 52
-	','            reduce using rule 52
-	'-'            reduce using rule 52
-	'.'            reduce using rule 52
-	'.)'           reduce using rule 52
-	'/\\'          reduce using rule 52
-	':'            reduce using rule 52
-	'<'            reduce using rule 52
-	'<='           reduce using rule 52
-	'=='           reduce using rule 52
-	'==='          reduce using rule 52
-	'==>'          reduce using rule 52
-	'>'            reduce using rule 52
-	'>='           reduce using rule 52
-	'\\/'          reduce using rule 52
-	'div'          shift, and enter state 62
-	'mod'          shift, and enter state 63
-	%eof           reduce using rule 52
-
-
-State 82
-
-	Exp -> Exp1 '++' Exp .                              (rule 48)
-
-	'!='           reduce using rule 48
-	')'            reduce using rule 48
-	','            reduce using rule 48
-	'.'            reduce using rule 48
-	'.)'           reduce using rule 48
-	'/\\'          reduce using rule 48
-	'<'            reduce using rule 48
-	'<='           reduce using rule 48
-	'=='           reduce using rule 48
-	'==='          reduce using rule 48
-	'==>'          reduce using rule 48
-	'>'            reduce using rule 48
-	'>='           reduce using rule 48
-	'\\/'          reduce using rule 48
-	%eof           reduce using rule 48
-
-
-State 83
-
-	Exp1 -> Exp1 '+' Exp2 .                             (rule 51)
-	Exp2 -> Exp2 . '*' Exp3                             (rule 54)
-	Exp2 -> Exp2 . 'div' Exp3                           (rule 55)
-	Exp2 -> Exp2 . 'mod' Exp3                           (rule 56)
-
-	'!='           reduce using rule 51
-	')'            reduce using rule 51
-	'*'            shift, and enter state 61
-	'+'            reduce using rule 51
-	'++'           reduce using rule 51
-	','            reduce using rule 51
-	'-'            reduce using rule 51
-	'.'            reduce using rule 51
-	'.)'           reduce using rule 51
-	'/\\'          reduce using rule 51
-	':'            reduce using rule 51
-	'<'            reduce using rule 51
-	'<='           reduce using rule 51
-	'=='           reduce using rule 51
-	'==='          reduce using rule 51
-	'==>'          reduce using rule 51
-	'>'            reduce using rule 51
-	'>='           reduce using rule 51
-	'\\/'          reduce using rule 51
-	'div'          shift, and enter state 62
-	'mod'          shift, and enter state 63
-	%eof           reduce using rule 51
-
-
-State 84
-
-	Exp2 -> Exp2 'mod' Exp3 .                           (rule 56)
-
-	'!='           reduce using rule 56
-	')'            reduce using rule 56
-	'*'            reduce using rule 56
-	'+'            reduce using rule 56
-	'++'           reduce using rule 56
-	','            reduce using rule 56
-	'-'            reduce using rule 56
-	'.'            reduce using rule 56
-	'.)'           reduce using rule 56
-	'/\\'          reduce using rule 56
-	':'            reduce using rule 56
-	'<'            reduce using rule 56
-	'<='           reduce using rule 56
-	'=='           reduce using rule 56
-	'==='          reduce using rule 56
-	'==>'          reduce using rule 56
-	'>'            reduce using rule 56
-	'>='           reduce using rule 56
-	'\\/'          reduce using rule 56
-	'div'          reduce using rule 56
-	'mod'          reduce using rule 56
-	%eof           reduce using rule 56
-
-
-State 85
-
-	Exp2 -> Exp2 'div' Exp3 .                           (rule 55)
-
-	'!='           reduce using rule 55
-	')'            reduce using rule 55
-	'*'            reduce using rule 55
-	'+'            reduce using rule 55
-	'++'           reduce using rule 55
-	','            reduce using rule 55
-	'-'            reduce using rule 55
-	'.'            reduce using rule 55
-	'.)'           reduce using rule 55
-	'/\\'          reduce using rule 55
-	':'            reduce using rule 55
-	'<'            reduce using rule 55
-	'<='           reduce using rule 55
-	'=='           reduce using rule 55
-	'==='          reduce using rule 55
-	'==>'          reduce using rule 55
-	'>'            reduce using rule 55
-	'>='           reduce using rule 55
-	'\\/'          reduce using rule 55
-	'div'          reduce using rule 55
-	'mod'          reduce using rule 55
-	%eof           reduce using rule 55
-
-
-State 86
-
-	Exp2 -> Exp2 '*' Exp3 .                             (rule 54)
-
-	'!='           reduce using rule 54
-	')'            reduce using rule 54
-	'*'            reduce using rule 54
-	'+'            reduce using rule 54
-	'++'           reduce using rule 54
-	','            reduce using rule 54
-	'-'            reduce using rule 54
-	'.'            reduce using rule 54
-	'.)'           reduce using rule 54
-	'/\\'          reduce using rule 54
-	':'            reduce using rule 54
-	'<'            reduce using rule 54
-	'<='           reduce using rule 54
-	'=='           reduce using rule 54
-	'==='          reduce using rule 54
-	'==>'          reduce using rule 54
-	'>'            reduce using rule 54
-	'>='           reduce using rule 54
-	'\\/'          reduce using rule 54
-	'div'          reduce using rule 54
-	'mod'          reduce using rule 54
-	%eof           reduce using rule 54
-
-
 State 87
 
-	Exp3 -> '(' Exp ')' .                               (rule 65)
+	Exp3 -> '(' Exp ')' .                               (rule 68)
 
-	'!='           reduce using rule 65
-	')'            reduce using rule 65
-	'*'            reduce using rule 65
-	'+'            reduce using rule 65
-	'++'           reduce using rule 65
-	','            reduce using rule 65
-	'-'            reduce using rule 65
-	'.'            reduce using rule 65
-	'.)'           reduce using rule 65
-	'/\\'          reduce using rule 65
-	':'            reduce using rule 65
-	'<'            reduce using rule 65
-	'<='           reduce using rule 65
-	'=='           reduce using rule 65
-	'==='          reduce using rule 65
-	'==>'          reduce using rule 65
-	'>'            reduce using rule 65
-	'>='           reduce using rule 65
-	'\\/'          reduce using rule 65
-	'div'          reduce using rule 65
-	'mod'          reduce using rule 65
-	%eof           reduce using rule 65
+	'!='           reduce using rule 68
+	')'            reduce using rule 68
+	'*'            reduce using rule 68
+	'+'            reduce using rule 68
+	'++'           reduce using rule 68
+	','            reduce using rule 68
+	'-'            reduce using rule 68
+	'.'            reduce using rule 68
+	'.)'           reduce using rule 68
+	'/\\'          reduce using rule 68
+	':'            reduce using rule 68
+	'<'            reduce using rule 68
+	'<='           reduce using rule 68
+	'=='           reduce using rule 68
+	'==='          reduce using rule 68
+	'==>'          reduce using rule 68
+	'>'            reduce using rule 68
+	'>='           reduce using rule 68
+	'\\/'          reduce using rule 68
+	'div'          reduce using rule 68
+	'mod'          reduce using rule 68
+	%eof           reduce using rule 68
 
 
 State 88
 
-	Pred -> Pred . '===' Pred1                          (rule 23)
-	ListPred -> Pred .                                  (rule 46)
-	ListPred -> Pred . ',' ListPred                     (rule 47)
+	Pred -> Pred . '===' Pred1                          (rule 26)
+	ListPred -> Pred .                                  (rule 49)
+	ListPred -> Pred . ',' ListPred                     (rule 50)
 
 	','            shift, and enter state 109
-	'.)'           reduce using rule 46
+	'.)'           reduce using rule 49
 	'==='          shift, and enter state 56
 
 
 State 89
 
-	Pred6 -> DynVar '(.' ListPred . '.)'                (rule 43)
+	Pred6 -> DynVar '(.' ListPred . '.)'                (rule 46)
 
 	'.)'           shift, and enter state 108
 
 
 State 90
 
-	ListExp -> Exp .                                    (rule 67)
-	ListExp -> Exp . ',' ListExp                        (rule 68)
+	ListExp -> Exp .                                    (rule 70)
+	ListExp -> Exp . ',' ListExp                        (rule 71)
 
-	')'            reduce using rule 67
+	')'            reduce using rule 70
 	','            shift, and enter state 107
 
 
 State 91
 
-	Exp3 -> DynVar '(' ListExp . ')'                    (rule 64)
+	Exp3 -> DynVar '(' ListExp . ')'                    (rule 67)
 
 	')'            shift, and enter state 106
 
 
 State 92
 
-	Pred -> Pred '===' Pred1 .                          (rule 23)
+	Pred -> Pred '===' Pred1 .                          (rule 26)
 
-	')'            reduce using rule 23
-	','            reduce using rule 23
-	'.'            reduce using rule 23
-	'.)'           reduce using rule 23
-	'==='          reduce using rule 23
-	%eof           reduce using rule 23
+	')'            reduce using rule 26
+	','            reduce using rule 26
+	'.'            reduce using rule 26
+	'.)'           reduce using rule 26
+	'==='          reduce using rule 26
+	%eof           reduce using rule 26
 
 
 State 93
 
-	Pred2 -> Pred2 '\\/' Pred3 .                        (rule 27)
-	Pred3 -> Pred3 . '/\\' Pred4                        (rule 29)
+	Pred2 -> Pred2 '\\/' Pred3 .                        (rule 30)
+	Pred3 -> Pred3 . '/\\' Pred4                        (rule 32)
 
-	')'            reduce using rule 27
-	','            reduce using rule 27
-	'.'            reduce using rule 27
-	'.)'           reduce using rule 27
+	')'            reduce using rule 30
+	','            reduce using rule 30
+	'.'            reduce using rule 30
+	'.)'           reduce using rule 30
 	'/\\'          shift, and enter state 53
-	'==='          reduce using rule 27
-	'==>'          reduce using rule 27
-	'\\/'          reduce using rule 27
-	%eof           reduce using rule 27
+	'==='          reduce using rule 30
+	'==>'          reduce using rule 30
+	'\\/'          reduce using rule 30
+	%eof           reduce using rule 30
 
 
 State 94
 
-	Pred1 -> Pred2 '==>' Pred1 .                        (rule 25)
+	Pred1 -> Pred2 '==>' Pred1 .                        (rule 28)
 
-	')'            reduce using rule 25
-	','            reduce using rule 25
-	'.'            reduce using rule 25
-	'.)'           reduce using rule 25
-	'==='          reduce using rule 25
-	%eof           reduce using rule 25
+	')'            reduce using rule 28
+	','            reduce using rule 28
+	'.'            reduce using rule 28
+	'.)'           reduce using rule 28
+	'==='          reduce using rule 28
+	%eof           reduce using rule 28
 
 
 State 95
 
-	Pred3 -> Pred3 '/\\' Pred4 .                        (rule 29)
+	Pred3 -> Pred3 '/\\' Pred4 .                        (rule 32)
 
-	')'            reduce using rule 29
-	','            reduce using rule 29
-	'.'            reduce using rule 29
-	'.)'           reduce using rule 29
-	'/\\'          reduce using rule 29
-	'==='          reduce using rule 29
-	'==>'          reduce using rule 29
-	'\\/'          reduce using rule 29
-	%eof           reduce using rule 29
+	')'            reduce using rule 32
+	','            reduce using rule 32
+	'.'            reduce using rule 32
+	'.)'           reduce using rule 32
+	'/\\'          reduce using rule 32
+	'==='          reduce using rule 32
+	'==>'          reduce using rule 32
+	'\\/'          reduce using rule 32
+	%eof           reduce using rule 32
 
 
 State 96
 
-	Pred5 -> Exp '>=' Exp .                             (rule 38)
+	Pred5 -> Exp '>=' Exp .                             (rule 41)
 
-	')'            reduce using rule 38
-	','            reduce using rule 38
-	'.'            reduce using rule 38
-	'.)'           reduce using rule 38
-	'/\\'          reduce using rule 38
-	'==='          reduce using rule 38
-	'==>'          reduce using rule 38
-	'\\/'          reduce using rule 38
-	%eof           reduce using rule 38
+	')'            reduce using rule 41
+	','            reduce using rule 41
+	'.'            reduce using rule 41
+	'.)'           reduce using rule 41
+	'/\\'          reduce using rule 41
+	'==='          reduce using rule 41
+	'==>'          reduce using rule 41
+	'\\/'          reduce using rule 41
+	%eof           reduce using rule 41
 
 
 State 97
 
-	Pred5 -> Exp '>' Exp .                              (rule 37)
+	Pred5 -> Exp '>' Exp .                              (rule 40)
 
-	')'            reduce using rule 37
-	','            reduce using rule 37
-	'.'            reduce using rule 37
-	'.)'           reduce using rule 37
-	'/\\'          reduce using rule 37
-	'==='          reduce using rule 37
-	'==>'          reduce using rule 37
-	'\\/'          reduce using rule 37
-	%eof           reduce using rule 37
+	')'            reduce using rule 40
+	','            reduce using rule 40
+	'.'            reduce using rule 40
+	'.)'           reduce using rule 40
+	'/\\'          reduce using rule 40
+	'==='          reduce using rule 40
+	'==>'          reduce using rule 40
+	'\\/'          reduce using rule 40
+	%eof           reduce using rule 40
 
 
 State 98
 
-	Pred5 -> Exp '==' Exp .                             (rule 33)
-
-	')'            reduce using rule 33
-	','            reduce using rule 33
-	'.'            reduce using rule 33
-	'.)'           reduce using rule 33
-	'/\\'          reduce using rule 33
-	'==='          reduce using rule 33
-	'==>'          reduce using rule 33
-	'\\/'          reduce using rule 33
-	%eof           reduce using rule 33
-
-
-State 99
-
-	Pred5 -> Exp '<=' Exp .                             (rule 36)
+	Pred5 -> Exp '==' Exp .                             (rule 36)
 
 	')'            reduce using rule 36
 	','            reduce using rule 36
@@ -2080,49 +2072,64 @@ State 99
 	%eof           reduce using rule 36
 
 
+State 99
+
+	Pred5 -> Exp '<=' Exp .                             (rule 39)
+
+	')'            reduce using rule 39
+	','            reduce using rule 39
+	'.'            reduce using rule 39
+	'.)'           reduce using rule 39
+	'/\\'          reduce using rule 39
+	'==='          reduce using rule 39
+	'==>'          reduce using rule 39
+	'\\/'          reduce using rule 39
+	%eof           reduce using rule 39
+
+
 State 100
 
-	Pred5 -> Exp '<' Exp .                              (rule 35)
+	Pred5 -> Exp '<' Exp .                              (rule 38)
 
-	')'            reduce using rule 35
-	','            reduce using rule 35
-	'.'            reduce using rule 35
-	'.)'           reduce using rule 35
-	'/\\'          reduce using rule 35
-	'==='          reduce using rule 35
-	'==>'          reduce using rule 35
-	'\\/'          reduce using rule 35
-	%eof           reduce using rule 35
+	')'            reduce using rule 38
+	','            reduce using rule 38
+	'.'            reduce using rule 38
+	'.)'           reduce using rule 38
+	'/\\'          reduce using rule 38
+	'==='          reduce using rule 38
+	'==>'          reduce using rule 38
+	'\\/'          reduce using rule 38
+	%eof           reduce using rule 38
 
 
 State 101
 
-	Pred5 -> Exp '!=' Exp .                             (rule 34)
+	Pred5 -> Exp '!=' Exp .                             (rule 37)
 
-	')'            reduce using rule 34
-	','            reduce using rule 34
-	'.'            reduce using rule 34
-	'.)'           reduce using rule 34
-	'/\\'          reduce using rule 34
-	'==='          reduce using rule 34
-	'==>'          reduce using rule 34
-	'\\/'          reduce using rule 34
-	%eof           reduce using rule 34
+	')'            reduce using rule 37
+	','            reduce using rule 37
+	'.'            reduce using rule 37
+	'.)'           reduce using rule 37
+	'/\\'          reduce using rule 37
+	'==='          reduce using rule 37
+	'==>'          reduce using rule 37
+	'\\/'          reduce using rule 37
+	%eof           reduce using rule 37
 
 
 State 102
 
-	Pred6 -> '(' Pred ')' .                             (rule 44)
+	Pred6 -> '(' Pred ')' .                             (rule 47)
 
-	')'            reduce using rule 44
-	','            reduce using rule 44
-	'.'            reduce using rule 44
-	'.)'           reduce using rule 44
-	'/\\'          reduce using rule 44
-	'==='          reduce using rule 44
-	'==>'          reduce using rule 44
-	'\\/'          reduce using rule 44
-	%eof           reduce using rule 44
+	')'            reduce using rule 47
+	','            reduce using rule 47
+	'.'            reduce using rule 47
+	'.)'           reduce using rule 47
+	'/\\'          reduce using rule 47
+	'==='          reduce using rule 47
+	'==>'          reduce using rule 47
+	'\\/'          reduce using rule 47
+	%eof           reduce using rule 47
 
 
 State 103
@@ -2154,38 +2161,38 @@ State 105
 
 State 106
 
-	Exp3 -> DynVar '(' ListExp ')' .                    (rule 64)
+	Exp3 -> DynVar '(' ListExp ')' .                    (rule 67)
 
-	'!='           reduce using rule 64
-	')'            reduce using rule 64
-	'*'            reduce using rule 64
-	'+'            reduce using rule 64
-	'++'           reduce using rule 64
-	','            reduce using rule 64
-	'-'            reduce using rule 64
-	'.'            reduce using rule 64
-	'.)'           reduce using rule 64
-	'/\\'          reduce using rule 64
-	':'            reduce using rule 64
-	'<'            reduce using rule 64
-	'<='           reduce using rule 64
-	'=='           reduce using rule 64
-	'==='          reduce using rule 64
-	'==>'          reduce using rule 64
-	'>'            reduce using rule 64
-	'>='           reduce using rule 64
-	'\\/'          reduce using rule 64
-	'div'          reduce using rule 64
-	'mod'          reduce using rule 64
-	%eof           reduce using rule 64
+	'!='           reduce using rule 67
+	')'            reduce using rule 67
+	'*'            reduce using rule 67
+	'+'            reduce using rule 67
+	'++'           reduce using rule 67
+	','            reduce using rule 67
+	'-'            reduce using rule 67
+	'.'            reduce using rule 67
+	'.)'           reduce using rule 67
+	'/\\'          reduce using rule 67
+	':'            reduce using rule 67
+	'<'            reduce using rule 67
+	'<='           reduce using rule 67
+	'=='           reduce using rule 67
+	'==='          reduce using rule 67
+	'==>'          reduce using rule 67
+	'>'            reduce using rule 67
+	'>='           reduce using rule 67
+	'\\/'          reduce using rule 67
+	'div'          reduce using rule 67
+	'mod'          reduce using rule 67
+	%eof           reduce using rule 67
 
 
 State 107
 
-	ListExp -> Exp ',' . ListExp                        (rule 68)
+	ListExp -> Exp ',' . ListExp                        (rule 71)
 
 	'('            shift, and enter state 21
-	')'            reduce using rule 66
+	')'            reduce using rule 69
 	'false'        shift, and enter state 22
 	'neg'          shift, and enter state 23
 	'nil'          shift, and enter state 24
@@ -2203,25 +2210,25 @@ State 107
 
 State 108
 
-	Pred6 -> DynVar '(.' ListPred '.)' .                (rule 43)
+	Pred6 -> DynVar '(.' ListPred '.)' .                (rule 46)
 
-	')'            reduce using rule 43
-	','            reduce using rule 43
-	'.'            reduce using rule 43
-	'.)'           reduce using rule 43
-	'/\\'          reduce using rule 43
-	'==='          reduce using rule 43
-	'==>'          reduce using rule 43
-	'\\/'          reduce using rule 43
-	%eof           reduce using rule 43
+	')'            reduce using rule 46
+	','            reduce using rule 46
+	'.'            reduce using rule 46
+	'.)'           reduce using rule 46
+	'/\\'          reduce using rule 46
+	'==='          reduce using rule 46
+	'==>'          reduce using rule 46
+	'\\/'          reduce using rule 46
+	%eof           reduce using rule 46
 
 
 State 109
 
-	ListPred -> Pred ',' . ListPred                     (rule 47)
+	ListPred -> Pred ',' . ListPred                     (rule 50)
 
 	'('            shift, and enter state 35
-	'.)'           reduce using rule 45
+	'.)'           reduce using rule 48
 	'E'            shift, and enter state 36
 	'T'            shift, and enter state 37
 	'false'        shift, and enter state 22
@@ -2249,26 +2256,26 @@ State 109
 
 State 110
 
-	Type1 -> DynVar '(:' ListType2 ':)' .               (rule 71)
+	Type1 -> DynVar '(:' ListType2 ':)' .               (rule 74)
 
-	')'            reduce using rule 71
-	','            reduce using rule 71
-	'->'           reduce using rule 71
-	'.'            reduce using rule 71
-	'.)'           reduce using rule 71
-	'/\\'          reduce using rule 71
-	'==='          reduce using rule 71
-	'==>'          reduce using rule 71
-	'\\/'          reduce using rule 71
-	%eof           reduce using rule 71
+	')'            reduce using rule 74
+	','            reduce using rule 74
+	'->'           reduce using rule 74
+	'.'            reduce using rule 74
+	'.)'           reduce using rule 74
+	'/\\'          reduce using rule 74
+	'==='          reduce using rule 74
+	'==>'          reduce using rule 74
+	'\\/'          reduce using rule 74
+	%eof           reduce using rule 74
 
 
 State 111
 
-	ListType2 -> Type2 '|' . ListType2                  (rule 81)
+	ListType2 -> Type2 '|' . ListType2                  (rule 84)
 
 	'('            shift, and enter state 11
-	':)'           reduce using rule 79
+	':)'           reduce using rule 82
 	'tbot'         shift, and enter state 12
 	'ttop'         shift, and enter state 13
 	L_DynVar       shift, and enter state 14
@@ -2280,23 +2287,23 @@ State 111
 
 State 112
 
-	ListType2 -> Type2 '|' ListType2 .                  (rule 81)
+	ListType2 -> Type2 '|' ListType2 .                  (rule 84)
 
-	':)'           reduce using rule 81
+	':)'           reduce using rule 84
 
 
 State 113
 
-	ListPred -> Pred ',' ListPred .                     (rule 47)
+	ListPred -> Pred ',' ListPred .                     (rule 50)
 
-	'.)'           reduce using rule 47
+	'.)'           reduce using rule 50
 
 
 State 114
 
-	ListExp -> Exp ',' ListExp .                        (rule 68)
+	ListExp -> Exp ',' ListExp .                        (rule 71)
 
-	')'            reduce using rule 68
+	')'            reduce using rule 71
 
 
 State 115
@@ -2308,7 +2315,7 @@ State 115
 	'DclDLVar'     shift, and enter state 121
 	'DclVar'       shift, and enter state 122
 	'Law'          shift, and enter state 123
-	%eof           reduce using rule 21
+	%eof           reduce using rule 24
 
 	Item           goto state 117
 	ListItem       goto state 118
@@ -2322,17 +2329,17 @@ State 116
 
 State 117
 
-	ListItem -> Item . ListItem                         (rule 22)
+	ListItem -> Item . ListItem                         (rule 25)
 
 	'Conjecture'   shift, and enter state 119
 	'DclASet'      shift, and enter state 120
 	'DclDLVar'     shift, and enter state 121
 	'DclVar'       shift, and enter state 122
 	'Law'          shift, and enter state 123
-	%eof           reduce using rule 21
+	%eof           reduce using rule 24
 
 	Item           goto state 117
-	ListItem       goto state 132
+	ListItem       goto state 135
 
 State 118
 
@@ -2347,31 +2354,37 @@ State 119
 
 	L_DynVar       shift, and enter state 14
 
-	DynVar         goto state 131
+	DynVar         goto state 134
 
 State 120
 
-	Item -> 'DclASet' . DynVar '.'                      (rule 11)
+	Item -> 'DclASet' . VarClass DynVar '.'             (rule 11)
 
-	L_DynVar       shift, and enter state 14
+	'Exp'          shift, and enter state 129
+	'Obs'          shift, and enter state 130
+	'Prd'          shift, and enter state 131
 
-	DynVar         goto state 130
+	VarClass       goto state 133
 
 State 121
 
-	Item -> 'DclDLVar' . DynVar '.' ListDynVar '.'      (rule 10)
+	Item -> 'DclDLVar' . VarClass DynVar '.' ListDynVar '.'    (rule 10)
 
-	L_DynVar       shift, and enter state 14
+	'Exp'          shift, and enter state 129
+	'Obs'          shift, and enter state 130
+	'Prd'          shift, and enter state 131
 
-	DynVar         goto state 129
+	VarClass       goto state 132
 
 State 122
 
-	Item -> 'DclVar' . DynVar '.' VarRole '.'           (rule 9)
+	Item -> 'DclVar' . VarClass DynVar '.' VarRole '.'    (rule 9)
 
-	L_DynVar       shift, and enter state 14
+	'Exp'          shift, and enter state 129
+	'Obs'          shift, and enter state 130
+	'Prd'          shift, and enter state 131
 
-	DynVar         goto state 128
+	VarClass       goto state 128
 
 State 123
 
@@ -2389,65 +2402,89 @@ State 124
 
 	L_DynVar       shift, and enter state 14
 
-	DynVar         goto state 137
+	DynVar         goto state 140
 
 State 125
 
-	LawType -> 'assumed' .                              (rule 20)
+	LawType -> 'assumed' .                              (rule 23)
 
-	L_DynVar       reduce using rule 20
+	L_DynVar       reduce using rule 23
 
 
 State 126
 
-	LawType -> 'axiom' .                                (rule 18)
+	LawType -> 'axiom' .                                (rule 21)
 
-	L_DynVar       reduce using rule 18
+	L_DynVar       reduce using rule 21
 
 
 State 127
 
-	LawType -> 'proven' .                               (rule 19)
+	LawType -> 'proven' .                               (rule 22)
 
-	L_DynVar       reduce using rule 19
+	L_DynVar       reduce using rule 22
 
 
 State 128
 
-	Item -> 'DclVar' DynVar . '.' VarRole '.'           (rule 9)
+	Item -> 'DclVar' VarClass . DynVar '.' VarRole '.'    (rule 9)
 
-	'.'            shift, and enter state 136
+	L_DynVar       shift, and enter state 14
 
+	DynVar         goto state 139
 
 State 129
 
-	Item -> 'DclDLVar' DynVar . '.' ListDynVar '.'      (rule 10)
+	VarClass -> 'Exp' .                                 (rule 16)
 
-	'.'            shift, and enter state 135
+	L_DynVar       reduce using rule 16
 
 
 State 130
 
-	Item -> 'DclASet' DynVar . '.'                      (rule 11)
+	VarClass -> 'Obs' .                                 (rule 15)
 
-	'.'            shift, and enter state 134
+	L_DynVar       reduce using rule 15
 
 
 State 131
 
-	Item -> 'Conjecture' DynVar . '.' Pred '.'          (rule 12)
+	VarClass -> 'Prd' .                                 (rule 17)
 
-	'.'            shift, and enter state 133
+	L_DynVar       reduce using rule 17
 
 
 State 132
 
-	ListItem -> Item ListItem .                         (rule 22)
+	Item -> 'DclDLVar' VarClass . DynVar '.' ListDynVar '.'    (rule 10)
 
-	%eof           reduce using rule 22
+	L_DynVar       shift, and enter state 14
 
+	DynVar         goto state 138
 
 State 133
+
+	Item -> 'DclASet' VarClass . DynVar '.'             (rule 11)
+
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 137
+
+State 134
+
+	Item -> 'Conjecture' DynVar . '.' Pred '.'          (rule 12)
+
+	'.'            shift, and enter state 136
+
+
+State 135
+
+	ListItem -> Item ListItem .                         (rule 25)
+
+	%eof           reduce using rule 25
+
+
+State 136
 
 	Item -> 'Conjecture' DynVar '.' . Pred '.'          (rule 12)
 
@@ -2464,7 +2501,7 @@ State 133
 
 	Integer        goto state 15
 	DynVar         goto state 26
-	Pred           goto state 142
+	Pred           goto state 145
 	Pred1          goto state 28
 	Pred2          goto state 29
 	Pred3          goto state 30
@@ -2476,44 +2513,35 @@ State 133
 	Exp2           goto state 19
 	Exp3           goto state 20
 
-State 134
-
-	Item -> 'DclASet' DynVar '.' .                      (rule 11)
-
-	'Conjecture'   reduce using rule 11
-	'DclASet'      reduce using rule 11
-	'DclDLVar'     reduce using rule 11
-	'DclVar'       reduce using rule 11
-	'Law'          reduce using rule 11
-	%eof           reduce using rule 11
-
-
-State 135
-
-	Item -> 'DclDLVar' DynVar '.' . ListDynVar '.'      (rule 10)
-
-	'.'            reduce using rule 7
-	L_DynVar       shift, and enter state 14
-
-	DynVar         goto state 104
-	ListDynVar     goto state 141
-
-State 136
-
-	Item -> 'DclVar' DynVar '.' . VarRole '.'           (rule 9)
-
-	'var'          shift, and enter state 140
-
-	VarRole        goto state 139
-
 State 137
 
-	Item -> 'Law' LawType DynVar . '.' Pred '.'         (rule 13)
+	Item -> 'DclASet' VarClass DynVar . '.'             (rule 11)
 
-	'.'            shift, and enter state 138
+	'.'            shift, and enter state 144
 
 
 State 138
+
+	Item -> 'DclDLVar' VarClass DynVar . '.' ListDynVar '.'    (rule 10)
+
+	'.'            shift, and enter state 143
+
+
+State 139
+
+	Item -> 'DclVar' VarClass DynVar . '.' VarRole '.'    (rule 9)
+
+	'.'            shift, and enter state 142
+
+
+State 140
+
+	Item -> 'Law' LawType DynVar . '.' Pred '.'         (rule 13)
+
+	'.'            shift, and enter state 141
+
+
+State 141
 
 	Item -> 'Law' LawType DynVar '.' . Pred '.'         (rule 13)
 
@@ -2542,40 +2570,46 @@ State 138
 	Exp2           goto state 19
 	Exp3           goto state 20
 
-State 139
-
-	Item -> 'DclVar' DynVar '.' VarRole . '.'           (rule 9)
-
-	'.'            shift, and enter state 149
-
-
-State 140
-
-	VarRole -> 'var' . SBBL Type                        (rule 14)
-
-	'NA'           shift, and enter state 146
-	'NS'           shift, and enter state 147
-	'SB'           shift, and enter state 148
-
-	SBBL           goto state 145
-
-State 141
-
-	Item -> 'DclDLVar' DynVar '.' ListDynVar . '.'      (rule 10)
-
-	'.'            shift, and enter state 144
-
-
 State 142
 
-	Item -> 'Conjecture' DynVar '.' Pred . '.'          (rule 12)
-	Pred -> Pred . '===' Pred1                          (rule 23)
+	Item -> 'DclVar' VarClass DynVar '.' . VarRole '.'    (rule 9)
 
-	'.'            shift, and enter state 143
+	'var'          shift, and enter state 149
+
+	VarRole        goto state 148
+
+State 143
+
+	Item -> 'DclDLVar' VarClass DynVar '.' . ListDynVar '.'    (rule 10)
+
+	'.'            reduce using rule 7
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 104
+	ListDynVar     goto state 147
+
+State 144
+
+	Item -> 'DclASet' VarClass DynVar '.' .             (rule 11)
+
+	'Conjecture'   reduce using rule 11
+	'DclASet'      reduce using rule 11
+	'DclDLVar'     reduce using rule 11
+	'DclVar'       reduce using rule 11
+	'Law'          reduce using rule 11
+	%eof           reduce using rule 11
+
+
+State 145
+
+	Item -> 'Conjecture' DynVar '.' Pred . '.'          (rule 12)
+	Pred -> Pred . '===' Pred1                          (rule 26)
+
+	'.'            shift, and enter state 146
 	'==='          shift, and enter state 56
 
 
-State 143
+State 146
 
 	Item -> 'Conjecture' DynVar '.' Pred '.' .          (rule 12)
 
@@ -2587,79 +2621,34 @@ State 143
 	%eof           reduce using rule 12
 
 
-State 144
-
-	Item -> 'DclDLVar' DynVar '.' ListDynVar '.' .      (rule 10)
-
-	'Conjecture'   reduce using rule 10
-	'DclASet'      reduce using rule 10
-	'DclDLVar'     reduce using rule 10
-	'DclVar'       reduce using rule 10
-	'Law'          reduce using rule 10
-	%eof           reduce using rule 10
-
-
-State 145
-
-	VarRole -> 'var' SBBL . Type                        (rule 14)
-
-	'('            shift, and enter state 11
-	'tbot'         shift, and enter state 12
-	'ttop'         shift, and enter state 13
-	L_DynVar       shift, and enter state 14
-
-	DynVar         goto state 6
-	Type           goto state 152
-	Type1          goto state 8
-	Type2          goto state 9
-	Type3          goto state 10
-
-State 146
-
-	SBBL -> 'NA' .                                      (rule 15)
-
-	'('            reduce using rule 15
-	'tbot'         reduce using rule 15
-	'ttop'         reduce using rule 15
-	L_DynVar       reduce using rule 15
-
-
 State 147
 
-	SBBL -> 'NS' .                                      (rule 17)
+	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar . '.'    (rule 10)
 
-	'('            reduce using rule 17
-	'tbot'         reduce using rule 17
-	'ttop'         reduce using rule 17
-	L_DynVar       reduce using rule 17
+	'.'            shift, and enter state 157
 
 
 State 148
 
-	SBBL -> 'SB' .                                      (rule 16)
+	Item -> 'DclVar' VarClass DynVar '.' VarRole . '.'    (rule 9)
 
-	'('            reduce using rule 16
-	'tbot'         reduce using rule 16
-	'ttop'         reduce using rule 16
-	L_DynVar       reduce using rule 16
+	'.'            shift, and enter state 156
 
 
 State 149
 
-	Item -> 'DclVar' DynVar '.' VarRole '.' .           (rule 9)
+	VarRole -> 'var' . SBBL Type                        (rule 14)
 
-	'Conjecture'   reduce using rule 9
-	'DclASet'      reduce using rule 9
-	'DclDLVar'     reduce using rule 9
-	'DclVar'       reduce using rule 9
-	'Law'          reduce using rule 9
-	%eof           reduce using rule 9
+	'NA'           shift, and enter state 153
+	'NS'           shift, and enter state 154
+	'SB'           shift, and enter state 155
 
+	SBBL           goto state 152
 
 State 150
 
 	Item -> 'Law' LawType DynVar '.' Pred . '.'         (rule 13)
-	Pred -> Pred . '===' Pred1                          (rule 23)
+	Pred -> Pred . '===' Pred1                          (rule 26)
 
 	'.'            shift, and enter state 151
 	'==='          shift, and enter state 56
@@ -2679,6 +2668,75 @@ State 151
 
 State 152
 
+	VarRole -> 'var' SBBL . Type                        (rule 14)
+
+	'('            shift, and enter state 11
+	'tbot'         shift, and enter state 12
+	'ttop'         shift, and enter state 13
+	L_DynVar       shift, and enter state 14
+
+	DynVar         goto state 6
+	Type           goto state 158
+	Type1          goto state 8
+	Type2          goto state 9
+	Type3          goto state 10
+
+State 153
+
+	SBBL -> 'NA' .                                      (rule 18)
+
+	'('            reduce using rule 18
+	'tbot'         reduce using rule 18
+	'ttop'         reduce using rule 18
+	L_DynVar       reduce using rule 18
+
+
+State 154
+
+	SBBL -> 'NS' .                                      (rule 20)
+
+	'('            reduce using rule 20
+	'tbot'         reduce using rule 20
+	'ttop'         reduce using rule 20
+	L_DynVar       reduce using rule 20
+
+
+State 155
+
+	SBBL -> 'SB' .                                      (rule 19)
+
+	'('            reduce using rule 19
+	'tbot'         reduce using rule 19
+	'ttop'         reduce using rule 19
+	L_DynVar       reduce using rule 19
+
+
+State 156
+
+	Item -> 'DclVar' VarClass DynVar '.' VarRole '.' .    (rule 9)
+
+	'Conjecture'   reduce using rule 9
+	'DclASet'      reduce using rule 9
+	'DclDLVar'     reduce using rule 9
+	'DclVar'       reduce using rule 9
+	'Law'          reduce using rule 9
+	%eof           reduce using rule 9
+
+
+State 157
+
+	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar '.' .    (rule 10)
+
+	'Conjecture'   reduce using rule 10
+	'DclASet'      reduce using rule 10
+	'DclDLVar'     reduce using rule 10
+	'DclVar'       reduce using rule 10
+	'Law'          reduce using rule 10
+	%eof           reduce using rule 10
+
+
+State 158
+
 	VarRole -> 'var' SBBL Type .                        (rule 14)
 
 	'.'            reduce using rule 14
@@ -2687,7 +2745,7 @@ State 152
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 84
-Number of terminals: 51
-Number of non-terminals: 32
-Number of states: 153
+Number of rules: 87
+Number of terminals: 54
+Number of non-terminals: 33
+Number of states: 159

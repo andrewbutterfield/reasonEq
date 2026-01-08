@@ -189,32 +189,34 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "DclASet" 25
-    (b ".)" 13
+  b "DclVar" 27
+    (b "/\\" 14
        (b "+" 7
           (b "(:" 4
              (b "(" 2 (b "!=" 1 N N) (b "(." 3 N N)) (b "*" 6 (b ")" 5 N N) N))
-          (b "-" 10 (b "," 9 (b "++" 8 N N) N) (b "." 12 (b "->" 11 N N) N)))
-       (b "==" 19
-          (b ":)" 16
-             (b ":" 15 (b "/\\" 14 N N) N) (b "<=" 18 (b "<" 17 N N) N))
-          (b ">" 22
-             (b "==>" 21 (b "===" 20 N N) N)
-             (b "Conjecture" 24 (b ">=" 23 N N) N))))
-    (b "div" 38
-       (b "SB" 32
-          (b "Law" 29
-             (b "DclVar" 27 (b "DclDLVar" 26 N N) (b "E" 28 N N))
-             (b "NS" 31 (b "NA" 30 N N) N))
-          (b "\\/" 35
-             (b "Theory" 34 (b "T" 33 N N) N)
-             (b "axiom" 37 (b "assumed" 36 N N) N)))
-       (b "tbot" 44
-          (b "neg" 41
-             (b "mod" 40 (b "false" 39 N N) N)
-             (b "proven" 43 (b "nil" 42 N N) N))
-          (b "var" 47
-             (b "ttop" 46 (b "true" 45 N N) N) (b "~" 49 (b "|" 48 N N) N))))
+          (b "->" 11
+             (b "," 9 (b "++" 8 N N) (b "-" 10 N N))
+             (b ".)" 13 (b "." 12 N N) N)))
+       (b "==>" 21
+          (b "<=" 18
+             (b ":)" 16 (b ":" 15 N N) (b "<" 17 N N))
+             (b "===" 20 (b "==" 19 N N) N))
+          (b "Conjecture" 24
+             (b ">=" 23 (b ">" 22 N N) N)
+             (b "DclDLVar" 26 (b "DclASet" 25 N N) N))))
+    (b "axiom" 40
+       (b "Prd" 34
+          (b "NA" 31
+             (b "Exp" 29 (b "E" 28 N N) (b "Law" 30 N N))
+             (b "Obs" 33 (b "NS" 32 N N) N))
+          (b "Theory" 37
+             (b "T" 36 (b "SB" 35 N N) N) (b "assumed" 39 (b "\\/" 38 N N) N)))
+       (b "tbot" 47
+          (b "neg" 44
+             (b "false" 42 (b "div" 41 N N) (b "mod" 43 N N))
+             (b "proven" 46 (b "nil" 45 N N) N))
+          (b "var" 50
+             (b "ttop" 49 (b "true" 48 N N) N) (b "~" 52 (b "|" 51 N N) N))))
   where
   b s n = B bs (TS bs n)
     where

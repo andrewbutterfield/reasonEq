@@ -1,7 +1,7 @@
 Theory A . X Y .
- DclASet s .
- DclVar v . var SB t .
- DclDLVar dlv . x y z .
+ DclASet Exp s .
+ DclVar Obs v . var SB t .
+ DclDLVar Prd dlv . x y z .
  Conjecture c . A===B .
  Law axiom a . B==>A .
  Law proven p . C /\ D .

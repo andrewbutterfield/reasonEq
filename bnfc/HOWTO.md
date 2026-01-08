@@ -29,6 +29,15 @@ Lexing for variables like `'varA` (Before `varA`),
 The comparisons (== and friends) are now part of  `Pred`, 
 which also has its own identifiers.
 
+**This may be breaking things!**
+
+We can parse `A===B===C===D` but any attempt to add parentheses fails,
+e.g. `(A===B)` or `A===(B===C)===D`.
+
+*maybe need to merge `Pred` and `Exp` and use post-processing to eliminate strabge stuff?*
+
+
+
 
 
 

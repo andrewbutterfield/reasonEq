@@ -15,13 +15,36 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Left $ "Undefined case: " ++ show x
 
-transBoolean :: UTP.Abs.Boolean -> Result
-transBoolean x = case x of
-  UTP.Abs.Boolean string -> failure x
-
 transDynVar :: UTP.Abs.DynVar -> Result
 transDynVar x = case x of
   UTP.Abs.DynVar string -> failure x
+
+transTheory :: UTP.Abs.Theory -> Result
+transTheory x = case x of
+  UTP.Abs.Thry dynvar dynvars items -> failure x
+
+transItem :: UTP.Abs.Item -> Result
+transItem x = case x of
+  UTP.Abs.DeclVar dynvar varrole -> failure x
+  UTP.Abs.DeclDLVar dynvar dynvars -> failure x
+  UTP.Abs.Conj dynvar pred -> failure x
+  UTP.Abs.Law lawtype dynvar pred -> failure x
+
+transVarRole :: UTP.Abs.VarRole -> Result
+transVarRole x = case x of
+  UTP.Abs.VMR_KV sbbl type_ -> failure x
+
+transSBBL :: UTP.Abs.SBBL -> Result
+transSBBL x = case x of
+  UTP.Abs.SBBL_NA -> failure x
+  UTP.Abs.SBBL_SB -> failure x
+  UTP.Abs.SBBL_NS -> failure x
+
+transLawType :: UTP.Abs.LawType -> Result
+transLawType x = case x of
+  UTP.Abs.LAxiom -> failure x
+  UTP.Abs.LProof -> failure x
+  UTP.Abs.LAssume -> failure x
 
 transPred :: UTP.Abs.Pred -> Result
 transPred x = case x of
@@ -53,14 +76,16 @@ transExp x = case x of
   UTP.Abs.ENeg exp -> failure x
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar dynvar -> failure x
-  UTP.Abs.EBool boolean -> failure x
+  UTP.Abs.ETrue -> failure x
+  UTP.Abs.EFalse -> failure x
   UTP.Abs.ENil -> failure x
   UTP.Abs.ENmdTuple dynvar exps -> failure x
 
 transType :: UTP.Abs.Type -> Result
 transType x = case x of
   UTP.Abs.TFun type_1 type_2 -> failure x
-  UTP.Abs.TData dynvar types -> failure x
+  UTP.Abs.TRec dynvar types -> failure x
+  UTP.Abs.TProd dynvar types -> failure x
   UTP.Abs.TArb -> failure x
   UTP.Abs.TVar dynvar -> failure x
   UTP.Abs.TBot -> failure x

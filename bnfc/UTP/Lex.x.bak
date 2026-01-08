@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \= \= | \! \= | \< | \< \= | \> | \> \= | \( \. | \. \) | \( | \) | \, | \+ \+ | \: | \+ | \- | \* | \- \> | \: \: | \( \: | \: \) | \|
+@rsyms = \. | \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \= \= | \! \= | \< | \< \= | \> | \> \= | \( \. | \. \) | \( | \) | \, | \+ \+ | \: | \+ | \- | \* | \- \> | \( \: | \: \) | \|
 
 :-
 
@@ -38,10 +38,6 @@ $white+ ;
 -- Symbols
 @rsyms
     { tok (eitherResIdent TV) }
-
--- token Boolean
-f a l s e | t r u e
-    { tok (eitherResIdent T_Boolean) }
 
 -- token DynVar
 (\_ | $l)(\_ | ($d | $l)) *
@@ -68,7 +64,6 @@ data Tok
   | TV !String                    -- ^ Identifier.
   | TD !String                    -- ^ Float literal.
   | TC !String                    -- ^ Character literal.
-  | T_Boolean !String
   | T_DynVar !String
   deriving (Eq, Show, Ord)
 
@@ -132,7 +127,6 @@ tokenText t = case t of
   PT _ (TD s)   -> s
   PT _ (TC s)   -> s
   Err _         -> "#error"
-  PT _ (T_Boolean s) -> s
   PT _ (T_DynVar s) -> s
 
 -- | Convert a token to a string.
@@ -160,21 +154,31 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "<=" 18
-    (b "," 9
-       (b ")" 5
-          (b "(." 3 (b "(" 2 (b "!=" 1 N N) N) (b "(:" 4 N N))
-          (b "+" 7 (b "*" 6 N N) (b "++" 8 N N)))
-       (b ":" 14
-          (b ".)" 12 (b "->" 11 (b "-" 10 N N) N) (b "/\\" 13 N N))
-          (b "::" 16 (b ":)" 15 N N) (b "<" 17 N N))))
-    (b "div" 27
-       (b ">=" 23
-          (b "==>" 21 (b "===" 20 (b "==" 19 N N) N) (b ">" 22 N N))
-          (b "T" 25 (b "E" 24 N N) (b "\\/" 26 N N)))
-       (b "tbot" 31
-          (b "neg" 29 (b "mod" 28 N N) (b "nil" 30 N N))
-          (b "|" 33 (b "ttop" 32 N N) (b "~" 34 N N))))
+  b "DclDLVar" 25
+    (b ".)" 13
+       (b "+" 7
+          (b "(:" 4
+             (b "(" 2 (b "!=" 1 N N) (b "(." 3 N N)) (b "*" 6 (b ")" 5 N N) N))
+          (b "-" 10 (b "," 9 (b "++" 8 N N) N) (b "." 12 (b "->" 11 N N) N)))
+       (b "==" 19
+          (b ":)" 16
+             (b ":" 15 (b "/\\" 14 N N) N) (b "<=" 18 (b "<" 17 N N) N))
+          (b ">" 22
+             (b "==>" 21 (b "===" 20 N N) N)
+             (b "Conjecture" 24 (b ">=" 23 N N) N))))
+    (b "div" 37
+       (b "SB" 31
+          (b "Law" 28
+             (b "E" 27 (b "DclVar" 26 N N) N) (b "NS" 30 (b "NA" 29 N N) N))
+          (b "\\/" 34
+             (b "Theory" 33 (b "T" 32 N N) N)
+             (b "axiom" 36 (b "assumed" 35 N N) N)))
+       (b "tbot" 43
+          (b "neg" 40
+             (b "mod" 39 (b "false" 38 N N) N)
+             (b "proven" 42 (b "nil" 41 N N) N))
+          (b "var" 46
+             (b "ttop" 45 (b "true" 44 N N) N) (b "~" 48 (b "|" 47 N N) N))))
   where
   b s n = B bs (TS bs n)
     where

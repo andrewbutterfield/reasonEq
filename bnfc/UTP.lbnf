@@ -30,6 +30,9 @@
     Expressions -- covers arithmetic and cons-lists
     Predicates 
       -- covers propositions, equality, ordering, predicate transformers
+    Variable Data
+      -- this is a monster - see below
+      -- now we only implement what is actually used.
     Here: we have enough to represent most of the propositional theories
 
     Once quantifiers are introduced we need:
@@ -44,11 +47,12 @@
 
 -}
 
--- we want to add a boolean type
-token Boolean ( {"false"} | {"true"} ) ;
 
 -- we want identifiers to start with letters and underscores
 token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
+
+-- token SBBL ( {"NA"} | {"SB"} | {"NS"} ) ; -- n/a, subable, not-subable
+
 
 {- Theories
    SourceHandling syntex (.src)
@@ -78,9 +82,64 @@ Thry. Theory ::= "Theory" DynVar "." [DynVar] "." [Item] ;
 
 separator DynVar "" ;
 
-ItemKnown. Item ::= "Known" DynVar "." Type "." ;
-ItemConj.  Item ::= "Conjecture" DynVar "." Pred "." ;
-ItemLaw.   Item ::= "Law" LawType DynVar "." Pred "." ;
+{- Variable Data 
+
+      newtype VarTable
+        = VD ( String
+            , Map Variable   VarMatchRole
+            , Map Variable   LstVarMatchRole
+            , Map IdAndClass DynamicLstVarRole
+            )
+
+      data VarMatchRole -- Variable Matching Role
+        =  KT Term     -- Known Term   -- used in Proto.thr
+        |  KV Type (Maybe Subable) -- Known Variable -- widely used
+        |  KG          -- Generic Variable -- used in Proto.thr
+        |  KI Variable -- Instance Variable ! variable must be known as generic
+                              -- used in Proto.thr
+        |  UV          -- Unknown Variable -- never explicitly represented
+
+      data LstVarMatchRole -- ListVar Matching Roles
+      = KL VarList        -- Known Variable-List (all known?) -- Proto.thr
+            [Variable]     -- full expansion
+            Int            -- length of full expansion
+      | KS VarSet         -- Known Variable-Set (all known?) -- Proto.thr
+            (Set Variable) -- full expansion
+            Int            -- size of full expansion
+      | AL                -- Abstract Known Variable-List  -- Proto.thr
+      | AS                -- Abstract Known Variable-Set -- Proto.thr
+      | UL                -- Unknown List-Variable -- never explicitly represented
+
+      data DynamicLstVarRole -- Dynamic ListVar Matching Roles
+      = DL [Identifier]      -- Known-list, Variable identifiers -- UTCP,Proto
+            [Identifier]      -- Known-list, List-Variable identifiers
+            [Identifier]      -- full expansion
+            Int               -- length of full expansion
+      | DS (Set Identifier)  -- Known-set, Variable identifiers -- Proto.thr
+            (Set Identifier)  -- Known-set, List-Variable identifiers
+            (Set Identifier)  -- full expansion
+            Int               -- size of full expansion
+      | DAL                  -- Abstract Known List  -- Proto.thr
+      | DAS                  -- Abstract Known Set   -- UWhile,Proto
+      | UD         -- Unknown Dynamic List-Variable
+
+  For now we only implement stuff actually used !
+  This is  KV DL DAS 
+-}
+
+
+DeclVar.   Item ::= "DclVar" DynVar "." VarRole "."    ;  -- KV
+DeclDLVar. Item ::= "DclDLVar" DynVar "." [DynVar] "." ;  -- DL
+DeclASet.  Item ::= "DclASet" DynVar "."               ;  -- DAS
+Conj.      Item ::= "Conjecture" DynVar "." Pred "."   ;
+Law.       Item ::= "Law" LawType DynVar "." Pred "."  ;
+
+
+VMR_KV. VarRole ::= "var" SBBL Type ;
+
+SBBL_NA. SBBL ::= "NA" ;
+SBBL_SB. SBBL ::= "SB" ;
+SBBL_NS. SBBL ::= "NS" ;
 
 LAxiom.  LawType ::= "axiom" ;
 LProof.  LawType ::= "proven" ;
@@ -136,7 +195,8 @@ EMod.  Exp2 ::= Exp2 "mod" Exp3 ;
 ENeg.  Exp2 ::= "neg" Exp3      ;
 EInt.  Exp3 ::= Integer         ;
 EVar.  Exp3 ::= DynVar          ;
-EBool. Exp3 ::= Boolean         ;
+ETrue. Exp3 ::= "true"          ;
+EFalse. Exp3 ::= "false"          ;
 ENil.  Exp3 ::= "nil"           ;
 ENmdTuple. Exp3 ::= DynVar "(" [Exp] ")" ;
 coercions Exp 3                 ;

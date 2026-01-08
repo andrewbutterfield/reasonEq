@@ -1,5 +1,7 @@
 Theory A . X Y .
- Known d . t .
+ DclASet s .
+ DclVar v . var SB t .
+ DclDLVar dlv . x y z .
  Conjecture c . A===B .
  Law axiom a . B==>A .
  Law proven p . C /\ D .

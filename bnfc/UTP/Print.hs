@@ -134,10 +134,44 @@ instance Print Integer where
 instance Print Double where
   prt _ x = doc (shows x)
 
-instance Print UTP.Abs.Boolean where
-  prt _ (UTP.Abs.Boolean i) = doc $ showString i
 instance Print UTP.Abs.DynVar where
   prt _ (UTP.Abs.DynVar i) = doc $ showString i
+instance Print UTP.Abs.Theory where
+  prt i = \case
+    UTP.Abs.Thry dynvar dynvars items -> prPrec i 0 (concatD [doc (showString "Theory"), prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString "."), prt 0 items])
+
+instance Print [UTP.Abs.DynVar] where
+  prt _ [] = concatD []
+  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+
+instance Print UTP.Abs.Item where
+  prt i = \case
+    UTP.Abs.DeclVar dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
+    UTP.Abs.DeclDLVar dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
+    UTP.Abs.DeclASet dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 dynvar, doc (showString ".")])
+    UTP.Abs.Conj dynvar pred -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
+    UTP.Abs.Law lawtype dynvar pred -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
+
+instance Print UTP.Abs.VarRole where
+  prt i = \case
+    UTP.Abs.VMR_KV sbbl type_ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 type_])
+
+instance Print UTP.Abs.SBBL where
+  prt i = \case
+    UTP.Abs.SBBL_NA -> prPrec i 0 (concatD [doc (showString "NA")])
+    UTP.Abs.SBBL_SB -> prPrec i 0 (concatD [doc (showString "SB")])
+    UTP.Abs.SBBL_NS -> prPrec i 0 (concatD [doc (showString "NS")])
+
+instance Print UTP.Abs.LawType where
+  prt i = \case
+    UTP.Abs.LAxiom -> prPrec i 0 (concatD [doc (showString "axiom")])
+    UTP.Abs.LProof -> prPrec i 0 (concatD [doc (showString "proven")])
+    UTP.Abs.LAssume -> prPrec i 0 (concatD [doc (showString "assumed")])
+
+instance Print [UTP.Abs.Item] where
+  prt _ [] = concatD []
+  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+
 instance Print UTP.Abs.Pred where
   prt i = \case
     UTP.Abs.PEqv pred1 pred2 -> prPrec i 0 (concatD [prt 0 pred1, doc (showString "==="), prt 1 pred2])
@@ -173,7 +207,8 @@ instance Print UTP.Abs.Exp where
     UTP.Abs.ENeg exp -> prPrec i 2 (concatD [doc (showString "neg"), prt 3 exp])
     UTP.Abs.EInt n -> prPrec i 3 (concatD [prt 0 n])
     UTP.Abs.EVar dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
-    UTP.Abs.EBool boolean -> prPrec i 3 (concatD [prt 0 boolean])
+    UTP.Abs.ETrue -> prPrec i 3 (concatD [doc (showString "true")])
+    UTP.Abs.EFalse -> prPrec i 3 (concatD [doc (showString "false")])
     UTP.Abs.ENil -> prPrec i 3 (concatD [doc (showString "nil")])
     UTP.Abs.ENmdTuple dynvar exps -> prPrec i 3 (concatD [prt 0 dynvar, doc (showString "("), prt 0 exps, doc (showString ")")])
 

@@ -8,6 +8,7 @@
 module UTP.Par
   ( happyError
   , myLexer
+  , pTheory
   , pPred
   , pExp
   , pType
@@ -20,6 +21,7 @@ import UTP.Lex
 
 }
 
+%name pTheory Theory
 %name pPred Pred
 %name pExp Exp
 %name pType Type
@@ -27,53 +29,98 @@ import UTP.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '!='      { PT _ (TS _ 1)       }
-  '('       { PT _ (TS _ 2)       }
-  '(.'      { PT _ (TS _ 3)       }
-  '(:'      { PT _ (TS _ 4)       }
-  ')'       { PT _ (TS _ 5)       }
-  '*'       { PT _ (TS _ 6)       }
-  '+'       { PT _ (TS _ 7)       }
-  '++'      { PT _ (TS _ 8)       }
-  ','       { PT _ (TS _ 9)       }
-  '-'       { PT _ (TS _ 10)      }
-  '->'      { PT _ (TS _ 11)      }
-  '.)'      { PT _ (TS _ 12)      }
-  '/\\'     { PT _ (TS _ 13)      }
-  ':'       { PT _ (TS _ 14)      }
-  ':)'      { PT _ (TS _ 15)      }
-  '<'       { PT _ (TS _ 16)      }
-  '<='      { PT _ (TS _ 17)      }
-  '=='      { PT _ (TS _ 18)      }
-  '==='     { PT _ (TS _ 19)      }
-  '==>'     { PT _ (TS _ 20)      }
-  '>'       { PT _ (TS _ 21)      }
-  '>='      { PT _ (TS _ 22)      }
-  'E'       { PT _ (TS _ 23)      }
-  'T'       { PT _ (TS _ 24)      }
-  '\\/'     { PT _ (TS _ 25)      }
-  'div'     { PT _ (TS _ 26)      }
-  'mod'     { PT _ (TS _ 27)      }
-  'neg'     { PT _ (TS _ 28)      }
-  'nil'     { PT _ (TS _ 29)      }
-  'tbot'    { PT _ (TS _ 30)      }
-  'ttop'    { PT _ (TS _ 31)      }
-  '|'       { PT _ (TS _ 32)      }
-  '~'       { PT _ (TS _ 33)      }
-  L_integ   { PT _ (TI $$)        }
-  L_Boolean { PT _ (T_Boolean $$) }
-  L_DynVar  { PT _ (T_DynVar $$)  }
+  '!='         { PT _ (TS _ 1)      }
+  '('          { PT _ (TS _ 2)      }
+  '(.'         { PT _ (TS _ 3)      }
+  '(:'         { PT _ (TS _ 4)      }
+  ')'          { PT _ (TS _ 5)      }
+  '*'          { PT _ (TS _ 6)      }
+  '+'          { PT _ (TS _ 7)      }
+  '++'         { PT _ (TS _ 8)      }
+  ','          { PT _ (TS _ 9)      }
+  '-'          { PT _ (TS _ 10)     }
+  '->'         { PT _ (TS _ 11)     }
+  '.'          { PT _ (TS _ 12)     }
+  '.)'         { PT _ (TS _ 13)     }
+  '/\\'        { PT _ (TS _ 14)     }
+  ':'          { PT _ (TS _ 15)     }
+  ':)'         { PT _ (TS _ 16)     }
+  '<'          { PT _ (TS _ 17)     }
+  '<='         { PT _ (TS _ 18)     }
+  '=='         { PT _ (TS _ 19)     }
+  '==='        { PT _ (TS _ 20)     }
+  '==>'        { PT _ (TS _ 21)     }
+  '>'          { PT _ (TS _ 22)     }
+  '>='         { PT _ (TS _ 23)     }
+  'Conjecture' { PT _ (TS _ 24)     }
+  'DclASet'    { PT _ (TS _ 25)     }
+  'DclDLVar'   { PT _ (TS _ 26)     }
+  'DclVar'     { PT _ (TS _ 27)     }
+  'E'          { PT _ (TS _ 28)     }
+  'Law'        { PT _ (TS _ 29)     }
+  'NA'         { PT _ (TS _ 30)     }
+  'NS'         { PT _ (TS _ 31)     }
+  'SB'         { PT _ (TS _ 32)     }
+  'T'          { PT _ (TS _ 33)     }
+  'Theory'     { PT _ (TS _ 34)     }
+  '\\/'        { PT _ (TS _ 35)     }
+  'assumed'    { PT _ (TS _ 36)     }
+  'axiom'      { PT _ (TS _ 37)     }
+  'div'        { PT _ (TS _ 38)     }
+  'false'      { PT _ (TS _ 39)     }
+  'mod'        { PT _ (TS _ 40)     }
+  'neg'        { PT _ (TS _ 41)     }
+  'nil'        { PT _ (TS _ 42)     }
+  'proven'     { PT _ (TS _ 43)     }
+  'tbot'       { PT _ (TS _ 44)     }
+  'true'       { PT _ (TS _ 45)     }
+  'ttop'       { PT _ (TS _ 46)     }
+  'var'        { PT _ (TS _ 47)     }
+  '|'          { PT _ (TS _ 48)     }
+  '~'          { PT _ (TS _ 49)     }
+  L_integ      { PT _ (TI $$)       }
+  L_DynVar     { PT _ (T_DynVar $$) }
 
 %%
 
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
-Boolean :: { UTP.Abs.Boolean }
-Boolean  : L_Boolean { UTP.Abs.Boolean $1 }
-
 DynVar :: { UTP.Abs.DynVar }
 DynVar  : L_DynVar { UTP.Abs.DynVar $1 }
+
+Theory :: { UTP.Abs.Theory }
+Theory
+  : 'Theory' DynVar '.' ListDynVar '.' ListItem { UTP.Abs.Thry $2 $4 $6 }
+
+ListDynVar :: { [UTP.Abs.DynVar] }
+ListDynVar : {- empty -} { [] } | DynVar ListDynVar { (:) $1 $2 }
+
+Item :: { UTP.Abs.Item }
+Item
+  : 'DclVar' DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $4 }
+  | 'DclDLVar' DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $4 }
+  | 'DclASet' DynVar '.' { UTP.Abs.DeclASet $2 }
+  | 'Conjecture' DynVar '.' Pred '.' { UTP.Abs.Conj $2 $4 }
+  | 'Law' LawType DynVar '.' Pred '.' { UTP.Abs.Law $2 $3 $5 }
+
+VarRole :: { UTP.Abs.VarRole }
+VarRole : 'var' SBBL Type { UTP.Abs.VMR_KV $2 $3 }
+
+SBBL :: { UTP.Abs.SBBL }
+SBBL
+  : 'NA' { UTP.Abs.SBBL_NA }
+  | 'SB' { UTP.Abs.SBBL_SB }
+  | 'NS' { UTP.Abs.SBBL_NS }
+
+LawType :: { UTP.Abs.LawType }
+LawType
+  : 'axiom' { UTP.Abs.LAxiom }
+  | 'proven' { UTP.Abs.LProof }
+  | 'assumed' { UTP.Abs.LAssume }
+
+ListItem :: { [UTP.Abs.Item] }
+ListItem : {- empty -} { [] } | Item ListItem { (:) $1 $2 }
 
 Pred :: { UTP.Abs.Pred }
 Pred : Pred '===' Pred1 { UTP.Abs.PEqv $1 $3 } | Pred1 { $1 }
@@ -138,7 +185,8 @@ Exp3 :: { UTP.Abs.Exp }
 Exp3
   : Integer { UTP.Abs.EInt $1 }
   | DynVar { UTP.Abs.EVar $1 }
-  | Boolean { UTP.Abs.EBool $1 }
+  | 'true' { UTP.Abs.ETrue }
+  | 'false' { UTP.Abs.EFalse }
   | 'nil' { UTP.Abs.ENil }
   | DynVar '(' ListExp ')' { UTP.Abs.ENmdTuple $1 $3 }
   | '(' Exp ')' { $2 }

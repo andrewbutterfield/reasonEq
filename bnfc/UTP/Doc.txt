@@ -27,11 +27,13 @@ The reserved words used in UTP are the following:
   | ``Conjecture`` | ``DclASet`` | ``DclDLVar`` | ``DclVar``
   | ``Exp`` | ``False`` | ``Law`` | ``NA``
   | ``NS`` | ``Obs`` | ``Prd`` | ``SB``
-  | ``Sub`` | ``SubL`` | ``SubV`` | ``Theory``
-  | ``True`` | ``assumed`` | ``axiom`` | ``div``
-  | ``false`` | ``mod`` | ``neg`` | ``nil``
-  | ``proven`` | ``tbot`` | ``true`` | ``ttop``
-  | ``var`` |  |  |
+  | ``SC`` | ``Sub`` | ``SubL`` | ``SubV``
+  | ``Theory`` | ``True`` | ``VSC`` | ``assumed``
+  | ``axiom`` | ``covby`` | ``dcovby`` | ``disj``
+  | ``div`` | ``false`` | ``fresh`` | ``lst``
+  | ``mod`` | ``neg`` | ``nil`` | ``none``
+  | ``proven`` | ``std`` | ``tbot`` | ``true``
+  | ``ttop`` | ``var`` |  |
 
 The symbols used in UTP are the following:
   | . | === | ==> | \/
@@ -40,7 +42,7 @@ The symbols used in UTP are the following:
   | ++ | : | + | -
   | * | ( | ) | (.
   | / | .) | | | ,
-  | -> | (: | :) |
+  | -> | (: | :) | ;
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -57,8 +59,8 @@ All other symbols are terminals.
   | //Item// | -> | ``DclVar`` //VarClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VarClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VarClass// //DynVar// ``.``
-  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Term// ``.``
-  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Term// ``.``
+  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Term// ``.`` //SCond//
+  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Term// ``.`` //SCond//
   | //VarRole// | -> | ``var`` //SBBL// //Type//
   | //VarClass// | -> | ``Obs``
   |  |  **|**  | ``Exp``
@@ -129,6 +131,22 @@ All other symbols are terminals.
   |  |  **|**  | //Type2// ``|`` //[Type2]//
   | //[Type3]// | -> | **eps**
   |  |  **|**  | //Type3// //[Type3]//
+  | //GVar// | -> | ``std`` //DynVar//
+  |  |  **|**  | ``lst`` //DynVar//
+  | //[GVar]// | -> | **eps**
+  |  |  **|**  | //GVar//
+  |  |  **|**  | //GVar// ``,`` //[GVar]//
+  | //VarSet// | -> | //[GVar]//
+  | //VSCond// | -> | //GVar// ``disj`` //VarSet//
+  |  |  **|**  | //GVar// ``covby`` //VarSet//
+  |  |  **|**  | //GVar// ``dcovby`` //VarSet//
+  | //[VSCond]// | -> | **eps**
+  |  |  **|**  | //VSCond//
+  |  |  **|**  | //VSCond// ``;`` //[VSCond]//
+  | //SCond// | -> | ``SC`` //[VSCond]// ``.`` //VarSet// ``.``
+  |  |  **|**  | ``VSC`` //[VSCond]// ``.``
+  |  |  **|**  | ``fresh`` //VarSet// ``.``
+  |  |  **|**  | ``none``
 
 
 

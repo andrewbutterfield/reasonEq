@@ -30,20 +30,16 @@
     Expressions -- covers arithmetic and cons-lists
     Predicates 
       -- covers propositions, equality, ordering, predicate transformers
-    Variable Data
+    Terms = Expressions+Predicates -- done
+    Variable Data -- covers what's actually used
       -- this is a monster - see below
       -- now we only implement what is actually used.
-    Substitutions
-    Here: we have enough to represent most of the propositional theories
-
-    Once substitution and/or quantifiers are introduced we need:
-    Side-Conditions
-
-    Top-level theory structuring:
-    Named-Assertions
-    Known-Declarations
-    Theory-Imports
-    Named-Theory
+    Substitutions -- done
+    Side-Conditions -- done
+    Quantifiers -- TBD
+    Iterators, etc.... TBD
+    Top-level theory structuring: -- done
+      Named-Assertions; Known-Declarations; Theory-Imports; Named-Theory
 
 -}
 
@@ -126,8 +122,8 @@ separator DynVar "" ;
 DeclVar.   Item ::= "DclVar" VarClass DynVar "." VarRole "."    ;  -- KV
 DeclDLVar. Item ::= "DclDLVar" VarClass DynVar "." [DynVar] "." ;  -- DL
 DeclASet.  Item ::= "DclASet" VarClass DynVar "."               ;  -- DAS
-Conj.      Item ::= "Conjecture" DynVar "." Term "." ;
-Law.       Item ::= "Law" LawType DynVar "." Term "." ;
+Conj.      Item ::= "Conjecture" DynVar "." Term "." SCond  ;
+Law.       Item ::= "Law" LawType DynVar "." Term "." SCond  ;
 
 VMR_KV. VarRole ::= "var" SBBL Type ;
 
@@ -224,4 +220,31 @@ coercions Type 3 ;
 separator Type2 "|" ;
 separator Type3 "" ;
 
-entrypoints Theory, Term, Type ;
+{- Side-Conditions
+    type SideCond = ( [VarSideConds]  -- all must be true
+                    , VarSet )       -- must be fresh
+    data  VarSideConds -- (V,D,C,Cd)
+      = VSC  GenVar      --  v,T,l$
+            (NA VarSet)  --  D, if applicable
+            (NA VarSet)  --  C, if applicable
+            (NA VarSet)  --  Cd, if applicable
+    data NA t = NA | The t -- we can ignore this
+-}
+
+SVar. GVar ::= "std" DynVar ;
+LVar. GVar ::= "lst" DynVar ;
+separator GVar "," ;
+
+VSet. VarSet ::= [GVar] ;
+
+VSCDisj.   VSCond ::= GVar "disj"   VarSet ;
+VSCCovBy.  VSCond ::= GVar "covby"  VarSet ;
+VSCDynCov. VSCond ::= GVar "dcovby" VarSet ;
+separator VSCond ";" ;
+
+SCFull.  SCond ::= "SC" [VSCond] "." VarSet "." ;
+SCVSCs.  SCond ::= "VSC" [VSCond] "." ;
+SCFresh. SCond ::= "fresh" VarSet "." ;
+SCnone.  SCond ::= "none" ;
+
+entrypoints Theory, Term, Type, SCond ;

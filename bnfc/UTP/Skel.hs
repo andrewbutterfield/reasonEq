@@ -28,8 +28,8 @@ transItem x = case x of
   UTP.Abs.DeclVar varclass dynvar varrole -> failure x
   UTP.Abs.DeclDLVar varclass dynvar dynvars -> failure x
   UTP.Abs.DeclASet varclass dynvar -> failure x
-  UTP.Abs.Conj dynvar term -> failure x
-  UTP.Abs.Law lawtype dynvar term -> failure x
+  UTP.Abs.Conj dynvar term scond -> failure x
+  UTP.Abs.Law lawtype dynvar term scond -> failure x
 
 transVarRole :: UTP.Abs.VarRole -> Result
 transVarRole x = case x of
@@ -95,3 +95,25 @@ transType x = case x of
   UTP.Abs.TArb -> failure x
   UTP.Abs.TVar dynvar -> failure x
   UTP.Abs.TBot -> failure x
+
+transGVar :: UTP.Abs.GVar -> Result
+transGVar x = case x of
+  UTP.Abs.SVar dynvar -> failure x
+  UTP.Abs.LVar dynvar -> failure x
+
+transVarSet :: UTP.Abs.VarSet -> Result
+transVarSet x = case x of
+  UTP.Abs.VSet gvars -> failure x
+
+transVSCond :: UTP.Abs.VSCond -> Result
+transVSCond x = case x of
+  UTP.Abs.VSCDisj gvar varset -> failure x
+  UTP.Abs.VSCCovBy gvar varset -> failure x
+  UTP.Abs.VSCDynCov gvar varset -> failure x
+
+transSCond :: UTP.Abs.SCond -> Result
+transSCond x = case x of
+  UTP.Abs.SCFull vsconds varset -> failure x
+  UTP.Abs.SCVSCs vsconds -> failure x
+  UTP.Abs.SCFresh varset -> failure x
+  UTP.Abs.SCnone -> failure x

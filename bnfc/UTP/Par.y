@@ -11,6 +11,7 @@ module UTP.Par
   , pTheory
   , pTerm
   , pType
+  , pSCond
   ) where
 
 import Prelude
@@ -23,6 +24,7 @@ import UTP.Lex
 %name pTheory Theory
 %name pTerm Term
 %name pType Type
+%name pSCond SCond
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -44,45 +46,55 @@ import UTP.Lex
   '/\\'        { PT _ (TS _ 15)     }
   ':'          { PT _ (TS _ 16)     }
   ':)'         { PT _ (TS _ 17)     }
-  '<'          { PT _ (TS _ 18)     }
-  '<='         { PT _ (TS _ 19)     }
-  '=='         { PT _ (TS _ 20)     }
-  '==='        { PT _ (TS _ 21)     }
-  '==>'        { PT _ (TS _ 22)     }
-  '>'          { PT _ (TS _ 23)     }
-  '>='         { PT _ (TS _ 24)     }
-  'Conjecture' { PT _ (TS _ 25)     }
-  'DclASet'    { PT _ (TS _ 26)     }
-  'DclDLVar'   { PT _ (TS _ 27)     }
-  'DclVar'     { PT _ (TS _ 28)     }
-  'Exp'        { PT _ (TS _ 29)     }
-  'False'      { PT _ (TS _ 30)     }
-  'Law'        { PT _ (TS _ 31)     }
-  'NA'         { PT _ (TS _ 32)     }
-  'NS'         { PT _ (TS _ 33)     }
-  'Obs'        { PT _ (TS _ 34)     }
-  'Prd'        { PT _ (TS _ 35)     }
-  'SB'         { PT _ (TS _ 36)     }
-  'Sub'        { PT _ (TS _ 37)     }
-  'SubL'       { PT _ (TS _ 38)     }
-  'SubV'       { PT _ (TS _ 39)     }
-  'Theory'     { PT _ (TS _ 40)     }
-  'True'       { PT _ (TS _ 41)     }
-  '\\/'        { PT _ (TS _ 42)     }
-  'assumed'    { PT _ (TS _ 43)     }
-  'axiom'      { PT _ (TS _ 44)     }
-  'div'        { PT _ (TS _ 45)     }
-  'false'      { PT _ (TS _ 46)     }
-  'mod'        { PT _ (TS _ 47)     }
-  'neg'        { PT _ (TS _ 48)     }
-  'nil'        { PT _ (TS _ 49)     }
-  'proven'     { PT _ (TS _ 50)     }
-  'tbot'       { PT _ (TS _ 51)     }
-  'true'       { PT _ (TS _ 52)     }
-  'ttop'       { PT _ (TS _ 53)     }
-  'var'        { PT _ (TS _ 54)     }
-  '|'          { PT _ (TS _ 55)     }
-  '~'          { PT _ (TS _ 56)     }
+  ';'          { PT _ (TS _ 18)     }
+  '<'          { PT _ (TS _ 19)     }
+  '<='         { PT _ (TS _ 20)     }
+  '=='         { PT _ (TS _ 21)     }
+  '==='        { PT _ (TS _ 22)     }
+  '==>'        { PT _ (TS _ 23)     }
+  '>'          { PT _ (TS _ 24)     }
+  '>='         { PT _ (TS _ 25)     }
+  'Conjecture' { PT _ (TS _ 26)     }
+  'DclASet'    { PT _ (TS _ 27)     }
+  'DclDLVar'   { PT _ (TS _ 28)     }
+  'DclVar'     { PT _ (TS _ 29)     }
+  'Exp'        { PT _ (TS _ 30)     }
+  'False'      { PT _ (TS _ 31)     }
+  'Law'        { PT _ (TS _ 32)     }
+  'NA'         { PT _ (TS _ 33)     }
+  'NS'         { PT _ (TS _ 34)     }
+  'Obs'        { PT _ (TS _ 35)     }
+  'Prd'        { PT _ (TS _ 36)     }
+  'SB'         { PT _ (TS _ 37)     }
+  'SC'         { PT _ (TS _ 38)     }
+  'Sub'        { PT _ (TS _ 39)     }
+  'SubL'       { PT _ (TS _ 40)     }
+  'SubV'       { PT _ (TS _ 41)     }
+  'Theory'     { PT _ (TS _ 42)     }
+  'True'       { PT _ (TS _ 43)     }
+  'VSC'        { PT _ (TS _ 44)     }
+  '\\/'        { PT _ (TS _ 45)     }
+  'assumed'    { PT _ (TS _ 46)     }
+  'axiom'      { PT _ (TS _ 47)     }
+  'covby'      { PT _ (TS _ 48)     }
+  'dcovby'     { PT _ (TS _ 49)     }
+  'disj'       { PT _ (TS _ 50)     }
+  'div'        { PT _ (TS _ 51)     }
+  'false'      { PT _ (TS _ 52)     }
+  'fresh'      { PT _ (TS _ 53)     }
+  'lst'        { PT _ (TS _ 54)     }
+  'mod'        { PT _ (TS _ 55)     }
+  'neg'        { PT _ (TS _ 56)     }
+  'nil'        { PT _ (TS _ 57)     }
+  'none'       { PT _ (TS _ 58)     }
+  'proven'     { PT _ (TS _ 59)     }
+  'std'        { PT _ (TS _ 60)     }
+  'tbot'       { PT _ (TS _ 61)     }
+  'true'       { PT _ (TS _ 62)     }
+  'ttop'       { PT _ (TS _ 63)     }
+  'var'        { PT _ (TS _ 64)     }
+  '|'          { PT _ (TS _ 65)     }
+  '~'          { PT _ (TS _ 66)     }
   L_integ      { PT _ (TI $$)       }
   L_DynVar     { PT _ (T_DynVar $$) }
 
@@ -106,8 +118,8 @@ Item
   : 'DclVar' VarClass DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $3 $5 }
   | 'DclDLVar' VarClass DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $3 $5 }
   | 'DclASet' VarClass DynVar '.' { UTP.Abs.DeclASet $2 $3 }
-  | 'Conjecture' DynVar '.' Term '.' { UTP.Abs.Conj $2 $4 }
-  | 'Law' LawType DynVar '.' Term '.' { UTP.Abs.Law $2 $3 $5 }
+  | 'Conjecture' DynVar '.' Term '.' SCond { UTP.Abs.Conj $2 $4 $6 }
+  | 'Law' LawType DynVar '.' Term '.' SCond { UTP.Abs.Law $2 $3 $5 $7 }
 
 VarRole :: { UTP.Abs.VarRole }
 VarRole : 'var' SBBL Type { UTP.Abs.VMR_KV $2 $3 }
@@ -225,6 +237,39 @@ ListType2
 
 ListType3 :: { [UTP.Abs.Type] }
 ListType3 : {- empty -} { [] } | Type3 ListType3 { (:) $1 $2 }
+
+GVar :: { UTP.Abs.GVar }
+GVar
+  : 'std' DynVar { UTP.Abs.SVar $2 }
+  | 'lst' DynVar { UTP.Abs.LVar $2 }
+
+ListGVar :: { [UTP.Abs.GVar] }
+ListGVar
+  : {- empty -} { [] }
+  | GVar { (:[]) $1 }
+  | GVar ',' ListGVar { (:) $1 $3 }
+
+VarSet :: { UTP.Abs.VarSet }
+VarSet : ListGVar { UTP.Abs.VSet $1 }
+
+VSCond :: { UTP.Abs.VSCond }
+VSCond
+  : GVar 'disj' VarSet { UTP.Abs.VSCDisj $1 $3 }
+  | GVar 'covby' VarSet { UTP.Abs.VSCCovBy $1 $3 }
+  | GVar 'dcovby' VarSet { UTP.Abs.VSCDynCov $1 $3 }
+
+ListVSCond :: { [UTP.Abs.VSCond] }
+ListVSCond
+  : {- empty -} { [] }
+  | VSCond { (:[]) $1 }
+  | VSCond ';' ListVSCond { (:) $1 $3 }
+
+SCond :: { UTP.Abs.SCond }
+SCond
+  : 'SC' ListVSCond '.' VarSet '.' { UTP.Abs.SCFull $2 $4 }
+  | 'VSC' ListVSCond '.' { UTP.Abs.SCVSCs $2 }
+  | 'fresh' VarSet '.' { UTP.Abs.SCFresh $2 }
+  | 'none' { UTP.Abs.SCnone }
 
 {
 

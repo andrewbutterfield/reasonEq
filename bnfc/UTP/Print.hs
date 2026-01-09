@@ -149,8 +149,8 @@ instance Print UTP.Abs.Item where
     UTP.Abs.DeclVar varclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     UTP.Abs.DeclDLVar varclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     UTP.Abs.DeclASet varclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 varclass, prt 0 dynvar, doc (showString ".")])
-    UTP.Abs.Conj dynvar term -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
-    UTP.Abs.Law lawtype dynvar term -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
+    UTP.Abs.Conj dynvar term scond -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString "."), prt 0 scond])
+    UTP.Abs.Law lawtype dynvar term scond -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString "."), prt 0 scond])
 
 instance Print UTP.Abs.VarRole where
   prt i = \case
@@ -232,3 +232,35 @@ instance Print [UTP.Abs.Type] where
   prt _ [] = concatD []
   prt _ [x] = concatD [prt 2 x]
   prt _ (x:xs) = concatD [prt 2 x, doc (showString "|"), prt 2 xs]
+
+instance Print UTP.Abs.GVar where
+  prt i = \case
+    UTP.Abs.SVar dynvar -> prPrec i 0 (concatD [doc (showString "std"), prt 0 dynvar])
+    UTP.Abs.LVar dynvar -> prPrec i 0 (concatD [doc (showString "lst"), prt 0 dynvar])
+
+instance Print [UTP.Abs.GVar] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print UTP.Abs.VarSet where
+  prt i = \case
+    UTP.Abs.VSet gvars -> prPrec i 0 (concatD [prt 0 gvars])
+
+instance Print UTP.Abs.VSCond where
+  prt i = \case
+    UTP.Abs.VSCDisj gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "disj"), prt 0 varset])
+    UTP.Abs.VSCCovBy gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "covby"), prt 0 varset])
+    UTP.Abs.VSCDynCov gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "dcovby"), prt 0 varset])
+
+instance Print [UTP.Abs.VSCond] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ";"), prt 0 xs]
+
+instance Print UTP.Abs.SCond where
+  prt i = \case
+    UTP.Abs.SCFull vsconds varset -> prPrec i 0 (concatD [doc (showString "SC"), prt 0 vsconds, doc (showString "."), prt 0 varset, doc (showString ".")])
+    UTP.Abs.SCVSCs vsconds -> prPrec i 0 (concatD [doc (showString "VSC"), prt 0 vsconds, doc (showString ".")])
+    UTP.Abs.SCFresh varset -> prPrec i 0 (concatD [doc (showString "fresh"), prt 0 varset, doc (showString ".")])
+    UTP.Abs.SCnone -> prPrec i 0 (concatD [doc (showString "none")])

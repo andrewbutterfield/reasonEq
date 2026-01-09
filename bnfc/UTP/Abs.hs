@@ -17,8 +17,8 @@ data Item
     = DeclVar VarClass DynVar VarRole
     | DeclDLVar VarClass DynVar [DynVar]
     | DeclASet VarClass DynVar
-    | Conj DynVar Term
-    | Law LawType DynVar Term
+    | Conj DynVar Term SCond
+    | Law LawType DynVar Term SCond
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data VarRole = VMR_KV SBBL Type
@@ -74,6 +74,25 @@ data Type
     | TArb
     | TVar DynVar
     | TBot
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data GVar = SVar DynVar | LVar DynVar
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data VarSet = VSet [GVar]
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data VSCond
+    = VSCDisj GVar VarSet
+    | VSCCovBy GVar VarSet
+    | VSCDynCov GVar VarSet
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data SCond
+    = SCFull [VSCond] VarSet
+    | SCVSCs [VSCond]
+    | SCFresh VarSet
+    | SCnone
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype DynVar = DynVar String

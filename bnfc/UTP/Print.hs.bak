@@ -136,8 +136,6 @@ instance Print Double where
 
 instance Print UTP.Abs.DynVar where
   prt _ (UTP.Abs.DynVar i) = doc $ showString i
-instance Print UTP.Abs.DynLVar where
-  prt _ (UTP.Abs.DynLVar i) = doc $ showString i
 instance Print UTP.Abs.Theory where
   prt i = \case
     UTP.Abs.Thry dynvar dynvars items -> prPrec i 0 (concatD [doc (showString "Theory"), prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString "."), prt 0 items])
@@ -234,3 +232,35 @@ instance Print [UTP.Abs.Type] where
   prt _ [] = concatD []
   prt _ [x] = concatD [prt 2 x]
   prt _ (x:xs) = concatD [prt 2 x, doc (showString "|"), prt 2 xs]
+
+instance Print UTP.Abs.GVar where
+  prt i = \case
+    UTP.Abs.SVar dynvar -> prPrec i 0 (concatD [doc (showString "std"), prt 0 dynvar])
+    UTP.Abs.LVar dynvar -> prPrec i 0 (concatD [doc (showString "lst"), prt 0 dynvar])
+
+instance Print [UTP.Abs.GVar] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print UTP.Abs.VarSet where
+  prt i = \case
+    UTP.Abs.VSet gvars -> prPrec i 0 (concatD [prt 0 gvars])
+
+instance Print UTP.Abs.VSCond where
+  prt i = \case
+    UTP.Abs.VSCDisj gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "disj"), prt 0 varset])
+    UTP.Abs.VSCCovBy gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "covby"), prt 0 varset])
+    UTP.Abs.VSCDynCov gvar varset -> prPrec i 0 (concatD [prt 0 gvar, doc (showString "dcovby"), prt 0 varset])
+
+instance Print [UTP.Abs.VSCond] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ";"), prt 0 xs]
+
+instance Print UTP.Abs.SCond where
+  prt i = \case
+    UTP.Abs.SCFull vsconds varset -> prPrec i 0 (concatD [doc (showString "SC"), prt 0 vsconds, doc (showString "."), prt 0 varset, doc (showString ".")])
+    UTP.Abs.SCVSCs vsconds -> prPrec i 0 (concatD [doc (showString "VSC"), prt 0 vsconds, doc (showString ".")])
+    UTP.Abs.SCFresh varset -> prPrec i 0 (concatD [doc (showString "fresh"), prt 0 varset, doc (showString ".")])
+    UTP.Abs.SCnone -> prPrec i 0 (concatD [doc (showString "none")])

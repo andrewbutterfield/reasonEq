@@ -76,9 +76,25 @@ data Type
     | TBot
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-newtype DynVar = DynVar String
-  deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
+data GVar = SVar DynVar | LVar DynVar
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-newtype DynLVar = DynLVar String
+data VarSet = VSet [GVar]
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data VSCond
+    = VSCDisj GVar VarSet
+    | VSCCovBy GVar VarSet
+    | VSCDynCov GVar VarSet
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data SCond
+    = SCFull [VSCond] VarSet
+    | SCVSCs [VSCond]
+    | SCFresh VarSet
+    | SCnone
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+newtype DynVar = DynVar String
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 

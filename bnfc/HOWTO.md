@@ -7,8 +7,8 @@ General approach:
 
 ```
 bnfc -d -m UTP.lbnf
-make
-UTP/Test
+make -f rmake
+./Runner
   <enter stuff>
 ^D
 ```

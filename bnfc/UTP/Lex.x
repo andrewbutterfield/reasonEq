@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \. | \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \= \= | \! \= | \< | \< \= | \> | \> \= | \+ \+ | \: | \+ | \- | \* | \( | \) | \( \. | \/ | \. \) | \| | \, | \- \> | \( \: | \: \) | \;
+@rsyms = \. | \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \= \= | \! \= | \< | \< \= | \> | \> \= | \+ \+ | \: | \+ | \- | \* | \( | \) | \[ \. | \/ | \. \] | \| | \, | \- \> | \( \: | \: \) | \;
 
 :-
 
@@ -154,29 +154,29 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "NS" 34
-    (b ":)" 17
-       (b "," 9
-          (b ")" 5
-             (b "(." 3 (b "(" 2 (b "!=" 1 N N) N) (b "(:" 4 N N))
-             (b "+" 7 (b "*" 6 N N) (b "++" 8 N N)))
-          (b ".)" 13
-             (b "->" 11 (b "-" 10 N N) (b "." 12 N N))
-             (b "/\\" 15 (b "/" 14 N N) (b ":" 16 N N))))
-       (b "Conjecture" 26
-          (b "===" 22
-             (b "<=" 20 (b "<" 19 (b ";" 18 N N) N) (b "==" 21 N N))
-             (b ">" 24 (b "==>" 23 N N) (b ">=" 25 N N)))
-          (b "Exp" 30
-             (b "DclDLVar" 28 (b "DclASet" 27 N N) (b "DclVar" 29 N N))
-             (b "Law" 32 (b "False" 31 N N) (b "NA" 33 N N)))))
+  b "Obs" 34
+    (b ";" 17
+       (b "-" 9
+          (b "*" 5
+             (b "(:" 3 (b "(" 2 (b "!=" 1 N N) N) (b ")" 4 N N))
+             (b "++" 7 (b "+" 6 N N) (b "," 8 N N)))
+          (b "/" 13
+             (b "." 11 (b "->" 10 N N) (b ".]" 12 N N))
+             (b ":" 15 (b "/\\" 14 N N) (b ":)" 16 N N))))
+       (b "DclASet" 26
+          (b "==>" 22
+             (b "==" 20 (b "<=" 19 (b "<" 18 N N) N) (b "===" 21 N N))
+             (b ">=" 24 (b ">" 23 N N) (b "Conjecture" 25 N N)))
+          (b "False" 30
+             (b "DclVar" 28 (b "DclDLVar" 27 N N) (b "Exp" 29 N N))
+             (b "NA" 32 (b "Law" 31 N N) (b "NS" 33 N N)))))
     (b "div" 51
-       (b "True" 43
-          (b "Sub" 39
-             (b "SB" 37 (b "Prd" 36 (b "Obs" 35 N N) N) (b "SC" 38 N N))
-             (b "SubV" 41 (b "SubL" 40 N N) (b "Theory" 42 N N)))
+       (b "VSC" 43
+          (b "SubL" 39
+             (b "SC" 37 (b "SB" 36 (b "Prd" 35 N N) N) (b "Sub" 38 N N))
+             (b "Theory" 41 (b "SubV" 40 N N) (b "True" 42 N N)))
           (b "axiom" 47
-             (b "\\/" 45 (b "VSC" 44 N N) (b "assumed" 46 N N))
+             (b "\\/" 45 (b "[." 44 N N) (b "assumed" 46 N N))
              (b "dcovby" 49 (b "covby" 48 N N) (b "disj" 50 N N))))
        (b "proven" 59
           (b "mod" 55

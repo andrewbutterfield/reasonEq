@@ -59,8 +59,8 @@ All other symbols are terminals.
   | //Item// | -> | ``DclVar`` //VarClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VarClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VarClass// //DynVar// ``.``
-  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Term// ``.``
-  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Term// ``.``
+  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Term// ``.`` //SCond//
+  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Term// ``.`` //SCond//
   | //VarRole// | -> | ``var`` //SBBL// //Type//
   | //VarClass// | -> | ``Obs``
   |  |  **|**  | ``Exp``

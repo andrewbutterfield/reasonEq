@@ -73,9 +73,9 @@ Grammar
 	Term8 -> 'false'                                   (59)
 	Term8 -> 'nil'                                     (60)
 	Term8 -> DynVar '(' ListTerm ')'                   (61)
-	Term8 -> 'SubV' Term '(.' ListTerm '/' ListDynVar '.)'   (62)
-	Term8 -> 'SubL' Term '(.' ListDynVar '/' ListDynVar '.)'   (63)
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)'   (64)
+	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar '.]'   (62)
+	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]'   (63)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'   (64)
 	Term8 -> '(' Term ')'                              (65)
 	ListTerm ->                                        (66)
 	ListTerm -> Term                                   (67)
@@ -117,48 +117,48 @@ Terminals
 -----------------------------------------------------------------------------
 	'!='           { PT _ (TS _ 1) }
 	'('            { PT _ (TS _ 2) }
-	'(.'           { PT _ (TS _ 3) }
-	'(:'           { PT _ (TS _ 4) }
-	')'            { PT _ (TS _ 5) }
-	'*'            { PT _ (TS _ 6) }
-	'+'            { PT _ (TS _ 7) }
-	'++'           { PT _ (TS _ 8) }
-	','            { PT _ (TS _ 9) }
-	'-'            { PT _ (TS _ 10) }
-	'->'           { PT _ (TS _ 11) }
-	'.'            { PT _ (TS _ 12) }
-	'.)'           { PT _ (TS _ 13) }
-	'/'            { PT _ (TS _ 14) }
-	'/\\'          { PT _ (TS _ 15) }
-	':'            { PT _ (TS _ 16) }
-	':)'           { PT _ (TS _ 17) }
-	';'            { PT _ (TS _ 18) }
-	'<'            { PT _ (TS _ 19) }
-	'<='           { PT _ (TS _ 20) }
-	'=='           { PT _ (TS _ 21) }
-	'==='          { PT _ (TS _ 22) }
-	'==>'          { PT _ (TS _ 23) }
-	'>'            { PT _ (TS _ 24) }
-	'>='           { PT _ (TS _ 25) }
-	'Conjecture'   { PT _ (TS _ 26) }
-	'DclASet'      { PT _ (TS _ 27) }
-	'DclDLVar'     { PT _ (TS _ 28) }
-	'DclVar'       { PT _ (TS _ 29) }
-	'Exp'          { PT _ (TS _ 30) }
-	'False'        { PT _ (TS _ 31) }
-	'Law'          { PT _ (TS _ 32) }
-	'NA'           { PT _ (TS _ 33) }
-	'NS'           { PT _ (TS _ 34) }
-	'Obs'          { PT _ (TS _ 35) }
-	'Prd'          { PT _ (TS _ 36) }
-	'SB'           { PT _ (TS _ 37) }
-	'SC'           { PT _ (TS _ 38) }
-	'Sub'          { PT _ (TS _ 39) }
-	'SubL'         { PT _ (TS _ 40) }
-	'SubV'         { PT _ (TS _ 41) }
-	'Theory'       { PT _ (TS _ 42) }
-	'True'         { PT _ (TS _ 43) }
-	'VSC'          { PT _ (TS _ 44) }
+	'(:'           { PT _ (TS _ 3) }
+	')'            { PT _ (TS _ 4) }
+	'*'            { PT _ (TS _ 5) }
+	'+'            { PT _ (TS _ 6) }
+	'++'           { PT _ (TS _ 7) }
+	','            { PT _ (TS _ 8) }
+	'-'            { PT _ (TS _ 9) }
+	'->'           { PT _ (TS _ 10) }
+	'.'            { PT _ (TS _ 11) }
+	'.]'           { PT _ (TS _ 12) }
+	'/'            { PT _ (TS _ 13) }
+	'/\\'          { PT _ (TS _ 14) }
+	':'            { PT _ (TS _ 15) }
+	':)'           { PT _ (TS _ 16) }
+	';'            { PT _ (TS _ 17) }
+	'<'            { PT _ (TS _ 18) }
+	'<='           { PT _ (TS _ 19) }
+	'=='           { PT _ (TS _ 20) }
+	'==='          { PT _ (TS _ 21) }
+	'==>'          { PT _ (TS _ 22) }
+	'>'            { PT _ (TS _ 23) }
+	'>='           { PT _ (TS _ 24) }
+	'Conjecture'   { PT _ (TS _ 25) }
+	'DclASet'      { PT _ (TS _ 26) }
+	'DclDLVar'     { PT _ (TS _ 27) }
+	'DclVar'       { PT _ (TS _ 28) }
+	'Exp'          { PT _ (TS _ 29) }
+	'False'        { PT _ (TS _ 30) }
+	'Law'          { PT _ (TS _ 31) }
+	'NA'           { PT _ (TS _ 32) }
+	'NS'           { PT _ (TS _ 33) }
+	'Obs'          { PT _ (TS _ 34) }
+	'Prd'          { PT _ (TS _ 35) }
+	'SB'           { PT _ (TS _ 36) }
+	'SC'           { PT _ (TS _ 37) }
+	'Sub'          { PT _ (TS _ 38) }
+	'SubL'         { PT _ (TS _ 39) }
+	'SubV'         { PT _ (TS _ 40) }
+	'Theory'       { PT _ (TS _ 41) }
+	'True'         { PT _ (TS _ 42) }
+	'VSC'          { PT _ (TS _ 43) }
+	'[.'           { PT _ (TS _ 44) }
 	'\\/'          { PT _ (TS _ 45) }
 	'assumed'      { PT _ (TS _ 46) }
 	'axiom'        { PT _ (TS _ 47) }
@@ -303,7 +303,6 @@ State 5
 	Integer -> L_integ .                                (rule 4)
 
 	'!='           reduce using rule 4
-	'(.'           reduce using rule 4
 	')'            reduce using rule 4
 	'*'            reduce using rule 4
 	'+'            reduce using rule 4
@@ -321,6 +320,7 @@ State 5
 	'==>'          reduce using rule 4
 	'>'            reduce using rule 4
 	'>='           reduce using rule 4
+	'[.'           reduce using rule 4
 	'\\/'          reduce using rule 4
 	'div'          reduce using rule 4
 	'mod'          reduce using rule 4
@@ -503,7 +503,6 @@ State 19
 
 	'!='           reduce using rule 5
 	'('            reduce using rule 5
-	'(.'           reduce using rule 5
 	'(:'           reduce using rule 5
 	')'            reduce using rule 5
 	'*'            reduce using rule 5
@@ -513,7 +512,7 @@ State 19
 	'-'            reduce using rule 5
 	'->'           reduce using rule 5
 	'.'            reduce using rule 5
-	'.)'           reduce using rule 5
+	'.]'           reduce using rule 5
 	'/'            reduce using rule 5
 	'/\\'          reduce using rule 5
 	':'            reduce using rule 5
@@ -526,6 +525,7 @@ State 19
 	'==>'          reduce using rule 5
 	'>'            reduce using rule 5
 	'>='           reduce using rule 5
+	'[.'           reduce using rule 5
 	'\\/'          reduce using rule 5
 	'covby'        reduce using rule 5
 	'dcovby'       reduce using rule 5
@@ -544,7 +544,6 @@ State 20
 	Term8 -> Integer .                                  (rule 56)
 
 	'!='           reduce using rule 56
-	'(.'           reduce using rule 56
 	')'            reduce using rule 56
 	'*'            reduce using rule 56
 	'+'            reduce using rule 56
@@ -562,6 +561,7 @@ State 20
 	'==>'          reduce using rule 56
 	'>'            reduce using rule 56
 	'>='           reduce using rule 56
+	'[.'           reduce using rule 56
 	'\\/'          reduce using rule 56
 	'div'          reduce using rule 56
 	'mod'          reduce using rule 56
@@ -576,9 +576,6 @@ State 21
 
 	'!='           reduce using rule 57
 	'('            shift, and enter state 69
-	'(.'           reduce using rule 57
-			(reduce using rule 43)
-
 	')'            reduce using rule 57
 			(reduce using rule 43)
 
@@ -610,6 +607,9 @@ State 21
 
 	'>'            reduce using rule 57
 	'>='           reduce using rule 57
+	'[.'           reduce using rule 57
+			(reduce using rule 43)
+
 	'\\/'          reduce using rule 57
 			(reduce using rule 43)
 
@@ -633,12 +633,12 @@ State 23
 
 	Term -> Term1 .                                     (rule 27)
 
-	'(.'           reduce using rule 27
 	')'            reduce using rule 27
 	','            reduce using rule 27
 	'.'            reduce using rule 27
 	'/'            reduce using rule 27
 	'==='          reduce using rule 27
+	'[.'           reduce using rule 27
 	%eof           reduce using rule 27
 
 
@@ -648,13 +648,13 @@ State 24
 	Term1 -> Term2 .                                    (rule 29)
 	Term2 -> Term2 . '\\/' Term3                        (rule 30)
 
-	'(.'           reduce using rule 29
 	')'            reduce using rule 29
 	','            reduce using rule 29
 	'.'            reduce using rule 29
 	'/'            reduce using rule 29
 	'==='          reduce using rule 29
 	'==>'          shift, and enter state 66
+	'[.'           reduce using rule 29
 	'\\/'          shift, and enter state 67
 	%eof           reduce using rule 29
 
@@ -664,7 +664,6 @@ State 25
 	Term2 -> Term3 .                                    (rule 31)
 	Term3 -> Term3 . '/\\' Term4                        (rule 32)
 
-	'(.'           reduce using rule 31
 	')'            reduce using rule 31
 	','            reduce using rule 31
 	'.'            reduce using rule 31
@@ -672,6 +671,7 @@ State 25
 	'/\\'          shift, and enter state 65
 	'==='          reduce using rule 31
 	'==>'          reduce using rule 31
+	'[.'           reduce using rule 31
 	'\\/'          reduce using rule 31
 	%eof           reduce using rule 31
 
@@ -680,7 +680,6 @@ State 26
 
 	Term3 -> Term4 .                                    (rule 34)
 
-	'(.'           reduce using rule 34
 	')'            reduce using rule 34
 	','            reduce using rule 34
 	'.'            reduce using rule 34
@@ -688,6 +687,7 @@ State 26
 	'/\\'          reduce using rule 34
 	'==='          reduce using rule 34
 	'==>'          reduce using rule 34
+	'[.'           reduce using rule 34
 	'\\/'          reduce using rule 34
 	%eof           reduce using rule 34
 
@@ -703,7 +703,6 @@ State 27
 	Term4 -> Term5 .                                    (rule 44)
 
 	'!='           shift, and enter state 59
-	'(.'           reduce using rule 44
 	')'            reduce using rule 44
 	','            reduce using rule 44
 	'.'            reduce using rule 44
@@ -716,6 +715,7 @@ State 27
 	'==>'          reduce using rule 44
 	'>'            shift, and enter state 63
 	'>='           shift, and enter state 64
+	'[.'           reduce using rule 44
 	'\\/'          reduce using rule 44
 	%eof           reduce using rule 44
 
@@ -729,7 +729,6 @@ State 28
 	Term6 -> Term6 . '-' Term7                          (rule 49)
 
 	'!='           reduce using rule 47
-	'(.'           reduce using rule 47
 	')'            reduce using rule 47
 	'+'            shift, and enter state 55
 	'++'           shift, and enter state 56
@@ -746,6 +745,7 @@ State 28
 	'==>'          reduce using rule 47
 	'>'            reduce using rule 47
 	'>='           reduce using rule 47
+	'[.'           reduce using rule 47
 	'\\/'          reduce using rule 47
 	%eof           reduce using rule 47
 
@@ -758,7 +758,6 @@ State 29
 	Term7 -> Term7 . 'mod' Term8                        (rule 53)
 
 	'!='           reduce using rule 50
-	'(.'           reduce using rule 50
 	')'            reduce using rule 50
 	'*'            shift, and enter state 52
 	'+'            reduce using rule 50
@@ -776,6 +775,7 @@ State 29
 	'==>'          reduce using rule 50
 	'>'            reduce using rule 50
 	'>='           reduce using rule 50
+	'[.'           reduce using rule 50
 	'\\/'          reduce using rule 50
 	'div'          shift, and enter state 53
 	'mod'          shift, and enter state 54
@@ -787,7 +787,6 @@ State 30
 	Term7 -> Term8 .                                    (rule 55)
 
 	'!='           reduce using rule 55
-	'(.'           reduce using rule 55
 	')'            reduce using rule 55
 	'*'            reduce using rule 55
 	'+'            reduce using rule 55
@@ -805,6 +804,7 @@ State 30
 	'==>'          reduce using rule 55
 	'>'            reduce using rule 55
 	'>='           reduce using rule 55
+	'[.'           reduce using rule 55
 	'\\/'          reduce using rule 55
 	'div'          reduce using rule 55
 	'mod'          reduce using rule 55
@@ -845,7 +845,6 @@ State 32
 
 	Term4 -> 'False' .                                  (rule 42)
 
-	'(.'           reduce using rule 42
 	')'            reduce using rule 42
 	','            reduce using rule 42
 	'.'            reduce using rule 42
@@ -853,13 +852,14 @@ State 32
 	'/\\'          reduce using rule 42
 	'==='          reduce using rule 42
 	'==>'          reduce using rule 42
+	'[.'           reduce using rule 42
 	'\\/'          reduce using rule 42
 	%eof           reduce using rule 42
 
 
 State 33
 
-	Term8 -> 'Sub' . Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' . Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -889,7 +889,7 @@ State 33
 
 State 34
 
-	Term8 -> 'SubL' . Term '(.' ListDynVar '/' ListDynVar '.)'    (rule 63)
+	Term8 -> 'SubL' . Term '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -919,7 +919,7 @@ State 34
 
 State 35
 
-	Term8 -> 'SubV' . Term '(.' ListTerm '/' ListDynVar '.)'    (rule 62)
+	Term8 -> 'SubV' . Term '[.' ListTerm '/' ListDynVar '.]'    (rule 62)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -951,7 +951,6 @@ State 36
 
 	Term4 -> 'True' .                                   (rule 41)
 
-	'(.'           reduce using rule 41
 	')'            reduce using rule 41
 	','            reduce using rule 41
 	'.'            reduce using rule 41
@@ -959,6 +958,7 @@ State 36
 	'/\\'          reduce using rule 41
 	'==='          reduce using rule 41
 	'==>'          reduce using rule 41
+	'[.'           reduce using rule 41
 	'\\/'          reduce using rule 41
 	%eof           reduce using rule 41
 
@@ -968,7 +968,6 @@ State 37
 	Term8 -> 'false' .                                  (rule 59)
 
 	'!='           reduce using rule 59
-	'(.'           reduce using rule 59
 	')'            reduce using rule 59
 	'*'            reduce using rule 59
 	'+'            reduce using rule 59
@@ -986,6 +985,7 @@ State 37
 	'==>'          reduce using rule 59
 	'>'            reduce using rule 59
 	'>='           reduce using rule 59
+	'[.'           reduce using rule 59
 	'\\/'          reduce using rule 59
 	'div'          reduce using rule 59
 	'mod'          reduce using rule 59
@@ -1015,7 +1015,6 @@ State 39
 	Term8 -> 'nil' .                                    (rule 60)
 
 	'!='           reduce using rule 60
-	'(.'           reduce using rule 60
 	')'            reduce using rule 60
 	'*'            reduce using rule 60
 	'+'            reduce using rule 60
@@ -1033,6 +1032,7 @@ State 39
 	'==>'          reduce using rule 60
 	'>'            reduce using rule 60
 	'>='           reduce using rule 60
+	'[.'           reduce using rule 60
 	'\\/'          reduce using rule 60
 	'div'          reduce using rule 60
 	'mod'          reduce using rule 60
@@ -1044,7 +1044,6 @@ State 40
 	Term8 -> 'true' .                                   (rule 58)
 
 	'!='           reduce using rule 58
-	'(.'           reduce using rule 58
 	')'            reduce using rule 58
 	'*'            reduce using rule 58
 	'+'            reduce using rule 58
@@ -1062,6 +1061,7 @@ State 40
 	'==>'          reduce using rule 58
 	'>'            reduce using rule 58
 	'>='           reduce using rule 58
+	'[.'           reduce using rule 58
 	'\\/'          reduce using rule 58
 	'div'          reduce using rule 58
 	'mod'          reduce using rule 58
@@ -1119,7 +1119,6 @@ State 45
 
 	Term3 -> '~' Term4 .                                (rule 33)
 
-	'(.'           reduce using rule 33
 	')'            reduce using rule 33
 	','            reduce using rule 33
 	'.'            reduce using rule 33
@@ -1127,6 +1126,7 @@ State 45
 	'/\\'          reduce using rule 33
 	'==='          reduce using rule 33
 	'==>'          reduce using rule 33
+	'[.'           reduce using rule 33
 	'\\/'          reduce using rule 33
 	%eof           reduce using rule 33
 
@@ -1138,7 +1138,6 @@ State 46
 
 	'!='           reduce using rule 57
 	'('            shift, and enter state 69
-	'(.'           reduce using rule 57
 	')'            reduce using rule 57
 	'*'            reduce using rule 57
 	'+'            reduce using rule 57
@@ -1156,6 +1155,7 @@ State 46
 	'==>'          reduce using rule 57
 	'>'            reduce using rule 57
 	'>='           reduce using rule 57
+	'[.'           reduce using rule 57
 	'\\/'          reduce using rule 57
 	'div'          reduce using rule 57
 	'mod'          reduce using rule 57
@@ -1167,7 +1167,6 @@ State 47
 	Term7 -> 'neg' Term8 .                              (rule 54)
 
 	'!='           reduce using rule 54
-	'(.'           reduce using rule 54
 	')'            reduce using rule 54
 	'*'            reduce using rule 54
 	'+'            reduce using rule 54
@@ -1185,6 +1184,7 @@ State 47
 	'==>'          reduce using rule 54
 	'>'            reduce using rule 54
 	'>='           reduce using rule 54
+	'[.'           reduce using rule 54
 	'\\/'          reduce using rule 54
 	'div'          reduce using rule 54
 	'mod'          reduce using rule 54
@@ -1194,28 +1194,28 @@ State 47
 State 48
 
 	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'SubV' Term . '(.' ListTerm '/' ListDynVar '.)'    (rule 62)
+	Term8 -> 'SubV' Term . '[.' ListTerm '/' ListDynVar '.]'    (rule 62)
 
-	'(.'           shift, and enter state 123
 	'==='          shift, and enter state 68
+	'[.'           shift, and enter state 123
 
 
 State 49
 
 	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'SubL' Term . '(.' ListDynVar '/' ListDynVar '.)'    (rule 63)
+	Term8 -> 'SubL' Term . '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
 
-	'(.'           shift, and enter state 122
 	'==='          shift, and enter state 68
+	'[.'           shift, and enter state 122
 
 
 State 50
 
 	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'Sub' Term . '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term . '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
-	'(.'           shift, and enter state 121
 	'==='          shift, and enter state 68
+	'[.'           shift, and enter state 121
 
 
 State 51
@@ -2017,12 +2017,12 @@ State 103
 
 	Term -> Term '===' Term1 .                          (rule 26)
 
-	'(.'           reduce using rule 26
 	')'            reduce using rule 26
 	','            reduce using rule 26
 	'.'            reduce using rule 26
 	'/'            reduce using rule 26
 	'==='          reduce using rule 26
+	'[.'           reduce using rule 26
 	%eof           reduce using rule 26
 
 
@@ -2031,7 +2031,6 @@ State 104
 	Term2 -> Term2 '\\/' Term3 .                        (rule 30)
 	Term3 -> Term3 . '/\\' Term4                        (rule 32)
 
-	'(.'           reduce using rule 30
 	')'            reduce using rule 30
 	','            reduce using rule 30
 	'.'            reduce using rule 30
@@ -2039,6 +2038,7 @@ State 104
 	'/\\'          shift, and enter state 65
 	'==='          reduce using rule 30
 	'==>'          reduce using rule 30
+	'[.'           reduce using rule 30
 	'\\/'          reduce using rule 30
 	%eof           reduce using rule 30
 
@@ -2047,12 +2047,12 @@ State 105
 
 	Term1 -> Term2 '==>' Term1 .                        (rule 28)
 
-	'(.'           reduce using rule 28
 	')'            reduce using rule 28
 	','            reduce using rule 28
 	'.'            reduce using rule 28
 	'/'            reduce using rule 28
 	'==='          reduce using rule 28
+	'[.'           reduce using rule 28
 	%eof           reduce using rule 28
 
 
@@ -2060,7 +2060,6 @@ State 106
 
 	Term3 -> Term3 '/\\' Term4 .                        (rule 32)
 
-	'(.'           reduce using rule 32
 	')'            reduce using rule 32
 	','            reduce using rule 32
 	'.'            reduce using rule 32
@@ -2068,6 +2067,7 @@ State 106
 	'/\\'          reduce using rule 32
 	'==='          reduce using rule 32
 	'==>'          reduce using rule 32
+	'[.'           reduce using rule 32
 	'\\/'          reduce using rule 32
 	%eof           reduce using rule 32
 
@@ -2076,7 +2076,6 @@ State 107
 
 	Term4 -> Term5 '>=' Term5 .                         (rule 40)
 
-	'(.'           reduce using rule 40
 	')'            reduce using rule 40
 	','            reduce using rule 40
 	'.'            reduce using rule 40
@@ -2084,6 +2083,7 @@ State 107
 	'/\\'          reduce using rule 40
 	'==='          reduce using rule 40
 	'==>'          reduce using rule 40
+	'[.'           reduce using rule 40
 	'\\/'          reduce using rule 40
 	%eof           reduce using rule 40
 
@@ -2092,7 +2092,6 @@ State 108
 
 	Term4 -> Term5 '>' Term5 .                          (rule 39)
 
-	'(.'           reduce using rule 39
 	')'            reduce using rule 39
 	','            reduce using rule 39
 	'.'            reduce using rule 39
@@ -2100,6 +2099,7 @@ State 108
 	'/\\'          reduce using rule 39
 	'==='          reduce using rule 39
 	'==>'          reduce using rule 39
+	'[.'           reduce using rule 39
 	'\\/'          reduce using rule 39
 	%eof           reduce using rule 39
 
@@ -2108,7 +2108,6 @@ State 109
 
 	Term4 -> Term5 '==' Term5 .                         (rule 35)
 
-	'(.'           reduce using rule 35
 	')'            reduce using rule 35
 	','            reduce using rule 35
 	'.'            reduce using rule 35
@@ -2116,6 +2115,7 @@ State 109
 	'/\\'          reduce using rule 35
 	'==='          reduce using rule 35
 	'==>'          reduce using rule 35
+	'[.'           reduce using rule 35
 	'\\/'          reduce using rule 35
 	%eof           reduce using rule 35
 
@@ -2124,7 +2124,6 @@ State 110
 
 	Term4 -> Term5 '<=' Term5 .                         (rule 38)
 
-	'(.'           reduce using rule 38
 	')'            reduce using rule 38
 	','            reduce using rule 38
 	'.'            reduce using rule 38
@@ -2132,6 +2131,7 @@ State 110
 	'/\\'          reduce using rule 38
 	'==='          reduce using rule 38
 	'==>'          reduce using rule 38
+	'[.'           reduce using rule 38
 	'\\/'          reduce using rule 38
 	%eof           reduce using rule 38
 
@@ -2140,7 +2140,6 @@ State 111
 
 	Term4 -> Term5 '<' Term5 .                          (rule 37)
 
-	'(.'           reduce using rule 37
 	')'            reduce using rule 37
 	','            reduce using rule 37
 	'.'            reduce using rule 37
@@ -2148,6 +2147,7 @@ State 111
 	'/\\'          reduce using rule 37
 	'==='          reduce using rule 37
 	'==>'          reduce using rule 37
+	'[.'           reduce using rule 37
 	'\\/'          reduce using rule 37
 	%eof           reduce using rule 37
 
@@ -2156,7 +2156,6 @@ State 112
 
 	Term4 -> Term5 '!=' Term5 .                         (rule 36)
 
-	'(.'           reduce using rule 36
 	')'            reduce using rule 36
 	','            reduce using rule 36
 	'.'            reduce using rule 36
@@ -2164,6 +2163,7 @@ State 112
 	'/\\'          reduce using rule 36
 	'==='          reduce using rule 36
 	'==>'          reduce using rule 36
+	'[.'           reduce using rule 36
 	'\\/'          reduce using rule 36
 	%eof           reduce using rule 36
 
@@ -2173,7 +2173,6 @@ State 113
 	Term5 -> Term6 ':' Term5 .                          (rule 46)
 
 	'!='           reduce using rule 46
-	'(.'           reduce using rule 46
 	')'            reduce using rule 46
 	','            reduce using rule 46
 	'.'            reduce using rule 46
@@ -2186,6 +2185,7 @@ State 113
 	'==>'          reduce using rule 46
 	'>'            reduce using rule 46
 	'>='           reduce using rule 46
+	'[.'           reduce using rule 46
 	'\\/'          reduce using rule 46
 	%eof           reduce using rule 46
 
@@ -2198,7 +2198,6 @@ State 114
 	Term7 -> Term7 . 'mod' Term8                        (rule 53)
 
 	'!='           reduce using rule 49
-	'(.'           reduce using rule 49
 	')'            reduce using rule 49
 	'*'            shift, and enter state 52
 	'+'            reduce using rule 49
@@ -2216,6 +2215,7 @@ State 114
 	'==>'          reduce using rule 49
 	'>'            reduce using rule 49
 	'>='           reduce using rule 49
+	'[.'           reduce using rule 49
 	'\\/'          reduce using rule 49
 	'div'          shift, and enter state 53
 	'mod'          shift, and enter state 54
@@ -2227,7 +2227,6 @@ State 115
 	Term5 -> Term6 '++' Term5 .                         (rule 45)
 
 	'!='           reduce using rule 45
-	'(.'           reduce using rule 45
 	')'            reduce using rule 45
 	','            reduce using rule 45
 	'.'            reduce using rule 45
@@ -2240,6 +2239,7 @@ State 115
 	'==>'          reduce using rule 45
 	'>'            reduce using rule 45
 	'>='           reduce using rule 45
+	'[.'           reduce using rule 45
 	'\\/'          reduce using rule 45
 	%eof           reduce using rule 45
 
@@ -2252,7 +2252,6 @@ State 116
 	Term7 -> Term7 . 'mod' Term8                        (rule 53)
 
 	'!='           reduce using rule 48
-	'(.'           reduce using rule 48
 	')'            reduce using rule 48
 	'*'            shift, and enter state 52
 	'+'            reduce using rule 48
@@ -2270,6 +2269,7 @@ State 116
 	'==>'          reduce using rule 48
 	'>'            reduce using rule 48
 	'>='           reduce using rule 48
+	'[.'           reduce using rule 48
 	'\\/'          reduce using rule 48
 	'div'          shift, and enter state 53
 	'mod'          shift, and enter state 54
@@ -2281,7 +2281,6 @@ State 117
 	Term7 -> Term7 'mod' Term8 .                        (rule 53)
 
 	'!='           reduce using rule 53
-	'(.'           reduce using rule 53
 	')'            reduce using rule 53
 	'*'            reduce using rule 53
 	'+'            reduce using rule 53
@@ -2299,6 +2298,7 @@ State 117
 	'==>'          reduce using rule 53
 	'>'            reduce using rule 53
 	'>='           reduce using rule 53
+	'[.'           reduce using rule 53
 	'\\/'          reduce using rule 53
 	'div'          reduce using rule 53
 	'mod'          reduce using rule 53
@@ -2310,7 +2310,6 @@ State 118
 	Term7 -> Term7 'div' Term8 .                        (rule 52)
 
 	'!='           reduce using rule 52
-	'(.'           reduce using rule 52
 	')'            reduce using rule 52
 	'*'            reduce using rule 52
 	'+'            reduce using rule 52
@@ -2328,6 +2327,7 @@ State 118
 	'==>'          reduce using rule 52
 	'>'            reduce using rule 52
 	'>='           reduce using rule 52
+	'[.'           reduce using rule 52
 	'\\/'          reduce using rule 52
 	'div'          reduce using rule 52
 	'mod'          reduce using rule 52
@@ -2339,7 +2339,6 @@ State 119
 	Term7 -> Term7 '*' Term8 .                          (rule 51)
 
 	'!='           reduce using rule 51
-	'(.'           reduce using rule 51
 	')'            reduce using rule 51
 	'*'            reduce using rule 51
 	'+'            reduce using rule 51
@@ -2357,6 +2356,7 @@ State 119
 	'==>'          reduce using rule 51
 	'>'            reduce using rule 51
 	'>='           reduce using rule 51
+	'[.'           reduce using rule 51
 	'\\/'          reduce using rule 51
 	'div'          reduce using rule 51
 	'mod'          reduce using rule 51
@@ -2368,7 +2368,6 @@ State 120
 	Term8 -> '(' Term ')' .                             (rule 65)
 
 	'!='           reduce using rule 65
-	'(.'           reduce using rule 65
 	')'            reduce using rule 65
 	'*'            reduce using rule 65
 	'+'            reduce using rule 65
@@ -2386,6 +2385,7 @@ State 120
 	'==>'          reduce using rule 65
 	'>'            reduce using rule 65
 	'>='           reduce using rule 65
+	'[.'           reduce using rule 65
 	'\\/'          reduce using rule 65
 	'div'          reduce using rule 65
 	'mod'          reduce using rule 65
@@ -2394,7 +2394,7 @@ State 120
 
 State 121
 
-	Term8 -> 'Sub' Term '(.' . ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' . ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 66
@@ -2426,7 +2426,7 @@ State 121
 
 State 122
 
-	Term8 -> 'SubL' Term '(.' . ListDynVar '/' ListDynVar '.)'    (rule 63)
+	Term8 -> 'SubL' Term '[.' . ListDynVar '/' ListDynVar '.]'    (rule 63)
 
 	'/'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2436,7 +2436,7 @@ State 122
 
 State 123
 
-	Term8 -> 'SubV' Term '(.' . ListTerm '/' ListDynVar '.)'    (rule 62)
+	Term8 -> 'SubV' Term '[.' . ListTerm '/' ListDynVar '.]'    (rule 62)
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 66
@@ -2481,7 +2481,7 @@ State 125
 	ListDynVar -> DynVar . ListDynVar                   (rule 8)
 
 	'.'            reduce using rule 7
-	'.)'           reduce using rule 7
+	'.]'           reduce using rule 7
 	'/'            reduce using rule 7
 	'|'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2498,21 +2498,21 @@ State 126
 
 State 127
 
-	Term8 -> 'SubV' Term '(.' ListTerm . '/' ListDynVar '.)'    (rule 62)
+	Term8 -> 'SubV' Term '[.' ListTerm . '/' ListDynVar '.]'    (rule 62)
 
 	'/'            shift, and enter state 145
 
 
 State 128
 
-	Term8 -> 'SubL' Term '(.' ListDynVar . '/' ListDynVar '.)'    (rule 63)
+	Term8 -> 'SubL' Term '[.' ListDynVar . '/' ListDynVar '.]'    (rule 63)
 
 	'/'            shift, and enter state 144
 
 
 State 129
 
-	Term8 -> 'Sub' Term '(.' ListTerm . '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm . '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'/'            shift, and enter state 143
 
@@ -2522,7 +2522,6 @@ State 130
 	Term8 -> DynVar '(' ListTerm ')' .                  (rule 61)
 
 	'!='           reduce using rule 61
-	'(.'           reduce using rule 61
 	')'            reduce using rule 61
 	'*'            reduce using rule 61
 	'+'            reduce using rule 61
@@ -2540,6 +2539,7 @@ State 130
 	'==>'          reduce using rule 61
 	'>'            reduce using rule 61
 	'>='           reduce using rule 61
+	'[.'           reduce using rule 61
 	'\\/'          reduce using rule 61
 	'div'          reduce using rule 61
 	'mod'          reduce using rule 61
@@ -2679,7 +2679,7 @@ State 142
 
 State 143
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' . ListDynVar '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' . ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'|'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2689,9 +2689,9 @@ State 143
 
 State 144
 
-	Term8 -> 'SubL' Term '(.' ListDynVar '/' . ListDynVar '.)'    (rule 63)
+	Term8 -> 'SubL' Term '[.' ListDynVar '/' . ListDynVar '.]'    (rule 63)
 
-	'.)'           reduce using rule 7
+	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 125
@@ -2699,9 +2699,9 @@ State 144
 
 State 145
 
-	Term8 -> 'SubV' Term '(.' ListTerm '/' . ListDynVar '.)'    (rule 62)
+	Term8 -> 'SubV' Term '[.' ListTerm '/' . ListDynVar '.]'    (rule 62)
 
-	'.)'           reduce using rule 7
+	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 125
@@ -2726,7 +2726,7 @@ State 147
 	ListDynVar -> DynVar ListDynVar .                   (rule 8)
 
 	'.'            reduce using rule 8
-	'.)'           reduce using rule 8
+	'.]'           reduce using rule 8
 	'/'            reduce using rule 8
 	'|'            reduce using rule 8
 
@@ -2802,28 +2802,28 @@ State 154
 
 State 155
 
-	Term8 -> 'SubV' Term '(.' ListTerm '/' ListDynVar . '.)'    (rule 62)
+	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar . '.]'    (rule 62)
 
-	'.)'           shift, and enter state 160
+	'.]'           shift, and enter state 160
 
 
 State 156
 
-	Term8 -> 'SubL' Term '(.' ListDynVar '/' ListDynVar . '.)'    (rule 63)
+	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar . '.]'    (rule 63)
 
-	'.)'           shift, and enter state 159
+	'.]'           shift, and enter state 159
 
 
 State 157
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar . '|' ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar . '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'|'            shift, and enter state 158
 
 
 State 158
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' . ListDynVar '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' . ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'/'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2833,10 +2833,9 @@ State 158
 
 State 159
 
-	Term8 -> 'SubL' Term '(.' ListDynVar '/' ListDynVar '.)' .    (rule 63)
+	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]' .    (rule 63)
 
 	'!='           reduce using rule 63
-	'(.'           reduce using rule 63
 	')'            reduce using rule 63
 	'*'            reduce using rule 63
 	'+'            reduce using rule 63
@@ -2854,6 +2853,7 @@ State 159
 	'==>'          reduce using rule 63
 	'>'            reduce using rule 63
 	'>='           reduce using rule 63
+	'[.'           reduce using rule 63
 	'\\/'          reduce using rule 63
 	'div'          reduce using rule 63
 	'mod'          reduce using rule 63
@@ -2862,10 +2862,9 @@ State 159
 
 State 160
 
-	Term8 -> 'SubV' Term '(.' ListTerm '/' ListDynVar '.)' .    (rule 62)
+	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar '.]' .    (rule 62)
 
 	'!='           reduce using rule 62
-	'(.'           reduce using rule 62
 	')'            reduce using rule 62
 	'*'            reduce using rule 62
 	'+'            reduce using rule 62
@@ -2883,6 +2882,7 @@ State 160
 	'==>'          reduce using rule 62
 	'>'            reduce using rule 62
 	'>='           reduce using rule 62
+	'[.'           reduce using rule 62
 	'\\/'          reduce using rule 62
 	'div'          reduce using rule 62
 	'mod'          reduce using rule 62
@@ -3037,16 +3037,16 @@ State 177
 
 State 178
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar . '/' ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar . '/' ListDynVar '.]'    (rule 64)
 
 	'/'            shift, and enter state 179
 
 
 State 179
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' . ListDynVar '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' . ListDynVar '.]'    (rule 64)
 
-	'.)'           reduce using rule 7
+	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 125
@@ -3167,17 +3167,16 @@ State 189
 
 State 190
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar . '.)'    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar . '.]'    (rule 64)
 
-	'.)'           shift, and enter state 191
+	'.]'           shift, and enter state 191
 
 
 State 191
 
-	Term8 -> 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)' .    (rule 64)
+	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' .    (rule 64)
 
 	'!='           reduce using rule 64
-	'(.'           reduce using rule 64
 	')'            reduce using rule 64
 	'*'            reduce using rule 64
 	'+'            reduce using rule 64
@@ -3195,6 +3194,7 @@ State 191
 	'==>'          reduce using rule 64
 	'>'            reduce using rule 64
 	'>='           reduce using rule 64
+	'[.'           reduce using rule 64
 	'\\/'          reduce using rule 64
 	'div'          reduce using rule 64
 	'mod'          reduce using rule 64

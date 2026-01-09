@@ -31,48 +31,48 @@ import UTP.Lex
 %token
   '!='         { PT _ (TS _ 1)      }
   '('          { PT _ (TS _ 2)      }
-  '(.'         { PT _ (TS _ 3)      }
-  '(:'         { PT _ (TS _ 4)      }
-  ')'          { PT _ (TS _ 5)      }
-  '*'          { PT _ (TS _ 6)      }
-  '+'          { PT _ (TS _ 7)      }
-  '++'         { PT _ (TS _ 8)      }
-  ','          { PT _ (TS _ 9)      }
-  '-'          { PT _ (TS _ 10)     }
-  '->'         { PT _ (TS _ 11)     }
-  '.'          { PT _ (TS _ 12)     }
-  '.)'         { PT _ (TS _ 13)     }
-  '/'          { PT _ (TS _ 14)     }
-  '/\\'        { PT _ (TS _ 15)     }
-  ':'          { PT _ (TS _ 16)     }
-  ':)'         { PT _ (TS _ 17)     }
-  ';'          { PT _ (TS _ 18)     }
-  '<'          { PT _ (TS _ 19)     }
-  '<='         { PT _ (TS _ 20)     }
-  '=='         { PT _ (TS _ 21)     }
-  '==='        { PT _ (TS _ 22)     }
-  '==>'        { PT _ (TS _ 23)     }
-  '>'          { PT _ (TS _ 24)     }
-  '>='         { PT _ (TS _ 25)     }
-  'Conjecture' { PT _ (TS _ 26)     }
-  'DclASet'    { PT _ (TS _ 27)     }
-  'DclDLVar'   { PT _ (TS _ 28)     }
-  'DclVar'     { PT _ (TS _ 29)     }
-  'Exp'        { PT _ (TS _ 30)     }
-  'False'      { PT _ (TS _ 31)     }
-  'Law'        { PT _ (TS _ 32)     }
-  'NA'         { PT _ (TS _ 33)     }
-  'NS'         { PT _ (TS _ 34)     }
-  'Obs'        { PT _ (TS _ 35)     }
-  'Prd'        { PT _ (TS _ 36)     }
-  'SB'         { PT _ (TS _ 37)     }
-  'SC'         { PT _ (TS _ 38)     }
-  'Sub'        { PT _ (TS _ 39)     }
-  'SubL'       { PT _ (TS _ 40)     }
-  'SubV'       { PT _ (TS _ 41)     }
-  'Theory'     { PT _ (TS _ 42)     }
-  'True'       { PT _ (TS _ 43)     }
-  'VSC'        { PT _ (TS _ 44)     }
+  '(:'         { PT _ (TS _ 3)      }
+  ')'          { PT _ (TS _ 4)      }
+  '*'          { PT _ (TS _ 5)      }
+  '+'          { PT _ (TS _ 6)      }
+  '++'         { PT _ (TS _ 7)      }
+  ','          { PT _ (TS _ 8)      }
+  '-'          { PT _ (TS _ 9)      }
+  '->'         { PT _ (TS _ 10)     }
+  '.'          { PT _ (TS _ 11)     }
+  '.]'         { PT _ (TS _ 12)     }
+  '/'          { PT _ (TS _ 13)     }
+  '/\\'        { PT _ (TS _ 14)     }
+  ':'          { PT _ (TS _ 15)     }
+  ':)'         { PT _ (TS _ 16)     }
+  ';'          { PT _ (TS _ 17)     }
+  '<'          { PT _ (TS _ 18)     }
+  '<='         { PT _ (TS _ 19)     }
+  '=='         { PT _ (TS _ 20)     }
+  '==='        { PT _ (TS _ 21)     }
+  '==>'        { PT _ (TS _ 22)     }
+  '>'          { PT _ (TS _ 23)     }
+  '>='         { PT _ (TS _ 24)     }
+  'Conjecture' { PT _ (TS _ 25)     }
+  'DclASet'    { PT _ (TS _ 26)     }
+  'DclDLVar'   { PT _ (TS _ 27)     }
+  'DclVar'     { PT _ (TS _ 28)     }
+  'Exp'        { PT _ (TS _ 29)     }
+  'False'      { PT _ (TS _ 30)     }
+  'Law'        { PT _ (TS _ 31)     }
+  'NA'         { PT _ (TS _ 32)     }
+  'NS'         { PT _ (TS _ 33)     }
+  'Obs'        { PT _ (TS _ 34)     }
+  'Prd'        { PT _ (TS _ 35)     }
+  'SB'         { PT _ (TS _ 36)     }
+  'SC'         { PT _ (TS _ 37)     }
+  'Sub'        { PT _ (TS _ 38)     }
+  'SubL'       { PT _ (TS _ 39)     }
+  'SubV'       { PT _ (TS _ 40)     }
+  'Theory'     { PT _ (TS _ 41)     }
+  'True'       { PT _ (TS _ 42)     }
+  'VSC'        { PT _ (TS _ 43)     }
+  '[.'         { PT _ (TS _ 44)     }
   '\\/'        { PT _ (TS _ 45)     }
   'assumed'    { PT _ (TS _ 46)     }
   'axiom'      { PT _ (TS _ 47)     }
@@ -201,9 +201,9 @@ Term8
   | 'false' { UTP.Abs.EFalse }
   | 'nil' { UTP.Abs.ENil }
   | DynVar '(' ListTerm ')' { UTP.Abs.TCons $1 $3 }
-  | 'SubV' Term '(.' ListTerm '/' ListDynVar '.)' { UTP.Abs.TSubV $2 $4 $6 }
-  | 'SubL' Term '(.' ListDynVar '/' ListDynVar '.)' { UTP.Abs.TSubLV $2 $4 $6 }
-  | 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)' { UTP.Abs.TSubst $2 $4 $6 $8 $10 }
+  | 'SubV' Term '[.' ListTerm '/' ListDynVar '.]' { UTP.Abs.TSubV $2 $4 $6 }
+  | 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]' { UTP.Abs.TSubLV $2 $4 $6 }
+  | 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' { UTP.Abs.TSubst $2 $4 $6 $8 $10 }
   | '(' Term ')' { $2 }
 
 ListTerm :: { [UTP.Abs.Term] }

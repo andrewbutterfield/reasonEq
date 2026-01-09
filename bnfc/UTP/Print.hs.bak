@@ -149,8 +149,8 @@ instance Print UTP.Abs.Item where
     UTP.Abs.DeclVar varclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     UTP.Abs.DeclDLVar varclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     UTP.Abs.DeclASet varclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 varclass, prt 0 dynvar, doc (showString ".")])
-    UTP.Abs.Conj dynvar term -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
-    UTP.Abs.Law lawtype dynvar term -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
+    UTP.Abs.Conj dynvar term scond -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString "."), prt 0 scond])
+    UTP.Abs.Law lawtype dynvar term scond -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString "."), prt 0 scond])
 
 instance Print UTP.Abs.VarRole where
   prt i = \case

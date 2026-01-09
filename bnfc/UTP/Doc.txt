@@ -40,8 +40,8 @@ The symbols used in UTP are the following:
   | /\ | ~ | == | !=
   | < | <= | > | >=
   | ++ | : | + | -
-  | * | ( | ) | (.
-  | / | .) | | | ,
+  | * | ( | ) | [.
+  | / | .] | | | ,
   | -> | (: | :) | ;
 
 ===Comments===
@@ -109,9 +109,9 @@ All other symbols are terminals.
   |  |  **|**  | ``false``
   |  |  **|**  | ``nil``
   |  |  **|**  | //DynVar// ``(`` //[Term]// ``)``
-  |  |  **|**  | ``SubV`` //Term// ``(.`` //[Term]// ``/`` //[DynVar]// ``.)``
-  |  |  **|**  | ``SubL`` //Term// ``(.`` //[DynVar]// ``/`` //[DynVar]// ``.)``
-  |  |  **|**  | ``Sub`` //Term// ``(.`` //[Term]// ``/`` //[DynVar]// ``|`` //[DynVar]// ``/`` //[DynVar]// ``.)``
+  |  |  **|**  | ``SubV`` //Term// ``[.`` //[Term]// ``/`` //[DynVar]// ``.]``
+  |  |  **|**  | ``SubL`` //Term// ``[.`` //[DynVar]// ``/`` //[DynVar]// ``.]``
+  |  |  **|**  | ``Sub`` //Term// ``[.`` //[Term]// ``/`` //[DynVar]// ``|`` //[DynVar]// ``/`` //[DynVar]// ``.]``
   |  |  **|**  | ``(`` //Term// ``)``
   | //[Term]// | -> | **eps**
   |  |  **|**  | //Term//

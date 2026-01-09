@@ -208,9 +208,9 @@ instance Print UTP.Abs.Term where
     UTP.Abs.EFalse -> prPrec i 8 (concatD [doc (showString "false")])
     UTP.Abs.ENil -> prPrec i 8 (concatD [doc (showString "nil")])
     UTP.Abs.TCons dynvar terms -> prPrec i 8 (concatD [prt 0 dynvar, doc (showString "("), prt 0 terms, doc (showString ")")])
-    UTP.Abs.TSubV term terms dynvars -> prPrec i 8 (concatD [doc (showString "SubV"), prt 0 term, doc (showString "(."), prt 0 terms, doc (showString "/"), prt 0 dynvars, doc (showString ".)")])
-    UTP.Abs.TSubLV term dynvars1 dynvars2 -> prPrec i 8 (concatD [doc (showString "SubL"), prt 0 term, doc (showString "(."), prt 0 dynvars1, doc (showString "/"), prt 0 dynvars2, doc (showString ".)")])
-    UTP.Abs.TSubst term terms dynvars1 dynvars2 dynvars3 -> prPrec i 8 (concatD [doc (showString "Sub"), prt 0 term, doc (showString "(."), prt 0 terms, doc (showString "/"), prt 0 dynvars1, doc (showString "|"), prt 0 dynvars2, doc (showString "/"), prt 0 dynvars3, doc (showString ".)")])
+    UTP.Abs.TSubV term terms dynvars -> prPrec i 8 (concatD [doc (showString "SubV"), prt 0 term, doc (showString "[."), prt 0 terms, doc (showString "/"), prt 0 dynvars, doc (showString ".]")])
+    UTP.Abs.TSubLV term dynvars1 dynvars2 -> prPrec i 8 (concatD [doc (showString "SubL"), prt 0 term, doc (showString "[."), prt 0 dynvars1, doc (showString "/"), prt 0 dynvars2, doc (showString ".]")])
+    UTP.Abs.TSubst term terms dynvars1 dynvars2 dynvars3 -> prPrec i 8 (concatD [doc (showString "Sub"), prt 0 term, doc (showString "[."), prt 0 terms, doc (showString "/"), prt 0 dynvars1, doc (showString "|"), prt 0 dynvars2, doc (showString "/"), prt 0 dynvars3, doc (showString ".]")])
 
 instance Print [UTP.Abs.Term] where
   prt _ [] = concatD []

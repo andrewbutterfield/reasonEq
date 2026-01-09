@@ -118,8 +118,8 @@ Item
   : 'DclVar' VarClass DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $3 $5 }
   | 'DclDLVar' VarClass DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $3 $5 }
   | 'DclASet' VarClass DynVar '.' { UTP.Abs.DeclASet $2 $3 }
-  | 'Conjecture' DynVar '.' Term '.' { UTP.Abs.Conj $2 $4 }
-  | 'Law' LawType DynVar '.' Term '.' { UTP.Abs.Law $2 $3 $5 }
+  | 'Conjecture' DynVar '.' Term '.' SCond { UTP.Abs.Conj $2 $4 $6 }
+  | 'Law' LawType DynVar '.' Term '.' SCond { UTP.Abs.Law $2 $3 $5 $7 }
 
 VarRole :: { UTP.Abs.VarRole }
 VarRole : 'var' SBBL Type { UTP.Abs.VMR_KV $2 $3 }

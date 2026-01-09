@@ -47,7 +47,7 @@
 token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
 
 {- Theories
-   SourceHandling syntex (.src)
+   SourceHandling syntex  ( .src )
 
    Theory EQV
    Known eqv {O CS} : ( B -> ( B -> B ) ) .
@@ -185,13 +185,13 @@ ETrue.  Term8 ::= "true" ;
 EFalse. Term8 ::= "false" ;
 ENil.   Term8 ::= "nil" ;
 TCons.  Term8 ::= DynVar "(" [Term] ")" ;
-TSubV. Term8  ::= "SubV" Term "(." [Term] "/" [DynVar] ".)" ;
-TSubLV. Term8 ::= "SubL" Term  "(." [DynVar] "/" [DynVar] ".)" ;
+TSubV. Term8  ::= "SubV" Term "[." [Term] "/" [DynVar] ".]" ;
+TSubLV. Term8 ::= "SubL" Term  "[." [DynVar] "/" [DynVar] ".]" ;
 TSubst. Term8 ::= "Sub" Term 
-                     "(." [Term] "/" [DynVar] 
+                     "[." [Term] "/" [DynVar] 
                           "|" 
                           [DynVar] "/" [DynVar]
-                     ".)" ;
+                     ".]" ;
 coercions Term 8 ;
 separator Term "," ;
 

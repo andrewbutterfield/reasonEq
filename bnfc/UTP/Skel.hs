@@ -28,8 +28,8 @@ transItem x = case x of
   UTP.Abs.DeclVar varclass dynvar varrole -> failure x
   UTP.Abs.DeclDLVar varclass dynvar dynvars -> failure x
   UTP.Abs.DeclASet varclass dynvar -> failure x
-  UTP.Abs.Conj dynvar pred -> failure x
-  UTP.Abs.Law lawtype dynvar pred -> failure x
+  UTP.Abs.Conj dynvar term -> failure x
+  UTP.Abs.Law lawtype dynvar term -> failure x
 
 transVarRole :: UTP.Abs.VarRole -> Result
 transVarRole x = case x of
@@ -53,40 +53,36 @@ transLawType x = case x of
   UTP.Abs.LProof -> failure x
   UTP.Abs.LAssume -> failure x
 
-transPred :: UTP.Abs.Pred -> Result
-transPred x = case x of
-  UTP.Abs.PEqv pred1 pred2 -> failure x
-  UTP.Abs.PImpl pred1 pred2 -> failure x
-  UTP.Abs.POr pred1 pred2 -> failure x
-  UTP.Abs.PAnd pred1 pred2 -> failure x
-  UTP.Abs.PNot pred -> failure x
-  UTP.Abs.EQ exp1 exp2 -> failure x
-  UTP.Abs.NE exp1 exp2 -> failure x
-  UTP.Abs.LT exp1 exp2 -> failure x
-  UTP.Abs.LE exp1 exp2 -> failure x
-  UTP.Abs.GT exp1 exp2 -> failure x
-  UTP.Abs.GE exp1 exp2 -> failure x
+transTerm :: UTP.Abs.Term -> Result
+transTerm x = case x of
+  UTP.Abs.PEqv term1 term2 -> failure x
+  UTP.Abs.PImpl term1 term2 -> failure x
+  UTP.Abs.POr term1 term2 -> failure x
+  UTP.Abs.PAnd term1 term2 -> failure x
+  UTP.Abs.PNot term -> failure x
+  UTP.Abs.EQ term1 term2 -> failure x
+  UTP.Abs.NE term1 term2 -> failure x
+  UTP.Abs.LT term1 term2 -> failure x
+  UTP.Abs.LE term1 term2 -> failure x
+  UTP.Abs.GT term1 term2 -> failure x
+  UTP.Abs.GE term1 term2 -> failure x
   UTP.Abs.PTrue -> failure x
   UTP.Abs.PFalse -> failure x
   UTP.Abs.PVar dynvar -> failure x
-  UTP.Abs.PredTX dynvar preds -> failure x
-
-transExp :: UTP.Abs.Exp -> Result
-transExp x = case x of
-  UTP.Abs.ECat exp1 exp2 -> failure x
-  UTP.Abs.ECons exp1 exp2 -> failure x
-  UTP.Abs.EAdd exp1 exp2 -> failure x
-  UTP.Abs.ESub exp1 exp2 -> failure x
-  UTP.Abs.EMul exp1 exp2 -> failure x
-  UTP.Abs.EDiv exp1 exp2 -> failure x
-  UTP.Abs.EMod exp1 exp2 -> failure x
-  UTP.Abs.ENeg exp -> failure x
+  UTP.Abs.LCat term1 term2 -> failure x
+  UTP.Abs.LCons term1 term2 -> failure x
+  UTP.Abs.EAdd term1 term2 -> failure x
+  UTP.Abs.ESub term1 term2 -> failure x
+  UTP.Abs.EMul term1 term2 -> failure x
+  UTP.Abs.EDiv term1 term2 -> failure x
+  UTP.Abs.EMod term1 term2 -> failure x
+  UTP.Abs.ENeg term -> failure x
   UTP.Abs.EInt integer -> failure x
   UTP.Abs.EVar dynvar -> failure x
   UTP.Abs.ETrue -> failure x
   UTP.Abs.EFalse -> failure x
   UTP.Abs.ENil -> failure x
-  UTP.Abs.ENmdTuple dynvar exps -> failure x
+  UTP.Abs.TCons dynvar terms -> failure x
 
 transType :: UTP.Abs.Type -> Result
 transType x = case x of

@@ -36,10 +36,9 @@ The symbols used in UTP are the following:
   | . | === | ==> | \/
   | /\ | ~ | == | !=
   | < | <= | > | >=
-  | (. | .) | ( | )
-  | , | ++ | : | +
-  | - | * | -> | (:
-  | :) | | |  |
+  | ++ | : | + | -
+  | * | ( | ) | ,
+  | -> | (: | :) | |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -56,8 +55,8 @@ All other symbols are terminals.
   | //Item// | -> | ``DclVar`` //VarClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VarClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VarClass// //DynVar// ``.``
-  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Pred// ``.``
-  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Pred// ``.``
+  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Term// ``.``
+  |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Term// ``.``
   | //VarRole// | -> | ``var`` //SBBL// //Type//
   | //VarClass// | -> | ``Obs``
   |  |  **|**  | ``Exp``
@@ -70,52 +69,46 @@ All other symbols are terminals.
   |  |  **|**  | ``assumed``
   | //[Item]// | -> | **eps**
   |  |  **|**  | //Item// //[Item]//
-  | //Pred// | -> | //Pred// ``===`` //Pred1//
-  |  |  **|**  | //Pred1//
-  | //Pred1// | -> | //Pred2// ``==>`` //Pred1//
-  |  |  **|**  | //Pred2//
-  | //Pred2// | -> | //Pred2// ``\/`` //Pred3//
-  |  |  **|**  | //Pred3//
-  | //Pred3// | -> | //Pred3// ``/\`` //Pred4//
-  |  |  **|**  | ``~`` //Pred4//
-  |  |  **|**  | //Pred4//
-  | //Pred4// | -> | //Exp// ``==`` //Exp//
-  |  |  **|**  | //Exp// ``!=`` //Exp//
-  |  |  **|**  | //Exp// ``<`` //Exp//
-  |  |  **|**  | //Exp// ``<=`` //Exp//
-  |  |  **|**  | //Exp// ``>`` //Exp//
-  |  |  **|**  | //Exp// ``>=`` //Exp//
+  | //Term// | -> | //Term// ``===`` //Term1//
+  |  |  **|**  | //Term1//
+  | //Term1// | -> | //Term2// ``==>`` //Term1//
+  |  |  **|**  | //Term2//
+  | //Term2// | -> | //Term2// ``\/`` //Term3//
+  |  |  **|**  | //Term3//
+  | //Term3// | -> | //Term3// ``/\`` //Term4//
+  |  |  **|**  | ``~`` //Term4//
+  |  |  **|**  | //Term4//
+  | //Term4// | -> | //Term5// ``==`` //Term5//
+  |  |  **|**  | //Term5// ``!=`` //Term5//
+  |  |  **|**  | //Term5// ``<`` //Term5//
+  |  |  **|**  | //Term5// ``<=`` //Term5//
+  |  |  **|**  | //Term5// ``>`` //Term5//
+  |  |  **|**  | //Term5// ``>=`` //Term5//
   |  |  **|**  | ``True``
   |  |  **|**  | ``False``
   |  |  **|**  | //DynVar//
-  |  |  **|**  | //Pred5//
-  | //Pred5// | -> | //DynVar// ``(.`` //[Pred]// ``.)``
-  |  |  **|**  | //Pred6//
-  | //Pred6// | -> | ``(`` //Pred// ``)``
-  | //[Pred]// | -> | **eps**
-  |  |  **|**  | //Pred//
-  |  |  **|**  | //Pred// ``,`` //[Pred]//
-  | //Exp// | -> | //Exp1// ``++`` //Exp//
-  |  |  **|**  | //Exp1// ``:`` //Exp//
-  |  |  **|**  | //Exp1//
-  | //Exp1// | -> | //Exp1// ``+`` //Exp2//
-  |  |  **|**  | //Exp1// ``-`` //Exp2//
-  |  |  **|**  | //Exp2//
-  | //Exp2// | -> | //Exp2// ``*`` //Exp3//
-  |  |  **|**  | //Exp2// ``div`` //Exp3//
-  |  |  **|**  | //Exp2// ``mod`` //Exp3//
-  |  |  **|**  | ``neg`` //Exp3//
-  |  |  **|**  | //Exp3//
-  | //Exp3// | -> | //Integer//
+  |  |  **|**  | //Term5//
+  | //Term5// | -> | //Term6// ``++`` //Term5//
+  |  |  **|**  | //Term6// ``:`` //Term5//
+  |  |  **|**  | //Term6//
+  | //Term6// | -> | //Term6// ``+`` //Term7//
+  |  |  **|**  | //Term6// ``-`` //Term7//
+  |  |  **|**  | //Term7//
+  | //Term7// | -> | //Term7// ``*`` //Term8//
+  |  |  **|**  | //Term7// ``div`` //Term8//
+  |  |  **|**  | //Term7// ``mod`` //Term8//
+  |  |  **|**  | ``neg`` //Term8//
+  |  |  **|**  | //Term8//
+  | //Term8// | -> | //Integer//
   |  |  **|**  | //DynVar//
   |  |  **|**  | ``true``
   |  |  **|**  | ``false``
   |  |  **|**  | ``nil``
-  |  |  **|**  | //DynVar// ``(`` //[Exp]// ``)``
-  |  |  **|**  | ``(`` //Exp// ``)``
-  | //[Exp]// | -> | **eps**
-  |  |  **|**  | //Exp//
-  |  |  **|**  | //Exp// ``,`` //[Exp]//
+  |  |  **|**  | //DynVar// ``(`` //[Term]// ``)``
+  |  |  **|**  | ``(`` //Term// ``)``
+  | //[Term]// | -> | **eps**
+  |  |  **|**  | //Term//
+  |  |  **|**  | //Term// ``,`` //[Term]//
   | //Type// | -> | //Type1// ``->`` //Type//
   |  |  **|**  | //Type1//
   | //Type1// | -> | //DynVar// ``(:`` //[Type2]// ``:)``

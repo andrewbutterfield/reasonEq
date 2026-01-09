@@ -33,7 +33,7 @@ import Control.Monad      ( when )
 
 import UTP.Abs   ()
 import UTP.Lex   ( Token, mkPosToken )
-import UTP.Par   ( pTheory, pPred, pExp, myLexer )
+import UTP.Par   ( pTheory, pTerm, pType, myLexer )
 import UTP.Print ( Print, printTree )
 import UTP.Skel  ()
 
@@ -80,8 +80,8 @@ usage = do
     [ "usage: Call with one of the following argument combinations:"
     , "  --help          Display this help message."
     , "  (no arguments)  Parse theory from stdin verbosely."
-    , "  -p              Parse predicate from stdin verbosely"
-    , "  -e              Parse expression from stdin verbosely"
+    , "  -t              Parse term from stdin verbosely"
+    , "  -T              Parse type from stdin verbosely"
     , "  (files)         Parse content of files verbosely."
     , "  -s (files)      Silent mode. Parse content of files silently."
     ]
@@ -92,8 +92,8 @@ main = do
   case args of
     ["--help"] -> usage
     []         -> getContents >>= run 2 pTheory
-    ["-p"]     -> getContents >>= run 2 pPred
-    ["-e"]     -> getContents >>= run 2 pExp
+    ["-t"]     -> getContents >>= run 2 pTerm
+    ["-T"]     -> getContents >>= run 2 pType
     "-s":fs    -> mapM_ (runFile 0 pTheory) fs
     fs         -> mapM_ (runFile 2 pTheory) fs
 \end{code}

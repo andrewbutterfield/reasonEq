@@ -38,16 +38,10 @@ data Pred
     | PImpl Pred Pred
     | POr Pred Pred
     | PAnd Pred Pred
-    | EQ Exp Exp
-    | NE Exp Exp
-    | LT Exp Exp
-    | LE Exp Exp
-    | GT Exp Exp
-    | GE Exp Exp
+    | PNot Pred
     | PTrue
     | PFalse
     | PVar DynVar
-    | PNot Pred
     | PredTX DynVar [Pred]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 

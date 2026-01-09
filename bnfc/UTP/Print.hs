@@ -149,8 +149,8 @@ instance Print UTP.Abs.Item where
     UTP.Abs.DeclVar varclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     UTP.Abs.DeclDLVar varclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 varclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     UTP.Abs.DeclASet varclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 varclass, prt 0 dynvar, doc (showString ".")])
-    UTP.Abs.Conj dynvar pred -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
-    UTP.Abs.Law lawtype dynvar pred -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 pred, doc (showString ".")])
+    UTP.Abs.Conj dynvar term -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
+    UTP.Abs.Law lawtype dynvar term -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 term, doc (showString ".")])
 
 instance Print UTP.Abs.VarRole where
   prt i = \case
@@ -178,47 +178,38 @@ instance Print [UTP.Abs.Item] where
   prt _ [] = concatD []
   prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
 
-instance Print UTP.Abs.Pred where
+instance Print UTP.Abs.Term where
   prt i = \case
-    UTP.Abs.PEqv pred1 pred2 -> prPrec i 0 (concatD [prt 0 pred1, doc (showString "==="), prt 1 pred2])
-    UTP.Abs.PImpl pred1 pred2 -> prPrec i 1 (concatD [prt 2 pred1, doc (showString "==>"), prt 1 pred2])
-    UTP.Abs.POr pred1 pred2 -> prPrec i 2 (concatD [prt 2 pred1, doc (showString "\\/"), prt 3 pred2])
-    UTP.Abs.PAnd pred1 pred2 -> prPrec i 3 (concatD [prt 3 pred1, doc (showString "/\\"), prt 4 pred2])
-    UTP.Abs.PNot pred -> prPrec i 3 (concatD [doc (showString "~"), prt 4 pred])
-    UTP.Abs.EQ exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString "=="), prt 0 exp2])
-    UTP.Abs.NE exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString "!="), prt 0 exp2])
-    UTP.Abs.LT exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString "<"), prt 0 exp2])
-    UTP.Abs.LE exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString "<="), prt 0 exp2])
-    UTP.Abs.GT exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString ">"), prt 0 exp2])
-    UTP.Abs.GE exp1 exp2 -> prPrec i 4 (concatD [prt 0 exp1, doc (showString ">="), prt 0 exp2])
+    UTP.Abs.PEqv term1 term2 -> prPrec i 0 (concatD [prt 0 term1, doc (showString "==="), prt 1 term2])
+    UTP.Abs.PImpl term1 term2 -> prPrec i 1 (concatD [prt 2 term1, doc (showString "==>"), prt 1 term2])
+    UTP.Abs.POr term1 term2 -> prPrec i 2 (concatD [prt 2 term1, doc (showString "\\/"), prt 3 term2])
+    UTP.Abs.PAnd term1 term2 -> prPrec i 3 (concatD [prt 3 term1, doc (showString "/\\"), prt 4 term2])
+    UTP.Abs.PNot term -> prPrec i 3 (concatD [doc (showString "~"), prt 4 term])
+    UTP.Abs.EQ term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString "=="), prt 5 term2])
+    UTP.Abs.NE term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString "!="), prt 5 term2])
+    UTP.Abs.LT term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString "<"), prt 5 term2])
+    UTP.Abs.LE term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString "<="), prt 5 term2])
+    UTP.Abs.GT term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString ">"), prt 5 term2])
+    UTP.Abs.GE term1 term2 -> prPrec i 4 (concatD [prt 5 term1, doc (showString ">="), prt 5 term2])
     UTP.Abs.PTrue -> prPrec i 4 (concatD [doc (showString "True")])
     UTP.Abs.PFalse -> prPrec i 4 (concatD [doc (showString "False")])
     UTP.Abs.PVar dynvar -> prPrec i 4 (concatD [prt 0 dynvar])
-    UTP.Abs.PredTX dynvar preds -> prPrec i 5 (concatD [prt 0 dynvar, doc (showString "(."), prt 0 preds, doc (showString ".)")])
+    UTP.Abs.LCat term1 term2 -> prPrec i 5 (concatD [prt 6 term1, doc (showString "++"), prt 5 term2])
+    UTP.Abs.LCons term1 term2 -> prPrec i 5 (concatD [prt 6 term1, doc (showString ":"), prt 5 term2])
+    UTP.Abs.EAdd term1 term2 -> prPrec i 6 (concatD [prt 6 term1, doc (showString "+"), prt 7 term2])
+    UTP.Abs.ESub term1 term2 -> prPrec i 6 (concatD [prt 6 term1, doc (showString "-"), prt 7 term2])
+    UTP.Abs.EMul term1 term2 -> prPrec i 7 (concatD [prt 7 term1, doc (showString "*"), prt 8 term2])
+    UTP.Abs.EDiv term1 term2 -> prPrec i 7 (concatD [prt 7 term1, doc (showString "div"), prt 8 term2])
+    UTP.Abs.EMod term1 term2 -> prPrec i 7 (concatD [prt 7 term1, doc (showString "mod"), prt 8 term2])
+    UTP.Abs.ENeg term -> prPrec i 7 (concatD [doc (showString "neg"), prt 8 term])
+    UTP.Abs.EInt n -> prPrec i 8 (concatD [prt 0 n])
+    UTP.Abs.EVar dynvar -> prPrec i 8 (concatD [prt 0 dynvar])
+    UTP.Abs.ETrue -> prPrec i 8 (concatD [doc (showString "true")])
+    UTP.Abs.EFalse -> prPrec i 8 (concatD [doc (showString "false")])
+    UTP.Abs.ENil -> prPrec i 8 (concatD [doc (showString "nil")])
+    UTP.Abs.TCons dynvar terms -> prPrec i 8 (concatD [prt 0 dynvar, doc (showString "("), prt 0 terms, doc (showString ")")])
 
-instance Print [UTP.Abs.Pred] where
-  prt _ [] = concatD []
-  prt _ [x] = concatD [prt 0 x]
-  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
-
-instance Print UTP.Abs.Exp where
-  prt i = \case
-    UTP.Abs.ECat exp1 exp2 -> prPrec i 0 (concatD [prt 1 exp1, doc (showString "++"), prt 0 exp2])
-    UTP.Abs.ECons exp1 exp2 -> prPrec i 0 (concatD [prt 1 exp1, doc (showString ":"), prt 0 exp2])
-    UTP.Abs.EAdd exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "+"), prt 2 exp2])
-    UTP.Abs.ESub exp1 exp2 -> prPrec i 1 (concatD [prt 1 exp1, doc (showString "-"), prt 2 exp2])
-    UTP.Abs.EMul exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "*"), prt 3 exp2])
-    UTP.Abs.EDiv exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "div"), prt 3 exp2])
-    UTP.Abs.EMod exp1 exp2 -> prPrec i 2 (concatD [prt 2 exp1, doc (showString "mod"), prt 3 exp2])
-    UTP.Abs.ENeg exp -> prPrec i 2 (concatD [doc (showString "neg"), prt 3 exp])
-    UTP.Abs.EInt n -> prPrec i 3 (concatD [prt 0 n])
-    UTP.Abs.EVar dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
-    UTP.Abs.ETrue -> prPrec i 3 (concatD [doc (showString "true")])
-    UTP.Abs.EFalse -> prPrec i 3 (concatD [doc (showString "false")])
-    UTP.Abs.ENil -> prPrec i 3 (concatD [doc (showString "nil")])
-    UTP.Abs.ENmdTuple dynvar exps -> prPrec i 3 (concatD [prt 0 dynvar, doc (showString "("), prt 0 exps, doc (showString ")")])
-
-instance Print [UTP.Abs.Exp] where
+instance Print [UTP.Abs.Term] where
   prt _ [] = concatD []
   prt _ [x] = concatD [prt 0 x]
   prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]

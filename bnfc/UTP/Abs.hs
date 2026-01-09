@@ -17,8 +17,8 @@ data Item
     = DeclVar VarClass DynVar VarRole
     | DeclDLVar VarClass DynVar [DynVar]
     | DeclASet VarClass DynVar
-    | Conj DynVar Pred
-    | Law LawType DynVar Pred
+    | Conj DynVar Term
+    | Law LawType DynVar Term
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data VarRole = VMR_KV SBBL Type
@@ -33,39 +33,35 @@ data SBBL = SBBL_NA | SBBL_SB | SBBL_NS
 data LawType = LAxiom | LProof | LAssume
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Pred
-    = PEqv Pred Pred
-    | PImpl Pred Pred
-    | POr Pred Pred
-    | PAnd Pred Pred
-    | PNot Pred
-    | EQ Exp Exp
-    | NE Exp Exp
-    | LT Exp Exp
-    | LE Exp Exp
-    | GT Exp Exp
-    | GE Exp Exp
+data Term
+    = PEqv Term Term
+    | PImpl Term Term
+    | POr Term Term
+    | PAnd Term Term
+    | PNot Term
+    | EQ Term Term
+    | NE Term Term
+    | LT Term Term
+    | LE Term Term
+    | GT Term Term
+    | GE Term Term
     | PTrue
     | PFalse
     | PVar DynVar
-    | PredTX DynVar [Pred]
-  deriving (C.Eq, C.Ord, C.Show, C.Read)
-
-data Exp
-    = ECat Exp Exp
-    | ECons Exp Exp
-    | EAdd Exp Exp
-    | ESub Exp Exp
-    | EMul Exp Exp
-    | EDiv Exp Exp
-    | EMod Exp Exp
-    | ENeg Exp
+    | LCat Term Term
+    | LCons Term Term
+    | EAdd Term Term
+    | ESub Term Term
+    | EMul Term Term
+    | EDiv Term Term
+    | EMod Term Term
+    | ENeg Term
     | EInt Integer
     | EVar DynVar
     | ETrue
     | EFalse
     | ENil
-    | ENmdTuple DynVar [Exp]
+    | TCons DynVar [Term]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Type

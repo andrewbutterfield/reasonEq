@@ -29,58 +29,52 @@ import UTP.Lex
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
-  '!='         { PT _ (TS _ 1)      }
-  '('          { PT _ (TS _ 2)      }
-  '(.'         { PT _ (TS _ 3)      }
-  '(:'         { PT _ (TS _ 4)      }
-  ')'          { PT _ (TS _ 5)      }
-  '*'          { PT _ (TS _ 6)      }
-  '+'          { PT _ (TS _ 7)      }
-  '++'         { PT _ (TS _ 8)      }
-  ','          { PT _ (TS _ 9)      }
-  '-'          { PT _ (TS _ 10)     }
-  '->'         { PT _ (TS _ 11)     }
-  '.'          { PT _ (TS _ 12)     }
-  '.)'         { PT _ (TS _ 13)     }
-  '/\\'        { PT _ (TS _ 14)     }
-  ':'          { PT _ (TS _ 15)     }
-  ':)'         { PT _ (TS _ 16)     }
-  '<'          { PT _ (TS _ 17)     }
-  '<='         { PT _ (TS _ 18)     }
-  '=='         { PT _ (TS _ 19)     }
-  '==='        { PT _ (TS _ 20)     }
-  '==>'        { PT _ (TS _ 21)     }
-  '>'          { PT _ (TS _ 22)     }
-  '>='         { PT _ (TS _ 23)     }
-  'Conjecture' { PT _ (TS _ 24)     }
-  'DclASet'    { PT _ (TS _ 25)     }
-  'DclDLVar'   { PT _ (TS _ 26)     }
-  'DclVar'     { PT _ (TS _ 27)     }
-  'Exp'        { PT _ (TS _ 28)     }
-  'False'      { PT _ (TS _ 29)     }
-  'Law'        { PT _ (TS _ 30)     }
-  'NA'         { PT _ (TS _ 31)     }
-  'NS'         { PT _ (TS _ 32)     }
-  'Obs'        { PT _ (TS _ 33)     }
-  'Prd'        { PT _ (TS _ 34)     }
-  'SB'         { PT _ (TS _ 35)     }
-  'Theory'     { PT _ (TS _ 36)     }
-  'True'       { PT _ (TS _ 37)     }
-  '\\/'        { PT _ (TS _ 38)     }
-  'assumed'    { PT _ (TS _ 39)     }
-  'axiom'      { PT _ (TS _ 40)     }
-  'div'        { PT _ (TS _ 41)     }
-  'false'      { PT _ (TS _ 42)     }
-  'mod'        { PT _ (TS _ 43)     }
-  'neg'        { PT _ (TS _ 44)     }
-  'nil'        { PT _ (TS _ 45)     }
-  'proven'     { PT _ (TS _ 46)     }
-  'tbot'       { PT _ (TS _ 47)     }
-  'true'       { PT _ (TS _ 48)     }
-  'ttop'       { PT _ (TS _ 49)     }
-  'var'        { PT _ (TS _ 50)     }
-  '|'          { PT _ (TS _ 51)     }
-  '~'          { PT _ (TS _ 52)     }
+  '('          { PT _ (TS _ 1)      }
+  '(.'         { PT _ (TS _ 2)      }
+  '(:'         { PT _ (TS _ 3)      }
+  ')'          { PT _ (TS _ 4)      }
+  '*'          { PT _ (TS _ 5)      }
+  '+'          { PT _ (TS _ 6)      }
+  '++'         { PT _ (TS _ 7)      }
+  ','          { PT _ (TS _ 8)      }
+  '-'          { PT _ (TS _ 9)      }
+  '->'         { PT _ (TS _ 10)     }
+  '.'          { PT _ (TS _ 11)     }
+  '.)'         { PT _ (TS _ 12)     }
+  '/\\'        { PT _ (TS _ 13)     }
+  ':'          { PT _ (TS _ 14)     }
+  ':)'         { PT _ (TS _ 15)     }
+  '==='        { PT _ (TS _ 16)     }
+  '==>'        { PT _ (TS _ 17)     }
+  'Conjecture' { PT _ (TS _ 18)     }
+  'DclASet'    { PT _ (TS _ 19)     }
+  'DclDLVar'   { PT _ (TS _ 20)     }
+  'DclVar'     { PT _ (TS _ 21)     }
+  'Exp'        { PT _ (TS _ 22)     }
+  'False'      { PT _ (TS _ 23)     }
+  'Law'        { PT _ (TS _ 24)     }
+  'NA'         { PT _ (TS _ 25)     }
+  'NS'         { PT _ (TS _ 26)     }
+  'Obs'        { PT _ (TS _ 27)     }
+  'Prd'        { PT _ (TS _ 28)     }
+  'SB'         { PT _ (TS _ 29)     }
+  'Theory'     { PT _ (TS _ 30)     }
+  'True'       { PT _ (TS _ 31)     }
+  '\\/'        { PT _ (TS _ 32)     }
+  'assumed'    { PT _ (TS _ 33)     }
+  'axiom'      { PT _ (TS _ 34)     }
+  'div'        { PT _ (TS _ 35)     }
+  'false'      { PT _ (TS _ 36)     }
+  'mod'        { PT _ (TS _ 37)     }
+  'neg'        { PT _ (TS _ 38)     }
+  'nil'        { PT _ (TS _ 39)     }
+  'proven'     { PT _ (TS _ 40)     }
+  'tbot'       { PT _ (TS _ 41)     }
+  'true'       { PT _ (TS _ 42)     }
+  'ttop'       { PT _ (TS _ 43)     }
+  'var'        { PT _ (TS _ 44)     }
+  '|'          { PT _ (TS _ 45)     }
+  '~'          { PT _ (TS _ 46)     }
   L_integ      { PT _ (TI $$)       }
   L_DynVar     { PT _ (T_DynVar $$) }
 
@@ -141,24 +135,16 @@ Pred2 :: { UTP.Abs.Pred }
 Pred2 : Pred2 '\\/' Pred3 { UTP.Abs.POr $1 $3 } | Pred3 { $1 }
 
 Pred3 :: { UTP.Abs.Pred }
-Pred3 : Pred3 '/\\' Pred4 { UTP.Abs.PAnd $1 $3 } | Pred4 { $1 }
+Pred3
+  : Pred3 '/\\' Pred4 { UTP.Abs.PAnd $1 $3 }
+  | '~' Pred4 { UTP.Abs.PNot $2 }
+  | Pred4 { $1 }
 
 Pred4 :: { UTP.Abs.Pred }
 Pred4
-  : Exp '==' Exp { UTP.Abs.EQ $1 $3 }
-  | Exp '!=' Exp { UTP.Abs.NE $1 $3 }
-  | Exp '<' Exp { UTP.Abs.LT $1 $3 }
-  | Exp '<=' Exp { UTP.Abs.LE $1 $3 }
-  | Exp '>' Exp { UTP.Abs.GT $1 $3 }
-  | Exp '>=' Exp { UTP.Abs.GE $1 $3 }
-  | 'True' { UTP.Abs.PTrue }
+  : 'True' { UTP.Abs.PTrue }
   | 'False' { UTP.Abs.PFalse }
   | DynVar { UTP.Abs.PVar $1 }
-  | Pred5 { $1 }
-
-Pred5 :: { UTP.Abs.Pred }
-Pred5
-  : '~' Pred4 { UTP.Abs.PNot $2 }
   | DynVar '(.' ListPred '.)' { UTP.Abs.PredTX $1 $3 }
   | '(' Pred ')' { $2 }
 

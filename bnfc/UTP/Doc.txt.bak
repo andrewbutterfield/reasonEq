@@ -34,12 +34,10 @@ The reserved words used in UTP are the following:
 
 The symbols used in UTP are the following:
   | . | === | ==> | \/
-  | /\ | == | != | <
-  | <= | > | >= | ~
-  | (. | .) | ( | )
-  | , | ++ | : | +
-  | - | * | -> | (:
-  | :) | | |  |
+  | /\ | ~ | (. | .)
+  | ( | ) | , | ++
+  | : | + | - | *
+  | -> | (: | :) | |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -77,18 +75,11 @@ All other symbols are terminals.
   | //Pred2// | -> | //Pred2// ``\/`` //Pred3//
   |  |  **|**  | //Pred3//
   | //Pred3// | -> | //Pred3// ``/\`` //Pred4//
+  |  |  **|**  | ``~`` //Pred4//
   |  |  **|**  | //Pred4//
-  | //Pred4// | -> | //Exp// ``==`` //Exp//
-  |  |  **|**  | //Exp// ``!=`` //Exp//
-  |  |  **|**  | //Exp// ``<`` //Exp//
-  |  |  **|**  | //Exp// ``<=`` //Exp//
-  |  |  **|**  | //Exp// ``>`` //Exp//
-  |  |  **|**  | //Exp// ``>=`` //Exp//
-  |  |  **|**  | ``True``
+  | //Pred4// | -> | ``True``
   |  |  **|**  | ``False``
   |  |  **|**  | //DynVar//
-  |  |  **|**  | //Pred5//
-  | //Pred5// | -> | ``~`` //Pred4//
   |  |  **|**  | //DynVar// ``(.`` //[Pred]// ``.)``
   |  |  **|**  | ``(`` //Pred// ``)``
   | //[Pred]// | -> | **eps**

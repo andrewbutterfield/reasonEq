@@ -130,8 +130,8 @@ separator DynVar "" ;
 DeclVar.   Item ::= "DclVar" VarClass DynVar "." VarRole "."    ;  -- KV
 DeclDLVar. Item ::= "DclDLVar" VarClass DynVar "." [DynVar] "." ;  -- DL
 DeclASet.  Item ::= "DclASet" VarClass DynVar "."               ;  -- DAS
-Conj.      Item ::= "Conjecture" DynVar "." Pred "."   ;
-Law.       Item ::= "Law" LawType DynVar "." Pred "."  ;
+Conj.      Item ::= "Conjecture" DynVar "." Term "."   ;
+Law.       Item ::= "Law" LawType DynVar "." Term "."  ;
 
 VMR_KV. VarRole ::= "var" SBBL Type ;
 
@@ -149,61 +149,53 @@ LAssume. LawType ::= "assumed" ;
 
 separator Item "" ;
 
-{- Predicates
-   Propositional precedence:  tight..loose: ~ /\ \/ ==> ===
+{- Terms (Expressions,Predicates)
+   Haskell and Propositional binary operators (tightest first):
+      | Left-Assoc           |         Non-Assoc            | Right-Assoc
+      | !!                   |                              | . 
+      |                      |                              | ^ ^^ **
+   7  | * / div mod rem quot |                              | 
+   6  | + -                  |                              |
+   5  |                      |                              | : ++
+   4  |                      | == /= < <= > >= elem notElem | 
+   3  |                      |                              | && /\
+   2  |                      |                              | || \/
+   1  |                      |                              | ==>
+   0  |                      |                              | ===
+      | >> >>=               |                              |
+      |                      |                              | $ $! seq   
 -}
-PEqv.  Pred  ::= Pred "===" Pred1  ;
-PImpl. Pred1 ::= Pred2 "==>" Pred1  ;
-POr.   Pred2 ::= Pred2 "\\/" Pred3  ;
-PAnd.  Pred3 ::= Pred3 "/\\" Pred4  ;
-PNot.  Pred3 ::= "~" Pred4          ;
-EQ.    Pred4 ::= Exp "==" Exp       ; 
-NE.    Pred4 ::= Exp "!=" Exp       ; 
-LT.    Pred4 ::= Exp "<" Exp        ; 
-LE.    Pred4 ::= Exp "<=" Exp       ; 
-GT.    Pred4 ::= Exp ">" Exp        ; 
-GE.    Pred4 ::= Exp ">=" Exp       ; 
-PTrue. Pred4 ::= "True"             ;
-PFalse. Pred4 ::= "False"           ;
-PVar.  Pred4 ::= DynVar             ;
--- PExpr. Pred6 ::= "E" Exp            ;
--- PType. Pred6 ::= "T" Type ;
-PredTX. Pred5 ::= DynVar "(." [Pred] ".)" ;
-coercions Pred 6                   ;
-separator Pred "," ;
+PEqv.   Term  ::= Term "===" Term1   ;
+PImpl.  Term1 ::= Term2 "==>" Term1  ;
+POr.    Term2 ::= Term2 "\\/" Term3  ;
+PAnd.   Term3 ::= Term3 "/\\" Term4  ;
+PNot.   Term3 ::= "~" Term4          ;
+EQ.     Term4 ::= Term5 "==" Term5       ; 
+NE.     Term4 ::= Term5 "!=" Term5       ; 
+LT.     Term4 ::= Term5 "<" Term5        ; 
+LE.     Term4 ::= Term5 "<=" Term5       ; 
+GT.     Term4 ::= Term5 ">" Term5        ; 
+GE.     Term4 ::= Term5 ">=" Term5       ; 
+PTrue.  Term4 ::= "True"             ;
+PFalse. Term4 ::= "False"           ;
+PVar.   Term4 ::= DynVar             ;
+LCat.   Term5 ::= Term6  "++" Term5 ;
+LCons.  Term5 ::= Term6  ":"  Term5 ;
+EAdd.   Term6 ::= Term6  "+"  Term7  ;
+ESub.   Term6 ::= Term6  "-"  Term7  ;
+EMul.   Term7 ::= Term7  "*"  Term8  ;
+EDiv.   Term7 ::= Term7 "div" Term8  ;
+EMod.   Term7 ::= Term7 "mod" Term8  ;
+ENeg.   Term7 ::= "neg" Term8        ;
+EInt.   Term8 ::= Integer            ;
+EVar.   Term8 ::= DynVar          ;
+ETrue.  Term8 ::= "true"          ;
+EFalse. Term8 ::= "false"          ;
+ENil.   Term8 ::= "nil"           ;
+TCons.  Term8 ::= DynVar "(" [Term] ")" ;
+coercions Term 8 ;
+separator Term "," ;
 
-{- Expressions  
-  Haskell operators:
-   Prc | Left-Assoc           |         Non-Assoc            | Right-Assoc
-    9  | !!                   |                              | . 
-    8  |                      |                              | ^ ^^ **
-    7  | * / div mod rem quot |                              | 
-    6  | + -                  |                              |
-    5  |                      |                              | : ++
-    4  |                      | == /= < <= > >= elem notElem | 
-    3  |                      |                              | &&
-    2  |                      |                              | ||
-    1  | >> >>=               |                              |
-    0  |                      |                              | $ $! seq    
--}
-
-
-ECat.  Exp  ::= Exp1  "++" Exp  ;
-ECons. Exp  ::= Exp1  ":"  Exp  ;
-EAdd.  Exp1 ::= Exp1  "+"  Exp2 ;
-ESub.  Exp1 ::= Exp1  "-"  Exp2 ;
-EMul.  Exp2 ::= Exp2  "*"  Exp3 ;
-EDiv.  Exp2 ::= Exp2 "div" Exp3 ;
-EMod.  Exp2 ::= Exp2 "mod" Exp3 ;
-ENeg.  Exp2 ::= "neg" Exp3      ;
-EInt.  Exp3 ::= Integer         ;
-EVar.  Exp3 ::= DynVar          ;
-ETrue. Exp3 ::= "true"          ;
-EFalse. Exp3 ::= "false"          ;
-ENil.  Exp3 ::= "nil"           ;
-ENmdTuple. Exp3 ::= DynVar "(" [Exp] ")" ;
-coercions Exp 3                 ;
-separator Exp "," ;
 
 {- Types
   reasonEq Type(s)
@@ -229,4 +221,4 @@ coercions Type 3 ;
 separator Type2 "|" ;
 separator Type3 "" ;
 
-entrypoints Theory, Pred, Exp, Type ;
+entrypoints Theory, Term, Type ;

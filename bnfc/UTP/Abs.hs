@@ -51,7 +51,7 @@ data Term
     | LCat Term Term
     | LCons Term Term
     | EAdd Term Term
-    | ESub Term Term
+    | EMinus Term Term
     | EMul Term Term
     | EDiv Term Term
     | EMod Term Term
@@ -62,6 +62,9 @@ data Term
     | EFalse
     | ENil
     | TCons DynVar [Term]
+    | TSubV Term [Term] [DynVar]
+    | TSubLV Term [DynVar] [DynVar]
+    | TSubst Term [Term] [DynVar] [DynVar] [DynVar]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Type

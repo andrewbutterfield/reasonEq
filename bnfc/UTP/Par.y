@@ -29,54 +29,60 @@ import UTP.Lex
 %token
   '!='         { PT _ (TS _ 1)      }
   '('          { PT _ (TS _ 2)      }
-  '(:'         { PT _ (TS _ 3)      }
-  ')'          { PT _ (TS _ 4)      }
-  '*'          { PT _ (TS _ 5)      }
-  '+'          { PT _ (TS _ 6)      }
-  '++'         { PT _ (TS _ 7)      }
-  ','          { PT _ (TS _ 8)      }
-  '-'          { PT _ (TS _ 9)      }
-  '->'         { PT _ (TS _ 10)     }
-  '.'          { PT _ (TS _ 11)     }
-  '/\\'        { PT _ (TS _ 12)     }
-  ':'          { PT _ (TS _ 13)     }
-  ':)'         { PT _ (TS _ 14)     }
-  '<'          { PT _ (TS _ 15)     }
-  '<='         { PT _ (TS _ 16)     }
-  '=='         { PT _ (TS _ 17)     }
-  '==='        { PT _ (TS _ 18)     }
-  '==>'        { PT _ (TS _ 19)     }
-  '>'          { PT _ (TS _ 20)     }
-  '>='         { PT _ (TS _ 21)     }
-  'Conjecture' { PT _ (TS _ 22)     }
-  'DclASet'    { PT _ (TS _ 23)     }
-  'DclDLVar'   { PT _ (TS _ 24)     }
-  'DclVar'     { PT _ (TS _ 25)     }
-  'Exp'        { PT _ (TS _ 26)     }
-  'False'      { PT _ (TS _ 27)     }
-  'Law'        { PT _ (TS _ 28)     }
-  'NA'         { PT _ (TS _ 29)     }
-  'NS'         { PT _ (TS _ 30)     }
-  'Obs'        { PT _ (TS _ 31)     }
-  'Prd'        { PT _ (TS _ 32)     }
-  'SB'         { PT _ (TS _ 33)     }
-  'Theory'     { PT _ (TS _ 34)     }
-  'True'       { PT _ (TS _ 35)     }
-  '\\/'        { PT _ (TS _ 36)     }
-  'assumed'    { PT _ (TS _ 37)     }
-  'axiom'      { PT _ (TS _ 38)     }
-  'div'        { PT _ (TS _ 39)     }
-  'false'      { PT _ (TS _ 40)     }
-  'mod'        { PT _ (TS _ 41)     }
-  'neg'        { PT _ (TS _ 42)     }
-  'nil'        { PT _ (TS _ 43)     }
-  'proven'     { PT _ (TS _ 44)     }
-  'tbot'       { PT _ (TS _ 45)     }
-  'true'       { PT _ (TS _ 46)     }
-  'ttop'       { PT _ (TS _ 47)     }
-  'var'        { PT _ (TS _ 48)     }
-  '|'          { PT _ (TS _ 49)     }
-  '~'          { PT _ (TS _ 50)     }
+  '(.'         { PT _ (TS _ 3)      }
+  '(:'         { PT _ (TS _ 4)      }
+  ')'          { PT _ (TS _ 5)      }
+  '*'          { PT _ (TS _ 6)      }
+  '+'          { PT _ (TS _ 7)      }
+  '++'         { PT _ (TS _ 8)      }
+  ','          { PT _ (TS _ 9)      }
+  '-'          { PT _ (TS _ 10)     }
+  '->'         { PT _ (TS _ 11)     }
+  '.'          { PT _ (TS _ 12)     }
+  '.)'         { PT _ (TS _ 13)     }
+  '/'          { PT _ (TS _ 14)     }
+  '/\\'        { PT _ (TS _ 15)     }
+  ':'          { PT _ (TS _ 16)     }
+  ':)'         { PT _ (TS _ 17)     }
+  '<'          { PT _ (TS _ 18)     }
+  '<='         { PT _ (TS _ 19)     }
+  '=='         { PT _ (TS _ 20)     }
+  '==='        { PT _ (TS _ 21)     }
+  '==>'        { PT _ (TS _ 22)     }
+  '>'          { PT _ (TS _ 23)     }
+  '>='         { PT _ (TS _ 24)     }
+  'Conjecture' { PT _ (TS _ 25)     }
+  'DclASet'    { PT _ (TS _ 26)     }
+  'DclDLVar'   { PT _ (TS _ 27)     }
+  'DclVar'     { PT _ (TS _ 28)     }
+  'Exp'        { PT _ (TS _ 29)     }
+  'False'      { PT _ (TS _ 30)     }
+  'Law'        { PT _ (TS _ 31)     }
+  'NA'         { PT _ (TS _ 32)     }
+  'NS'         { PT _ (TS _ 33)     }
+  'Obs'        { PT _ (TS _ 34)     }
+  'Prd'        { PT _ (TS _ 35)     }
+  'SB'         { PT _ (TS _ 36)     }
+  'Sub'        { PT _ (TS _ 37)     }
+  'SubL'       { PT _ (TS _ 38)     }
+  'SubV'       { PT _ (TS _ 39)     }
+  'Theory'     { PT _ (TS _ 40)     }
+  'True'       { PT _ (TS _ 41)     }
+  '\\/'        { PT _ (TS _ 42)     }
+  'assumed'    { PT _ (TS _ 43)     }
+  'axiom'      { PT _ (TS _ 44)     }
+  'div'        { PT _ (TS _ 45)     }
+  'false'      { PT _ (TS _ 46)     }
+  'mod'        { PT _ (TS _ 47)     }
+  'neg'        { PT _ (TS _ 48)     }
+  'nil'        { PT _ (TS _ 49)     }
+  'proven'     { PT _ (TS _ 50)     }
+  'tbot'       { PT _ (TS _ 51)     }
+  'true'       { PT _ (TS _ 52)     }
+  'ttop'       { PT _ (TS _ 53)     }
+  'var'        { PT _ (TS _ 54)     }
+  '|'          { PT _ (TS _ 55)     }
+  '~'          { PT _ (TS _ 56)     }
   L_integ      { PT _ (TI $$)       }
   L_DynVar     { PT _ (T_DynVar $$) }
 
@@ -164,7 +170,7 @@ Term5
 Term6 :: { UTP.Abs.Term }
 Term6
   : Term6 '+' Term7 { UTP.Abs.EAdd $1 $3 }
-  | Term6 '-' Term7 { UTP.Abs.ESub $1 $3 }
+  | Term6 '-' Term7 { UTP.Abs.EMinus $1 $3 }
   | Term7 { $1 }
 
 Term7 :: { UTP.Abs.Term }
@@ -183,6 +189,9 @@ Term8
   | 'false' { UTP.Abs.EFalse }
   | 'nil' { UTP.Abs.ENil }
   | DynVar '(' ListTerm ')' { UTP.Abs.TCons $1 $3 }
+  | 'SubV' Term '(.' ListTerm '/' ListDynVar '.)' { UTP.Abs.TSubV $2 $4 $6 }
+  | 'SubL' Term '(.' ListDynVar '/' ListDynVar '.)' { UTP.Abs.TSubLV $2 $4 $6 }
+  | 'Sub' Term '(.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.)' { UTP.Abs.TSubst $2 $4 $6 $8 $10 }
   | '(' Term ')' { $2 }
 
 ListTerm :: { [UTP.Abs.Term] }

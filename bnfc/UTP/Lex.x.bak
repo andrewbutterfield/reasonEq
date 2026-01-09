@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \. | \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \( \. | \. \) | \( | \) | \, | \+ \+ | \: | \+ | \- | \* | \- \> | \( \: | \: \) | \|
+@rsyms = \. | \= \= \= | \= \= \> | \\ \/ | \/ \\ | \~ | \= \= | \! \= | \< | \< \= | \> | \> \= | \+ \+ | \: | \+ | \- | \* | \( | \) | \( \. | \/ | \. \) | \| | \, | \- \> | \( \: | \: \)
 
 :-
 
@@ -42,6 +42,10 @@ $white+ ;
 -- token DynVar
 (\_ | $l)(\_ | ($d | $l)) *
     { tok (eitherResIdent T_DynVar) }
+
+-- token DynLVar
+\$ (\_ | $l)(\_ | ($d | $l)) *
+    { tok (eitherResIdent T_DynLVar) }
 
 -- Keywords and Ident
 $l $i*
@@ -65,6 +69,7 @@ data Tok
   | TD !String                    -- ^ Float literal.
   | TC !String                    -- ^ Character literal.
   | T_DynVar !String
+  | T_DynLVar !String
   deriving (Eq, Show, Ord)
 
 -- | Smart constructor for 'Tok' for the sake of backwards compatibility.
@@ -128,6 +133,7 @@ tokenText t = case t of
   PT _ (TC s)   -> s
   Err _         -> "#error"
   PT _ (T_DynVar s) -> s
+  PT _ (T_DynLVar s) -> s
 
 -- | Convert a token to a string.
 prToken :: Token -> String
@@ -154,29 +160,37 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "Law" 24
-    (b ".)" 12
-       (b "+" 6
-          (b "(:" 3 (b "(." 2 (b "(" 1 N N) N) (b "*" 5 (b ")" 4 N N) N))
-          (b "-" 9 (b "," 8 (b "++" 7 N N) N) (b "." 11 (b "->" 10 N N) N)))
-       (b "Conjecture" 18
-          (b ":)" 15
-             (b ":" 14 (b "/\\" 13 N N) N) (b "==>" 17 (b "===" 16 N N) N))
-          (b "DclVar" 21
-             (b "DclDLVar" 20 (b "DclASet" 19 N N) N)
-             (b "False" 23 (b "Exp" 22 N N) N))))
-    (b "false" 36
-       (b "Theory" 30
-          (b "Obs" 27
-             (b "NS" 26 (b "NA" 25 N N) N) (b "SB" 29 (b "Prd" 28 N N) N))
-          (b "assumed" 33
-             (b "\\/" 32 (b "True" 31 N N) N)
-             (b "div" 35 (b "axiom" 34 N N) N)))
-       (b "true" 42
-          (b "nil" 39
-             (b "neg" 38 (b "mod" 37 N N) N)
-             (b "tbot" 41 (b "proven" 40 N N) N))
-          (b "|" 45 (b "var" 44 (b "ttop" 43 N N) N) (b "~" 46 N N))))
+  b "Exp" 29
+    (b "/\\" 15
+       (b "++" 8
+          (b "(:" 4
+             (b "(" 2 (b "!=" 1 N N) (b "(." 3 N N))
+             (b "*" 6 (b ")" 5 N N) (b "+" 7 N N)))
+          (b "." 12
+             (b "-" 10 (b "," 9 N N) (b "->" 11 N N))
+             (b "/" 14 (b ".)" 13 N N) N)))
+       (b "==>" 22
+          (b "<=" 19
+             (b ":)" 17 (b ":" 16 N N) (b "<" 18 N N))
+             (b "===" 21 (b "==" 20 N N) N))
+          (b "DclASet" 26
+             (b ">=" 24 (b ">" 23 N N) (b "Conjecture" 25 N N))
+             (b "DclVar" 28 (b "DclDLVar" 27 N N) N))))
+    (b "assumed" 43
+       (b "SB" 36
+          (b "NS" 33
+             (b "Law" 31 (b "False" 30 N N) (b "NA" 32 N N))
+             (b "Prd" 35 (b "Obs" 34 N N) N))
+          (b "Theory" 40
+             (b "SubL" 38 (b "Sub" 37 N N) (b "SubV" 39 N N))
+             (b "\\/" 42 (b "True" 41 N N) N)))
+       (b "proven" 50
+          (b "mod" 47
+             (b "div" 45 (b "axiom" 44 N N) (b "false" 46 N N))
+             (b "nil" 49 (b "neg" 48 N N) N))
+          (b "var" 54
+             (b "true" 52 (b "tbot" 51 N N) (b "ttop" 53 N N))
+             (b "~" 56 (b "|" 55 N N) N))))
   where
   b s n = B bs (TS bs n)
     where

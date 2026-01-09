@@ -27,18 +27,20 @@ The reserved words used in UTP are the following:
   | ``Conjecture`` | ``DclASet`` | ``DclDLVar`` | ``DclVar``
   | ``Exp`` | ``False`` | ``Law`` | ``NA``
   | ``NS`` | ``Obs`` | ``Prd`` | ``SB``
-  | ``Theory`` | ``True`` | ``assumed`` | ``axiom``
-  | ``div`` | ``false`` | ``mod`` | ``neg``
-  | ``nil`` | ``proven`` | ``tbot`` | ``true``
-  | ``ttop`` | ``var`` |  |
+  | ``Sub`` | ``SubL`` | ``SubV`` | ``Theory``
+  | ``True`` | ``assumed`` | ``axiom`` | ``div``
+  | ``false`` | ``mod`` | ``neg`` | ``nil``
+  | ``proven`` | ``tbot`` | ``true`` | ``ttop``
+  | ``var`` |  |  |
 
 The symbols used in UTP are the following:
   | . | === | ==> | \/
   | /\ | ~ | == | !=
   | < | <= | > | >=
   | ++ | : | + | -
-  | * | ( | ) | ,
-  | -> | (: | :) | |
+  | * | ( | ) | (.
+  | / | .) | | | ,
+  | -> | (: | :) |
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -105,6 +107,9 @@ All other symbols are terminals.
   |  |  **|**  | ``false``
   |  |  **|**  | ``nil``
   |  |  **|**  | //DynVar// ``(`` //[Term]// ``)``
+  |  |  **|**  | ``SubV`` //Term// ``(.`` //[Term]// ``/`` //[DynVar]// ``.)``
+  |  |  **|**  | ``SubL`` //Term// ``(.`` //[DynVar]// ``/`` //[DynVar]// ``.)``
+  |  |  **|**  | ``Sub`` //Term// ``(.`` //[Term]// ``/`` //[DynVar]// ``|`` //[DynVar]// ``/`` //[DynVar]// ``.)``
   |  |  **|**  | ``(`` //Term// ``)``
   | //[Term]// | -> | **eps**
   |  |  **|**  | //Term//

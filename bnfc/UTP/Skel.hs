@@ -72,7 +72,7 @@ transTerm x = case x of
   UTP.Abs.LCat term1 term2 -> failure x
   UTP.Abs.LCons term1 term2 -> failure x
   UTP.Abs.EAdd term1 term2 -> failure x
-  UTP.Abs.ESub term1 term2 -> failure x
+  UTP.Abs.EMinus term1 term2 -> failure x
   UTP.Abs.EMul term1 term2 -> failure x
   UTP.Abs.EDiv term1 term2 -> failure x
   UTP.Abs.EMod term1 term2 -> failure x
@@ -83,6 +83,9 @@ transTerm x = case x of
   UTP.Abs.EFalse -> failure x
   UTP.Abs.ENil -> failure x
   UTP.Abs.TCons dynvar terms -> failure x
+  UTP.Abs.TSubV term terms dynvars -> failure x
+  UTP.Abs.TSubLV term dynvars1 dynvars2 -> failure x
+  UTP.Abs.TSubst term terms dynvars1 dynvars2 dynvars3 -> failure x
 
 transType :: UTP.Abs.Type -> Result
 transType x = case x of

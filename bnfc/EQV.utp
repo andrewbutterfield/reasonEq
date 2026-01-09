@@ -6,11 +6,13 @@ Law axiom true_true . True .
 Law axiom eqv_refl  . P === P .
 Law axiom eqv_assoc . (P === (Q === R)) === ((P === Q) === R)  .
 Law axiom eqv_symm  . (P === Q) === (Q === P) .
-Law axiom id_subst  . SUB_xs_xs (P) ===  P .
-Law axiom non_subst . SUB_xs_es (P) ===  disj_P_from_xs (P) .
+Law axiom id_subst  . SubL P (. x / x .)  ===  P .
+Law axiom non_subst . SubL P (. e / x .) ===  disj_P_from_xs (P) .
 
 Conjecture eqv_id   . (True === Q)  === Q .
-Conjecture true_subst . SUB_xs_e (True) === True .
+Conjecture true_subst . SubL True (. e / x .) === True .
 Conjecture eqv_subst  .  
-       SUB_xs_e (P === Q) === ( SUB_xs_e (P)  === SUB_xs_e (Q) )
+       SubL P === Q (. e / x .) 
+       === 
+       ( SubL P (. e / x .) === SubL Q (. e / x .) )
 .

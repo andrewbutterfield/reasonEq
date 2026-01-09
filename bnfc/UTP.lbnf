@@ -33,10 +33,10 @@
     Variable Data
       -- this is a monster - see below
       -- now we only implement what is actually used.
+    Substitutions
     Here: we have enough to represent most of the propositional theories
 
-    Once quantifiers are introduced we need:
-    Substitutions
+    Once substitution and/or quantifiers are introduced we need:
     Side-Conditions
 
     Top-level theory structuring:
@@ -47,12 +47,8 @@
 
 -}
 
-
 -- we want identifiers to start with letters and underscores
 token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
-
--- token SBBL ( {"NA"} | {"SB"} | {"NS"} ) ; -- n/a, subable, not-subable
-
 
 {- Theories
    SourceHandling syntex (.src)
@@ -130,8 +126,8 @@ separator DynVar "" ;
 DeclVar.   Item ::= "DclVar" VarClass DynVar "." VarRole "."    ;  -- KV
 DeclDLVar. Item ::= "DclDLVar" VarClass DynVar "." [DynVar] "." ;  -- DL
 DeclASet.  Item ::= "DclASet" VarClass DynVar "."               ;  -- DAS
-Conj.      Item ::= "Conjecture" DynVar "." Term "."   ;
-Law.       Item ::= "Law" LawType DynVar "." Term "."  ;
+Conj.      Item ::= "Conjecture" DynVar "." Term "." ;
+Law.       Item ::= "Law" LawType DynVar "." Term "." ;
 
 VMR_KV. VarRole ::= "var" SBBL Type ;
 
@@ -165,34 +161,41 @@ separator Item "" ;
       | >> >>=               |                              |
       |                      |                              | $ $! seq   
 -}
-PEqv.   Term  ::= Term "===" Term1   ;
-PImpl.  Term1 ::= Term2 "==>" Term1  ;
-POr.    Term2 ::= Term2 "\\/" Term3  ;
-PAnd.   Term3 ::= Term3 "/\\" Term4  ;
-PNot.   Term3 ::= "~" Term4          ;
-EQ.     Term4 ::= Term5 "==" Term5       ; 
-NE.     Term4 ::= Term5 "!=" Term5       ; 
-LT.     Term4 ::= Term5 "<" Term5        ; 
-LE.     Term4 ::= Term5 "<=" Term5       ; 
-GT.     Term4 ::= Term5 ">" Term5        ; 
-GE.     Term4 ::= Term5 ">=" Term5       ; 
-PTrue.  Term4 ::= "True"             ;
-PFalse. Term4 ::= "False"           ;
-PVar.   Term4 ::= DynVar             ;
+PEqv.   Term  ::= Term "===" Term1 ;
+PImpl.  Term1 ::= Term2 "==>" Term1 ;
+POr.    Term2 ::= Term2 "\\/" Term3 ;
+PAnd.   Term3 ::= Term3 "/\\" Term4 ;
+PNot.   Term3 ::= "~" Term4 ;
+EQ.     Term4 ::= Term5 "==" Term5 ;
+NE.     Term4 ::= Term5 "!=" Term5 ;
+LT.     Term4 ::= Term5 "<" Term5 ;
+LE.     Term4 ::= Term5 "<=" Term5 ;
+GT.     Term4 ::= Term5 ">" Term5 ;
+GE.     Term4 ::= Term5 ">=" Term5 ;
+PTrue.  Term4 ::= "True" ;
+PFalse. Term4 ::= "False" ;
+PVar.   Term4 ::= DynVar ;
 LCat.   Term5 ::= Term6  "++" Term5 ;
 LCons.  Term5 ::= Term6  ":"  Term5 ;
-EAdd.   Term6 ::= Term6  "+"  Term7  ;
-ESub.   Term6 ::= Term6  "-"  Term7  ;
-EMul.   Term7 ::= Term7  "*"  Term8  ;
-EDiv.   Term7 ::= Term7 "div" Term8  ;
-EMod.   Term7 ::= Term7 "mod" Term8  ;
-ENeg.   Term7 ::= "neg" Term8        ;
-EInt.   Term8 ::= Integer            ;
-EVar.   Term8 ::= DynVar          ;
-ETrue.  Term8 ::= "true"          ;
-EFalse. Term8 ::= "false"          ;
-ENil.   Term8 ::= "nil"           ;
+EAdd.   Term6 ::= Term6  "+"  Term7 ;
+EMinus. Term6 ::= Term6  "-"  Term7 ;
+EMul.   Term7 ::= Term7  "*"  Term8 ;
+EDiv.   Term7 ::= Term7 "div" Term8 ;
+EMod.   Term7 ::= Term7 "mod" Term8 ;
+ENeg.   Term7 ::= "neg" Term8 ;
+EInt.   Term8 ::= Integer ;
+EVar.   Term8 ::= DynVar ;
+ETrue.  Term8 ::= "true" ;
+EFalse. Term8 ::= "false" ;
+ENil.   Term8 ::= "nil" ;
 TCons.  Term8 ::= DynVar "(" [Term] ")" ;
+TSubV. Term8  ::= "SubV" Term "(." [Term] "/" [DynVar] ".)" ;
+TSubLV. Term8 ::= "SubL" Term  "(." [DynVar] "/" [DynVar] ".)" ;
+TSubst. Term8 ::= "Sub" Term 
+                     "(." [Term] "/" [DynVar] 
+                          "|" 
+                          [DynVar] "/" [DynVar]
+                     ".)" ;
 coercions Term 8 ;
 separator Term "," ;
 

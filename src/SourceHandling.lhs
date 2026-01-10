@@ -38,6 +38,7 @@ import Laws
 import VarData
 import Assertions
 import Theories
+import BNFC/Abs
 import TestRendering
 import StdTypeSignature
 
@@ -46,15 +47,17 @@ import Debugger
 
 \section{Load-Generate Intro.}
 
-We provide a simple, clunky way to read and write theory objects
-using a simple grammar mostly using prefix-based constructs.
+We provide a grammar for theory files defined using LBNF (\h{BNFC/UTP}).
+The plan is that we will use this as the main way 
+to create new/edit existing theories,
+so we don't have to use Haskell modules for this purpose.
 
-The plan is that we will use this as the main way to create
-new theories,
-so we don't have to use Haskell modules.
+Parsers and prettyprinters are already implemented, 
+for theories, terms, types and side-conditions.
+All we have to provide here are mapping functions 
+between the LBNF abstract types and the concrete \reasonEq\ types,
+as well as relevant file handling.
 
-\textbf{The plan now is to use LBNF to define a nicer grammar}
-\textsl{See \texttt{reasonEq/bnfc}}.
 
 \newpage
 \section{Theories}

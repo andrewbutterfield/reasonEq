@@ -18,11 +18,11 @@ import System.Environment ( getArgs )
 import System.Exit        ( exitFailure )
 import Control.Monad      ( when )
 
-import UTP.Abs   ()
-import UTP.Lex   ( Token, mkPosToken )
-import UTP.Par   ( pPred, myLexer )
-import UTP.Print ( Print, printTree )
-import UTP.Skel  ()
+import REQ.Abs   ()
+import REQ.Lex   ( Token, mkPosToken )
+import REQ.Par   ( pTheory, myLexer )
+import REQ.Print ( Print, printTree )
+import REQ.Skel  ()
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a
@@ -70,7 +70,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    []         -> getContents >>= run 2 pPred
-    "-s":fs    -> mapM_ (runFile 0 pPred) fs
-    fs         -> mapM_ (runFile 2 pPred) fs
+    []         -> getContents >>= run 2 pTheory
+    "-s":fs    -> mapM_ (runFile 0 pTheory) fs
+    fs         -> mapM_ (runFile 2 pTheory) fs
 

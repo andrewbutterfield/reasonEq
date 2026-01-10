@@ -5,7 +5,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns -Wno-overlapping-patterns #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module UTP.Par
+module REQ.Par
   ( happyError
   , myLexer
   , pTheory
@@ -16,8 +16,8 @@ module UTP.Par
 
 import Prelude
 
-import qualified UTP.Abs
-import UTP.Lex
+import qualified REQ.Abs
+import REQ.Lex
 
 }
 
@@ -103,173 +103,173 @@ import UTP.Lex
 Integer :: { Integer }
 Integer  : L_integ  { (read $1) :: Integer }
 
-DynVar :: { UTP.Abs.DynVar }
-DynVar  : L_DynVar { UTP.Abs.DynVar $1 }
+DynVar :: { REQ.Abs.DynVar }
+DynVar  : L_DynVar { REQ.Abs.DynVar $1 }
 
-Theory :: { UTP.Abs.Theory }
+Theory :: { REQ.Abs.Theory }
 Theory
-  : 'Theory' DynVar '.' ListDynVar '.' ListItem { UTP.Abs.Thry $2 $4 $6 }
+  : 'Theory' DynVar '.' ListDynVar '.' ListItem { REQ.Abs.Thry $2 $4 $6 }
 
-ListDynVar :: { [UTP.Abs.DynVar] }
+ListDynVar :: { [REQ.Abs.DynVar] }
 ListDynVar : {- empty -} { [] } | DynVar ListDynVar { (:) $1 $2 }
 
-Item :: { UTP.Abs.Item }
+Item :: { REQ.Abs.Item }
 Item
-  : 'DclVar' VarClass DynVar '.' VarRole '.' { UTP.Abs.DeclVar $2 $3 $5 }
-  | 'DclDLVar' VarClass DynVar '.' ListDynVar '.' { UTP.Abs.DeclDLVar $2 $3 $5 }
-  | 'DclASet' VarClass DynVar '.' { UTP.Abs.DeclASet $2 $3 }
-  | 'Conjecture' DynVar '.' Term '.' SCond { UTP.Abs.Conj $2 $4 $6 }
-  | 'Law' LawType DynVar '.' Term '.' SCond { UTP.Abs.Law $2 $3 $5 $7 }
+  : 'DclVar' VarClass DynVar '.' VarRole '.' { REQ.Abs.DeclVar $2 $3 $5 }
+  | 'DclDLVar' VarClass DynVar '.' ListDynVar '.' { REQ.Abs.DeclDLVar $2 $3 $5 }
+  | 'DclASet' VarClass DynVar '.' { REQ.Abs.DeclASet $2 $3 }
+  | 'Conjecture' DynVar '.' Term '.' SCond { REQ.Abs.Conj $2 $4 $6 }
+  | 'Law' LawType DynVar '.' Term '.' SCond { REQ.Abs.Law $2 $3 $5 $7 }
 
-VarRole :: { UTP.Abs.VarRole }
-VarRole : 'var' SBBL Type { UTP.Abs.VMR_KV $2 $3 }
+VarRole :: { REQ.Abs.VarRole }
+VarRole : 'var' SBBL Type { REQ.Abs.VMR_KV $2 $3 }
 
-VarClass :: { UTP.Abs.VarClass }
+VarClass :: { REQ.Abs.VarClass }
 VarClass
-  : 'Obs' { UTP.Abs.VarObs }
-  | 'Exp' { UTP.Abs.VarExp }
-  | 'Prd' { UTP.Abs.VarPred }
+  : 'Obs' { REQ.Abs.VarObs }
+  | 'Exp' { REQ.Abs.VarExp }
+  | 'Prd' { REQ.Abs.VarPred }
 
-SBBL :: { UTP.Abs.SBBL }
+SBBL :: { REQ.Abs.SBBL }
 SBBL
-  : 'NA' { UTP.Abs.SBBL_NA }
-  | 'SB' { UTP.Abs.SBBL_SB }
-  | 'NS' { UTP.Abs.SBBL_NS }
+  : 'NA' { REQ.Abs.SBBL_NA }
+  | 'SB' { REQ.Abs.SBBL_SB }
+  | 'NS' { REQ.Abs.SBBL_NS }
 
-LawType :: { UTP.Abs.LawType }
+LawType :: { REQ.Abs.LawType }
 LawType
-  : 'axiom' { UTP.Abs.LAxiom }
-  | 'proven' { UTP.Abs.LProof }
-  | 'assumed' { UTP.Abs.LAssume }
+  : 'axiom' { REQ.Abs.LAxiom }
+  | 'proven' { REQ.Abs.LProof }
+  | 'assumed' { REQ.Abs.LAssume }
 
-ListItem :: { [UTP.Abs.Item] }
+ListItem :: { [REQ.Abs.Item] }
 ListItem : {- empty -} { [] } | Item ListItem { (:) $1 $2 }
 
-Term :: { UTP.Abs.Term }
-Term : Term '===' Term1 { UTP.Abs.PEqv $1 $3 } | Term1 { $1 }
+Term :: { REQ.Abs.Term }
+Term : Term '===' Term1 { REQ.Abs.PEqv $1 $3 } | Term1 { $1 }
 
-Term1 :: { UTP.Abs.Term }
-Term1 : Term2 '==>' Term1 { UTP.Abs.PImpl $1 $3 } | Term2 { $1 }
+Term1 :: { REQ.Abs.Term }
+Term1 : Term2 '==>' Term1 { REQ.Abs.PImpl $1 $3 } | Term2 { $1 }
 
-Term2 :: { UTP.Abs.Term }
-Term2 : Term2 '\\/' Term3 { UTP.Abs.POr $1 $3 } | Term3 { $1 }
+Term2 :: { REQ.Abs.Term }
+Term2 : Term2 '\\/' Term3 { REQ.Abs.POr $1 $3 } | Term3 { $1 }
 
-Term3 :: { UTP.Abs.Term }
+Term3 :: { REQ.Abs.Term }
 Term3
-  : Term3 '/\\' Term4 { UTP.Abs.PAnd $1 $3 }
-  | '~' Term4 { UTP.Abs.PNot $2 }
+  : Term3 '/\\' Term4 { REQ.Abs.PAnd $1 $3 }
+  | '~' Term4 { REQ.Abs.PNot $2 }
   | Term4 { $1 }
 
-Term4 :: { UTP.Abs.Term }
+Term4 :: { REQ.Abs.Term }
 Term4
-  : Term5 '==' Term5 { UTP.Abs.EQ $1 $3 }
-  | Term5 '!=' Term5 { UTP.Abs.NE $1 $3 }
-  | Term5 '<' Term5 { UTP.Abs.LT $1 $3 }
-  | Term5 '<=' Term5 { UTP.Abs.LE $1 $3 }
-  | Term5 '>' Term5 { UTP.Abs.GT $1 $3 }
-  | Term5 '>=' Term5 { UTP.Abs.GE $1 $3 }
-  | 'True' { UTP.Abs.PTrue }
-  | 'False' { UTP.Abs.PFalse }
-  | DynVar { UTP.Abs.PVar $1 }
+  : Term5 '==' Term5 { REQ.Abs.EQ $1 $3 }
+  | Term5 '!=' Term5 { REQ.Abs.NE $1 $3 }
+  | Term5 '<' Term5 { REQ.Abs.LT $1 $3 }
+  | Term5 '<=' Term5 { REQ.Abs.LE $1 $3 }
+  | Term5 '>' Term5 { REQ.Abs.GT $1 $3 }
+  | Term5 '>=' Term5 { REQ.Abs.GE $1 $3 }
+  | 'True' { REQ.Abs.PTrue }
+  | 'False' { REQ.Abs.PFalse }
+  | DynVar { REQ.Abs.PVar $1 }
   | Term5 { $1 }
 
-Term5 :: { UTP.Abs.Term }
+Term5 :: { REQ.Abs.Term }
 Term5
-  : Term6 '++' Term5 { UTP.Abs.LCat $1 $3 }
-  | Term6 ':' Term5 { UTP.Abs.LCons $1 $3 }
+  : Term6 '++' Term5 { REQ.Abs.LCat $1 $3 }
+  | Term6 ':' Term5 { REQ.Abs.LCons $1 $3 }
   | Term6 { $1 }
 
-Term6 :: { UTP.Abs.Term }
+Term6 :: { REQ.Abs.Term }
 Term6
-  : Term6 '+' Term7 { UTP.Abs.EAdd $1 $3 }
-  | Term6 '-' Term7 { UTP.Abs.EMinus $1 $3 }
+  : Term6 '+' Term7 { REQ.Abs.EAdd $1 $3 }
+  | Term6 '-' Term7 { REQ.Abs.EMinus $1 $3 }
   | Term7 { $1 }
 
-Term7 :: { UTP.Abs.Term }
+Term7 :: { REQ.Abs.Term }
 Term7
-  : Term7 '*' Term8 { UTP.Abs.EMul $1 $3 }
-  | Term7 'div' Term8 { UTP.Abs.EDiv $1 $3 }
-  | Term7 'mod' Term8 { UTP.Abs.EMod $1 $3 }
-  | 'neg' Term8 { UTP.Abs.ENeg $2 }
+  : Term7 '*' Term8 { REQ.Abs.EMul $1 $3 }
+  | Term7 'div' Term8 { REQ.Abs.EDiv $1 $3 }
+  | Term7 'mod' Term8 { REQ.Abs.EMod $1 $3 }
+  | 'neg' Term8 { REQ.Abs.ENeg $2 }
   | Term8 { $1 }
 
-Term8 :: { UTP.Abs.Term }
+Term8 :: { REQ.Abs.Term }
 Term8
-  : Integer { UTP.Abs.EInt $1 }
-  | DynVar { UTP.Abs.EVar $1 }
-  | 'true' { UTP.Abs.ETrue }
-  | 'false' { UTP.Abs.EFalse }
-  | 'nil' { UTP.Abs.ENil }
-  | DynVar '(' ListTerm ')' { UTP.Abs.TCons $1 $3 }
-  | 'SubV' Term '[.' ListTerm '/' ListDynVar '.]' { UTP.Abs.TSubV $2 $4 $6 }
-  | 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]' { UTP.Abs.TSubLV $2 $4 $6 }
-  | 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' { UTP.Abs.TSubst $2 $4 $6 $8 $10 }
+  : Integer { REQ.Abs.EInt $1 }
+  | DynVar { REQ.Abs.EVar $1 }
+  | 'true' { REQ.Abs.ETrue }
+  | 'false' { REQ.Abs.EFalse }
+  | 'nil' { REQ.Abs.ENil }
+  | DynVar '(' ListTerm ')' { REQ.Abs.TCons $1 $3 }
+  | 'SubV' Term '[.' ListTerm '/' ListDynVar '.]' { REQ.Abs.TSubV $2 $4 $6 }
+  | 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]' { REQ.Abs.TSubLV $2 $4 $6 }
+  | 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' { REQ.Abs.TSubst $2 $4 $6 $8 $10 }
   | '(' Term ')' { $2 }
 
-ListTerm :: { [UTP.Abs.Term] }
+ListTerm :: { [REQ.Abs.Term] }
 ListTerm
   : {- empty -} { [] }
   | Term { (:[]) $1 }
   | Term ',' ListTerm { (:) $1 $3 }
 
-Type :: { UTP.Abs.Type }
-Type : Type1 '->' Type { UTP.Abs.TFun $1 $3 } | Type1 { $1 }
+Type :: { REQ.Abs.Type }
+Type : Type1 '->' Type { REQ.Abs.TFun $1 $3 } | Type1 { $1 }
 
-Type1 :: { UTP.Abs.Type }
+Type1 :: { REQ.Abs.Type }
 Type1
-  : DynVar '(:' ListType2 ':)' { UTP.Abs.TRec $1 $3 } | Type2 { $1 }
+  : DynVar '(:' ListType2 ':)' { REQ.Abs.TRec $1 $3 } | Type2 { $1 }
 
-Type2 :: { UTP.Abs.Type }
-Type2 : DynVar ListType3 { UTP.Abs.TProd $1 $2 } | Type3 { $1 }
+Type2 :: { REQ.Abs.Type }
+Type2 : DynVar ListType3 { REQ.Abs.TProd $1 $2 } | Type3 { $1 }
 
-Type3 :: { UTP.Abs.Type }
+Type3 :: { REQ.Abs.Type }
 Type3
-  : 'ttop' { UTP.Abs.TArb }
-  | DynVar { UTP.Abs.TVar $1 }
-  | 'tbot' { UTP.Abs.TBot }
+  : 'ttop' { REQ.Abs.TArb }
+  | DynVar { REQ.Abs.TVar $1 }
+  | 'tbot' { REQ.Abs.TBot }
   | '(' Type ')' { $2 }
 
-ListType2 :: { [UTP.Abs.Type] }
+ListType2 :: { [REQ.Abs.Type] }
 ListType2
   : {- empty -} { [] }
   | Type2 { (:[]) $1 }
   | Type2 '|' ListType2 { (:) $1 $3 }
 
-ListType3 :: { [UTP.Abs.Type] }
+ListType3 :: { [REQ.Abs.Type] }
 ListType3 : {- empty -} { [] } | Type3 ListType3 { (:) $1 $2 }
 
-GVar :: { UTP.Abs.GVar }
+GVar :: { REQ.Abs.GVar }
 GVar
-  : 'std' DynVar { UTP.Abs.SVar $2 }
-  | 'lst' DynVar { UTP.Abs.LVar $2 }
+  : 'std' DynVar { REQ.Abs.SVar $2 }
+  | 'lst' DynVar { REQ.Abs.LVar $2 }
 
-ListGVar :: { [UTP.Abs.GVar] }
+ListGVar :: { [REQ.Abs.GVar] }
 ListGVar
   : {- empty -} { [] }
   | GVar { (:[]) $1 }
   | GVar ',' ListGVar { (:) $1 $3 }
 
-VarSet :: { UTP.Abs.VarSet }
-VarSet : ListGVar { UTP.Abs.VSet $1 }
+VarSet :: { REQ.Abs.VarSet }
+VarSet : ListGVar { REQ.Abs.VSet $1 }
 
-VSCond :: { UTP.Abs.VSCond }
+VSCond :: { REQ.Abs.VSCond }
 VSCond
-  : GVar 'disj' VarSet { UTP.Abs.VSCDisj $1 $3 }
-  | GVar 'covby' VarSet { UTP.Abs.VSCCovBy $1 $3 }
-  | GVar 'dcovby' VarSet { UTP.Abs.VSCDynCov $1 $3 }
+  : GVar 'disj' VarSet { REQ.Abs.VSCDisj $1 $3 }
+  | GVar 'covby' VarSet { REQ.Abs.VSCCovBy $1 $3 }
+  | GVar 'dcovby' VarSet { REQ.Abs.VSCDynCov $1 $3 }
 
-ListVSCond :: { [UTP.Abs.VSCond] }
+ListVSCond :: { [REQ.Abs.VSCond] }
 ListVSCond
   : {- empty -} { [] }
   | VSCond { (:[]) $1 }
   | VSCond ';' ListVSCond { (:) $1 $3 }
 
-SCond :: { UTP.Abs.SCond }
+SCond :: { REQ.Abs.SCond }
 SCond
-  : 'SC' ListVSCond '.' VarSet '.' { UTP.Abs.SCFull $2 $4 }
-  | 'VSC' ListVSCond '.' { UTP.Abs.SCVSCs $2 }
-  | 'fresh' VarSet '.' { UTP.Abs.SCFresh $2 }
-  | 'none' { UTP.Abs.SCnone }
+  : 'SC' ListVSCond '.' VarSet '.' { REQ.Abs.SCFull $2 $4 }
+  | 'VSC' ListVSCond '.' { REQ.Abs.SCVSCs $2 }
+  | 'fresh' VarSet '.' { REQ.Abs.SCFresh $2 }
+  | 'none' { REQ.Abs.SCnone }
 
 {
 

@@ -1,18 +1,29 @@
 # HowTo
 
-We use `bnfc -d -m UTP.lbnf` 
+We use `bnfc -d -m REQ.lbnf` 
 which puts the generated stuff 
-into directory `reasonEq/src/BNFC/UTP`.
+into directory `reasonEq/bnfc/REQ`.
 
 General approach:
 
+For development/debugging:
+
 ```
-cd .../reasonEq/src/BNFC
-bnfc -d -m UTP.lbnf
+cd .../reasonEq/bnfc
+bnfc -d -m REQ.lbnf
 make -f rmake
 ./Runner
   <enter stuff>
 ^D
+```
+
+For deployment:
+
+```
+cd .../reasonEq/bnfc
+bnfc -d -m REQ.lbnf
+make
+mv REQ ../src/REQ
 ```
 
 Now we need to move to having a test program. 

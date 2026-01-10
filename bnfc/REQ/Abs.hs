@@ -2,9 +2,9 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | The abstract syntax of language UTP.
+-- | The abstract syntax of language REQ.
 
-module UTP.Abs where
+module REQ.Abs where
 
 import Prelude (Integer, String)
 import qualified Prelude as C (Eq, Ord, Show, Read)
@@ -17,8 +17,8 @@ data Item
     = DeclVar VarClass DynVar VarRole
     | DeclDLVar VarClass DynVar [DynVar]
     | DeclASet VarClass DynVar
-    | Conj DynVar Term
-    | Law LawType DynVar Term
+    | Conj DynVar Term SCond
+    | Law LawType DynVar Term SCond
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data VarRole = VMR_KV SBBL Type

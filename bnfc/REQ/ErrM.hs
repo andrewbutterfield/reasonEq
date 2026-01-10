@@ -13,7 +13,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module UTP.ErrM where
+module REQ.ErrM where
 
 import Prelude             (id, const, Either(..), String)
 

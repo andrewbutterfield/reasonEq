@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
-{-# LINE 4 "UTP/Lex.x" #-}
+{-# LINE 4 "REQ/Lex.x" #-}
 {-# OPTIONS -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -w #-}
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module UTP.Lex where
+module REQ.Lex where
 
 import Prelude
 
@@ -90,7 +90,7 @@ alex_actions = array (0 :: Int, 13)
   , (0,alex_action_1)
   ]
 
-{-# LINE 54 "UTP/Lex.x" #-}
+{-# LINE 54 "REQ/Lex.x" #-}
 -- | Create a token with position.
 tok :: (String -> Tok) -> (Posn -> String -> Token)
 tok f p = PT p . f

@@ -3,6 +3,7 @@
 *.fls
 *.aux
 *.log
+*.bak
 MAIN.pdf
 TUT.pdf
 *.gz

@@ -23,7 +23,7 @@ For deployment:
 cd .../reasonEq/bnfc
 bnfc -d -m REQ.lbnf
 make
-mv REQ ../src/REQ
+source deploy.sh
 ```
 
 Now we need to move to having a test program. 

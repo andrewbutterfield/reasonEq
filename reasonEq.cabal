@@ -43,6 +43,7 @@ library
       REQ.Abs
       REQ.Lex
       REQ.Par
+      REQ.Print
       REqState
       SAT
       Sequents

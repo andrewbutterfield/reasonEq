@@ -223,7 +223,7 @@ instance Print REQ.Abs.Typ where
     REQ.Abs.TRec dynvar typs -> prPrec i 1 (concatD [prt 0 dynvar, doc (showString "(:"), prt 2 typs, doc (showString ":)")])
     REQ.Abs.TProd dynvar typs -> prPrec i 2 (concatD [prt 0 dynvar, prt 3 typs])
     REQ.Abs.TArb -> prPrec i 3 (concatD [doc (showString "ttop")])
-    REQ.Abs.TVbl dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
+    REQ.Abs.TVar dynvar -> prPrec i 3 (concatD [prt 0 dynvar])
     REQ.Abs.TBot -> prPrec i 3 (concatD [doc (showString "tbot")])
 
 instance Print [REQ.Abs.Typ] where

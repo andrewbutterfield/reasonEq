@@ -40,6 +40,9 @@ library
       Proofs
       ProofSettings
       Ranking
+      REQ.Abs
+      REQ.Lex
+      REQ.Par
       REqState
       SAT
       Sequents
@@ -100,6 +103,7 @@ library
   build-depends:
       HUnit
     , HsYAML
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -126,6 +130,7 @@ executable req
   build-depends:
       HUnit
     , HsYAML
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -153,6 +158,7 @@ executable showpp
   build-depends:
       HUnit
     , HsYAML
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -187,6 +193,7 @@ test-suite reasonEq-test
   build-depends:
       HUnit
     , HsYAML
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers

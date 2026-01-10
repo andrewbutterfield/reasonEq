@@ -225,7 +225,7 @@ Typ2 : DynVar ListTyp3 { REQ.Abs.TProd $1 $2 } | Typ3 { $1 }
 Typ3 :: { REQ.Abs.Typ }
 Typ3
   : 'ttop' { REQ.Abs.TArb }
-  | DynVar { REQ.Abs.TVbl $1 }
+  | DynVar { REQ.Abs.TVar $1 }
   | 'tbot' { REQ.Abs.TBot }
   | '(' Typ ')' { $2 }
 

@@ -93,7 +93,7 @@ transTyp x = case x of
   REQ.Abs.TRec dynvar typs -> failure x
   REQ.Abs.TProd dynvar typs -> failure x
   REQ.Abs.TArb -> failure x
-  REQ.Abs.TVbl dynvar -> failure x
+  REQ.Abs.TVar dynvar -> failure x
   REQ.Abs.TBot -> failure x
 
 transGVar :: REQ.Abs.GVar -> Result

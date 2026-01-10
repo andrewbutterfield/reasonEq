@@ -70,7 +70,7 @@ token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
      Laws.
 -}
 
-Thry. Theory ::= "Theory" DynVar "." [DynVar] "." [Item] ;
+Thr. Thry ::= "Theory" DynVar "." [DynVar] "." [Item] ;
 
 separator DynVar "" ;
 
@@ -119,17 +119,17 @@ separator DynVar "" ;
   This is  KV DL DAS 
 -}
 
-DeclVar.   Item ::= "DclVar" VarClass DynVar "." VarRole "."    ;  -- KV
-DeclDLVar. Item ::= "DclDLVar" VarClass DynVar "." [DynVar] "." ;  -- DL
-DeclASet.  Item ::= "DclASet" VarClass DynVar "."               ;  -- DAS
-Conj.      Item ::= "Conjecture" DynVar "." Term "." SCond  ;
-Law.       Item ::= "Law" LawType DynVar "." Term "." SCond  ;
+DeclVar.   Item ::= "DclVar" VClass DynVar "." VarRole "."    ;  -- KV
+DeclDLVar. Item ::= "DclDLVar" VClass DynVar "." [DynVar] "." ;  -- DL
+DeclASet.  Item ::= "DclASet" VClass DynVar "."               ;  -- DAS
+Conj.      Item ::= "Conjecture" DynVar "." Trm "." SCond  ;
+Law.       Item ::= "Law" LawType DynVar "." Trm "." SCond  ;
 
-VMR_KV. VarRole ::= "var" SBBL Type ;
+VMR_KV. VarRole ::= "var" SBBL Typ ;
 
-VarObs. VarClass ::= "Obs" ;
-VarExp. VarClass ::= "Exp" ;
-VarPred. VarClass ::= "Prd" ;
+VarObs. VClass ::= "Obs" ;
+VarExp. VClass ::= "Exp" ;
+VarPred. VClass ::= "Prd" ;
 
 SBBL_NA. SBBL ::= "NA" ;
 SBBL_SB. SBBL ::= "SB" ;
@@ -158,48 +158,48 @@ separator Item "" ;
       | >> >>=               |                              |
       |                      |                              | $ $! seq   
 -}
-PEqv.   Term  ::= Term "===" Term1 ;
-PImpl.  Term1 ::= Term2 "==>" Term1 ;
-POr.    Term2 ::= Term2 "\\/" Term3 ;
-PAnd.   Term3 ::= Term3 "/\\" Term4 ;
-PNot.   Term3 ::= "~" Term4 ;
+PEqv.   Trm  ::= Trm "===" Trm1 ;
+PImpl.  Trm1 ::= Trm2 "==>" Trm1 ;
+POr.    Trm2 ::= Trm2 "\\/" Trm3 ;
+PAnd.   Trm3 ::= Trm3 "/\\" Trm4 ;
+PNot.   Trm3 ::= "~" Trm4 ;
 -- program predicates ?
-EQ.     Term4 ::= Term5 "==" Term5 ;
-NE.     Term4 ::= Term5 "!=" Term5 ;
-LT.     Term4 ::= Term5 "<" Term5 ;
-LE.     Term4 ::= Term5 "<=" Term5 ;
-GT.     Term4 ::= Term5 ">" Term5 ;
-GE.     Term4 ::= Term5 ">=" Term5 ;
-PTrue.  Term4 ::= "True" ;
-PFalse. Term4 ::= "False" ;
-PVar.   Term4 ::= DynVar ;
-LCat.   Term5 ::= Term6  "++" Term5 ;
-LCons.  Term5 ::= Term6  ":"  Term5 ;
-EAdd.   Term6 ::= Term6  "+"  Term7 ;
-EMinus. Term6 ::= Term6  "-"  Term7 ;
-EMul.   Term7 ::= Term7  "*"  Term8 ;
-EDiv.   Term7 ::= Term7 "div" Term8 ;
-EMod.   Term7 ::= Term7 "mod" Term8 ;
-ENeg.   Term7 ::= "neg" Term8 ;
-EInt.   Term8 ::= Integer ;
-EVar.   Term8 ::= DynVar ;
-ETrue.  Term8 ::= "true" ;
-EFalse. Term8 ::= "false" ;
-ENil.   Term8 ::= "nil" ;
-TCons.  Term8 ::= DynVar "(" [Term] ")" ;
-TSubV. Term8  ::= "SubV" Term "[." [Term] "/" [DynVar] ".]" ;
-TSubLV. Term8 ::= "SubL" Term  "[." [DynVar] "/" [DynVar] ".]" ;
-TSubst. Term8 ::= "Sub" Term 
-                     "[." [Term] "/" [DynVar] 
+EQ.     Trm4 ::= Trm5 "==" Trm5 ;
+NE.     Trm4 ::= Trm5 "!=" Trm5 ;
+LT.     Trm4 ::= Trm5 "<" Trm5 ;
+LE.     Trm4 ::= Trm5 "<=" Trm5 ;
+GT.     Trm4 ::= Trm5 ">" Trm5 ;
+GE.     Trm4 ::= Trm5 ">=" Trm5 ;
+PTrue.  Trm4 ::= "True" ;
+PFalse. Trm4 ::= "False" ;
+PVar.   Trm4 ::= DynVar ;
+LCat.   Trm5 ::= Trm6  "++" Trm5 ;
+LCons.  Trm5 ::= Trm6  ":"  Trm5 ;
+EAdd.   Trm6 ::= Trm6  "+"  Trm7 ;
+EMinus. Trm6 ::= Trm6  "-"  Trm7 ;
+EMul.   Trm7 ::= Trm7  "*"  Trm8 ;
+EDiv.   Trm7 ::= Trm7 "div" Trm8 ;
+EMod.   Trm7 ::= Trm7 "mod" Trm8 ;
+ENeg.   Trm7 ::= "neg" Trm8 ;
+EInt.   Trm8 ::= Integer ;
+EVar.   Trm8 ::= DynVar ;
+ETrue.  Trm8 ::= "true" ;
+EFalse. Trm8 ::= "false" ;
+ENil.   Trm8 ::= "nil" ;
+TCons.  Trm8 ::= DynVar "(" [Trm] ")" ;
+TSubV. Trm8  ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
+TSubLV. Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
+TSubst. Trm8 ::= "Sub" Trm 
+                     "[." [Trm] "/" [DynVar] 
                           "|" 
                           [DynVar] "/" [DynVar]
                      ".]" ;
-coercions Term 8 ;
-separator Term "," ;
+coercions Trm 8 ;
+separator Trm "," ;
 
 
 {- Types
-  reasonEq Type(s)
+  reasonEq Typ(s)
     ArbType
     TypeVar i  
     TypeCons i ts 
@@ -212,15 +212,15 @@ separator Term "," ;
     t1 -> t2 -> t3   is  t1 -> (t2 -> t3)
 -}
 
-TFun.  Type ::= Type1 "->" Type ;
-TRec.  Type1 ::= DynVar "(:" [Type2] ":)" ;
-TProd. Type2 ::= DynVar [Type3] ;
-TArb.  Type3 ::= "ttop" ;
-TVar.  Type3 ::= DynVar ; 
-TBot.  Type3 ::= "tbot" ;
-coercions Type 3 ;
-separator Type2 "|" ;
-separator Type3 "" ;
+TFun.  Typ ::= Typ1 "->" Typ ;
+TRec.  Typ1 ::= DynVar "(:" [Typ2] ":)" ;
+TProd. Typ2 ::= DynVar [Typ3] ;
+TArb.  Typ3 ::= "ttop" ;
+TVbl.  Typ3 ::= DynVar ; 
+TBot.  Typ3 ::= "tbot" ;
+coercions Typ 3 ;
+separator Typ2 "|" ;
+separator Typ3 "" ;
 
 {- Side-Conditions
     type SideCond = ( [VarSideConds]  -- all must be true
@@ -237,16 +237,16 @@ SVar. GVar ::= "std" DynVar ;
 LVar. GVar ::= "lst" DynVar ;
 separator GVar "," ;
 
-VSet. VarSet ::= [GVar] ;
+VSet. VrSet ::= [GVar] ;
 
-VSCDisj.   VSCond ::= GVar "disj"   VarSet ;
-VSCCovBy.  VSCond ::= GVar "covby"  VarSet ;
-VSCDynCov. VSCond ::= GVar "dcovby" VarSet ;
+VSCDisj.   VSCond ::= GVar "disj"   VrSet ;
+VSCCovBy.  VSCond ::= GVar "covby"  VrSet ;
+VSCDynCov. VSCond ::= GVar "dcovby" VrSet ;
 separator VSCond ";" ;
 
-SCFull.  SCond ::= "SC" [VSCond] "." VarSet "." ;
+SCFull.  SCond ::= "SC" [VSCond] "." VrSet "." ;
 SCVSCs.  SCond ::= "VSC" [VSCond] "." ;
-SCFresh. SCond ::= "fresh" VarSet "." ;
+SCFresh. SCond ::= "fresh" VrSet "." ;
 SCnone.  SCond ::= "none" ;
 
-entrypoints Theory, Term, Type, SCond ;
+entrypoints Thry, Trm, Typ, SCond ;

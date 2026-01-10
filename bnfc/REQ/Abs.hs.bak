@@ -72,7 +72,7 @@ data Typ
     | TRec DynVar [Typ]
     | TProd DynVar [Typ]
     | TArb
-    | TVbl DynVar
+    | TVar DynVar
     | TBot
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 

@@ -11,7 +11,9 @@ module SourceHandling (
 , term_syntax
 , renderNNToken'
 , loadTheory, genTheory
-, loadTerm
+, loadTerm -- genTerm
+-- , loadType, genType
+-- , loadSideCond, genSideCond
 )
 
 where
@@ -38,7 +40,7 @@ import Laws
 import VarData
 import Assertions
 import Theories
-import BNFC/Abs
+import REQ.Abs
 import TestRendering
 import StdTypeSignature
 
@@ -57,6 +59,11 @@ for theories, terms, types and side-conditions.
 All we have to provide here are mapping functions 
 between the LBNF abstract types and the concrete \reasonEq\ types,
 as well as relevant file handling.
+
+\begin{code}
+tt :: Trm -> Term
+tt PTrue = Val ArbType $ Boolean True
+\end{code}
 
 
 \newpage

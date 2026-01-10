@@ -11,24 +11,24 @@ rule 43 is unused
 -----------------------------------------------------------------------------
 Grammar
 -----------------------------------------------------------------------------
-	%start_pTheory -> Theory                           (0)
-	%start_pTerm -> Term                               (1)
-	%start_pType -> Type                               (2)
+	%start_pThry -> Thry                               (0)
+	%start_pTrm -> Trm                                 (1)
+	%start_pTyp -> Typ                                 (2)
 	%start_pSCond -> SCond                             (3)
 	Integer -> L_integ                                 (4)
 	DynVar -> L_DynVar                                 (5)
-	Theory -> 'Theory' DynVar '.' ListDynVar '.' ListItem   (6)
+	Thry -> 'Theory' DynVar '.' ListDynVar '.' ListItem   (6)
 	ListDynVar ->                                      (7)
 	ListDynVar -> DynVar ListDynVar                    (8)
-	Item -> 'DclVar' VarClass DynVar '.' VarRole '.'   (9)
-	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar '.'   (10)
-	Item -> 'DclASet' VarClass DynVar '.'              (11)
-	Item -> 'Conjecture' DynVar '.' Term '.' SCond     (12)
-	Item -> 'Law' LawType DynVar '.' Term '.' SCond    (13)
-	VarRole -> 'var' SBBL Type                         (14)
-	VarClass -> 'Obs'                                  (15)
-	VarClass -> 'Exp'                                  (16)
-	VarClass -> 'Prd'                                  (17)
+	Item -> 'DclVar' VClass DynVar '.' VarRole '.'     (9)
+	Item -> 'DclDLVar' VClass DynVar '.' ListDynVar '.'   (10)
+	Item -> 'DclASet' VClass DynVar '.'                (11)
+	Item -> 'Conjecture' DynVar '.' Trm '.' SCond      (12)
+	Item -> 'Law' LawType DynVar '.' Trm '.' SCond     (13)
+	VarRole -> 'var' SBBL Typ                          (14)
+	VClass -> 'Obs'                                    (15)
+	VClass -> 'Exp'                                    (16)
+	VClass -> 'Prd'                                    (17)
 	SBBL -> 'NA'                                       (18)
 	SBBL -> 'SB'                                       (19)
 	SBBL -> 'NS'                                       (20)
@@ -37,79 +37,79 @@ Grammar
 	LawType -> 'assumed'                               (23)
 	ListItem ->                                        (24)
 	ListItem -> Item ListItem                          (25)
-	Term -> Term '===' Term1                           (26)
-	Term -> Term1                                      (27)
-	Term1 -> Term2 '==>' Term1                         (28)
-	Term1 -> Term2                                     (29)
-	Term2 -> Term2 '\\/' Term3                         (30)
-	Term2 -> Term3                                     (31)
-	Term3 -> Term3 '/\\' Term4                         (32)
-	Term3 -> '~' Term4                                 (33)
-	Term3 -> Term4                                     (34)
-	Term4 -> Term5 '==' Term5                          (35)
-	Term4 -> Term5 '!=' Term5                          (36)
-	Term4 -> Term5 '<' Term5                           (37)
-	Term4 -> Term5 '<=' Term5                          (38)
-	Term4 -> Term5 '>' Term5                           (39)
-	Term4 -> Term5 '>=' Term5                          (40)
-	Term4 -> 'True'                                    (41)
-	Term4 -> 'False'                                   (42)
-	Term4 -> DynVar                                    (43)
-	Term4 -> Term5                                     (44)
-	Term5 -> Term6 '++' Term5                          (45)
-	Term5 -> Term6 ':' Term5                           (46)
-	Term5 -> Term6                                     (47)
-	Term6 -> Term6 '+' Term7                           (48)
-	Term6 -> Term6 '-' Term7                           (49)
-	Term6 -> Term7                                     (50)
-	Term7 -> Term7 '*' Term8                           (51)
-	Term7 -> Term7 'div' Term8                         (52)
-	Term7 -> Term7 'mod' Term8                         (53)
-	Term7 -> 'neg' Term8                               (54)
-	Term7 -> Term8                                     (55)
-	Term8 -> Integer                                   (56)
-	Term8 -> DynVar                                    (57)
-	Term8 -> 'true'                                    (58)
-	Term8 -> 'false'                                   (59)
-	Term8 -> 'nil'                                     (60)
-	Term8 -> DynVar '(' ListTerm ')'                   (61)
-	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar '.]'   (62)
-	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]'   (63)
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'   (64)
-	Term8 -> '(' Term ')'                              (65)
-	ListTerm ->                                        (66)
-	ListTerm -> Term                                   (67)
-	ListTerm -> Term ',' ListTerm                      (68)
-	Type -> Type1 '->' Type                            (69)
-	Type -> Type1                                      (70)
-	Type1 -> DynVar '(:' ListType2 ':)'                (71)
-	Type1 -> Type2                                     (72)
-	Type2 -> DynVar ListType3                          (73)
-	Type2 -> Type3                                     (74)
-	Type3 -> 'ttop'                                    (75)
-	Type3 -> DynVar                                    (76)
-	Type3 -> 'tbot'                                    (77)
-	Type3 -> '(' Type ')'                              (78)
-	ListType2 ->                                       (79)
-	ListType2 -> Type2                                 (80)
-	ListType2 -> Type2 '|' ListType2                   (81)
-	ListType3 ->                                       (82)
-	ListType3 -> Type3 ListType3                       (83)
+	Trm -> Trm '===' Trm1                              (26)
+	Trm -> Trm1                                        (27)
+	Trm1 -> Trm2 '==>' Trm1                            (28)
+	Trm1 -> Trm2                                       (29)
+	Trm2 -> Trm2 '\\/' Trm3                            (30)
+	Trm2 -> Trm3                                       (31)
+	Trm3 -> Trm3 '/\\' Trm4                            (32)
+	Trm3 -> '~' Trm4                                   (33)
+	Trm3 -> Trm4                                       (34)
+	Trm4 -> Trm5 '==' Trm5                             (35)
+	Trm4 -> Trm5 '!=' Trm5                             (36)
+	Trm4 -> Trm5 '<' Trm5                              (37)
+	Trm4 -> Trm5 '<=' Trm5                             (38)
+	Trm4 -> Trm5 '>' Trm5                              (39)
+	Trm4 -> Trm5 '>=' Trm5                             (40)
+	Trm4 -> 'True'                                     (41)
+	Trm4 -> 'False'                                    (42)
+	Trm4 -> DynVar                                     (43)
+	Trm4 -> Trm5                                       (44)
+	Trm5 -> Trm6 '++' Trm5                             (45)
+	Trm5 -> Trm6 ':' Trm5                              (46)
+	Trm5 -> Trm6                                       (47)
+	Trm6 -> Trm6 '+' Trm7                              (48)
+	Trm6 -> Trm6 '-' Trm7                              (49)
+	Trm6 -> Trm7                                       (50)
+	Trm7 -> Trm7 '*' Trm8                              (51)
+	Trm7 -> Trm7 'div' Trm8                            (52)
+	Trm7 -> Trm7 'mod' Trm8                            (53)
+	Trm7 -> 'neg' Trm8                                 (54)
+	Trm7 -> Trm8                                       (55)
+	Trm8 -> Integer                                    (56)
+	Trm8 -> DynVar                                     (57)
+	Trm8 -> 'true'                                     (58)
+	Trm8 -> 'false'                                    (59)
+	Trm8 -> 'nil'                                      (60)
+	Trm8 -> DynVar '(' ListTrm ')'                     (61)
+	Trm8 -> 'SubV' Trm '[.' ListTrm '/' ListDynVar '.]'   (62)
+	Trm8 -> 'SubL' Trm '[.' ListDynVar '/' ListDynVar '.]'   (63)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'   (64)
+	Trm8 -> '(' Trm ')'                                (65)
+	ListTrm ->                                         (66)
+	ListTrm -> Trm                                     (67)
+	ListTrm -> Trm ',' ListTrm                         (68)
+	Typ -> Typ1 '->' Typ                               (69)
+	Typ -> Typ1                                        (70)
+	Typ1 -> DynVar '(:' ListTyp2 ':)'                  (71)
+	Typ1 -> Typ2                                       (72)
+	Typ2 -> DynVar ListTyp3                            (73)
+	Typ2 -> Typ3                                       (74)
+	Typ3 -> 'ttop'                                     (75)
+	Typ3 -> DynVar                                     (76)
+	Typ3 -> 'tbot'                                     (77)
+	Typ3 -> '(' Typ ')'                                (78)
+	ListTyp2 ->                                        (79)
+	ListTyp2 -> Typ2                                   (80)
+	ListTyp2 -> Typ2 '|' ListTyp2                      (81)
+	ListTyp3 ->                                        (82)
+	ListTyp3 -> Typ3 ListTyp3                          (83)
 	GVar -> 'std' DynVar                               (84)
 	GVar -> 'lst' DynVar                               (85)
 	ListGVar ->                                        (86)
 	ListGVar -> GVar                                   (87)
 	ListGVar -> GVar ',' ListGVar                      (88)
-	VarSet -> ListGVar                                 (89)
-	VSCond -> GVar 'disj' VarSet                       (90)
-	VSCond -> GVar 'covby' VarSet                      (91)
-	VSCond -> GVar 'dcovby' VarSet                     (92)
+	VrSet -> ListGVar                                  (89)
+	VSCond -> GVar 'disj' VrSet                        (90)
+	VSCond -> GVar 'covby' VrSet                       (91)
+	VSCond -> GVar 'dcovby' VrSet                      (92)
 	ListVSCond ->                                      (93)
 	ListVSCond -> VSCond                               (94)
 	ListVSCond -> VSCond ';' ListVSCond                (95)
-	SCond -> 'SC' ListVSCond '.' VarSet '.'            (96)
+	SCond -> 'SC' ListVSCond '.' VrSet '.'             (96)
 	SCond -> 'VSC' ListVSCond '.'                      (97)
-	SCond -> 'fresh' VarSet '.'                        (98)
+	SCond -> 'fresh' VrSet '.'                         (98)
 	SCond -> 'none'                                    (99)
 
 -----------------------------------------------------------------------------
@@ -187,39 +187,39 @@ Terminals
 -----------------------------------------------------------------------------
 Non-terminals
 -----------------------------------------------------------------------------
-	%start_pTheory  rule  0
-	%start_pTerm    rule  1
-	%start_pType    rule  2
+	%start_pThry    rule  0
+	%start_pTrm     rule  1
+	%start_pTyp     rule  2
 	%start_pSCond   rule  3
 	Integer         rule  4
 	DynVar          rule  5
-	Theory          rule  6
+	Thry            rule  6
 	ListDynVar      rules 7, 8
 	Item            rules 9, 10, 11, 12, 13
 	VarRole         rule  14
-	VarClass        rules 15, 16, 17
+	VClass          rules 15, 16, 17
 	SBBL            rules 18, 19, 20
 	LawType         rules 21, 22, 23
 	ListItem        rules 24, 25
-	Term            rules 26, 27
-	Term1           rules 28, 29
-	Term2           rules 30, 31
-	Term3           rules 32, 33, 34
-	Term4           rules 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
-	Term5           rules 45, 46, 47
-	Term6           rules 48, 49, 50
-	Term7           rules 51, 52, 53, 54, 55
-	Term8           rules 56, 57, 58, 59, 60, 61, 62, 63, 64, 65
-	ListTerm        rules 66, 67, 68
-	Type            rules 69, 70
-	Type1           rules 71, 72
-	Type2           rules 73, 74
-	Type3           rules 75, 76, 77, 78
-	ListType2       rules 79, 80, 81
-	ListType3       rules 82, 83
+	Trm             rules 26, 27
+	Trm1            rules 28, 29
+	Trm2            rules 30, 31
+	Trm3            rules 32, 33, 34
+	Trm4            rules 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
+	Trm5            rules 45, 46, 47
+	Trm6            rules 48, 49, 50
+	Trm7            rules 51, 52, 53, 54, 55
+	Trm8            rules 56, 57, 58, 59, 60, 61, 62, 63, 64, 65
+	ListTrm         rules 66, 67, 68
+	Typ             rules 69, 70
+	Typ1            rules 71, 72
+	Typ2            rules 73, 74
+	Typ3            rules 75, 76, 77, 78
+	ListTyp2        rules 79, 80, 81
+	ListTyp3        rules 82, 83
 	GVar            rules 84, 85
 	ListGVar        rules 86, 87, 88
-	VarSet          rule  89
+	VrSet           rule  89
 	VSCond          rules 90, 91, 92
 	ListVSCond      rules 93, 94, 95
 	SCond           rules 96, 97, 98, 99
@@ -229,15 +229,15 @@ States
 -----------------------------------------------------------------------------
 State 0
 
-	%start_pTheory -> . Theory                          (rule 0)
+	%start_pThry -> . Thry                              (rule 0)
 
 	'Theory'       shift, and enter state 43
 
-	Theory         goto state 42
+	Thry           goto state 42
 
 State 1
 
-	%start_pTerm -> . Term                              (rule 1)
+	%start_pTrm -> . Trm                                (rule 1)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -255,19 +255,19 @@ State 1
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 22
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 22
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 2
 
-	%start_pType -> . Type                              (rule 2)
+	%start_pTyp -> . Typ                                (rule 2)
 
 	'('            shift, and enter state 16
 	'tbot'         shift, and enter state 17
@@ -275,10 +275,10 @@ State 2
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 11
-	Type           goto state 12
-	Type1          goto state 13
-	Type2          goto state 14
-	Type3          goto state 15
+	Typ            goto state 12
+	Typ1           goto state 13
+	Typ2           goto state 14
+	Typ3           goto state 15
 
 State 3
 
@@ -336,7 +336,7 @@ State 6
 
 State 7
 
-	SCond -> 'SC' . ListVSCond '.' VarSet '.'           (rule 96)
+	SCond -> 'SC' . ListVSCond '.' VrSet '.'            (rule 96)
 
 	'.'            reduce using rule 93
 	'lst'          shift, and enter state 79
@@ -360,7 +360,7 @@ State 8
 
 State 9
 
-	SCond -> 'fresh' . VarSet '.'                       (rule 98)
+	SCond -> 'fresh' . VrSet '.'                        (rule 98)
 
 	'.'            reduce using rule 86
 	'lst'          shift, and enter state 79
@@ -368,7 +368,7 @@ State 9
 
 	GVar           goto state 76
 	ListGVar       goto state 77
-	VarSet         goto state 78
+	VrSet          goto state 78
 
 State 10
 
@@ -384,9 +384,9 @@ State 10
 
 State 11
 
-	Type1 -> DynVar . '(:' ListType2 ':)'               (rule 71)
-	Type2 -> DynVar . ListType3                         (rule 73)
-	Type3 -> DynVar .                                   (rule 76)
+	Typ1 -> DynVar . '(:' ListTyp2 ':)'                 (rule 71)
+	Typ2 -> DynVar . ListTyp3                           (rule 73)
+	Typ3 -> DynVar .                                    (rule 76)
 
 	'('            shift, and enter state 16
 	'(:'           shift, and enter state 75
@@ -407,20 +407,20 @@ State 11
 
 
 	DynVar         goto state 72
-	Type3          goto state 73
-	ListType3      goto state 74
+	Typ3           goto state 73
+	ListTyp3       goto state 74
 
 State 12
 
-	%start_pType -> Type .                              (rule 2)
+	%start_pTyp -> Typ .                                (rule 2)
 
 	%eof           accept
 
 
 State 13
 
-	Type -> Type1 . '->' Type                           (rule 69)
-	Type -> Type1 .                                     (rule 70)
+	Typ -> Typ1 . '->' Typ                              (rule 69)
+	Typ -> Typ1 .                                       (rule 70)
 
 	')'            reduce using rule 70
 	'->'           shift, and enter state 71
@@ -430,7 +430,7 @@ State 13
 
 State 14
 
-	Type1 -> Type2 .                                    (rule 72)
+	Typ1 -> Typ2 .                                      (rule 72)
 
 	')'            reduce using rule 72
 	'->'           reduce using rule 72
@@ -440,7 +440,7 @@ State 14
 
 State 15
 
-	Type2 -> Type3 .                                    (rule 74)
+	Typ2 -> Typ3 .                                      (rule 74)
 
 	')'            reduce using rule 74
 	'->'           reduce using rule 74
@@ -452,7 +452,7 @@ State 15
 
 State 16
 
-	Type3 -> '(' . Type ')'                             (rule 78)
+	Typ3 -> '(' . Typ ')'                               (rule 78)
 
 	'('            shift, and enter state 16
 	'tbot'         shift, and enter state 17
@@ -460,14 +460,14 @@ State 16
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 11
-	Type           goto state 70
-	Type1          goto state 13
-	Type2          goto state 14
-	Type3          goto state 15
+	Typ            goto state 70
+	Typ1           goto state 13
+	Typ2           goto state 14
+	Typ3           goto state 15
 
 State 17
 
-	Type3 -> 'tbot' .                                   (rule 77)
+	Typ3 -> 'tbot' .                                    (rule 77)
 
 	'('            reduce using rule 77
 	')'            reduce using rule 77
@@ -483,7 +483,7 @@ State 17
 
 State 18
 
-	Type3 -> 'ttop' .                                   (rule 75)
+	Typ3 -> 'ttop' .                                    (rule 75)
 
 	'('            reduce using rule 75
 	')'            reduce using rule 75
@@ -541,7 +541,7 @@ State 19
 
 State 20
 
-	Term8 -> Integer .                                  (rule 56)
+	Trm8 -> Integer .                                   (rule 56)
 
 	'!='           reduce using rule 56
 	')'            reduce using rule 56
@@ -570,9 +570,9 @@ State 20
 
 State 21
 
-	Term4 -> DynVar .                                   (rule 43)
-	Term8 -> DynVar .                                   (rule 57)
-	Term8 -> DynVar . '(' ListTerm ')'                  (rule 61)
+	Trm4 -> DynVar .                                    (rule 43)
+	Trm8 -> DynVar .                                    (rule 57)
+	Trm8 -> DynVar . '(' ListTrm ')'                    (rule 61)
 
 	'!='           reduce using rule 57
 	'('            shift, and enter state 69
@@ -622,8 +622,8 @@ State 21
 
 State 22
 
-	%start_pTerm -> Term .                              (rule 1)
-	Term -> Term . '===' Term1                          (rule 26)
+	%start_pTrm -> Trm .                                (rule 1)
+	Trm -> Trm . '===' Trm1                             (rule 26)
 
 	'==='          shift, and enter state 68
 	%eof           accept
@@ -631,7 +631,7 @@ State 22
 
 State 23
 
-	Term -> Term1 .                                     (rule 27)
+	Trm -> Trm1 .                                       (rule 27)
 
 	')'            reduce using rule 27
 	','            reduce using rule 27
@@ -644,9 +644,9 @@ State 23
 
 State 24
 
-	Term1 -> Term2 . '==>' Term1                        (rule 28)
-	Term1 -> Term2 .                                    (rule 29)
-	Term2 -> Term2 . '\\/' Term3                        (rule 30)
+	Trm1 -> Trm2 . '==>' Trm1                           (rule 28)
+	Trm1 -> Trm2 .                                      (rule 29)
+	Trm2 -> Trm2 . '\\/' Trm3                           (rule 30)
 
 	')'            reduce using rule 29
 	','            reduce using rule 29
@@ -661,8 +661,8 @@ State 24
 
 State 25
 
-	Term2 -> Term3 .                                    (rule 31)
-	Term3 -> Term3 . '/\\' Term4                        (rule 32)
+	Trm2 -> Trm3 .                                      (rule 31)
+	Trm3 -> Trm3 . '/\\' Trm4                           (rule 32)
 
 	')'            reduce using rule 31
 	','            reduce using rule 31
@@ -678,7 +678,7 @@ State 25
 
 State 26
 
-	Term3 -> Term4 .                                    (rule 34)
+	Trm3 -> Trm4 .                                      (rule 34)
 
 	')'            reduce using rule 34
 	','            reduce using rule 34
@@ -694,13 +694,13 @@ State 26
 
 State 27
 
-	Term4 -> Term5 . '==' Term5                         (rule 35)
-	Term4 -> Term5 . '!=' Term5                         (rule 36)
-	Term4 -> Term5 . '<' Term5                          (rule 37)
-	Term4 -> Term5 . '<=' Term5                         (rule 38)
-	Term4 -> Term5 . '>' Term5                          (rule 39)
-	Term4 -> Term5 . '>=' Term5                         (rule 40)
-	Term4 -> Term5 .                                    (rule 44)
+	Trm4 -> Trm5 . '==' Trm5                            (rule 35)
+	Trm4 -> Trm5 . '!=' Trm5                            (rule 36)
+	Trm4 -> Trm5 . '<' Trm5                             (rule 37)
+	Trm4 -> Trm5 . '<=' Trm5                            (rule 38)
+	Trm4 -> Trm5 . '>' Trm5                             (rule 39)
+	Trm4 -> Trm5 . '>=' Trm5                            (rule 40)
+	Trm4 -> Trm5 .                                      (rule 44)
 
 	'!='           shift, and enter state 59
 	')'            reduce using rule 44
@@ -722,11 +722,11 @@ State 27
 
 State 28
 
-	Term5 -> Term6 . '++' Term5                         (rule 45)
-	Term5 -> Term6 . ':' Term5                          (rule 46)
-	Term5 -> Term6 .                                    (rule 47)
-	Term6 -> Term6 . '+' Term7                          (rule 48)
-	Term6 -> Term6 . '-' Term7                          (rule 49)
+	Trm5 -> Trm6 . '++' Trm5                            (rule 45)
+	Trm5 -> Trm6 . ':' Trm5                             (rule 46)
+	Trm5 -> Trm6 .                                      (rule 47)
+	Trm6 -> Trm6 . '+' Trm7                             (rule 48)
+	Trm6 -> Trm6 . '-' Trm7                             (rule 49)
 
 	'!='           reduce using rule 47
 	')'            reduce using rule 47
@@ -752,10 +752,10 @@ State 28
 
 State 29
 
-	Term6 -> Term7 .                                    (rule 50)
-	Term7 -> Term7 . '*' Term8                          (rule 51)
-	Term7 -> Term7 . 'div' Term8                        (rule 52)
-	Term7 -> Term7 . 'mod' Term8                        (rule 53)
+	Trm6 -> Trm7 .                                      (rule 50)
+	Trm7 -> Trm7 . '*' Trm8                             (rule 51)
+	Trm7 -> Trm7 . 'div' Trm8                           (rule 52)
+	Trm7 -> Trm7 . 'mod' Trm8                           (rule 53)
 
 	'!='           reduce using rule 50
 	')'            reduce using rule 50
@@ -784,7 +784,7 @@ State 29
 
 State 30
 
-	Term7 -> Term8 .                                    (rule 55)
+	Trm7 -> Trm8 .                                      (rule 55)
 
 	'!='           reduce using rule 55
 	')'            reduce using rule 55
@@ -813,7 +813,7 @@ State 30
 
 State 31
 
-	Term8 -> '(' . Term ')'                             (rule 65)
+	Trm8 -> '(' . Trm ')'                               (rule 65)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -831,19 +831,19 @@ State 31
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 51
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 51
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 32
 
-	Term4 -> 'False' .                                  (rule 42)
+	Trm4 -> 'False' .                                   (rule 42)
 
 	')'            reduce using rule 42
 	','            reduce using rule 42
@@ -859,7 +859,7 @@ State 32
 
 State 33
 
-	Term8 -> 'Sub' . Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' . Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -877,19 +877,19 @@ State 33
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 50
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 50
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 34
 
-	Term8 -> 'SubL' . Term '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
+	Trm8 -> 'SubL' . Trm '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -907,19 +907,19 @@ State 34
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 49
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 49
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 35
 
-	Term8 -> 'SubV' . Term '[.' ListTerm '/' ListDynVar '.]'    (rule 62)
+	Trm8 -> 'SubV' . Trm '[.' ListTrm '/' ListDynVar '.]'    (rule 62)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -937,19 +937,19 @@ State 35
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 48
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 48
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 36
 
-	Term4 -> 'True' .                                   (rule 41)
+	Trm4 -> 'True' .                                    (rule 41)
 
 	')'            reduce using rule 41
 	','            reduce using rule 41
@@ -965,7 +965,7 @@ State 36
 
 State 37
 
-	Term8 -> 'false' .                                  (rule 59)
+	Trm8 -> 'false' .                                   (rule 59)
 
 	'!='           reduce using rule 59
 	')'            reduce using rule 59
@@ -994,7 +994,7 @@ State 37
 
 State 38
 
-	Term7 -> 'neg' . Term8                              (rule 54)
+	Trm7 -> 'neg' . Trm8                                (rule 54)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1008,11 +1008,11 @@ State 38
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term8          goto state 47
+	Trm8           goto state 47
 
 State 39
 
-	Term8 -> 'nil' .                                    (rule 60)
+	Trm8 -> 'nil' .                                     (rule 60)
 
 	'!='           reduce using rule 60
 	')'            reduce using rule 60
@@ -1041,7 +1041,7 @@ State 39
 
 State 40
 
-	Term8 -> 'true' .                                   (rule 58)
+	Trm8 -> 'true' .                                    (rule 58)
 
 	'!='           reduce using rule 58
 	')'            reduce using rule 58
@@ -1070,7 +1070,7 @@ State 40
 
 State 41
 
-	Term3 -> '~' . Term4                                (rule 33)
+	Trm3 -> '~' . Trm4                                  (rule 33)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -1087,22 +1087,22 @@ State 41
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term4          goto state 45
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm4           goto state 45
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 42
 
-	%start_pTheory -> Theory .                          (rule 0)
+	%start_pThry -> Thry .                              (rule 0)
 
 	%eof           accept
 
 
 State 43
 
-	Theory -> 'Theory' . DynVar '.' ListDynVar '.' ListItem    (rule 6)
+	Thry -> 'Theory' . DynVar '.' ListDynVar '.' ListItem    (rule 6)
 
 	L_DynVar       shift, and enter state 19
 
@@ -1110,14 +1110,14 @@ State 43
 
 State 44
 
-	Theory -> 'Theory' DynVar . '.' ListDynVar '.' ListItem    (rule 6)
+	Thry -> 'Theory' DynVar . '.' ListDynVar '.' ListItem    (rule 6)
 
 	'.'            shift, and enter state 124
 
 
 State 45
 
-	Term3 -> '~' Term4 .                                (rule 33)
+	Trm3 -> '~' Trm4 .                                  (rule 33)
 
 	')'            reduce using rule 33
 	','            reduce using rule 33
@@ -1133,8 +1133,8 @@ State 45
 
 State 46
 
-	Term8 -> DynVar .                                   (rule 57)
-	Term8 -> DynVar . '(' ListTerm ')'                  (rule 61)
+	Trm8 -> DynVar .                                    (rule 57)
+	Trm8 -> DynVar . '(' ListTrm ')'                    (rule 61)
 
 	'!='           reduce using rule 57
 	'('            shift, and enter state 69
@@ -1164,7 +1164,7 @@ State 46
 
 State 47
 
-	Term7 -> 'neg' Term8 .                              (rule 54)
+	Trm7 -> 'neg' Trm8 .                                (rule 54)
 
 	'!='           reduce using rule 54
 	')'            reduce using rule 54
@@ -1193,8 +1193,8 @@ State 47
 
 State 48
 
-	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'SubV' Term . '[.' ListTerm '/' ListDynVar '.]'    (rule 62)
+	Trm -> Trm . '===' Trm1                             (rule 26)
+	Trm8 -> 'SubV' Trm . '[.' ListTrm '/' ListDynVar '.]'    (rule 62)
 
 	'==='          shift, and enter state 68
 	'[.'           shift, and enter state 123
@@ -1202,8 +1202,8 @@ State 48
 
 State 49
 
-	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'SubL' Term . '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
+	Trm -> Trm . '===' Trm1                             (rule 26)
+	Trm8 -> 'SubL' Trm . '[.' ListDynVar '/' ListDynVar '.]'    (rule 63)
 
 	'==='          shift, and enter state 68
 	'[.'           shift, and enter state 122
@@ -1211,8 +1211,8 @@ State 49
 
 State 50
 
-	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> 'Sub' Term . '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm -> Trm . '===' Trm1                             (rule 26)
+	Trm8 -> 'Sub' Trm . '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'==='          shift, and enter state 68
 	'[.'           shift, and enter state 121
@@ -1220,8 +1220,8 @@ State 50
 
 State 51
 
-	Term -> Term . '===' Term1                          (rule 26)
-	Term8 -> '(' Term . ')'                             (rule 65)
+	Trm -> Trm . '===' Trm1                             (rule 26)
+	Trm8 -> '(' Trm . ')'                               (rule 65)
 
 	')'            shift, and enter state 120
 	'==='          shift, and enter state 68
@@ -1229,7 +1229,7 @@ State 51
 
 State 52
 
-	Term7 -> Term7 '*' . Term8                          (rule 51)
+	Trm7 -> Trm7 '*' . Trm8                             (rule 51)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1243,11 +1243,11 @@ State 52
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term8          goto state 119
+	Trm8           goto state 119
 
 State 53
 
-	Term7 -> Term7 'div' . Term8                        (rule 52)
+	Trm7 -> Trm7 'div' . Trm8                           (rule 52)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1261,11 +1261,11 @@ State 53
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term8          goto state 118
+	Trm8           goto state 118
 
 State 54
 
-	Term7 -> Term7 'mod' . Term8                        (rule 53)
+	Trm7 -> Trm7 'mod' . Trm8                           (rule 53)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1279,11 +1279,11 @@ State 54
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term8          goto state 117
+	Trm8           goto state 117
 
 State 55
 
-	Term6 -> Term6 '+' . Term7                          (rule 48)
+	Trm6 -> Trm6 '+' . Trm7                             (rule 48)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1298,12 +1298,12 @@ State 55
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term7          goto state 116
-	Term8          goto state 30
+	Trm7           goto state 116
+	Trm8           goto state 30
 
 State 56
 
-	Term5 -> Term6 '++' . Term5                         (rule 45)
+	Trm5 -> Trm6 '++' . Trm5                            (rule 45)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1318,14 +1318,14 @@ State 56
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 115
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 115
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 57
 
-	Term6 -> Term6 '-' . Term7                          (rule 49)
+	Trm6 -> Trm6 '-' . Trm7                             (rule 49)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1340,12 +1340,12 @@ State 57
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term7          goto state 114
-	Term8          goto state 30
+	Trm7           goto state 114
+	Trm8           goto state 30
 
 State 58
 
-	Term5 -> Term6 ':' . Term5                          (rule 46)
+	Trm5 -> Trm6 ':' . Trm5                             (rule 46)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1360,14 +1360,14 @@ State 58
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 113
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 113
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 59
 
-	Term4 -> Term5 '!=' . Term5                         (rule 36)
+	Trm4 -> Trm5 '!=' . Trm5                            (rule 36)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1382,14 +1382,14 @@ State 59
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 112
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 112
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 60
 
-	Term4 -> Term5 '<' . Term5                          (rule 37)
+	Trm4 -> Trm5 '<' . Trm5                             (rule 37)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1404,14 +1404,14 @@ State 60
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 111
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 111
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 61
 
-	Term4 -> Term5 '<=' . Term5                         (rule 38)
+	Trm4 -> Trm5 '<=' . Trm5                            (rule 38)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1426,14 +1426,14 @@ State 61
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 110
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 110
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 62
 
-	Term4 -> Term5 '==' . Term5                         (rule 35)
+	Trm4 -> Trm5 '==' . Trm5                            (rule 35)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1448,14 +1448,14 @@ State 62
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 109
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 109
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 63
 
-	Term4 -> Term5 '>' . Term5                          (rule 39)
+	Trm4 -> Trm5 '>' . Trm5                             (rule 39)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1470,14 +1470,14 @@ State 63
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 108
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 108
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 64
 
-	Term4 -> Term5 '>=' . Term5                         (rule 40)
+	Trm4 -> Trm5 '>=' . Trm5                            (rule 40)
 
 	'('            shift, and enter state 31
 	'Sub'          shift, and enter state 33
@@ -1492,14 +1492,14 @@ State 64
 
 	Integer        goto state 20
 	DynVar         goto state 46
-	Term5          goto state 107
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm5           goto state 107
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 65
 
-	Term3 -> Term3 '/\\' . Term4                        (rule 32)
+	Trm3 -> Trm3 '/\\' . Trm4                           (rule 32)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -1516,15 +1516,15 @@ State 65
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term4          goto state 106
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm4           goto state 106
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 66
 
-	Term1 -> Term2 '==>' . Term1                        (rule 28)
+	Trm1 -> Trm2 '==>' . Trm1                           (rule 28)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -1542,18 +1542,18 @@ State 66
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term1          goto state 105
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm1           goto state 105
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 67
 
-	Term2 -> Term2 '\\/' . Term3                        (rule 30)
+	Trm2 -> Trm2 '\\/' . Trm3                           (rule 30)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -1571,16 +1571,16 @@ State 67
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term3          goto state 104
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm3           goto state 104
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 68
 
-	Term -> Term '===' . Term1                          (rule 26)
+	Trm -> Trm '===' . Trm1                             (rule 26)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -1598,18 +1598,18 @@ State 68
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term1          goto state 103
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm1           goto state 103
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 69
 
-	Term8 -> DynVar '(' . ListTerm ')'                  (rule 61)
+	Trm8 -> DynVar '(' . ListTrm ')'                    (rule 61)
 
 	'('            shift, and enter state 31
 	')'            reduce using rule 66
@@ -1628,27 +1628,27 @@ State 69
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 101
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
-	ListTerm       goto state 102
+	Trm            goto state 101
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+	ListTrm        goto state 102
 
 State 70
 
-	Type3 -> '(' Type . ')'                             (rule 78)
+	Typ3 -> '(' Typ . ')'                               (rule 78)
 
 	')'            shift, and enter state 100
 
 
 State 71
 
-	Type -> Type1 '->' . Type                           (rule 69)
+	Typ -> Typ1 '->' . Typ                              (rule 69)
 
 	'('            shift, and enter state 16
 	'tbot'         shift, and enter state 17
@@ -1656,14 +1656,14 @@ State 71
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 11
-	Type           goto state 99
-	Type1          goto state 13
-	Type2          goto state 14
-	Type3          goto state 15
+	Typ            goto state 99
+	Typ1           goto state 13
+	Typ2           goto state 14
+	Typ3           goto state 15
 
 State 72
 
-	Type3 -> DynVar .                                   (rule 76)
+	Typ3 -> DynVar .                                    (rule 76)
 
 	'('            reduce using rule 76
 	')'            reduce using rule 76
@@ -1679,7 +1679,7 @@ State 72
 
 State 73
 
-	ListType3 -> Type3 . ListType3                      (rule 83)
+	ListTyp3 -> Typ3 . ListTyp3                         (rule 83)
 
 	'('            shift, and enter state 16
 	')'            reduce using rule 82
@@ -1693,12 +1693,12 @@ State 73
 	%eof           reduce using rule 82
 
 	DynVar         goto state 72
-	Type3          goto state 73
-	ListType3      goto state 98
+	Typ3           goto state 73
+	ListTyp3       goto state 98
 
 State 74
 
-	Type2 -> DynVar ListType3 .                         (rule 73)
+	Typ2 -> DynVar ListTyp3 .                           (rule 73)
 
 	')'            reduce using rule 73
 	'->'           reduce using rule 73
@@ -1710,7 +1710,7 @@ State 74
 
 State 75
 
-	Type1 -> DynVar '(:' . ListType2 ':)'               (rule 71)
+	Typ1 -> DynVar '(:' . ListTyp2 ':)'                 (rule 71)
 
 	'('            shift, and enter state 16
 	':)'           reduce using rule 79
@@ -1719,9 +1719,9 @@ State 75
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 95
-	Type2          goto state 96
-	Type3          goto state 15
-	ListType2      goto state 97
+	Typ2           goto state 96
+	Typ3           goto state 15
+	ListTyp2       goto state 97
 
 State 76
 
@@ -1735,7 +1735,7 @@ State 76
 
 State 77
 
-	VarSet -> ListGVar .                                (rule 89)
+	VrSet -> ListGVar .                                 (rule 89)
 
 	'.'            reduce using rule 89
 	';'            reduce using rule 89
@@ -1743,7 +1743,7 @@ State 77
 
 State 78
 
-	SCond -> 'fresh' VarSet . '.'                       (rule 98)
+	SCond -> 'fresh' VrSet . '.'                        (rule 98)
 
 	'.'            shift, and enter state 93
 
@@ -1766,9 +1766,9 @@ State 80
 
 State 81
 
-	VSCond -> GVar . 'disj' VarSet                      (rule 90)
-	VSCond -> GVar . 'covby' VarSet                     (rule 91)
-	VSCond -> GVar . 'dcovby' VarSet                    (rule 92)
+	VSCond -> GVar . 'disj' VrSet                       (rule 90)
+	VSCond -> GVar . 'covby' VrSet                      (rule 91)
+	VSCond -> GVar . 'dcovby' VrSet                     (rule 92)
 
 	'covby'        shift, and enter state 88
 	'dcovby'       shift, and enter state 89
@@ -1793,14 +1793,14 @@ State 83
 
 State 84
 
-	SCond -> 'SC' ListVSCond . '.' VarSet '.'           (rule 96)
+	SCond -> 'SC' ListVSCond . '.' VrSet '.'            (rule 96)
 
 	'.'            shift, and enter state 85
 
 
 State 85
 
-	SCond -> 'SC' ListVSCond '.' . VarSet '.'           (rule 96)
+	SCond -> 'SC' ListVSCond '.' . VrSet '.'            (rule 96)
 
 	'.'            reduce using rule 86
 	'lst'          shift, and enter state 79
@@ -1808,7 +1808,7 @@ State 85
 
 	GVar           goto state 76
 	ListGVar       goto state 77
-	VarSet         goto state 139
+	VrSet          goto state 139
 
 State 86
 
@@ -1836,7 +1836,7 @@ State 87
 
 State 88
 
-	VSCond -> GVar 'covby' . VarSet                     (rule 91)
+	VSCond -> GVar 'covby' . VrSet                      (rule 91)
 
 	'.'            reduce using rule 86
 	';'            reduce using rule 86
@@ -1845,11 +1845,11 @@ State 88
 
 	GVar           goto state 76
 	ListGVar       goto state 77
-	VarSet         goto state 137
+	VrSet          goto state 137
 
 State 89
 
-	VSCond -> GVar 'dcovby' . VarSet                    (rule 92)
+	VSCond -> GVar 'dcovby' . VrSet                     (rule 92)
 
 	'.'            reduce using rule 86
 	';'            reduce using rule 86
@@ -1858,11 +1858,11 @@ State 89
 
 	GVar           goto state 76
 	ListGVar       goto state 77
-	VarSet         goto state 136
+	VrSet          goto state 136
 
 State 90
 
-	VSCond -> GVar 'disj' . VarSet                      (rule 90)
+	VSCond -> GVar 'disj' . VrSet                       (rule 90)
 
 	'.'            reduce using rule 86
 	';'            reduce using rule 86
@@ -1871,7 +1871,7 @@ State 90
 
 	GVar           goto state 76
 	ListGVar       goto state 77
-	VarSet         goto state 135
+	VrSet          goto state 135
 
 State 91
 
@@ -1899,7 +1899,7 @@ State 92
 
 State 93
 
-	SCond -> 'fresh' VarSet '.' .                       (rule 98)
+	SCond -> 'fresh' VrSet '.' .                        (rule 98)
 
 	'Conjecture'   reduce using rule 98
 	'DclASet'      reduce using rule 98
@@ -1923,8 +1923,8 @@ State 94
 
 State 95
 
-	Type2 -> DynVar . ListType3                         (rule 73)
-	Type3 -> DynVar .                                   (rule 76)
+	Typ2 -> DynVar . ListTyp3                           (rule 73)
+	Typ3 -> DynVar .                                    (rule 76)
 
 	'('            shift, and enter state 16
 	':)'           reduce using rule 82
@@ -1938,13 +1938,13 @@ State 95
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 72
-	Type3          goto state 73
-	ListType3      goto state 74
+	Typ3           goto state 73
+	ListTyp3       goto state 74
 
 State 96
 
-	ListType2 -> Type2 .                                (rule 80)
-	ListType2 -> Type2 . '|' ListType2                  (rule 81)
+	ListTyp2 -> Typ2 .                                  (rule 80)
+	ListTyp2 -> Typ2 . '|' ListTyp2                     (rule 81)
 
 	':)'           reduce using rule 80
 	'|'            shift, and enter state 133
@@ -1952,14 +1952,14 @@ State 96
 
 State 97
 
-	Type1 -> DynVar '(:' ListType2 . ':)'               (rule 71)
+	Typ1 -> DynVar '(:' ListTyp2 . ':)'                 (rule 71)
 
 	':)'           shift, and enter state 132
 
 
 State 98
 
-	ListType3 -> Type3 ListType3 .                      (rule 83)
+	ListTyp3 -> Typ3 ListTyp3 .                         (rule 83)
 
 	')'            reduce using rule 83
 	'->'           reduce using rule 83
@@ -1971,7 +1971,7 @@ State 98
 
 State 99
 
-	Type -> Type1 '->' Type .                           (rule 69)
+	Typ -> Typ1 '->' Typ .                              (rule 69)
 
 	')'            reduce using rule 69
 	'.'            reduce using rule 69
@@ -1980,7 +1980,7 @@ State 99
 
 State 100
 
-	Type3 -> '(' Type ')' .                             (rule 78)
+	Typ3 -> '(' Typ ')' .                               (rule 78)
 
 	'('            reduce using rule 78
 	')'            reduce using rule 78
@@ -1996,9 +1996,9 @@ State 100
 
 State 101
 
-	Term -> Term . '===' Term1                          (rule 26)
-	ListTerm -> Term .                                  (rule 67)
-	ListTerm -> Term . ',' ListTerm                     (rule 68)
+	Trm -> Trm . '===' Trm1                             (rule 26)
+	ListTrm -> Trm .                                    (rule 67)
+	ListTrm -> Trm . ',' ListTrm                        (rule 68)
 
 	')'            reduce using rule 67
 	','            shift, and enter state 131
@@ -2008,14 +2008,14 @@ State 101
 
 State 102
 
-	Term8 -> DynVar '(' ListTerm . ')'                  (rule 61)
+	Trm8 -> DynVar '(' ListTrm . ')'                    (rule 61)
 
 	')'            shift, and enter state 130
 
 
 State 103
 
-	Term -> Term '===' Term1 .                          (rule 26)
+	Trm -> Trm '===' Trm1 .                             (rule 26)
 
 	')'            reduce using rule 26
 	','            reduce using rule 26
@@ -2028,8 +2028,8 @@ State 103
 
 State 104
 
-	Term2 -> Term2 '\\/' Term3 .                        (rule 30)
-	Term3 -> Term3 . '/\\' Term4                        (rule 32)
+	Trm2 -> Trm2 '\\/' Trm3 .                           (rule 30)
+	Trm3 -> Trm3 . '/\\' Trm4                           (rule 32)
 
 	')'            reduce using rule 30
 	','            reduce using rule 30
@@ -2045,7 +2045,7 @@ State 104
 
 State 105
 
-	Term1 -> Term2 '==>' Term1 .                        (rule 28)
+	Trm1 -> Trm2 '==>' Trm1 .                           (rule 28)
 
 	')'            reduce using rule 28
 	','            reduce using rule 28
@@ -2058,7 +2058,7 @@ State 105
 
 State 106
 
-	Term3 -> Term3 '/\\' Term4 .                        (rule 32)
+	Trm3 -> Trm3 '/\\' Trm4 .                           (rule 32)
 
 	')'            reduce using rule 32
 	','            reduce using rule 32
@@ -2074,7 +2074,7 @@ State 106
 
 State 107
 
-	Term4 -> Term5 '>=' Term5 .                         (rule 40)
+	Trm4 -> Trm5 '>=' Trm5 .                            (rule 40)
 
 	')'            reduce using rule 40
 	','            reduce using rule 40
@@ -2090,7 +2090,7 @@ State 107
 
 State 108
 
-	Term4 -> Term5 '>' Term5 .                          (rule 39)
+	Trm4 -> Trm5 '>' Trm5 .                             (rule 39)
 
 	')'            reduce using rule 39
 	','            reduce using rule 39
@@ -2106,7 +2106,7 @@ State 108
 
 State 109
 
-	Term4 -> Term5 '==' Term5 .                         (rule 35)
+	Trm4 -> Trm5 '==' Trm5 .                            (rule 35)
 
 	')'            reduce using rule 35
 	','            reduce using rule 35
@@ -2122,7 +2122,7 @@ State 109
 
 State 110
 
-	Term4 -> Term5 '<=' Term5 .                         (rule 38)
+	Trm4 -> Trm5 '<=' Trm5 .                            (rule 38)
 
 	')'            reduce using rule 38
 	','            reduce using rule 38
@@ -2138,7 +2138,7 @@ State 110
 
 State 111
 
-	Term4 -> Term5 '<' Term5 .                          (rule 37)
+	Trm4 -> Trm5 '<' Trm5 .                             (rule 37)
 
 	')'            reduce using rule 37
 	','            reduce using rule 37
@@ -2154,7 +2154,7 @@ State 111
 
 State 112
 
-	Term4 -> Term5 '!=' Term5 .                         (rule 36)
+	Trm4 -> Trm5 '!=' Trm5 .                            (rule 36)
 
 	')'            reduce using rule 36
 	','            reduce using rule 36
@@ -2170,7 +2170,7 @@ State 112
 
 State 113
 
-	Term5 -> Term6 ':' Term5 .                          (rule 46)
+	Trm5 -> Trm6 ':' Trm5 .                             (rule 46)
 
 	'!='           reduce using rule 46
 	')'            reduce using rule 46
@@ -2192,10 +2192,10 @@ State 113
 
 State 114
 
-	Term6 -> Term6 '-' Term7 .                          (rule 49)
-	Term7 -> Term7 . '*' Term8                          (rule 51)
-	Term7 -> Term7 . 'div' Term8                        (rule 52)
-	Term7 -> Term7 . 'mod' Term8                        (rule 53)
+	Trm6 -> Trm6 '-' Trm7 .                             (rule 49)
+	Trm7 -> Trm7 . '*' Trm8                             (rule 51)
+	Trm7 -> Trm7 . 'div' Trm8                           (rule 52)
+	Trm7 -> Trm7 . 'mod' Trm8                           (rule 53)
 
 	'!='           reduce using rule 49
 	')'            reduce using rule 49
@@ -2224,7 +2224,7 @@ State 114
 
 State 115
 
-	Term5 -> Term6 '++' Term5 .                         (rule 45)
+	Trm5 -> Trm6 '++' Trm5 .                            (rule 45)
 
 	'!='           reduce using rule 45
 	')'            reduce using rule 45
@@ -2246,10 +2246,10 @@ State 115
 
 State 116
 
-	Term6 -> Term6 '+' Term7 .                          (rule 48)
-	Term7 -> Term7 . '*' Term8                          (rule 51)
-	Term7 -> Term7 . 'div' Term8                        (rule 52)
-	Term7 -> Term7 . 'mod' Term8                        (rule 53)
+	Trm6 -> Trm6 '+' Trm7 .                             (rule 48)
+	Trm7 -> Trm7 . '*' Trm8                             (rule 51)
+	Trm7 -> Trm7 . 'div' Trm8                           (rule 52)
+	Trm7 -> Trm7 . 'mod' Trm8                           (rule 53)
 
 	'!='           reduce using rule 48
 	')'            reduce using rule 48
@@ -2278,7 +2278,7 @@ State 116
 
 State 117
 
-	Term7 -> Term7 'mod' Term8 .                        (rule 53)
+	Trm7 -> Trm7 'mod' Trm8 .                           (rule 53)
 
 	'!='           reduce using rule 53
 	')'            reduce using rule 53
@@ -2307,7 +2307,7 @@ State 117
 
 State 118
 
-	Term7 -> Term7 'div' Term8 .                        (rule 52)
+	Trm7 -> Trm7 'div' Trm8 .                           (rule 52)
 
 	'!='           reduce using rule 52
 	')'            reduce using rule 52
@@ -2336,7 +2336,7 @@ State 118
 
 State 119
 
-	Term7 -> Term7 '*' Term8 .                          (rule 51)
+	Trm7 -> Trm7 '*' Trm8 .                             (rule 51)
 
 	'!='           reduce using rule 51
 	')'            reduce using rule 51
@@ -2365,7 +2365,7 @@ State 119
 
 State 120
 
-	Term8 -> '(' Term ')' .                             (rule 65)
+	Trm8 -> '(' Trm ')' .                               (rule 65)
 
 	'!='           reduce using rule 65
 	')'            reduce using rule 65
@@ -2394,7 +2394,7 @@ State 120
 
 State 121
 
-	Term8 -> 'Sub' Term '[.' . ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' . ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 66
@@ -2413,20 +2413,20 @@ State 121
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 101
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
-	ListTerm       goto state 129
+	Trm            goto state 101
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+	ListTrm        goto state 129
 
 State 122
 
-	Term8 -> 'SubL' Term '[.' . ListDynVar '/' ListDynVar '.]'    (rule 63)
+	Trm8 -> 'SubL' Trm '[.' . ListDynVar '/' ListDynVar '.]'    (rule 63)
 
 	'/'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2436,7 +2436,7 @@ State 122
 
 State 123
 
-	Term8 -> 'SubV' Term '[.' . ListTerm '/' ListDynVar '.]'    (rule 62)
+	Trm8 -> 'SubV' Trm '[.' . ListTrm '/' ListDynVar '.]'    (rule 62)
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 66
@@ -2455,20 +2455,20 @@ State 123
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 101
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
-	ListTerm       goto state 127
+	Trm            goto state 101
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+	ListTrm        goto state 127
 
 State 124
 
-	Theory -> 'Theory' DynVar '.' . ListDynVar '.' ListItem    (rule 6)
+	Thry -> 'Theory' DynVar '.' . ListDynVar '.' ListItem    (rule 6)
 
 	'.'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2491,35 +2491,35 @@ State 125
 
 State 126
 
-	Theory -> 'Theory' DynVar '.' ListDynVar . '.' ListItem    (rule 6)
+	Thry -> 'Theory' DynVar '.' ListDynVar . '.' ListItem    (rule 6)
 
 	'.'            shift, and enter state 146
 
 
 State 127
 
-	Term8 -> 'SubV' Term '[.' ListTerm . '/' ListDynVar '.]'    (rule 62)
+	Trm8 -> 'SubV' Trm '[.' ListTrm . '/' ListDynVar '.]'    (rule 62)
 
 	'/'            shift, and enter state 145
 
 
 State 128
 
-	Term8 -> 'SubL' Term '[.' ListDynVar . '/' ListDynVar '.]'    (rule 63)
+	Trm8 -> 'SubL' Trm '[.' ListDynVar . '/' ListDynVar '.]'    (rule 63)
 
 	'/'            shift, and enter state 144
 
 
 State 129
 
-	Term8 -> 'Sub' Term '[.' ListTerm . '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm . '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'/'            shift, and enter state 143
 
 
 State 130
 
-	Term8 -> DynVar '(' ListTerm ')' .                  (rule 61)
+	Trm8 -> DynVar '(' ListTrm ')' .                    (rule 61)
 
 	'!='           reduce using rule 61
 	')'            reduce using rule 61
@@ -2548,7 +2548,7 @@ State 130
 
 State 131
 
-	ListTerm -> Term ',' . ListTerm                     (rule 68)
+	ListTrm -> Trm ',' . ListTrm                        (rule 68)
 
 	'('            shift, and enter state 31
 	')'            reduce using rule 66
@@ -2568,20 +2568,20 @@ State 131
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 101
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
-	ListTerm       goto state 142
+	Trm            goto state 101
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+	ListTrm        goto state 142
 
 State 132
 
-	Type1 -> DynVar '(:' ListType2 ':)' .               (rule 71)
+	Typ1 -> DynVar '(:' ListTyp2 ':)' .                 (rule 71)
 
 	')'            reduce using rule 71
 	'->'           reduce using rule 71
@@ -2591,7 +2591,7 @@ State 132
 
 State 133
 
-	ListType2 -> Type2 '|' . ListType2                  (rule 81)
+	ListTyp2 -> Typ2 '|' . ListTyp2                     (rule 81)
 
 	'('            shift, and enter state 16
 	':)'           reduce using rule 79
@@ -2600,9 +2600,9 @@ State 133
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 95
-	Type2          goto state 96
-	Type3          goto state 15
-	ListType2      goto state 141
+	Typ2           goto state 96
+	Typ3           goto state 15
+	ListTyp2       goto state 141
 
 State 134
 
@@ -2614,7 +2614,7 @@ State 134
 
 State 135
 
-	VSCond -> GVar 'disj' VarSet .                      (rule 90)
+	VSCond -> GVar 'disj' VrSet .                       (rule 90)
 
 	'.'            reduce using rule 90
 	';'            reduce using rule 90
@@ -2622,7 +2622,7 @@ State 135
 
 State 136
 
-	VSCond -> GVar 'dcovby' VarSet .                    (rule 92)
+	VSCond -> GVar 'dcovby' VrSet .                     (rule 92)
 
 	'.'            reduce using rule 92
 	';'            reduce using rule 92
@@ -2630,7 +2630,7 @@ State 136
 
 State 137
 
-	VSCond -> GVar 'covby' VarSet .                     (rule 91)
+	VSCond -> GVar 'covby' VrSet .                      (rule 91)
 
 	'.'            reduce using rule 91
 	';'            reduce using rule 91
@@ -2645,14 +2645,14 @@ State 138
 
 State 139
 
-	SCond -> 'SC' ListVSCond '.' VarSet . '.'           (rule 96)
+	SCond -> 'SC' ListVSCond '.' VrSet . '.'            (rule 96)
 
 	'.'            shift, and enter state 140
 
 
 State 140
 
-	SCond -> 'SC' ListVSCond '.' VarSet '.' .           (rule 96)
+	SCond -> 'SC' ListVSCond '.' VrSet '.' .            (rule 96)
 
 	'Conjecture'   reduce using rule 96
 	'DclASet'      reduce using rule 96
@@ -2664,14 +2664,14 @@ State 140
 
 State 141
 
-	ListType2 -> Type2 '|' ListType2 .                  (rule 81)
+	ListTyp2 -> Typ2 '|' ListTyp2 .                     (rule 81)
 
 	':)'           reduce using rule 81
 
 
 State 142
 
-	ListTerm -> Term ',' ListTerm .                     (rule 68)
+	ListTrm -> Trm ',' ListTrm .                        (rule 68)
 
 	')'            reduce using rule 68
 	'/'            reduce using rule 68
@@ -2679,7 +2679,7 @@ State 142
 
 State 143
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' . ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' . ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'|'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2689,7 +2689,7 @@ State 143
 
 State 144
 
-	Term8 -> 'SubL' Term '[.' ListDynVar '/' . ListDynVar '.]'    (rule 63)
+	Trm8 -> 'SubL' Trm '[.' ListDynVar '/' . ListDynVar '.]'    (rule 63)
 
 	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2699,7 +2699,7 @@ State 144
 
 State 145
 
-	Term8 -> 'SubV' Term '[.' ListTerm '/' . ListDynVar '.]'    (rule 62)
+	Trm8 -> 'SubV' Trm '[.' ListTrm '/' . ListDynVar '.]'    (rule 62)
 
 	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2709,7 +2709,7 @@ State 145
 
 State 146
 
-	Theory -> 'Theory' DynVar '.' ListDynVar '.' . ListItem    (rule 6)
+	Thry -> 'Theory' DynVar '.' ListDynVar '.' . ListItem    (rule 6)
 
 	'Conjecture'   shift, and enter state 150
 	'DclASet'      shift, and enter state 151
@@ -2747,14 +2747,14 @@ State 148
 
 State 149
 
-	Theory -> 'Theory' DynVar '.' ListDynVar '.' ListItem .    (rule 6)
+	Thry -> 'Theory' DynVar '.' ListDynVar '.' ListItem .    (rule 6)
 
 	%eof           reduce using rule 6
 
 
 State 150
 
-	Item -> 'Conjecture' . DynVar '.' Term '.' SCond    (rule 12)
+	Item -> 'Conjecture' . DynVar '.' Trm '.' SCond     (rule 12)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2762,37 +2762,37 @@ State 150
 
 State 151
 
-	Item -> 'DclASet' . VarClass DynVar '.'             (rule 11)
+	Item -> 'DclASet' . VClass DynVar '.'               (rule 11)
 
 	'Exp'          shift, and enter state 166
 	'Obs'          shift, and enter state 167
 	'Prd'          shift, and enter state 168
 
-	VarClass       goto state 170
+	VClass         goto state 170
 
 State 152
 
-	Item -> 'DclDLVar' . VarClass DynVar '.' ListDynVar '.'    (rule 10)
+	Item -> 'DclDLVar' . VClass DynVar '.' ListDynVar '.'    (rule 10)
 
 	'Exp'          shift, and enter state 166
 	'Obs'          shift, and enter state 167
 	'Prd'          shift, and enter state 168
 
-	VarClass       goto state 169
+	VClass         goto state 169
 
 State 153
 
-	Item -> 'DclVar' . VarClass DynVar '.' VarRole '.'    (rule 9)
+	Item -> 'DclVar' . VClass DynVar '.' VarRole '.'    (rule 9)
 
 	'Exp'          shift, and enter state 166
 	'Obs'          shift, and enter state 167
 	'Prd'          shift, and enter state 168
 
-	VarClass       goto state 165
+	VClass         goto state 165
 
 State 154
 
-	Item -> 'Law' . LawType DynVar '.' Term '.' SCond    (rule 13)
+	Item -> 'Law' . LawType DynVar '.' Trm '.' SCond    (rule 13)
 
 	'assumed'      shift, and enter state 162
 	'axiom'        shift, and enter state 163
@@ -2802,28 +2802,28 @@ State 154
 
 State 155
 
-	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar . '.]'    (rule 62)
+	Trm8 -> 'SubV' Trm '[.' ListTrm '/' ListDynVar . '.]'    (rule 62)
 
 	'.]'           shift, and enter state 160
 
 
 State 156
 
-	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar . '.]'    (rule 63)
+	Trm8 -> 'SubL' Trm '[.' ListDynVar '/' ListDynVar . '.]'    (rule 63)
 
 	'.]'           shift, and enter state 159
 
 
 State 157
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar . '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar . '|' ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'|'            shift, and enter state 158
 
 
 State 158
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' . ListDynVar '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' . ListDynVar '/' ListDynVar '.]'    (rule 64)
 
 	'/'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -2833,7 +2833,7 @@ State 158
 
 State 159
 
-	Term8 -> 'SubL' Term '[.' ListDynVar '/' ListDynVar '.]' .    (rule 63)
+	Trm8 -> 'SubL' Trm '[.' ListDynVar '/' ListDynVar '.]' .    (rule 63)
 
 	'!='           reduce using rule 63
 	')'            reduce using rule 63
@@ -2862,7 +2862,7 @@ State 159
 
 State 160
 
-	Term8 -> 'SubV' Term '[.' ListTerm '/' ListDynVar '.]' .    (rule 62)
+	Trm8 -> 'SubV' Trm '[.' ListTrm '/' ListDynVar '.]' .    (rule 62)
 
 	'!='           reduce using rule 62
 	')'            reduce using rule 62
@@ -2891,7 +2891,7 @@ State 160
 
 State 161
 
-	Item -> 'Law' LawType . DynVar '.' Term '.' SCond    (rule 13)
+	Item -> 'Law' LawType . DynVar '.' Trm '.' SCond    (rule 13)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2920,7 +2920,7 @@ State 164
 
 State 165
 
-	Item -> 'DclVar' VarClass . DynVar '.' VarRole '.'    (rule 9)
+	Item -> 'DclVar' VClass . DynVar '.' VarRole '.'    (rule 9)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2928,28 +2928,28 @@ State 165
 
 State 166
 
-	VarClass -> 'Exp' .                                 (rule 16)
+	VClass -> 'Exp' .                                   (rule 16)
 
 	L_DynVar       reduce using rule 16
 
 
 State 167
 
-	VarClass -> 'Obs' .                                 (rule 15)
+	VClass -> 'Obs' .                                   (rule 15)
 
 	L_DynVar       reduce using rule 15
 
 
 State 168
 
-	VarClass -> 'Prd' .                                 (rule 17)
+	VClass -> 'Prd' .                                   (rule 17)
 
 	L_DynVar       reduce using rule 17
 
 
 State 169
 
-	Item -> 'DclDLVar' VarClass . DynVar '.' ListDynVar '.'    (rule 10)
+	Item -> 'DclDLVar' VClass . DynVar '.' ListDynVar '.'    (rule 10)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2957,7 +2957,7 @@ State 169
 
 State 170
 
-	Item -> 'DclASet' VarClass . DynVar '.'             (rule 11)
+	Item -> 'DclASet' VClass . DynVar '.'               (rule 11)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2965,7 +2965,7 @@ State 170
 
 State 171
 
-	Item -> 'Conjecture' DynVar . '.' Term '.' SCond    (rule 12)
+	Item -> 'Conjecture' DynVar . '.' Trm '.' SCond     (rule 12)
 
 	'.'            shift, and enter state 173
 
@@ -2979,7 +2979,7 @@ State 172
 
 State 173
 
-	Item -> 'Conjecture' DynVar '.' . Term '.' SCond    (rule 12)
+	Item -> 'Conjecture' DynVar '.' . Trm '.' SCond     (rule 12)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -2997,54 +2997,54 @@ State 173
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 184
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 184
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 174
 
-	Item -> 'DclASet' VarClass DynVar . '.'             (rule 11)
+	Item -> 'DclASet' VClass DynVar . '.'               (rule 11)
 
 	'.'            shift, and enter state 183
 
 
 State 175
 
-	Item -> 'DclDLVar' VarClass DynVar . '.' ListDynVar '.'    (rule 10)
+	Item -> 'DclDLVar' VClass DynVar . '.' ListDynVar '.'    (rule 10)
 
 	'.'            shift, and enter state 182
 
 
 State 176
 
-	Item -> 'DclVar' VarClass DynVar . '.' VarRole '.'    (rule 9)
+	Item -> 'DclVar' VClass DynVar . '.' VarRole '.'    (rule 9)
 
 	'.'            shift, and enter state 181
 
 
 State 177
 
-	Item -> 'Law' LawType DynVar . '.' Term '.' SCond    (rule 13)
+	Item -> 'Law' LawType DynVar . '.' Trm '.' SCond    (rule 13)
 
 	'.'            shift, and enter state 180
 
 
 State 178
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar . '/' ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar . '/' ListDynVar '.]'    (rule 64)
 
 	'/'            shift, and enter state 179
 
 
 State 179
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' . ListDynVar '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' . ListDynVar '.]'    (rule 64)
 
 	'.]'           reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -3054,7 +3054,7 @@ State 179
 
 State 180
 
-	Item -> 'Law' LawType DynVar '.' . Term '.' SCond    (rule 13)
+	Item -> 'Law' LawType DynVar '.' . Trm '.' SCond    (rule 13)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -3072,19 +3072,19 @@ State 180
 
 	Integer        goto state 20
 	DynVar         goto state 21
-	Term           goto state 189
-	Term1          goto state 23
-	Term2          goto state 24
-	Term3          goto state 25
-	Term4          goto state 26
-	Term5          goto state 27
-	Term6          goto state 28
-	Term7          goto state 29
-	Term8          goto state 30
+	Trm            goto state 189
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
 
 State 181
 
-	Item -> 'DclVar' VarClass DynVar '.' . VarRole '.'    (rule 9)
+	Item -> 'DclVar' VClass DynVar '.' . VarRole '.'    (rule 9)
 
 	'var'          shift, and enter state 188
 
@@ -3092,7 +3092,7 @@ State 181
 
 State 182
 
-	Item -> 'DclDLVar' VarClass DynVar '.' . ListDynVar '.'    (rule 10)
+	Item -> 'DclDLVar' VClass DynVar '.' . ListDynVar '.'    (rule 10)
 
 	'.'            reduce using rule 7
 	L_DynVar       shift, and enter state 19
@@ -3102,7 +3102,7 @@ State 182
 
 State 183
 
-	Item -> 'DclASet' VarClass DynVar '.' .             (rule 11)
+	Item -> 'DclASet' VClass DynVar '.' .               (rule 11)
 
 	'Conjecture'   reduce using rule 11
 	'DclASet'      reduce using rule 11
@@ -3114,8 +3114,8 @@ State 183
 
 State 184
 
-	Item -> 'Conjecture' DynVar '.' Term . '.' SCond    (rule 12)
-	Term -> Term . '===' Term1                          (rule 26)
+	Item -> 'Conjecture' DynVar '.' Trm . '.' SCond     (rule 12)
+	Trm -> Trm . '===' Trm1                             (rule 26)
 
 	'.'            shift, and enter state 185
 	'==='          shift, and enter state 68
@@ -3123,7 +3123,7 @@ State 184
 
 State 185
 
-	Item -> 'Conjecture' DynVar '.' Term '.' . SCond    (rule 12)
+	Item -> 'Conjecture' DynVar '.' Trm '.' . SCond     (rule 12)
 
 	'SC'           shift, and enter state 7
 	'VSC'          shift, and enter state 8
@@ -3134,21 +3134,21 @@ State 185
 
 State 186
 
-	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar . '.'    (rule 10)
+	Item -> 'DclDLVar' VClass DynVar '.' ListDynVar . '.'    (rule 10)
 
 	'.'            shift, and enter state 198
 
 
 State 187
 
-	Item -> 'DclVar' VarClass DynVar '.' VarRole . '.'    (rule 9)
+	Item -> 'DclVar' VClass DynVar '.' VarRole . '.'    (rule 9)
 
 	'.'            shift, and enter state 197
 
 
 State 188
 
-	VarRole -> 'var' . SBBL Type                        (rule 14)
+	VarRole -> 'var' . SBBL Typ                         (rule 14)
 
 	'NA'           shift, and enter state 194
 	'NS'           shift, and enter state 195
@@ -3158,8 +3158,8 @@ State 188
 
 State 189
 
-	Item -> 'Law' LawType DynVar '.' Term . '.' SCond    (rule 13)
-	Term -> Term . '===' Term1                          (rule 26)
+	Item -> 'Law' LawType DynVar '.' Trm . '.' SCond    (rule 13)
+	Trm -> Trm . '===' Trm1                             (rule 26)
 
 	'.'            shift, and enter state 192
 	'==='          shift, and enter state 68
@@ -3167,14 +3167,14 @@ State 189
 
 State 190
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar . '.]'    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar . '.]'    (rule 64)
 
 	'.]'           shift, and enter state 191
 
 
 State 191
 
-	Term8 -> 'Sub' Term '[.' ListTerm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' .    (rule 64)
+	Trm8 -> 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' .    (rule 64)
 
 	'!='           reduce using rule 64
 	')'            reduce using rule 64
@@ -3203,7 +3203,7 @@ State 191
 
 State 192
 
-	Item -> 'Law' LawType DynVar '.' Term '.' . SCond    (rule 13)
+	Item -> 'Law' LawType DynVar '.' Trm '.' . SCond    (rule 13)
 
 	'SC'           shift, and enter state 7
 	'VSC'          shift, and enter state 8
@@ -3214,7 +3214,7 @@ State 192
 
 State 193
 
-	VarRole -> 'var' SBBL . Type                        (rule 14)
+	VarRole -> 'var' SBBL . Typ                         (rule 14)
 
 	'('            shift, and enter state 16
 	'tbot'         shift, and enter state 17
@@ -3222,10 +3222,10 @@ State 193
 	L_DynVar       shift, and enter state 19
 
 	DynVar         goto state 11
-	Type           goto state 200
-	Type1          goto state 13
-	Type2          goto state 14
-	Type3          goto state 15
+	Typ            goto state 200
+	Typ1           goto state 13
+	Typ2           goto state 14
+	Typ3           goto state 15
 
 State 194
 
@@ -3259,7 +3259,7 @@ State 196
 
 State 197
 
-	Item -> 'DclVar' VarClass DynVar '.' VarRole '.' .    (rule 9)
+	Item -> 'DclVar' VClass DynVar '.' VarRole '.' .    (rule 9)
 
 	'Conjecture'   reduce using rule 9
 	'DclASet'      reduce using rule 9
@@ -3271,7 +3271,7 @@ State 197
 
 State 198
 
-	Item -> 'DclDLVar' VarClass DynVar '.' ListDynVar '.' .    (rule 10)
+	Item -> 'DclDLVar' VClass DynVar '.' ListDynVar '.' .    (rule 10)
 
 	'Conjecture'   reduce using rule 10
 	'DclASet'      reduce using rule 10
@@ -3283,7 +3283,7 @@ State 198
 
 State 199
 
-	Item -> 'Conjecture' DynVar '.' Term '.' SCond .    (rule 12)
+	Item -> 'Conjecture' DynVar '.' Trm '.' SCond .     (rule 12)
 
 	'Conjecture'   reduce using rule 12
 	'DclASet'      reduce using rule 12
@@ -3295,14 +3295,14 @@ State 199
 
 State 200
 
-	VarRole -> 'var' SBBL Type .                        (rule 14)
+	VarRole -> 'var' SBBL Typ .                         (rule 14)
 
 	'.'            reduce using rule 14
 
 
 State 201
 
-	Item -> 'Law' LawType DynVar '.' Term '.' SCond .    (rule 13)
+	Item -> 'Law' LawType DynVar '.' Trm '.' SCond .    (rule 13)
 
 	'Conjecture'   reduce using rule 13
 	'DclASet'      reduce using rule 13

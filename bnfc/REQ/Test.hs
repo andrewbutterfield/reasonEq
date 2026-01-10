@@ -20,7 +20,7 @@ import Control.Monad      ( when )
 
 import REQ.Abs   ()
 import REQ.Lex   ( Token, mkPosToken )
-import REQ.Par   ( pTheory, myLexer )
+import REQ.Par   ( pThry, myLexer )
 import REQ.Print ( Print, printTree )
 import REQ.Skel  ()
 
@@ -70,7 +70,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    []         -> getContents >>= run 2 pTheory
-    "-s":fs    -> mapM_ (runFile 0 pTheory) fs
-    fs         -> mapM_ (runFile 2 pTheory) fs
+    []         -> getContents >>= run 2 pThry
+    "-s":fs    -> mapM_ (runFile 0 pThry) fs
+    fs         -> mapM_ (runFile 2 pThry) fs
 

@@ -60,11 +60,41 @@ All we have to provide here are mapping functions
 between the LBNF abstract types and the concrete \reasonEq\ types,
 as well as relevant file handling.
 
+\section{Conversions}
+
+Here we provide bidirectional conversions between the native \reasonEq\ types
+and those used in \h{bnfc/REQ}.
+We start with theories, because the known variable data is needed to resolve
+a range of ambiguous situations.
+This requires passing this known data down to the conversions 
+for the sub-components: terms, types, side-conditions, and variables.
+
+\subsection{Theory--Thry Conversions}
+
+\subsection{Term--Trm Conversions}
+
+Missing: known variable data:
+
 \begin{code}
-tt :: Trm -> Term
-tt PTrue = Val ArbType $ Boolean True
+trm2term :: Trm -> Term
+trm2term PTrue = Val ArbType $ Boolean True
 \end{code}
 
+\begin{code}
+term2trm :: Term -> Trm
+term2trm (Val _ (Boolean True)) = PTrue
+\end{code}
+
+\subsection{Type--Typ Conversions}
+
+\subsection{SideCond--SCond Conversions}
+
+\subsection{GenVar--DynVar Conversions}
+
+
+\newpage
+
+{\LARGE{\textbf{DEPRECATED BELOW}}}
 
 \newpage
 \section{Theories}

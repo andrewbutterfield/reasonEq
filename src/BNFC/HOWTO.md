@@ -1,11 +1,13 @@
 # HowTo
 
 We use `bnfc -d -m UTP.lbnf` 
-which puts the generated stuff into directory `reasonEq/bnfc/UTP`.
+which puts the generated stuff 
+into directory `reasonEq/src/BNFC/UTP`.
 
 General approach:
 
 ```
+cd .../reasonEq/src/BNFC
 bnfc -d -m UTP.lbnf
 make -f rmake
 ./Runner

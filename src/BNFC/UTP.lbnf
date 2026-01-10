@@ -149,7 +149,8 @@ separator Item "" ;
    7  | * / div mod rem quot |                              | 
    6  | + -                  |                              |
    5  |                      |                              | : ++
-   4  |                      | == /= < <= > >= elem notElem | 
+   4  |                      | == /= < <= > >= elem notElem |
+                  programs as predicates will probably live here      
    3  |                      |                              | && /\
    2  |                      |                              | || \/
    1  |                      |                              | ==>
@@ -162,6 +163,7 @@ PImpl.  Term1 ::= Term2 "==>" Term1 ;
 POr.    Term2 ::= Term2 "\\/" Term3 ;
 PAnd.   Term3 ::= Term3 "/\\" Term4 ;
 PNot.   Term3 ::= "~" Term4 ;
+-- program predicates ?
 EQ.     Term4 ::= Term5 "==" Term5 ;
 NE.     Term4 ::= Term5 "!=" Term5 ;
 LT.     Term4 ::= Term5 "<" Term5 ;

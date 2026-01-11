@@ -267,14 +267,14 @@ cmdLoad
   = ( loadCmd
     , "loads theory from text file"
     , unlines
-        ( (loadCmd ++ " <thry> -- load theory from <thry>.src")
+        ( (loadCmd ++ " <thry> -- load theory from <thry>.utp")
         : (loadSpc ++ "        -- warns if it modifies an existing theory" )
         : (loadSpc ++ "        -- creates a new theory if none exists" )
         : genLoadFormat )
     , loadTheoryFile )
 
 loadTheoryFile [thName] reqs = do
-  let fname = projectDir reqs </> thName </> thName <.> "src" 
+  let fname = projectDir reqs </> thName </> thName <.> "utp" 
   putStrLn("loading from "++fname)
   haveSource <- doesFileExist fname
   if haveSource then do 

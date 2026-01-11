@@ -23,7 +23,7 @@ import Data.Maybe(fromJust)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.List (nub, sort, (\\), intercalate, stripPrefix)
+import Data.List (nub, sort, (\\), intercalate, stripPrefix, partition)
 import Data.Char
 
 import NotApplicable
@@ -41,6 +41,7 @@ import VarData
 import Assertions
 import Theories
 import REQ.Abs
+import REQ.Par (myLexer,pThry)
 import TestRendering
 import StdTypeSignature
 
@@ -69,7 +70,88 @@ a range of ambiguous situations.
 This requires passing this known data down to the conversions 
 for the sub-components: terms, types, side-conditions, and variables.
 
+\subsection{Variable Handling}
+
+Due to the limitations of what can be expressed using LBNF,
+we have a specific way of encoding \reasonEq\ \h{Variable}s.
+The \h{VarClass} type is a straightforward match against \h{VClass}.
+However, we use a \h{DynVar} to encode both the \h{Identifier}
+and the \h{VarWhen} component, as follows 
+(assume here that $v$ contains only alphanumeric characters):
+\begin{eqnarray*}
+    v & v &  \text{Static}
+\\ \_v & 'v & \text{Before}
+\\ v\_ & v' & \text{After}
+\\ v\_d & v_d & \text{During}
+\end{eqnarray*}
+We don't handle textual variables just yet.
+
+\begin{code}
+dynvar2idwhen :: DynVar -> (Identifier,VarWhen)
+dynvar2idwhen (DynVar "") = (jId "null_variable",Static)
+dynvar2idwhen (DynVar "_") = (jId "null_variable",Before)
+dynvar2idwhen (DynVar ('_':rest)) = (jId rest,Before)
+-- look for last of the remaning underscores, if any
+dynvar2idwhen (DynVar dv) = (jId dv,Static) -- for now
+\end{code}
+
 \subsection{Theory--Thry Conversions}
+
+\begin{code}
+thry2theory :: MonadFail mf => Thry -> mf Theory
+thry2theory (Thr thNm deps items)
+  = items2theory items $
+    thName_ (dyn2str thNm) $
+    thDeps_ (map dyn2str deps) $
+    nullTheory
+
+dyn2str (DynVar str) = str
+
+items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
+items2theory items thry = do
+  let (decls,asserts) = partition isDeclItem items
+  knwn <- decls2vartable decls newVarTable
+  return $ known_ knwn thry
+
+isDeclItem :: Item -> Bool
+isDeclItem (Conj _ _ _)   =  False
+isDeclItem (Law _ _ _ _)  =  False
+isDeclItem _              =  True
+
+decls2vartable :: MonadFail mf => [Item] -> VarTable -> mf VarTable
+decls2vartable [] vtbl = return vtbl
+decls2vartable (item:items) vtbl = do
+  vtbl' <- decl2vtentry item vtbl
+  decls2vartable items vtbl'
+
+decl2vtentry :: MonadFail mf => Item -> VarTable -> mf VarTable
+decl2vtentry (DeclVar vclass dvar (VMR_KV sbbl typ)) vtbl = do
+  let vc = vclass2varclass vclass
+  let (id,vw) = dynvar2idwhen dvar
+  let var = Vbl id vc vw
+  let t = typ2type typ
+  case sbbl of
+    SBBL_NA  ->  addKnownVar var t vtbl
+    SBBL_SB  ->  addKnownConstructor var t True  vtbl
+    SBBL_NS  ->  addKnownConstructor var t False vtbl
+
+decl2vtentry item vtbl = fail  "decl2vtentry nyfi"
+-- VarRole ::= "var" SBBL Typ ;
+-- DeclVar VClass DynVar "var" SBBL Typ    -- KV KnownVar
+-- DeclDLVar VClass DynVar [DynVar] -- DL DynamicList
+-- DeclASet VClass DynVar  -- AbstractSet -- DynamicAbsSet
+
+vclass2varclass :: VClass -> VarClass
+vclass2varclass VarObs   =  ObsV
+vclass2varclass VarExp   =  ExprV
+vclass2varclass VarPred  =  PredV
+\end{code}
+
+
+\begin{code}
+theory2thry :: Theory -> Thry
+theory2thry _ = undefined
+\end{code}
 
 \subsection{Term--Trm Conversions}
 
@@ -87,10 +169,44 @@ term2trm (Val _ (Boolean True)) = PTrue
 
 \subsection{Type--Typ Conversions}
 
+\begin{code}
+typ2type :: Typ -> Type
+typ2type TArb                    =  ArbType
+typ2type TBot                    =  BottomType
+typ2type (TVbl (DynVar dv))      =  TypeVar $ jId dv
+typ2type (TFun t1 t2)            =  FunType (typ2type t1) (typ2type t2)
+typ2type (TProd (DynVar dv) ts)  =  TypeCons (jId dv) (map typ2type ts)
+typ2type (TRec (DynVar dv) fs)   =  TypeCons (jId dv) (map typ2type fs)
+\end{code}
+
+\begin{code}
+type2typ :: Type -> Typ
+type2typ _ = undefined
+\end{code}
+
 \subsection{SideCond--SCond Conversions}
+
+\begin{code}
+scond2sidecond :: SCond -> SideCond
+scond2sidecond _ = undefined
+\end{code}
+
+\begin{code}
+sidecond2scond :: SideCond -> SCond
+sidecond2scond _ = undefined
+\end{code}
 
 \subsection{GenVar--DynVar Conversions}
 
+\begin{code}
+dynvar2genvar :: DynVar -> GenVar
+dynvar2genvar _ = undefined
+\end{code}
+
+\begin{code}
+genvar2dynvar :: GenVar -> DynVar
+genvar2dynvar _ = undefined
+\end{code}
 
 \newpage
 
@@ -162,7 +278,11 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 Top-level:
 \begin{code}
 loadTheory :: MonadFail mf => TheoryDAG -> String -> mf Theory
-loadTheory thrys text = loadTheoryParts thrys $ tlex 1 $ numberlines text
+-- loadTheory thrys text = loadTheoryParts thrys $ tlex 1 $ numberlines text
+loadTheory thrys text 
+  = case pThry (myLexer text) of
+      Left err    ->  fail $ unlines ["loadTheory failed",err]
+      Right thry  ->  thry2theory thry
 
 loadTheoryParts :: MonadFail mf => TheoryDAG -> [NNToken] -> mf Theory
 loadTheoryParts thrys [] = fail "Empty theory file!" 

@@ -91,8 +91,12 @@ dynvar2idwhen :: DynVar -> (Identifier,VarWhen)
 dynvar2idwhen (DynVar "") = (jId "null_variable",Static)
 dynvar2idwhen (DynVar "_") = (jId "null_variable",Before)
 dynvar2idwhen (DynVar ('_':rest)) = (jId rest,Before)
--- look for last of the remaning underscores, if any
-dynvar2idwhen (DynVar dv) = (jId dv,Static) -- for now
+-- look for last of the remaining underscores, if any
+dynvar2idwhen (DynVar dv)
+  = case findlast (== '_') dv of
+      Nothing  ->  (jId dv,Static)
+      Just (before,[])  -> (jId before,After)
+      Just (before,d)   -> (jId before,During d)
 \end{code}
 
 \subsection{Theory--Thry Conversions}
@@ -110,7 +114,7 @@ dyn2str (DynVar str) = str
 items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
 items2theory items thry = do
   let (decls,asserts) = partition isDeclItem items
-  knwn <- decls2vartable decls newVarTable
+  knwn <- decls2vartable (pdbg "decls" decls) newVarTable
   return $ known_ knwn thry
 
 isDeclItem :: Item -> Bool
@@ -126,25 +130,38 @@ decls2vartable (item:items) vtbl = do
 
 decl2vtentry :: MonadFail mf => Item -> VarTable -> mf VarTable
 decl2vtentry (DeclVar vclass dvar (VMR_KV sbbl typ)) vtbl = do
-  let vc = vclass2varclass vclass
-  let (id,vw) = dynvar2idwhen dvar
-  let var = Vbl id vc vw
+  let vc = vclass2varclass $ pdbg "vclass" vclass
+  let (id,vw) = dynvar2idwhen $ pdbg "dvar" dvar
+  let var = pdbg "var" $ Vbl id vc vw
   let t = typ2type typ
   case sbbl of
-    SBBL_NA  ->  addKnownVar var t vtbl
+    SBBL_NA  ->  addKnownVar var (pdbg "t" t) vtbl
     SBBL_SB  ->  addKnownConstructor var t True  vtbl
     SBBL_NS  ->  addKnownConstructor var t False vtbl
 
+decl2vtentry (DeclDLVar vclass dvar dvars) vtbl = do
+  let vc = vclass2varclass vclass
+  let (id,vw) = dynvar2idwhen dvar
+  let lvar = Vbl id vc vw
+  let ids = map dynvar2idwhen dvars
+  let gvars = map (StdVar . mkVTableKeyVar vc) ids
+  addKnownVarList lvar gvars vtbl
+
+decl2vtentry (DeclASet vclass dvar) vtbl = do
+  let vc = vclass2varclass vclass
+  let (id,vw) = dynvar2idwhen dvar
+  let asvar = Vbl id vc vw
+  addAbstractVarSet asvar vtbl
+  
 decl2vtentry item vtbl = fail  "decl2vtentry nyfi"
--- VarRole ::= "var" SBBL Typ ;
--- DeclVar VClass DynVar "var" SBBL Typ    -- KV KnownVar
--- DeclDLVar VClass DynVar [DynVar] -- DL DynamicList
--- DeclASet VClass DynVar  -- AbstractSet -- DynamicAbsSet
 
 vclass2varclass :: VClass -> VarClass
 vclass2varclass VarObs   =  ObsV
 vclass2varclass VarExp   =  ExprV
 vclass2varclass VarPred  =  PredV
+
+mkVTableKeyVar :: VarClass -> (Identifier,VarWhen) -> Variable
+mkVTableKeyVar vc (id,vw) = Vbl id vc vw
 \end{code}
 
 

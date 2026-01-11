@@ -16,7 +16,8 @@ module Utilities (
 , zip1, zip2, zip2'
 , nlookup, alookup
 , restrictAList
-, extract, keyListDiff
+, extract, findfirst, findlast
+, keyListDiff
 , numberList, numberList'
 , putPP, putShow, pp
 , hasdup
@@ -164,6 +165,30 @@ extract p xs = (before,it,after)
    it = take 1 rest
    after = drop 1 rest
 \end{code}
+
+Finding the first occurence of something in a list, if any:
+\begin{code}
+findfirst :: (a -> Bool) -> [a] -> Maybe ([a],[a])
+findfirst _ [] = Nothing
+findfirst p xs  =  ff p [] xs
+  where
+    ff p erofeb [] 
+      | null erofeb  =  Nothing
+      | otherwise    =  Just (reverse erofeb,[])
+    ff p erofeb (x:xs)
+      | p x        =  Just(reverse erofeb,xs)
+      | otherwise  =  ff p (x:erofeb) xs
+\end{code}
+
+Finding the last occurence of something in a list, if any:
+\begin{code}
+findlast :: (a -> Bool) -> [a] -> Maybe ([a],[a])
+findlast p xs
+  = case findfirst p (reverse xs) of
+      Nothing              ->  Nothing
+      Just (retfa,erofeb)  ->  Just (reverse erofeb,reverse retfa)
+\end{code}
+
 
 List difference, assuming any key value occurs only
 once in each list.

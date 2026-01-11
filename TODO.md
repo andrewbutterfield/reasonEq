@@ -4,6 +4,8 @@
 
 ### Load/Generate
 
+Fix problem with `findfirst` as `findfirst (=='_') "eqv"` shoukd be `Nothing`.
+
 Pivot from the current `.src` files to the new `.utp` files based
 on `BNFC/UTP.lbnf`.
 

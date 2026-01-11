@@ -4,23 +4,6 @@
 
 ### Load/Generate
 
-Fix problem with `findfirst` as `findfirst (=='_') "eqv"` shoukd be `Nothing`.
-
-Pivot from the current `.src` files to the new `.utp` files based
-on `BNFC/UTP.lbnf`.
-
-Currently `src/SourceHandling` provides:
-
-```
-mkLawName      :: [String] -> String
-term_syntax     = syntax_bits ++ term_definition ++ key_names 
-renderNNToken' :: Token -> String
-loadTheory     :: MonadFail mf => TheoryDAG -> String -> mf Theory
-genTheory      :: Theory -> String
-loadTerm       :: MonadFail mf => String -> mf (Term, [NNToken])
-```
-
-Notes: `mkLawName` is not used anywhere, and that the only use of `NNToken` outside is in a call to `renderNNToken'`, and then only to report an error if a parsed term has leftover tokens. The `term_syntax` string is used to display the current term syntax description in help requests. We will drop these three.
 
 We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax.
 

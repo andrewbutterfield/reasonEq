@@ -172,11 +172,10 @@ findfirst :: (a -> Bool) -> [a] -> Maybe ([a],[a])
 findfirst _ [] = Nothing
 findfirst p xs  =  ff p [] xs
   where
-    ff p erofeb [] 
-      | null erofeb  =  Nothing
-      | otherwise    =  Just (reverse erofeb,[])
+    ff p erofeb []  =  Just (reverse erofeb,[])
     ff p erofeb (x:xs)
       | p x        =  Just(reverse erofeb,xs)
+      | null xs    =  Nothing
       | otherwise  =  ff p (x:erofeb) xs
 \end{code}
 

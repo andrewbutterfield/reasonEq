@@ -2,6 +2,20 @@
 
 ## URGENT or NEXT
 
+### Given "Stuff""
+
+We have one given type (B for boolean),
+but we also have default interpretations for variables,
+where `P` is usually a static predicate, `e` a static expression,
+etc.
+
+We need a more principled way to define "given" types.
+
+We need to be able to declare variable defaults as described above.
+
+We need to merge `(P|E)(True|False|Var)` into `(TTrue|TFalse|TVar)`
+in the syntax.
+
 ### Load/Generate
 
 
@@ -17,6 +31,7 @@ However only the first match is used by `applySimp`:
 **Because it just does `applyMatchToFocus1 1 `**
 
 *Instead it should try all the returned matches.*
+
 
 ## PLAN
 

@@ -44,6 +44,7 @@ import REQ.Abs
 import REQ.Par (myLexer,pThry)
 import TestRendering
 import StdTypeSignature
+import StdSignature
 
 import Debugger
 \end{code}
@@ -114,14 +115,19 @@ dyn2str (DynVar str) = str
 items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
 items2theory items thry = do
   let (decls,asserts) = partition isDeclItem items
-  knwn <- decls2vartable (pdbg "decls" decls) newVarTable
-  return $ known_ knwn thry
+  knwn <- decls2vartable decls newVarTable
+  (lws,cnjs) <- asserts2asns knwn asserts 
+  return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
 
 isDeclItem :: Item -> Bool
 isDeclItem (Conj _ _ _)   =  False
 isDeclItem (Law _ _ _ _)  =  False
 isDeclItem _              =  True
+\end{code}
 
+\subsubsection{Var-Table Conversions}
+
+\begin{code}
 decls2vartable :: MonadFail mf => [Item] -> VarTable -> mf VarTable
 decls2vartable [] vtbl = return vtbl
 decls2vartable (item:items) vtbl = do
@@ -129,13 +135,14 @@ decls2vartable (item:items) vtbl = do
   decls2vartable items vtbl'
 
 decl2vtentry :: MonadFail mf => Item -> VarTable -> mf VarTable
+
 decl2vtentry (DeclVar vclass dvar (VMR_KV sbbl typ)) vtbl = do
-  let vc = vclass2varclass $ pdbg "vclass" vclass
-  let (id,vw) = dynvar2idwhen $ pdbg "dvar" dvar
-  let var = pdbg "var" $ Vbl id vc vw
+  let vc = vclass2varclass vclass
+  let (id,vw) = dynvar2idwhen dvar
+  let var = Vbl id vc vw
   let t = typ2type typ
   case sbbl of
-    SBBL_NA  ->  addKnownVar var (pdbg "t" t) vtbl
+    SBBL_NA  ->  addKnownVar var t vtbl
     SBBL_SB  ->  addKnownConstructor var t True  vtbl
     SBBL_NS  ->  addKnownConstructor var t False vtbl
 
@@ -164,6 +171,36 @@ mkVTableKeyVar :: VarClass -> (Identifier,VarWhen) -> Variable
 mkVTableKeyVar vc (id,vw) = Vbl id vc vw
 \end{code}
 
+\subsubsection{Assertion Conversions}
+
+\begin{code}
+asserts2asns :: MonadFail mf 
+             => VarTable -> [Item] -> mf ([Law],[NmdAssertion])
+asserts2asns knwn asserts = ass2asns knwn [] [] asserts
+ass2asns knwn swal sjnoc [] = return (reverse swal,reverse sjnoc)
+ass2asns knwn swal sjnoc (Law ltyp dv tm sc : rest) = do
+  ll <- law2Law knwn ltyp dv tm sc
+  ass2asns knwn (ll++swal) sjnoc rest
+ass2asns knwn swal sjnoc (Conj dv tm sc : rest) = do
+  cnj <- conj2Conj knwn dv tm sc
+  ass2asns knwn swal (cnj:sjnoc) rest
+
+-- we only output axioms!
+law2Law :: MonadFail mf 
+        => VarTable -> LawType -> DynVar -> Trm -> SCond -> mf [Law]
+law2Law knwn LAxiom dv tm sc = do
+  nasn <- conj2Conj knwn dv tm sc
+  return [(nasn,Axiom)]
+law2Law _ _ _ _ _ = return [] -- ignore proofs, and assumptions
+
+conj2Conj :: MonadFail mf 
+        => VarTable -> DynVar -> Trm -> SCond -> mf NmdAssertion
+conj2Conj knwn (DynVar v) trm scond = do
+  term <- trm2term knwn trm
+  sidecond <- scond2sidecond knwn scond
+  return (v,mkAsn term sidecond)
+\end{code}
+
 
 \begin{code}
 theory2thry :: Theory -> Thry
@@ -172,11 +209,50 @@ theory2thry _ = undefined
 
 \subsection{Term--Trm Conversions}
 
-Missing: known variable data:
+Missing: known variable data.
+
+Also missing - default declarations for common variables
+(e.g., ``P'' is typically a static predicate variable).
 
 \begin{code}
-trm2term :: Trm -> Term
-trm2term PTrue = Val ArbType $ Boolean True
+trm2term :: MonadFail mf => VarTable -> Trm -> mf Term
+trm2term _ PTrue = return $ Val ArbType $ Boolean True
+trm2term vt (PEqv trm1 trm2) = do
+  term1 <- trm2term vt trm1
+  term2 <- trm2term vt trm2
+  return (term1 === term2)
+--trm2term vt PImpl trm1 trm2
+--trm2term vt POr trm1 trm2
+--trm2term vt PAnd trm1 trm2
+--trm2term vt PNot trm
+--trm2term vt EQ trm1 trm2
+--trm2term vt NE trm1 trm2
+--trm2term vt LT trm1 trm2
+--trm2term vt LE trm1 trm2
+--trm2term vt GT trm1 trm2
+--trm2term vt GE trm1 trm2
+--trm2term vt PTrue
+--trm2term vt PFalse
+--trm2term vt PVar dv
+--trm2term vt LCat trm1 trm2
+--trm2term vt LCons trm1 trm2
+--trm2term vt EAdd trm1 trm2
+--trm2term vt EMinus trm1 trm2
+--trm2term vt EMul trm1 trm2
+--trm2term vt EDiv trm1 trm2
+--trm2term vt EMod trm1 trm2
+--trm2term vt ENeg trm
+--trm2term vt EInt Integer
+trm2term vt (EVar dv) = return $ jVar ArbType $ Vbl id ExprV vw
+  where (id,vw) = dynvar2idwhen dv
+--trm2term vt ETrue
+--trm2term vt EFalse
+--trm2term vt ENil
+--trm2term vt TCons dv trms
+--trm2term vt TSubV trm trms dvs
+--trm2term vt TSubLV trm dvs dvs
+--trm2term vt TSubst trm trms dvs dvs dvs
+trm2term _ trm = fail ("trm2term nyfi\n"++show trm)
 \end{code}
 
 \begin{code}
@@ -210,8 +286,10 @@ type2typ _ = undefined
 \subsection{SideCond--SCond Conversions}
 
 \begin{code}
-scond2sidecond :: SCond -> SideCond
-scond2sidecond _ = undefined
+scond2sidecond :: MonadFail mf => VarTable -> SCond -> mf SideCond
+scond2sidecond _ SCnone = return scTrue
+-- scond2sidecond vt (SCVSCs vsconds)
+scond2sidecond vt scond = fail ("scond2sidecond nyfi\n"++show scond)
 \end{code}
 
 \begin{code}
@@ -981,9 +1059,9 @@ genLVarSub (tlv,rlv)
 Truth builders:
 \begin{code}
 true = Vbl (fromJust $ ident "true") PredV Static
-trueP = fromJust $ pVar ArbType true
+--trueP = fromJust $ pVar ArbType true
 false = Vbl (fromJust $ ident "false") PredV Static
-falseP = fromJust $ pVar ArbType false
+--falseP = fromJust $ pVar ArbType false
 mkTrue n | isUpper $ head n  =  trueP
 mkTrue _ =  Val bool $ Boolean True
 mkFalse n | isUpper $ head n  =  falseP

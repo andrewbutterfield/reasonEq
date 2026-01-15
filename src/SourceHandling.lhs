@@ -114,20 +114,76 @@ dyn2str (DynVar str) = str
 
 items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
 items2theory items thry = do
-  let (decls,asserts) = partition isDeclItem items
+  let (defs,rest) = partition isDefItem items
+  let (decls,asserts) = partition isDeclItem rest
   knwn <- decls2vartable decls newVarTable
   (lws,cnjs) <- asserts2asns knwn asserts 
   return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
+\end{code}
 
-isDeclItem :: Item -> Bool
-isDeclItem (Conj _ _ _)   =  False
-isDeclItem (Law _ _ _ _)  =  False
-isDeclItem _              =  True
+\subsubsection{Default Variable Attributes}
+
+Given a variable represented using a \h{DynVar} ($x, \_x, x\_, x\_d $), 
+we can easily determine the temporality of the variable, 
+but not its class.
+For variable identifiers that are a single character,
+we define defaults for the class, 
+based on common usage in UTP material, 
+as evidenced in the book\cite{UTP-book}:
+
+\begin{tabular}{|c|l|}
+\hline
+ A--Z & Predicate, Static
+\\ a--h & Expr, Static
+\\ i--n & Obs, Static
+\\ p--s & Pred, Before  
+\\ u--z & Obs, Dynamic
+\\ \multicolumn{2}{|c|}{not sure about o or t}
+\\\hline
+\end{tabular}
+
+
+For longer variables we use the above table with their first character.
+\begin{code}
+mkDefault :: [(String,a)] -> Map Char a
+mkDefault sas = M.fromList $ concat $ map twiddle sas
+twiddle :: ([a],b) -> [(a,b)]
+twiddle (xs,y) = map (\x -> (x,y)) xs
+chkDefault :: a -> Map Char a -> String -> a
+chkDefault dd defMap "" = dd
+chkDefault dd defMap (c:_)
+  = case M.lookup c defMap of
+      Nothing -> dd
+      Just d  -> d
+defaultClasses :: Map Char VarClass
+defaultClasses = mkDefault
+  [(['A'..'Z'],PredV),
+  ("abcdefgh",ExprV),("ijklmn",ObsV),("pqrs",PredV),("uvwxyz",ObsV)]
+defaultWhen :: Map Char VarWhen
+defaultWhen = mkDefault
+  [(['A'..'Z'],Static),
+  ("abcdefghijklmn",Static),("pqrs",Before),("uvwxyz",During "")]
+\end{code}
+Here \h{During ""} is code for ``any dynamic'' (before,after,during).
+
+
+The above defaults can be overridden using the default items.
+\begin{code}
+isDefItem :: Item -> Bool
+isDefItem (DefObs _) = True;
+isDefItem (DefExpr _) = True;
+isDefItem (DefPred _) = True;
+isDefItem (DefStatic _) = True;
+isDefItem _ = False
 \end{code}
 
 \subsubsection{Var-Table Conversions}
 
 \begin{code}
+isDeclItem :: Item -> Bool
+isDeclItem (Conj _ _ _)   =  False
+isDeclItem (Law _ _ _ _)  =  False
+isDeclItem _              =  True
 decls2vartable :: MonadFail mf => [Item] -> VarTable -> mf VarTable
 decls2vartable [] vtbl = return vtbl
 decls2vartable (item:items) vtbl = do

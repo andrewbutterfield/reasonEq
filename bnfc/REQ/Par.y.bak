@@ -114,7 +114,7 @@ ListDynVar : {- empty -} { [] } | DynVar ListDynVar { (:) $1 $2 }
 
 Item :: { REQ.Abs.Item }
 Item
-  : 'ObsVars' ListDynVar { REQ.Abs.DefObs $2 }
+  : 'ObsVars' ListDynVar '.' { REQ.Abs.DefObs $2 }
   | 'DclVar' VClass DynVar '.' VarRole '.' { REQ.Abs.DeclVar $2 $3 $5 }
   | 'DclDLVar' VClass DynVar '.' ListDynVar '.' { REQ.Abs.DeclDLVar $2 $3 $5 }
   | 'DclASet' VClass DynVar '.' { REQ.Abs.DeclASet $2 $3 }

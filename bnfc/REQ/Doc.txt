@@ -25,15 +25,15 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in REQ are the following:
   | ``Conjecture`` | ``DclASet`` | ``DclDLVar`` | ``DclVar``
-  | ``Exp`` | ``Law`` | ``NA`` | ``NS``
-  | ``Obs`` | ``ObsVars`` | ``Prd`` | ``SB``
-  | ``SC`` | ``Sub`` | ``SubL`` | ``SubV``
-  | ``Theory`` | ``VSC`` | ``assumed`` | ``axiom``
-  | ``covby`` | ``dcovby`` | ``disj`` | ``div``
-  | ``false`` | ``fresh`` | ``lst`` | ``mod``
-  | ``neg`` | ``nil`` | ``none`` | ``proven``
-  | ``std`` | ``tbot`` | ``true`` | ``ttop``
-  | ``var`` |  |  |
+  | ``Exp`` | ``ExprVars`` | ``Law`` | ``NA``
+  | ``NS`` | ``Obs`` | ``ObsVars`` | ``Prd``
+  | ``PredVars`` | ``SB`` | ``SC`` | ``StaticVars``
+  | ``Sub`` | ``SubL`` | ``SubV`` | ``Theory``
+  | ``VSC`` | ``assumed`` | ``axiom`` | ``covby``
+  | ``dcovby`` | ``disj`` | ``div`` | ``false``
+  | ``fresh`` | ``lst`` | ``mod`` | ``neg``
+  | ``nil`` | ``none`` | ``proven`` | ``std``
+  | ``tbot`` | ``true`` | ``ttop`` | ``var``
 
 The symbols used in REQ are the following:
   | . | === | ==> | \/
@@ -57,6 +57,9 @@ All other symbols are terminals.
   | //[DynVar]// | -> | **eps**
   |  |  **|**  | //DynVar// //[DynVar]//
   | //Item// | -> | ``ObsVars`` //[DynVar]// ``.``
+  |  |  **|**  | ``ExprVars`` //[DynVar]// ``.``
+  |  |  **|**  | ``PredVars`` //[DynVar]// ``.``
+  |  |  **|**  | ``StaticVars`` //[DynVar]// ``.``
   |  |  **|**  | ``DclVar`` //VClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VClass// //DynVar// ``.``

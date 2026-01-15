@@ -86,11 +86,26 @@ separator DynVar "" ;
   These are items that declare that specific variable names, 
   if not declared elsewhere, have certain charactersitics.
   For now this includes Variable Class (Obs,Expr,Pred),
-  and certain temporal cases: Static, Textual.
+  and certain temporal cases: Static, Textual(?).
+
+  Single-letter variables get classifed by default as follows:
+ 
+  Upper-Case:  Predicate, Static
+  Lower-Case:
+    a..h  Expr, Static
+    i..n  Obs, Static
+    p..s  Pred, Before  
+    u..z  Obs, Dynamic
+    not sure about o or t 
+
+    So far, list variables are Dynamic Obs.
+
 -}
 
-DefObs. Item ::= "ObsVars" [DynVar] "." ;
-
+DefObs.    Item ::= "ObsVars"    [DynVar] "." ; -- dynamic by default
+DefExpr.   Item ::= "ExprVars"   [DynVar] "." ; -- static by default
+DefPred.   Item ::= "PredVars"   [DynVar] "." ; -- static by default
+DefStatic. Item ::= "StaticVars" [DynVar] "." ; 
 
 {- Variable Data 
 

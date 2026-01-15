@@ -14,7 +14,11 @@ data Thry = Thr DynVar [DynVar] [Item]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Item
-    = DeclVar VClass DynVar VarRole
+    = DefObs [DynVar]
+    | DefExpr [DynVar]
+    | DefPred [DynVar]
+    | DefStatic [DynVar]
+    | DeclVar VClass DynVar VarRole
     | DeclDLVar VClass DynVar [DynVar]
     | DeclASet VClass DynVar
     | Conj DynVar Trm SCond

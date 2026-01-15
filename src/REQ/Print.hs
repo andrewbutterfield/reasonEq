@@ -146,6 +146,10 @@ instance Print [REQ.Abs.DynVar] where
 
 instance Print REQ.Abs.Item where
   prt i = \case
+    REQ.Abs.DefObs dynvars -> prPrec i 0 (concatD [doc (showString "ObsVars"), prt 0 dynvars, doc (showString ".")])
+    REQ.Abs.DefExpr dynvars -> prPrec i 0 (concatD [doc (showString "ExprVars"), prt 0 dynvars, doc (showString ".")])
+    REQ.Abs.DefPred dynvars -> prPrec i 0 (concatD [doc (showString "PredVars"), prt 0 dynvars, doc (showString ".")])
+    REQ.Abs.DefStatic dynvars -> prPrec i 0 (concatD [doc (showString "StaticVars"), prt 0 dynvars, doc (showString ".")])
     REQ.Abs.DeclVar vclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     REQ.Abs.DeclDLVar vclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     REQ.Abs.DeclASet vclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 vclass, prt 0 dynvar, doc (showString ".")])

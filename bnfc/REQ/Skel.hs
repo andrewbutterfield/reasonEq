@@ -26,6 +26,9 @@ transThry x = case x of
 transItem :: REQ.Abs.Item -> Result
 transItem x = case x of
   REQ.Abs.DefObs dynvars -> failure x
+  REQ.Abs.DefExpr dynvars -> failure x
+  REQ.Abs.DefPred dynvars -> failure x
+  REQ.Abs.DefStatic dynvars -> failure x
   REQ.Abs.DeclVar vclass dynvar varrole -> failure x
   REQ.Abs.DeclDLVar vclass dynvar dynvars -> failure x
   REQ.Abs.DeclASet vclass dynvar -> failure x

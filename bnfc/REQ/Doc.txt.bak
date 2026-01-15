@@ -56,7 +56,7 @@ All other symbols are terminals.
   | //Thry// | -> | ``Theory`` //DynVar// ``.`` //[DynVar]// ``.`` //[Item]//
   | //[DynVar]// | -> | **eps**
   |  |  **|**  | //DynVar// //[DynVar]//
-  | //Item// | -> | ``ObsVars`` //[DynVar]//
+  | //Item// | -> | ``ObsVars`` //[DynVar]// ``.``
   |  |  **|**  | ``DclVar`` //VClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VClass// //DynVar// ``.``

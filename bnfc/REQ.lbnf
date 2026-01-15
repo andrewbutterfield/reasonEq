@@ -170,9 +170,6 @@ LT.     Trm4 ::= Trm5 "<" Trm5 ;
 LE.     Trm4 ::= Trm5 "<=" Trm5 ;
 GT.     Trm4 ::= Trm5 ">" Trm5 ;
 GE.     Trm4 ::= Trm5 ">=" Trm5 ;
-PTrue.  Trm4 ::= "True" ;
-PFalse. Trm4 ::= "False" ;
-PVar.   Trm4 ::= DynVar ;
 LCat.   Trm5 ::= Trm6  "++" Trm5 ;
 LCons.  Trm5 ::= Trm6  ":"  Trm5 ;
 EAdd.   Trm6 ::= Trm6  "+"  Trm7 ;
@@ -182,12 +179,12 @@ EDiv.   Trm7 ::= Trm7 "div" Trm8 ;
 EMod.   Trm7 ::= Trm7 "mod" Trm8 ;
 ENeg.   Trm7 ::= "neg" Trm8 ;
 EInt.   Trm8 ::= Integer ;
-EVar.   Trm8 ::= DynVar ;
-ETrue.  Trm8 ::= "true" ;
-EFalse. Trm8 ::= "false" ;
+TmVar.  Trm8 ::= DynVar ;
+TTrue.  Trm8 ::= "true" ;
+TFalse. Trm8 ::= "false" ;
 ENil.   Trm8 ::= "nil" ;
 TCons.  Trm8 ::= DynVar "(" [Trm] ")" ;
-TSubV. Trm8  ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
+TSubV.  Trm8  ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
 TSubLV. Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
 TSubst. Trm8 ::= "Sub" Trm 
                      "[." [Trm] "/" [DynVar] 

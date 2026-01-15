@@ -45,9 +45,6 @@ data Trm
     | LE Trm Trm
     | GT Trm Trm
     | GE Trm Trm
-    | PTrue
-    | PFalse
-    | PVar DynVar
     | LCat Trm Trm
     | LCons Trm Trm
     | EAdd Trm Trm
@@ -57,9 +54,9 @@ data Trm
     | EMod Trm Trm
     | ENeg Trm
     | EInt Integer
-    | EVar DynVar
-    | ETrue
-    | EFalse
+    | TmVar DynVar
+    | TTrue
+    | TFalse
     | ENil
     | TCons DynVar [Trm]
     | TSubV Trm [Trm] [DynVar]

@@ -66,9 +66,6 @@ transTrm x = case x of
   REQ.Abs.LE trm1 trm2 -> failure x
   REQ.Abs.GT trm1 trm2 -> failure x
   REQ.Abs.GE trm1 trm2 -> failure x
-  REQ.Abs.PTrue -> failure x
-  REQ.Abs.PFalse -> failure x
-  REQ.Abs.PVar dynvar -> failure x
   REQ.Abs.LCat trm1 trm2 -> failure x
   REQ.Abs.LCons trm1 trm2 -> failure x
   REQ.Abs.EAdd trm1 trm2 -> failure x
@@ -78,9 +75,9 @@ transTrm x = case x of
   REQ.Abs.EMod trm1 trm2 -> failure x
   REQ.Abs.ENeg trm -> failure x
   REQ.Abs.EInt integer -> failure x
-  REQ.Abs.EVar dynvar -> failure x
-  REQ.Abs.ETrue -> failure x
-  REQ.Abs.EFalse -> failure x
+  REQ.Abs.TmVar dynvar -> failure x
+  REQ.Abs.TTrue -> failure x
+  REQ.Abs.TFalse -> failure x
   REQ.Abs.ENil -> failure x
   REQ.Abs.TCons dynvar trms -> failure x
   REQ.Abs.TSubV trm trms dynvars -> failure x

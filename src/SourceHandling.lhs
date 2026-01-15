@@ -216,7 +216,7 @@ Also missing - default declarations for common variables
 
 \begin{code}
 trm2term :: MonadFail mf => VarTable -> Trm -> mf Term
-trm2term _ PTrue = return $ Val ArbType $ Boolean True
+trm2term _ TTrue = return $ Val ArbType $ Boolean True
 trm2term vt (PEqv trm1 trm2) = do
   term1 <- trm2term vt trm1
   term2 <- trm2term vt trm2
@@ -243,7 +243,7 @@ trm2term vt (PEqv trm1 trm2) = do
 --trm2term vt EMod trm1 trm2
 --trm2term vt ENeg trm
 --trm2term vt EInt Integer
-trm2term vt (EVar dv) = return $ jVar ArbType $ Vbl id ExprV vw
+trm2term vt (TmVar dv) = return $ jVar ArbType $ Vbl id ExprV vw
   where (id,vw) = dynvar2idwhen dv
 --trm2term vt ETrue
 --trm2term vt EFalse
@@ -257,7 +257,7 @@ trm2term _ trm = fail ("trm2term nyfi\n"++show trm)
 
 \begin{code}
 term2trm :: Term -> Trm
-term2trm (Val _ (Boolean True)) = PTrue
+term2trm (Val _ (Boolean True)) = TTrue
 \end{code}
 
 \subsection{Type--Typ Conversions}

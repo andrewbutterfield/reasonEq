@@ -45,9 +45,6 @@ data Trm
     | LE Trm Trm
     | GT Trm Trm
     | GE Trm Trm
-    | PTrue
-    | PFalse
-    | PVar DynVar
     | LCat Trm Trm
     | LCons Trm Trm
     | EAdd Trm Trm
@@ -57,9 +54,9 @@ data Trm
     | EMod Trm Trm
     | ENeg Trm
     | EInt Integer
-    | EVar DynVar
-    | ETrue
-    | EFalse
+    | TVar DynVar
+    | TTrue
+    | TFalse
     | ENil
     | TCons DynVar [Trm]
     | TSubV Trm [Trm] [DynVar]
@@ -72,7 +69,7 @@ data Typ
     | TRec DynVar [Typ]
     | TProd DynVar [Typ]
     | TArb
-    | TVar DynVar
+    | TVbl DynVar
     | TBot
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 

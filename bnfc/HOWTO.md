@@ -12,6 +12,7 @@ For development/debugging:
 cd .../reasonEq/bnfc
 bnfc -d -m REQ.lbnf
 make -f rmake
+./Runner -- help
 ./Runner
   <enter stuff>
 ^D

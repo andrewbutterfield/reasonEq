@@ -154,7 +154,7 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "Obs" 34
+  b "Obs" 33
     (b ";" 17
        (b "-" 9
           (b "*" 5
@@ -163,28 +163,28 @@ resWords =
           (b "/" 13
              (b "." 11 (b "->" 10 N N) (b ".]" 12 N N))
              (b ":" 15 (b "/\\" 14 N N) (b ":)" 16 N N))))
-       (b "DclASet" 26
-          (b "==>" 22
-             (b "==" 20 (b "<=" 19 (b "<" 18 N N) N) (b "===" 21 N N))
-             (b ">=" 24 (b ">" 23 N N) (b "Conjecture" 25 N N)))
-          (b "False" 30
-             (b "DclVar" 28 (b "DclDLVar" 27 N N) (b "Exp" 29 N N))
-             (b "NA" 32 (b "Law" 31 N N) (b "NS" 33 N N)))))
-    (b "div" 51
-       (b "VSC" 43
-          (b "SubL" 39
-             (b "SC" 37 (b "SB" 36 (b "Prd" 35 N N) N) (b "Sub" 38 N N))
-             (b "Theory" 41 (b "SubV" 40 N N) (b "True" 42 N N)))
-          (b "axiom" 47
-             (b "\\/" 45 (b "[." 44 N N) (b "assumed" 46 N N))
-             (b "dcovby" 49 (b "covby" 48 N N) (b "disj" 50 N N))))
-       (b "proven" 59
-          (b "mod" 55
-             (b "fresh" 53 (b "false" 52 N N) (b "lst" 54 N N))
-             (b "nil" 57 (b "neg" 56 N N) (b "none" 58 N N)))
-          (b "ttop" 63
-             (b "tbot" 61 (b "std" 60 N N) (b "true" 62 N N))
-             (b "|" 65 (b "var" 64 N N) (b "~" 66 N N)))))
+       (b "Conjecture" 25
+          (b "===" 21
+             (b "<=" 19 (b "<" 18 N N) (b "==" 20 N N))
+             (b ">" 23 (b "==>" 22 N N) (b ">=" 24 N N)))
+          (b "Exp" 29
+             (b "DclDLVar" 27 (b "DclASet" 26 N N) (b "DclVar" 28 N N))
+             (b "NA" 31 (b "Law" 30 N N) (b "NS" 32 N N)))))
+    (b "div" 49
+       (b "VSC" 41
+          (b "Sub" 37
+             (b "SB" 35 (b "Prd" 34 N N) (b "SC" 36 N N))
+             (b "SubV" 39 (b "SubL" 38 N N) (b "Theory" 40 N N)))
+          (b "axiom" 45
+             (b "\\/" 43 (b "[." 42 N N) (b "assumed" 44 N N))
+             (b "dcovby" 47 (b "covby" 46 N N) (b "disj" 48 N N))))
+       (b "proven" 57
+          (b "mod" 53
+             (b "fresh" 51 (b "false" 50 N N) (b "lst" 52 N N))
+             (b "nil" 55 (b "neg" 54 N N) (b "none" 56 N N)))
+          (b "ttop" 61
+             (b "tbot" 59 (b "std" 58 N N) (b "true" 60 N N))
+             (b "|" 63 (b "var" 62 N N) (b "~" 64 N N)))))
   where
   b s n = B bs (TS bs n)
     where

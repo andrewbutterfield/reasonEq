@@ -14,7 +14,7 @@ We need a more principled way to define "given" types.
 We need to be able to declare variable defaults as described above.
 
 We need to merge `(P|E)(True|False|Var)` into `(TTrue|TFalse|TVar)`
-in the syntax.
+in the syntax. **DONE**
 
 ### Load/Generate
 

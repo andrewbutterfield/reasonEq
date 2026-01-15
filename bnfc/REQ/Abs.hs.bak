@@ -54,7 +54,7 @@ data Trm
     | EMod Trm Trm
     | ENeg Trm
     | EInt Integer
-    | TVar DynVar
+    | TmVar DynVar
     | TTrue
     | TFalse
     | ENil

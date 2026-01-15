@@ -146,6 +146,7 @@ instance Print [REQ.Abs.DynVar] where
 
 instance Print REQ.Abs.Item where
   prt i = \case
+    REQ.Abs.DefObs dynvars -> prPrec i 0 (concatD [doc (showString "ObsVars"), prt 0 dynvars])
     REQ.Abs.DeclVar vclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     REQ.Abs.DeclDLVar vclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     REQ.Abs.DeclASet vclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 vclass, prt 0 dynvar, doc (showString ".")])
@@ -200,7 +201,7 @@ instance Print REQ.Abs.Trm where
     REQ.Abs.EMod trm1 trm2 -> prPrec i 7 (concatD [prt 7 trm1, doc (showString "mod"), prt 8 trm2])
     REQ.Abs.ENeg trm -> prPrec i 7 (concatD [doc (showString "neg"), prt 8 trm])
     REQ.Abs.EInt n -> prPrec i 8 (concatD [prt 0 n])
-    REQ.Abs.TVar dynvar -> prPrec i 8 (concatD [prt 0 dynvar])
+    REQ.Abs.TmVar dynvar -> prPrec i 8 (concatD [prt 0 dynvar])
     REQ.Abs.TTrue -> prPrec i 8 (concatD [doc (showString "true")])
     REQ.Abs.TFalse -> prPrec i 8 (concatD [doc (showString "false")])
     REQ.Abs.ENil -> prPrec i 8 (concatD [doc (showString "nil")])

@@ -65,14 +65,32 @@ token DynVar  ( (letter|'_') (letter|digit|'_')* ) ;
      a list of zero or more dependent theories;
      a list of one of more theory items.
    Theory items are:
+     Default variable-name interpretations;
      Known variable declarations;
      Conjectures;
      Laws.
+
+ The Defaults are a new concept. 
+ These were typically hard coded in the Haskell files.
+ Now we declare them in the .utp file and their effect is local to that file.
+ We have an implicit global set of defaults that get overidden by
+ explicit defaults and known variable declarations.
 -}
 
 Thr. Thry ::= "Theory" DynVar "." [DynVar] "." [Item] ;
 
 separator DynVar "" ;
+
+{- Default Variable interpretations
+
+  These are items that declare that specific variable names, 
+  if not declared elsewhere, have certain charactersitics.
+  For now this includes Variable Class (Obs,Expr,Pred),
+  and certain temporal cases: Static, Textual.
+-}
+
+DefObs. Item ::= "ObsVars" [DynVar] "." ;
+
 
 {- Variable Data 
 

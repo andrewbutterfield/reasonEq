@@ -209,21 +209,21 @@ resWords =
           (b "Exp" 29
              (b "DclDLVar" 27 (b "DclASet" 26 N N) (b "DclVar" 28 N N))
              (b "NA" 31 (b "Law" 30 N N) (b "NS" 32 N N)))))
-    (b "div" 49
-       (b "VSC" 41
-          (b "Sub" 37
-             (b "SB" 35 (b "Prd" 34 N N) (b "SC" 36 N N))
-             (b "SubV" 39 (b "SubL" 38 N N) (b "Theory" 40 N N)))
-          (b "axiom" 45
-             (b "\\/" 43 (b "[." 42 N N) (b "assumed" 44 N N))
-             (b "dcovby" 47 (b "covby" 46 N N) (b "disj" 48 N N))))
-       (b "proven" 57
-          (b "mod" 53
-             (b "fresh" 51 (b "false" 50 N N) (b "lst" 52 N N))
-             (b "nil" 55 (b "neg" 54 N N) (b "none" 56 N N)))
-          (b "ttop" 61
-             (b "tbot" 59 (b "std" 58 N N) (b "true" 60 N N))
-             (b "|" 63 (b "var" 62 N N) (b "~" 64 N N)))))
+    (b "div" 50
+       (b "VSC" 42
+          (b "Sub" 38
+             (b "SB" 36 (b "Prd" 35 (b "ObsVars" 34 N N) N) (b "SC" 37 N N))
+             (b "SubV" 40 (b "SubL" 39 N N) (b "Theory" 41 N N)))
+          (b "axiom" 46
+             (b "\\/" 44 (b "[." 43 N N) (b "assumed" 45 N N))
+             (b "dcovby" 48 (b "covby" 47 N N) (b "disj" 49 N N))))
+       (b "proven" 58
+          (b "mod" 54
+             (b "fresh" 52 (b "false" 51 N N) (b "lst" 53 N N))
+             (b "nil" 56 (b "neg" 55 N N) (b "none" 57 N N)))
+          (b "ttop" 62
+             (b "tbot" 60 (b "std" 59 N N) (b "true" 61 N N))
+             (b "|" 64 (b "var" 63 N N) (b "~" 65 N N)))))
   where
   b s n = B bs (TS bs n)
     where

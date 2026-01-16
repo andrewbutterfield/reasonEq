@@ -11,7 +11,7 @@ module Arithmetic (
 , i_add, add
 , i_sub, sub
 , i_mul, mul
-, i_div, div
+, i_div, idiv
 , i_mod, imod
 , zero, one
 , arithmeticAxioms, arithmeticName, arithmeticTheory

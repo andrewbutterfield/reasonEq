@@ -2,24 +2,11 @@
 
 ## URGENT or NEXT
 
-### Given "Stuff""
-
-We have one given type (B for boolean),
-but we also have default interpretations for variables,
-where `P` is usually a static predicate, `e` a static expression,
-etc.
-
-We need a more principled way to define "given" types.
-
-We need to be able to declare variable defaults as described above.
-
-We need to merge `(P|E)(True|False|Var)` into `(TTrue|TFalse|TVar)`
-in the syntax. **DONE**
 
 ### Load/Generate
 
 
-We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax.
+We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax. **IN PROOGRESS - can load EQV.thr**
 
 ### Matching Improvement
 

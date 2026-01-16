@@ -11,15 +11,11 @@ module SourceHandling (
 , term_syntax
 , renderNNToken'
 , loadTheory, genTheory
-, loadTerm -- genTerm
--- , loadType, genType
--- , loadSideCond, genSideCond
+, loadTerm -- genTerm, loadType, genType, loadSideCond, genSideCond
 )
-
 where
 
 import Data.Maybe(fromJust)
--- import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -48,6 +44,7 @@ import StdSignature
 
 import Debugger
 \end{code}
+
 
 \section{Load-Generate Intro.}
 
@@ -100,7 +97,8 @@ dynvar2idwhen (DynVar dv)
       Just (before,d)   -> (jId before,During d)
 \end{code}
 
-\subsection{Theory--Thry Conversions}
+\newpage
+\subsection{Thry to Theory}
 
 \begin{code}
 thry2theory :: MonadFail mf => Thry -> mf Theory
@@ -227,6 +225,7 @@ mkVTableKeyVar :: VarClass -> (Identifier,VarWhen) -> Variable
 mkVTableKeyVar vc (id,vw) = Vbl id vc vw
 \end{code}
 
+\newpage
 \subsubsection{Assertion Conversions}
 
 \begin{code}
@@ -257,13 +256,14 @@ conj2Conj knwn (DynVar v) trm scond = do
   return (v,mkAsn term sidecond)
 \end{code}
 
+\subsection{Theory to Thry}
 
 \begin{code}
 theory2thry :: Theory -> Thry
 theory2thry _ = undefined
 \end{code}
 
-\subsection{Term--Trm Conversions}
+\subsection{Trm to Term}
 
 Missing: known variable data.
 
@@ -311,12 +311,14 @@ trm2term vt (TmVar dv) = return $ jVar ArbType $ Vbl id ExprV vw
 trm2term _ trm = fail ("trm2term nyfi\n"++show trm)
 \end{code}
 
+\subsection{Term to Trm}
+
 \begin{code}
 term2trm :: Term -> Trm
 term2trm (Val _ (Boolean True)) = TTrue
 \end{code}
 
-\subsection{Type--Typ Conversions}
+\subsection{Typ to Type}
 
 At present the only given type is $\Bool$ (\h{GivenType "B"}).
 \begin{code}
@@ -334,12 +336,14 @@ typ2type (TRec (DynVar dv) fs)
   =  TypeCons (jId dv) (map typ2type fs)
 \end{code}
 
+\subsection{Type to Typ}
+
 \begin{code}
 type2typ :: Type -> Typ
 type2typ _ = undefined
 \end{code}
 
-\subsection{SideCond--SCond Conversions}
+\subsection{SCond to SideCond}
 
 \begin{code}
 scond2sidecond :: MonadFail mf => VarTable -> SCond -> mf SideCond
@@ -348,17 +352,21 @@ scond2sidecond _ SCnone = return scTrue
 scond2sidecond vt scond = fail ("scond2sidecond nyfi\n"++show scond)
 \end{code}
 
+\subsection{SideCond to SCond}
+
 \begin{code}
 sidecond2scond :: SideCond -> SCond
 sidecond2scond _ = undefined
 \end{code}
 
-\subsection{GenVar--DynVar Conversions}
+\subsection{DynVar to GenVar}
 
 \begin{code}
 dynvar2genvar :: DynVar -> GenVar
 dynvar2genvar _ = undefined
 \end{code}
+
+\subsection{GenVar to DynVar}
 
 \begin{code}
 genvar2dynvar :: GenVar -> DynVar

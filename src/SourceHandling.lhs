@@ -42,6 +42,10 @@ import TestRendering
 import StdTypeSignature
 import StdSignature
 
+-- We really need more XSignature files in builtin
+import Lists
+import Arithmetic
+
 import Debugger
 \end{code}
 
@@ -131,7 +135,8 @@ as evidenced in the book\cite{UTP-book}:
 
 \begin{tabular}{|c|l|}
 \hline
- A--Z & Predicate, Static
+   A--L,N,P--R,T--Z & Predicate, Static
+\\ M,S,O & Obs, Dynamic  -- model/script/all observations
 \\ a--h & Expr, Static
 \\ i--n & Obs, Static
 \\ p--s & Pred, Before  
@@ -155,8 +160,9 @@ chkDefault dd defMap (c:_)
       Just d  -> d
 defaultClasses :: Map Char VarClass
 defaultClasses = mkDefault
-  [(['A'..'Z'],PredV),
-  ("abcdefgh",ExprV),("ijklmn",ObsV),("pqrs",PredV),("uvwxyz",ObsV)]
+  [(['A'..'L']++['N']++['P'..'R']++['T'..'Z'],PredV)
+  ,("MSO",ObsV)
+  ,("abcdefgh",ExprV),("ijklmn",ObsV),("pqrs",PredV),("uvwxyz",ObsV)]
 defaultWhen :: Map Char VarWhen
 defaultWhen = mkDefault
   [(['A'..'Z'],Static),
@@ -263,6 +269,7 @@ theory2thry :: Theory -> Thry
 theory2thry _ = undefined
 \end{code}
 
+\newpage
 \subsection{Trm to Term}
 
 Missing: known variable data.
@@ -272,44 +279,124 @@ Also missing - default declarations for common variables
 
 \begin{code}
 trm2term :: MonadFail mf => VarTable -> Trm -> mf Term
-trm2term _ TTrue = return $ Val ArbType $ Boolean True
-trm2term vt (PEqv trm1 trm2) = do
-  term1 <- trm2term vt trm1
-  term2 <- trm2term vt trm2
-  return (term1 === term2)
---trm2term vt PImpl trm1 trm2
---trm2term vt POr trm1 trm2
---trm2term vt PAnd trm1 trm2
---trm2term vt PNot trm
---trm2term vt EQ trm1 trm2
---trm2term vt NE trm1 trm2
---trm2term vt LT trm1 trm2
---trm2term vt LE trm1 trm2
---trm2term vt GT trm1 trm2
---trm2term vt GE trm1 trm2
---trm2term vt PTrue
---trm2term vt PFalse
---trm2term vt PVar dv
---trm2term vt LCat trm1 trm2
---trm2term vt LCons trm1 trm2
---trm2term vt EAdd trm1 trm2
---trm2term vt EMinus trm1 trm2
---trm2term vt EMul trm1 trm2
---trm2term vt EDiv trm1 trm2
---trm2term vt EMod trm1 trm2
+\end{code}
+
+Values
+
+\begin{code}
+trm2term _ TTrue     = return $ Val bool $ Boolean True
+trm2term _ TFalse    = return $ Val bool $ Boolean False
+trm2term vt (EInt i) = return $ Val int  $ Integer i
+\end{code}
+
+Variables
+
+\begin{code}
+trm2term vt (TmVar dv) = return $ jVar ArbType $ Vbl id vc vw
+  where 
+    (id,vw) = dynvar2idwhen dv
+    vc = determineClass vt id vw
+\end{code}
+
+Operators
+
+\begin{code}
+trm2term vt (PEqv trm1 trm2) = binop2term vt (===) trm1 trm2
+trm2term vt (PImpl trm1 trm2) = binop2term vt (==>) trm1 trm2
+trm2term vt (POr trm1 trm2) = binop2term vt (\/) trm1 trm2
+trm2term vt (PAnd trm1 trm2) = binop2term vt (/\) trm1 trm2
+--trm2term vt (EQ trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (NE trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (LT trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (LE trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (GT trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (GE trm1 trm2) = binop2term vt op trm1 trm2
+trm2term vt (LCat trm1 trm2) = binop2term vt cat trm1 trm2
+trm2term vt (LCons trm1 trm2) = binop2term vt cons trm1 trm2
+trm2term vt (EAdd trm1 trm2) = binop2term vt add trm1 trm2
+trm2term vt (EMinus trm1 trm2) = binop2term vt sub trm1 trm2
+trm2term vt (EMul trm1 trm2) = binop2term vt mul trm1 trm2
+trm2term vt (EDiv trm1 trm2) = binop2term vt idiv trm1 trm2
+trm2term vt (EMod trm1 trm2) = binop2term vt imod trm1 trm2
+\end{code}
+
+Miscellaneous
+
+\begin{code}
+--trm2term vt (PNot trm) 
 --trm2term vt ENeg trm
---trm2term vt EInt Integer
-trm2term vt (TmVar dv) = return $ jVar ArbType $ Vbl id ExprV vw
-  where (id,vw) = dynvar2idwhen dv
---trm2term vt ETrue
---trm2term vt EFalse
 --trm2term vt ENil
 --trm2term vt TCons dv trms
---trm2term vt TSubV trm trms dvs
---trm2term vt TSubLV trm dvs dvs
---trm2term vt TSubst trm trms dvs dvs dvs
+\end{code}
+
+Substitution
+
+\begin{code}
+trm2term vt (TSubV trm trms tdvs)     =  mkSubst vt trm trms tdvs [] []
+trm2term vt (TSubLV trm rdlvs tdlvs)  =  mkSubst vt trm [] [] rdlvs tdlvs
+trm2term vt (TSubst trm trms tdvs rdlvs tdlvs)
+                                      =  mkSubst vt trm trms tdvs rdlvs tdlvs
+\end{code}
+
+Not yet implemented!
+
+\begin{code}
 trm2term _ trm = fail ("trm2term nyfi\n"++show trm)
 \end{code}
+
+\newpage
+\subsubsection{Determine Class}
+
+We can get identifier and temporality.
+To determine class, we need to search the variable data table,
+by working through the different classes 
+and searching all three var-table mappings.
+\begin{code}
+determineClass :: VarTable -> Identifier -> VarWhen -> VarClass
+determineClass vt id vw
+  | ifIsVarClass  ObsV   =  ObsV
+  | ifIsVarClass  ExprV  =  ExprV
+  | ifIsVarClass  PredV  =  PredV
+  | ifIsLVarClass ObsV   =  ObsV
+  | ifIsLVarClass ExprV  =  ExprV
+  | ifIsLVarClass PredV  =  PredV
+  | otherwise        
+    =  case M.lookup (head $ idName id) defaultClasses of
+         Nothing  ->  ObsV  -- o or t
+         Just vc  ->  vc  
+  where
+   ifIsVarClass  vc  =  lookupVarTable vt (Vbl id vc vw)  /= UnknownVar
+   ifIsLVarClass vc  =  lookupLVarTable vt (Vbl id vc vw) /= UnknownListVar
+
+
+\end{code}
+
+\subsubsection{Binary Operation to Term}
+
+\begin{code}
+binop2term :: MonadFail m 
+           => VarTable -> (Term -> Term -> Term) -> Trm -> Trm -> m Term
+binop2term vt op trm1 trm2 = do
+  term1 <- trm2term vt trm1
+  term2 <- trm2term vt trm2
+  return (term1 `op` term2)
+\end{code}
+
+\subsubsection{Substitutions}
+
+\begin{code}
+mkSubst :: MonadFail m
+        => VarTable -> Trm -> [Trm] -> [DynVar] -> [DynVar] -> [DynVar] 
+        -> m Term
+mkSubst vt trm trms tdvs rdlvs tdlvs = do
+  term   <- trm2term vt trm
+  terms  <- sequence $ map (trm2term vt) trms
+  let tvars  = map (dynvar2stdvar vt) tdvs
+  let rlvars = map (dynvar2lstvar vt) rdlvs
+  let tlvars = map (dynvar2lstvar vt) tdlvs
+  return $ Sub ArbType term $ xSubstn (zip tvars terms) (zip tlvars rlvars)
+\end{code}
+Note the lack of error checking!!!
 
 \subsection{Term to Trm}
 
@@ -362,8 +449,15 @@ sidecond2scond _ = undefined
 \subsection{DynVar to GenVar}
 
 \begin{code}
-dynvar2genvar :: DynVar -> GenVar
-dynvar2genvar _ = undefined
+dynvar2stdvar :: VarTable -> DynVar -> Variable
+dynvar2stdvar vt dyn = Vbl id vc vw where
+  (id,vw) = dynvar2idwhen dyn
+  vc = determineClass vt id vw
+\end{code}
+
+\begin{code}
+dynvar2lstvar :: VarTable -> DynVar -> ListVar
+dynvar2lstvar vt dyn = LVbl (dynvar2stdvar vt dyn) [] []
 \end{code}
 
 \subsection{GenVar to DynVar}

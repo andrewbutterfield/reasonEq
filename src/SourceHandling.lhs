@@ -435,8 +435,28 @@ type2typ _ = undefined
 \begin{code}
 scond2sidecond :: MonadFail mf => VarTable -> SCond -> mf SideCond
 scond2sidecond _ SCnone = return scTrue
--- scond2sidecond vt (SCVSCs vsconds)
-scond2sidecond vt scond = fail ("scond2sidecond nyfi\n"++show scond)
+scond2sidecond vt (SCVSCs vsconds) 
+  = scond2sidecond vt (SCFull vsconds $ VSet [])
+scond2sidecond vt (SCFresh vrset)
+  = scond2sidecond vt (SCFull [] vrset)
+scond2sidecond vt (SCFull vsconds (VSet gvars)) = do
+  let vscs  = map (vscond2varsidecond vt) vsconds
+  let fvs = S.fromList $ map (gvar2genvar vt) gvars
+  mkSideCond vscs fvs
+\end{code}
+
+\subsubsection{VSCond to VarSideCond}
+
+\begin{code}
+vscond2varsidecond :: VarTable -> VSCond -> VarSideConds
+vscond2varsidecond vt (VSCDisj gv gvs) = vscond2VSC vt disjfrom gv gvs
+vscond2varsidecond vt (VSCCovBy gv gvs) = vscond2VSC vt coveredby gv gvs
+vscond2varsidecond vt (VSCDynCov gv gvs) = vscond2VSC vt dyncovered gv gvs
+
+vscond2VSC :: VarTable -> (GenVar -> VarSet -> VarSideConds)
+           -> GVar ->  VrSet -> VarSideConds
+vscond2VSC vt op gv (VSet gvs)
+  = gvar2genvar vt gv `op` (S.fromList $ map (gvar2genvar vt) gvs)
 \end{code}
 
 \subsection{SideCond to SCond}
@@ -458,6 +478,12 @@ dynvar2stdvar vt dyn = Vbl id vc vw where
 \begin{code}
 dynvar2lstvar :: VarTable -> DynVar -> ListVar
 dynvar2lstvar vt dyn = LVbl (dynvar2stdvar vt dyn) [] []
+\end{code}
+
+\begin{code}
+gvar2genvar :: VarTable -> GVar -> GenVar
+gvar2genvar vt (SVar dyn) = StdVar $ dynvar2stdvar vt dyn
+gvar2genvar vt (LVar dyn) = LstVar $ dynvar2lstvar vt dyn
 \end{code}
 
 \subsection{GenVar to DynVar}

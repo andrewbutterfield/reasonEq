@@ -251,7 +251,8 @@ generateState _ reqs = do
 
 generateState2 theory reqs = do
   let thnm = thName theory
-  let fname = projectDir reqs </> thnm </> thnm <.> "src"
+  -- want to avoid overwriting existing .utp files
+  let fname = projectDir reqs </> thnm </> (thnm++"-gen") <.> "utp"
   putStrLn("generating to "++fname)
   putStrLn ("saving "++fname)
   let theory_text = genTheory theory
@@ -608,12 +609,12 @@ newConj cjnm reqs
           else return reqs
 
   where
-    parse txt =
-      case loadTerm txt of
-        But msgs         ->  But msgs
-        Yes (term,[])    ->  Yes term
-        Yes (term,xtra)  ->  But [ "Error: leftover tokens" 
-                                 , concat (map renderNNToken' xtra) ]
+    parse txt = But ["loadTerm needs upgrsading to new LBNF syntax"]
+      --case loadTerm txt of
+      --  But msgs         ->  But msgs
+      --  Yes (term,[])    ->  Yes term
+      --  Yes (term,xtra)  ->  But [ "Error: leftover tokens" 
+      --                           , concat (map renderNNToken' xtra) ]
 \end{code}
                   
 

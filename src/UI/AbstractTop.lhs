@@ -223,18 +223,18 @@ while the rest is then parsed for the actual conjecture term.
 readConjecture :: MonadFail m => String -> REqState -> m REqState
 readConjecture text reqs
   | null body = fail "no conjecture term found"
-  | otherwise = 
-      case loadTerm body of
-        Yes (term,resttoks)
-          | null resttoks -> do
-              thry <- getCurrentTheory reqs
-              let newasn = mkAsn term scTrue
-              let newconj = (cname,newasn)
-              let thry' = conjs__ ([newconj]++) thry
-              thrys <- replaceTheory'' thry' $ theories reqs
-              return $ changed $ theories_ thrys reqs 
-          | otherwise -> fail ("junk at end: "++show resttoks)
-        But msgs -> fail ("conjecture parse failed:\n"++unlines' msgs)
+  | otherwise = fail "loadTerm needs upgrading to LBNF grammar"
+      --case loadTerm body of
+      --  Yes (term,resttoks)
+      --   | null resttoks -> do
+      --        thry <- getCurrentTheory reqs
+      --        let newasn = mkAsn term scTrue
+      --        let newconj = (cname,newasn)
+      --        let thry' = conjs__ ([newconj]++) thry
+      --        thrys <- replaceTheory'' thry' $ theories reqs
+      --       return $ changed $ theories_ thrys reqs 
+      --   | otherwise -> fail ("junk at end: "++show resttoks)
+      --  But msgs -> fail ("conjecture parse failed:\n"++unlines' msgs)
   where
     (cname,rest) = span (/= '\n') text
     body = ttail rest

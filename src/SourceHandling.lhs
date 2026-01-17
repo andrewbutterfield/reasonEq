@@ -36,6 +36,7 @@ import Assertions
 import Theories
 import REQ.Abs
 import REQ.Par (myLexer,pThry)
+import REQ.Print (printTree)
 import TestRendering
 import StdTypeSignature
 import StdSignature
@@ -73,7 +74,7 @@ loadTheory thrys text
 
 \begin{code}
 genTheory :: Theory -> String
-genTheory theory = "genTheory NYI"
+genTheory theory = printTree $ theory2thry theory
 \end{code}
 
 
@@ -114,6 +115,12 @@ dynvar2idwhen (DynVar dv)
       Nothing  ->  (jId dv,Static)
       Just (before,[])  -> (jId before,After)
       Just (before,d)   -> (jId before,During d)
+
+idwhen2dynvar :: String -> VarWhen -> DynVar
+idwhen2dynvar i Static      =  DynVar i
+idwhen2dynvar i Before      =  DynVar ('_':i)
+idwhen2dynvar i After       =  DynVar (i++['_'])
+idwhen2dynvar i (During d)  = DynVar (i++('_':d))
 \end{code}
 
 \newpage
@@ -277,11 +284,78 @@ conj2Conj knwn (DynVar v) trm scond = do
   return (v,mkAsn term sidecond)
 \end{code}
 
+\newpage
 \subsection{Theory to Thry}
 
 \begin{code}
 theory2thry :: Theory -> Thry
-theory2thry _ = undefined
+theory2thry theory 
+  = Thr (DynVar $ thName theory)
+        (map DynVar $ thDeps theory)
+        (   (known2items $ known theory)
+         ++ (y $ laws theory)
+         ++ (z $ conjs theory))
+\end{code}
+
+\subsubsection{VarTable to Items}
+
+\begin{code}
+known2items :: VarTable -> [Item]
+known2items vt
+  =    (vtable2items $ vtList vt)
+    ++ (stable2items $ stList vt) 
+    ++ (stable2items $ dtList vt) -- maps dtable into stable (Before)
+
+vtable2items vtl = map vmr2item  vtl
+stable2items stl = map lvmr2item stl
+
+vmr2item (Vbl (Identifier i _) vc vw,KnownVar typ sub)
+  = DeclVar vclass dynvar varrole
+  where
+    vclass = varclass2vclass vc
+    dynvar = idwhen2dynvar i vw
+    varrole = VMR_KV SBBL_NA $ type2typ typ
+-- KnownTerm trm
+-- KnownVar typ sub -- implemented
+-- GenericVar
+-- InstanceVar
+-- UnknownVar
+vmr2item vmr = error ("NYFI: vmr2item "++show vmr)
+
+vmr2varrole :: VarMatchRole -> VarRole
+vmr2varrole (KnownVar typ msub)
+  = VMR_KV (sbbl2subable msub) (type2typ typ)
+vmr2varrole vmr = error ("NYFI: vmr2varrole "++show vmr)
+
+sbbl2subable :: Maybe Subable -> SBBL
+sbbl2subable Nothing       =  SBBL_NA
+sbbl2subable (Just False)  =  SBBL_NS
+sbbl2subable (Just True)   =  SBBL_SB
+
+lvmr2item lvmr = error ("NYI: lvmr2item "++show lvmr)
+-- KnownVarList vl vars len
+-- KnownVarSet  vs vars siz
+-- AbstractList
+-- AbstractSet -- ipmlemented
+-- UnknownListVar
+
+-- DynamicList vis lvis expand len -- implemented
+-- DynamicSet vis lvis expand len
+-- DynamicAbsList
+-- DynamicAbsSet
+
+\end{code}
+
+\subsubsection{Laws to Items}
+
+\begin{code}
+y _ = []
+\end{code}
+
+\subsubsection{Conjectures to Items}
+
+\begin{code}
+z _ = []
 \end{code}
 
 \newpage
@@ -442,7 +516,16 @@ typ2type (TRec (DynVar dv) fs)
 
 \begin{code}
 type2typ :: Type -> Typ
-type2typ _ = undefined
+type2typ ArbType = TArb
+type2typ BottomType = TBot
+type2typ (GivenType (Identifier i _)) = TVbl $ idwhen2dynvar i Static
+type2typ (TypeVar (Identifier i _)) = TVbl $ idwhen2dynvar i Static
+type2typ (FunType td tr) = TFun (type2typ td) (type2typ tr)
+type2typ (TypeCons (Identifier i _) ts) 
+ = TProd (idwhen2dynvar i Static) (map type2typ ts)
+-- type2typ (AlgType i fs)
+--  = TRec (idwhen2dynvar i Static) (map type2typ fs)
+type2typ typ = error ("NYFI: type2typ "++show typ)
 \end{code}
 
 \subsection{SCond to SideCond}
@@ -504,6 +587,26 @@ gvar2genvar vt (LVar dyn) = LstVar $ dynvar2lstvar vt dyn
 \subsection{GenVar to DynVar}
 
 \begin{code}
-genvar2dynvar :: GenVar -> DynVar
-genvar2dynvar _ = undefined
+genvar2dynvar :: GenVar -> GVar
+genvar2dynvar (StdVar v)   =  SVar $ stdvar2dynvar  v
+genvar2dynvar (LstVar lv)  =  LVar $ lstvar2dynvar lv
+\end{code}
+
+\begin{code}
+lstvar2dynvar :: ListVar -> DynVar
+lstvar2dynvar (LVbl v [] []) = stdvar2dynvar v
+lstvar2dynvar lvar 
+  = error ("NYI cannot handle listvar 'less' lists: "++show lvar)
+\end{code}
+
+\begin{code}
+stdvar2dynvar :: Variable -> DynVar
+stdvar2dynvar (Vbl (Identifier i _) _ vw) = idwhen2dynvar i vw
+\end{code}
+
+\begin{code}
+varclass2vclass :: VarClass -> VClass
+varclass2vclass ObsV  = VarObs
+varclass2vclass ExprV = VarExp
+varclass2vclass PredV = VarPred
 \end{code}

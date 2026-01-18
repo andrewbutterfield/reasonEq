@@ -539,7 +539,16 @@ cons2trm sb (Identifier i _) [tm1,tm2]
   | i == "mod"  =  EMod   trm1 trm2
   where trm1 = term2trm tm1 ; trm2 = term2trm tm2    
 cons2trm sb (Identifier i _) ts
-  = TCons (idwhen2dynvar i Static) $ map term2trm ts
+  | i == "eqv" = balance PEqv trms
+  | otherwise  =  TCons (idwhen2dynvar i Static) trms
+  where trms =  map term2trm ts
+
+balance rel [] = ENil
+balance rel [trm]  =  trm
+balance rel [trm1,trm2] = rel trm1 trm2
+balance rel trms = rel (balance rel before) (balance rel after)
+  where 
+    (before,after) = splitAt ((length trms `div` 2)+1) trms
 
 subs2trm :: Term -> [(Variable,Term)] -> [(ListVar,ListVar)] ->  Trm
 subs2trm tm vts lvlvs

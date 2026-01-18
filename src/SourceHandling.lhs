@@ -294,7 +294,7 @@ theory2thry theory
         (map DynVar $ thDeps theory)
         (   (known2items $ known theory)
          ++ (y $ laws theory)
-         ++ (z $ conjs theory))
+         ++ (map nmdassn2Item $ conjs theory))
 \end{code}
 
 \subsubsection{VarTable to Items}
@@ -355,7 +355,11 @@ y _ = []
 \subsubsection{Conjectures to Items}
 
 \begin{code}
-z _ = []
+nmdassn2Item :: NmdAssertion -> Item
+nmdassn2Item (nm,(Assertion tm sc)) 
+  = Conj (idwhen2dynvar nm Static) 
+         (term2trm tm) 
+         (sidecond2scond sc)
 \end{code}
 
 \newpage
@@ -415,7 +419,7 @@ Miscellaneous
 --trm2term vt (PNot trm) 
 --trm2term vt ENeg trm
 --trm2term vt ENil
---trm2term vt TCons dv trms
+--trm2term vt (TCons dv trms) -- will add subable component
 \end{code}
 
 Substitution
@@ -492,6 +496,57 @@ Note the lack of error checking!!!
 \begin{code}
 term2trm :: Term -> Trm
 term2trm (Val _ (Boolean True)) = TTrue
+term2trm (Val _ (Boolean False)) = TFalse
+term2trm (Val _ (Integer i)) = EInt i
+term2trm (Var _ (Vbl (Identifier i _) vc vw)) 
+  = TmVar (idwhen2dynvar i vw)
+term2trm (Cons typ sb n ts) = cons2trm sb n ts
+-- term2trm (Bnd  typ n vs tm)
+-- term2trm (Lam  typ n vl tm)
+-- term2trm (Cls      n    tm)
+term2trm (Sub typ tm (Substn fvs lvs)) 
+  = subs2trm tm (S.toList fvs) (S.toList lvs)
+-- term2trm (Iter typ sa na si ni lvs)
+-- term2trm (VTyp typ v)
+term2trm tm = error ("NYI: term2trm "++show tm)
+
+cons2trm :: Subable -> Identifier -> [Term] -> Trm
+-- we ignore subable now but it should be added to TCons
+cons2trm sb (Identifier i _) [tm1,tm2]
+  | i == "==="  =  PEqv   trm1 trm2
+  | i == "==>"  =  PImpl  trm1 trm2
+  | i == "\\/"  =  POr    trm1 trm2
+  | i == "/\\"  =  PAnd   trm1 trm2
+  | i == "=="   =  Eql    trm1 trm2
+  | i == "!="   =  NE     trm1 trm2
+  | i == "<"    =  Lt     trm1 trm2
+  | i == "<="   =  LE     trm1 trm2
+  | i == ">"    =  Gt     trm1 trm2
+  | i == ">="   =  GE     trm1 trm2
+  | i == "++"   =  LCat   trm1 trm2
+  | i == ":"    =  LCons  trm1 trm2
+  | i == "+"    =  EAdd   trm1 trm2
+  | i == "-"    =  EMinus trm1 trm2
+  | i == "*"    =  EMul   trm1 trm2
+  | i == "div"  =  EDiv   trm1 trm2
+  | i == "mod"  =  EMod   trm1 trm2
+  where trm1 = term2trm tm1 ; trm2 = term2trm tm2    
+cons2trm sb (Identifier i _) ts
+  = TCons (idwhen2dynvar i Static) $ map term2trm ts
+
+subs2trm :: Term -> [(Variable,Term)] -> [(ListVar,ListVar)] ->  Trm
+subs2trm tm vts lvlvs
+  | null vts    =  TSubLV trm rldyn tldyn 
+  | null lvlvs  =  TSubV  trm rtdyn tvdyn
+  | otherwise   =  TSubst trm rtdyn tvdyn rldyn tldyn
+  where
+    (tv,rt)   = unzip vts
+    (tlv,rlv) = unzip lvlvs
+    trm       = term2trm tm
+    tvdyn     = map stdvar2dynvar tv
+    rtdyn     = map term2trm rt
+    rldyn     = map lstvar2dynvar rlv
+    tldyn     = map lstvar2dynvar tlv
 \end{code}
 
 \subsection{Typ to Type}

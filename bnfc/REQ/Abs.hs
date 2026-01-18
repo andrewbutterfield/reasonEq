@@ -31,7 +31,7 @@ data VarRole = KV SBBL Typ
 data VClass = VarObs | VarExp | VarPred
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data SBBL = SBBL_NA | SBBL_SB | SBBL_NS
+data SBBL = Na | SB | NS
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data LawType = LAxiom | LProof | LAssume
@@ -43,11 +43,11 @@ data Trm
     | POr Trm Trm
     | PAnd Trm Trm
     | PNot Trm
-    | EQ Trm Trm
+    | Eql Trm Trm
     | NE Trm Trm
-    | LT Trm Trm
+    | Lt Trm Trm
     | LE Trm Trm
-    | GT Trm Trm
+    | Gt Trm Trm
     | GE Trm Trm
     | LCat Trm Trm
     | LCons Trm Trm

@@ -47,9 +47,9 @@ transVClass x = case x of
 
 transSBBL :: REQ.Abs.SBBL -> Result
 transSBBL x = case x of
-  REQ.Abs.SBBL_NA -> failure x
-  REQ.Abs.SBBL_SB -> failure x
-  REQ.Abs.SBBL_NS -> failure x
+  REQ.Abs.Na -> failure x
+  REQ.Abs.SB -> failure x
+  REQ.Abs.NS -> failure x
 
 transLawType :: REQ.Abs.LawType -> Result
 transLawType x = case x of
@@ -64,11 +64,11 @@ transTrm x = case x of
   REQ.Abs.POr trm1 trm2 -> failure x
   REQ.Abs.PAnd trm1 trm2 -> failure x
   REQ.Abs.PNot trm -> failure x
-  REQ.Abs.EQ trm1 trm2 -> failure x
+  REQ.Abs.Eql trm1 trm2 -> failure x
   REQ.Abs.NE trm1 trm2 -> failure x
-  REQ.Abs.LT trm1 trm2 -> failure x
+  REQ.Abs.Lt trm1 trm2 -> failure x
   REQ.Abs.LE trm1 trm2 -> failure x
-  REQ.Abs.GT trm1 trm2 -> failure x
+  REQ.Abs.Gt trm1 trm2 -> failure x
   REQ.Abs.GE trm1 trm2 -> failure x
   REQ.Abs.LCat trm1 trm2 -> failure x
   REQ.Abs.LCons trm1 trm2 -> failure x

@@ -586,19 +586,19 @@ happyReduction_21 happy_x_1
 happyReduce_22 = happySpecReduce_1  7# happyReduction_22
 happyReduction_22 happy_x_1
 	 =  happyIn14
-		 (REQ.Abs.SBBL_NA
+		 (REQ.Abs.Na
 	)
 
 happyReduce_23 = happySpecReduce_1  7# happyReduction_23
 happyReduction_23 happy_x_1
 	 =  happyIn14
-		 (REQ.Abs.SBBL_SB
+		 (REQ.Abs.SB
 	)
 
 happyReduce_24 = happySpecReduce_1  7# happyReduction_24
 happyReduction_24 happy_x_1
 	 =  happyIn14
-		 (REQ.Abs.SBBL_NS
+		 (REQ.Abs.NS
 	)
 
 happyReduce_25 = happySpecReduce_1  8# happyReduction_25
@@ -716,7 +716,7 @@ happyReduction_39 happy_x_3
 	 =  case happyOut22 happy_x_1 of { (HappyWrap22 happy_var_1) -> 
 	case happyOut22 happy_x_3 of { (HappyWrap22 happy_var_3) -> 
 	happyIn21
-		 (REQ.Abs.EQ happy_var_1 happy_var_3
+		 (REQ.Abs.Eql happy_var_1 happy_var_3
 	)}}
 
 happyReduce_40 = happySpecReduce_3  14# happyReduction_40
@@ -736,7 +736,7 @@ happyReduction_41 happy_x_3
 	 =  case happyOut22 happy_x_1 of { (HappyWrap22 happy_var_1) -> 
 	case happyOut22 happy_x_3 of { (HappyWrap22 happy_var_3) -> 
 	happyIn21
-		 (REQ.Abs.LT happy_var_1 happy_var_3
+		 (REQ.Abs.Lt happy_var_1 happy_var_3
 	)}}
 
 happyReduce_42 = happySpecReduce_3  14# happyReduction_42
@@ -756,7 +756,7 @@ happyReduction_43 happy_x_3
 	 =  case happyOut22 happy_x_1 of { (HappyWrap22 happy_var_1) -> 
 	case happyOut22 happy_x_3 of { (HappyWrap22 happy_var_3) -> 
 	happyIn21
-		 (REQ.Abs.GT happy_var_1 happy_var_3
+		 (REQ.Abs.Gt happy_var_1 happy_var_3
 	)}}
 
 happyReduce_44 = happySpecReduce_3  14# happyReduction_44

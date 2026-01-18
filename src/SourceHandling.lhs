@@ -224,9 +224,9 @@ decl2vtentry (DeclVar vclass dvar (KV sbbl typ)) vtbl = do
   let var = Vbl id vc vw
   let t = typ2type typ
   case sbbl of
-    SBBL_NA  ->  addKnownVar var t vtbl
-    SBBL_SB  ->  addKnownConstructor var t True  vtbl
-    SBBL_NS  ->  addKnownConstructor var t False vtbl
+    Na  ->  addKnownVar var t vtbl
+    SB  ->  addKnownConstructor var t True  vtbl
+    NS  ->  addKnownConstructor var t False vtbl
 
 decl2vtentry (DeclDLVar vclass dvar dvars) vtbl = do
   let vc = vclass2varclass vclass
@@ -314,7 +314,7 @@ vmr2item (Vbl (Identifier i _) vc vw,KnownVar typ sub)
   where
     vclass = varclass2vclass vc
     dynvar = idwhen2dynvar i vw
-    varrole = KV SBBL_NA $ type2typ typ
+    varrole = KV Na $ type2typ typ
 -- KnownTerm trm
 -- KnownVar typ sub -- implemented
 -- GenericVar
@@ -328,9 +328,9 @@ vmr2varrole (KnownVar typ msub)
 vmr2varrole vmr = error ("NYFI: vmr2varrole "++show vmr)
 
 sbbl2subable :: Maybe Subable -> SBBL
-sbbl2subable Nothing       =  SBBL_NA
-sbbl2subable (Just False)  =  SBBL_NS
-sbbl2subable (Just True)   =  SBBL_SB
+sbbl2subable Nothing       =  Na
+sbbl2subable (Just False)  =  NS
+sbbl2subable (Just True)   =  SB
 
 lvmr2item lvmr = error ("NYI: lvmr2item "++show lvmr)
 -- KnownVarList vl vars len
@@ -394,11 +394,11 @@ trm2term vt (PEqv trm1 trm2) = binop2term vt (===) trm1 trm2
 trm2term vt (PImpl trm1 trm2) = binop2term vt (==>) trm1 trm2
 trm2term vt (POr trm1 trm2) = binop2term vt (\/) trm1 trm2
 trm2term vt (PAnd trm1 trm2) = binop2term vt (/\) trm1 trm2
---trm2term vt (EQ trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (Eql trm1 trm2) = binop2term vt op trm1 trm2
 --trm2term vt (NE trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (LT trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (Lt trm1 trm2) = binop2term vt op trm1 trm2
 --trm2term vt (LE trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (GT trm1 trm2) = binop2term vt op trm1 trm2
+--trm2term vt (Gt trm1 trm2) = binop2term vt op trm1 trm2
 --trm2term vt (GE trm1 trm2) = binop2term vt op trm1 trm2
 trm2term vt (LCat trm1 trm2) = binop2term vt cat trm1 trm2
 trm2term vt (LCons trm1 trm2) = binop2term vt cons trm1 trm2
@@ -561,7 +561,9 @@ vscond2VSC vt op gv (VSet gvs)
 
 \begin{code}
 sidecond2scond :: SideCond -> SCond
-sidecond2scond _ = undefined
+sidecond2scond ([],fvs)
+  | S.null fvs  =  SCnone
+  | otherwise   =  SCFresh $ VSet $ map genvar2dynvar $ S.toList fvs
 \end{code}
 
 \subsection{DynVar to GenVar}

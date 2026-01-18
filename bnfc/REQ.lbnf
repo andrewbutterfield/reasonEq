@@ -164,9 +164,9 @@ VarObs. VClass ::= "Obs" ;
 VarExp. VClass ::= "Exp" ;
 VarPred. VClass ::= "Prd" ;
 
-SBBL_NA. SBBL ::= "NA" ;
-SBBL_SB. SBBL ::= "SB" ;
-SBBL_NS. SBBL ::= "NS" ;
+Na. SBBL ::= "NA" ;
+SB. SBBL ::= "SB" ;
+NS. SBBL ::= "NS" ;
 
 LAxiom.  LawType ::= "axiom" ;
 LProof.  LawType ::= "proven" ;
@@ -197,11 +197,11 @@ POr.    Trm2 ::= Trm2 "\\/" Trm3 ;
 PAnd.   Trm3 ::= Trm3 "/\\" Trm4 ;
 PNot.   Trm3 ::= "~" Trm4 ;
 -- program predicates ?
-EQ.     Trm4 ::= Trm5 "==" Trm5 ;
+Eql.    Trm4 ::= Trm5 "==" Trm5 ;
 NE.     Trm4 ::= Trm5 "!=" Trm5 ;
-LT.     Trm4 ::= Trm5 "<" Trm5 ;
+Lt.     Trm4 ::= Trm5 "<" Trm5 ;
 LE.     Trm4 ::= Trm5 "<=" Trm5 ;
-GT.     Trm4 ::= Trm5 ">" Trm5 ;
+Gt.     Trm4 ::= Trm5 ">" Trm5 ;
 GE.     Trm4 ::= Trm5 ">=" Trm5 ;
 LCat.   Trm5 ::= Trm6  "++" Trm5 ;
 LCons.  Trm5 ::= Trm6  ":"  Trm5 ;

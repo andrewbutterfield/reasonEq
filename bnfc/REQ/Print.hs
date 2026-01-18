@@ -158,7 +158,7 @@ instance Print REQ.Abs.Item where
 
 instance Print REQ.Abs.VarRole where
   prt i = \case
-    REQ.Abs.VMR_KV sbbl typ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 typ])
+    REQ.Abs.KV sbbl typ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 typ])
 
 instance Print REQ.Abs.VClass where
   prt i = \case

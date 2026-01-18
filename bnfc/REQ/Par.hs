@@ -562,7 +562,7 @@ happyReduction_18 happy_x_3
 	 =  case happyOut14 happy_x_2 of { (HappyWrap14 happy_var_2) -> 
 	case happyOut27 happy_x_3 of { (HappyWrap27 happy_var_3) -> 
 	happyIn12
-		 (REQ.Abs.VMR_KV happy_var_2 happy_var_3
+		 (REQ.Abs.KV happy_var_2 happy_var_3
 	)}}
 
 happyReduce_19 = happySpecReduce_1  6# happyReduction_19

@@ -37,7 +37,7 @@ transItem x = case x of
 
 transVarRole :: REQ.Abs.VarRole -> Result
 transVarRole x = case x of
-  REQ.Abs.VMR_KV sbbl typ -> failure x
+  REQ.Abs.KV sbbl typ -> failure x
 
 transVClass :: REQ.Abs.VClass -> Result
 transVClass x = case x of

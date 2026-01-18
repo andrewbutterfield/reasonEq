@@ -15,6 +15,9 @@ data Thry = Thr DynVar [DynVar] [Item]
 
 data Item
     = DefObs [DynVar]
+    | DefExpr [DynVar]
+    | DefPred [DynVar]
+    | DefStatic [DynVar]
     | DeclVar VClass DynVar VarRole
     | DeclDLVar VClass DynVar [DynVar]
     | DeclASet VClass DynVar

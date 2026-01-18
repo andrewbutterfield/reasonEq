@@ -128,7 +128,7 @@ Item
   | 'Law' LawType DynVar '.' Trm '.' SCond { REQ.Abs.Law $2 $3 $5 $7 }
 
 VarRole :: { REQ.Abs.VarRole }
-VarRole : 'var' SBBL Typ { REQ.Abs.VMR_KV $2 $3 }
+VarRole : 'var' SBBL Typ { REQ.Abs.KV $2 $3 }
 
 VClass :: { REQ.Abs.VClass }
 VClass

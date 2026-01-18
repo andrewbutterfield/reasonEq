@@ -25,7 +25,7 @@ data Item
     | Law LawType DynVar Trm SCond
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data VarRole = VMR_KV SBBL Typ
+data VarRole = KV SBBL Typ
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data VClass = VarObs | VarExp | VarPred

@@ -158,7 +158,7 @@ DeclASet.  Item ::= "DclASet" VClass DynVar "."               ;  -- DAS
 Conj.      Item ::= "Conjecture" DynVar "." Trm "." SCond  ;
 Law.       Item ::= "Law" LawType DynVar "." Trm "." SCond  ;
 
-VMR_KV. VarRole ::= "var" SBBL Typ ;
+KV. VarRole ::= "var" SBBL Typ ;
 
 VarObs. VClass ::= "Obs" ;
 VarExp. VClass ::= "Exp" ;

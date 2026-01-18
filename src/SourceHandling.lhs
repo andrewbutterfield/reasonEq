@@ -218,7 +218,7 @@ decls2vartable (item:items) vtbl = do
 
 decl2vtentry :: MonadFail mf => Item -> VarTable -> mf VarTable
 
-decl2vtentry (DeclVar vclass dvar (VMR_KV sbbl typ)) vtbl = do
+decl2vtentry (DeclVar vclass dvar (KV sbbl typ)) vtbl = do
   let vc = vclass2varclass vclass
   let (id,vw) = dynvar2idwhen dvar
   let var = Vbl id vc vw
@@ -314,7 +314,7 @@ vmr2item (Vbl (Identifier i _) vc vw,KnownVar typ sub)
   where
     vclass = varclass2vclass vc
     dynvar = idwhen2dynvar i vw
-    varrole = VMR_KV SBBL_NA $ type2typ typ
+    varrole = KV SBBL_NA $ type2typ typ
 -- KnownTerm trm
 -- KnownVar typ sub -- implemented
 -- GenericVar
@@ -324,7 +324,7 @@ vmr2item vmr = error ("NYFI: vmr2item "++show vmr)
 
 vmr2varrole :: VarMatchRole -> VarRole
 vmr2varrole (KnownVar typ msub)
-  = VMR_KV (sbbl2subable msub) (type2typ typ)
+  = KV (sbbl2subable msub) (type2typ typ)
 vmr2varrole vmr = error ("NYFI: vmr2varrole "++show vmr)
 
 sbbl2subable :: Maybe Subable -> SBBL

@@ -268,7 +268,7 @@ ass2asns knwn swal sjnoc (Conj dv tm sc : rest) = do
   cnj <- conj2Conj knwn dv tm sc
   ass2asns knwn swal (cnj:sjnoc) rest
 
--- we only output axioms!
+-- we only keep axioms in .utp files !
 law2Law :: MonadFail mf 
         => VarTable -> LawType -> DynVar -> Trm -> SCond -> mf [Law]
 law2Law knwn LAxiom dv tm sc = do
@@ -293,7 +293,7 @@ theory2thry theory
   = Thr (DynVar $ thName theory)
         (map DynVar $ thDeps theory)
         (   (known2items $ known theory)
-         ++ (y $ laws theory)
+         ++ (concat $ map law2Item $ laws theory)
          ++ (map nmdassn2Item $ conjs theory))
 \end{code}
 
@@ -349,7 +349,14 @@ lvmr2item lvmr = error ("NYI: lvmr2item "++show lvmr)
 \subsubsection{Laws to Items}
 
 \begin{code}
-y _ = []
+law2Item :: Law -> [Item]
+-- we only put axioms into .utp files
+law2Item ((nm,(Assertion tm sc)),Axiom) 
+  = [ Law LAxiom
+          (idwhen2dynvar nm Static) 
+          (term2trm tm) 
+          (sidecond2scond sc) ]
+prov2lawtype _ = []
 \end{code}
 
 \subsubsection{Conjectures to Items}
@@ -513,21 +520,21 @@ term2trm tm = error ("NYI: term2trm "++show tm)
 cons2trm :: Subable -> Identifier -> [Term] -> Trm
 -- we ignore subable now but it should be added to TCons
 cons2trm sb (Identifier i _) [tm1,tm2]
-  | i == "==="  =  PEqv   trm1 trm2
-  | i == "==>"  =  PImpl  trm1 trm2
-  | i == "\\/"  =  POr    trm1 trm2
-  | i == "/\\"  =  PAnd   trm1 trm2
-  | i == "=="   =  Eql    trm1 trm2
-  | i == "!="   =  NE     trm1 trm2
-  | i == "<"    =  Lt     trm1 trm2
-  | i == "<="   =  LE     trm1 trm2
-  | i == ">"    =  Gt     trm1 trm2
-  | i == ">="   =  GE     trm1 trm2
-  | i == "++"   =  LCat   trm1 trm2
-  | i == ":"    =  LCons  trm1 trm2
-  | i == "+"    =  EAdd   trm1 trm2
-  | i == "-"    =  EMinus trm1 trm2
-  | i == "*"    =  EMul   trm1 trm2
+  | i == "eqv"  =  PEqv   trm1 trm2
+  | i == "imp"  =  PImpl  trm1 trm2
+  | i == "or"   =  POr    trm1 trm2
+  | i == "and"  =  PAnd   trm1 trm2
+  | i == "eq"   =  Eql    trm1 trm2
+  | i == "ne"   =  NE     trm1 trm2
+  | i == "lt"   =  Lt     trm1 trm2
+  | i == "le"   =  LE     trm1 trm2
+  | i == "gt"   =  Gt     trm1 trm2
+  | i == "ge"   =  GE     trm1 trm2
+  | i == "cat"  =  LCat   trm1 trm2
+  | i == "cons" =  LCons  trm1 trm2
+  | i == "add"  =  EAdd   trm1 trm2
+  | i == "sub"  =  EMinus trm1 trm2
+  | i == "mul"  =  EMul   trm1 trm2
   | i == "div"  =  EDiv   trm1 trm2
   | i == "mod"  =  EMod   trm1 trm2
   where trm1 = term2trm tm1 ; trm2 = term2trm tm2    
@@ -619,6 +626,31 @@ sidecond2scond :: SideCond -> SCond
 sidecond2scond ([],fvs)
   | S.null fvs  =  SCnone
   | otherwise   =  SCFresh $ VSet $ map genvar2dynvar $ S.toList fvs
+sidecond2scond (vscs,fvs)
+  | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond vscs
+  | otherwise   =  SCFull (concat $ map varsidecond2vscond vscs)
+                          (VSet $ map genvar2dynvar $ S.toList fvs)
+
+varsidecond2vscond :: VarSideConds -> [VSCond]
+varsidecond2vscond (VSC gv nvsD nvsC nvsCd)
+  =     mkDisj   gv nvsD
+     ++ mkCovby  gv nvsC 
+     ++ mkDynCon gv nvsCd
+
+mkDisj _  NA        =  []
+mkDisj gv (The vsD) 
+  =  [VSCDisj (genvar2dynvar gv) (varset2vset vsD) ]
+
+mkCovby _ NA = []
+mkCovby gv (The vsC)   
+  =  [VSCCovBy (genvar2dynvar gv) (varset2vset vsC) ]
+
+mkDynCon _ NA = []
+mkDynCon gv (The vsCd)  
+  =  [VSCDisj (genvar2dynvar gv) (varset2vset vsCd) ]
+
+varset2vset :: VarSet -> VrSet
+varset2vset vs = VSet $ map genvar2dynvar $ S.toList vs
 \end{code}
 
 \subsection{DynVar to GenVar}

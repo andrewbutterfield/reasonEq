@@ -158,7 +158,7 @@ instance Print REQ.Abs.Item where
 
 instance Print REQ.Abs.VarRole where
   prt i = \case
-    REQ.Abs.VMR_KV sbbl typ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 typ])
+    REQ.Abs.KV sbbl typ -> prPrec i 0 (concatD [doc (showString "var"), prt 0 sbbl, prt 0 typ])
 
 instance Print REQ.Abs.VClass where
   prt i = \case
@@ -168,9 +168,9 @@ instance Print REQ.Abs.VClass where
 
 instance Print REQ.Abs.SBBL where
   prt i = \case
-    REQ.Abs.SBBL_NA -> prPrec i 0 (concatD [doc (showString "NA")])
-    REQ.Abs.SBBL_SB -> prPrec i 0 (concatD [doc (showString "SB")])
-    REQ.Abs.SBBL_NS -> prPrec i 0 (concatD [doc (showString "NS")])
+    REQ.Abs.Na -> prPrec i 0 (concatD [doc (showString "NA")])
+    REQ.Abs.SB -> prPrec i 0 (concatD [doc (showString "SB")])
+    REQ.Abs.NS -> prPrec i 0 (concatD [doc (showString "NS")])
 
 instance Print REQ.Abs.LawType where
   prt i = \case
@@ -189,11 +189,11 @@ instance Print REQ.Abs.Trm where
     REQ.Abs.POr trm1 trm2 -> prPrec i 2 (concatD [prt 2 trm1, doc (showString "\\/"), prt 3 trm2])
     REQ.Abs.PAnd trm1 trm2 -> prPrec i 3 (concatD [prt 3 trm1, doc (showString "/\\"), prt 4 trm2])
     REQ.Abs.PNot trm -> prPrec i 3 (concatD [doc (showString "~"), prt 4 trm])
-    REQ.Abs.EQ trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "=="), prt 5 trm2])
+    REQ.Abs.Eql trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "=="), prt 5 trm2])
     REQ.Abs.NE trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "!="), prt 5 trm2])
-    REQ.Abs.LT trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "<"), prt 5 trm2])
+    REQ.Abs.Lt trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "<"), prt 5 trm2])
     REQ.Abs.LE trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString "<="), prt 5 trm2])
-    REQ.Abs.GT trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString ">"), prt 5 trm2])
+    REQ.Abs.Gt trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString ">"), prt 5 trm2])
     REQ.Abs.GE trm1 trm2 -> prPrec i 4 (concatD [prt 5 trm1, doc (showString ">="), prt 5 trm2])
     REQ.Abs.LCat trm1 trm2 -> prPrec i 5 (concatD [prt 6 trm1, doc (showString "++"), prt 5 trm2])
     REQ.Abs.LCons trm1 trm2 -> prPrec i 5 (concatD [prt 6 trm1, doc (showString ":"), prt 5 trm2])

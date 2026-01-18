@@ -2,6 +2,10 @@
 
 ## URGENT or NEXT
 
+Issue with `true_true` as lawname in `EQV.utp`.
+
+Rebuild grammar and try again....
+
 
 ### Load/Generate
 

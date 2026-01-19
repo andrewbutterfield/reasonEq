@@ -1,0 +1,15 @@
+Theory Not . EQV . 
+
+DclVar Obs not . var NA B -> B . 
+
+Law axiom false_def . False === not (True) . none 
+Law axiom not_eqv_distr . not (P === Q) === (not (P) === Q) . none 
+
+Conjecture not_eqv_swap . not (P) === Q === (P === not (Q)) . none 
+Conjecture not_invol . not (not (P)) === P . none 
+Conjecture false_neg . not (False) === True . none 
+Conjecture not_def . not (P) === (P === False) . none 
+Conjecture false_subst . SubL False [. e / x .] === False . none 
+Conjecture not_subst . 
+  SubL not (P) [. e / x .] === not (SubL P [. e / x .]) 
+. none

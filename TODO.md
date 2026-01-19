@@ -5,6 +5,9 @@
 
 ### Load/Generate
 
+Need to add substitutability declarations for names like eqv, not, or, and, etc.
+
+No declaration means it is considered not-substitutable.
 
 We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax. **IN PROGRESS - can load and generate `EQV.utp`**
 

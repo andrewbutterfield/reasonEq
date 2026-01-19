@@ -426,7 +426,11 @@ Miscellaneous
 --trm2term vt (PNot trm) 
 --trm2term vt ENeg trm
 --trm2term vt ENil
---trm2term vt (TCons dv trms) -- will add subable component
+trm2term vt (TCons dv trms) = do
+  let  (id,vw) = dynvar2idwhen dv
+  let sbbl = True -- should lookup vt ! when Subable decl. added in
+  terms <- sequence $ map (trm2term vt) trms 
+  return $ Cons ArbType sbbl id terms
 \end{code}
 
 Substitution

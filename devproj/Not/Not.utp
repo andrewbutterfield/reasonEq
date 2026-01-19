@@ -1,6 +1,6 @@
 Theory Not . EQV . 
 
-DclVar Obs not . var NA B -> B . 
+DclVar Obs not . var SB B -> B . 
 
 Law axiom false_def . False === not (True) . none 
 Law axiom not_eqv_distr . not (P === Q) === (not (P) === Q) . none 

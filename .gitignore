@@ -4,6 +4,7 @@
 *.aux
 *.log
 *.bak
+*.*.bak
 MAIN.pdf
 TUT.pdf
 *.gz

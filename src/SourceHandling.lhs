@@ -309,12 +309,10 @@ known2items vt
 vtable2items vtl = map vmr2item  vtl
 stable2items stl = map lvmr2item stl
 
-vmr2item (Vbl (Identifier i _) vc vw,KnownVar typ sub)
-  = DeclVar vclass dynvar varrole
-  where
-    vclass = varclass2vclass vc
-    dynvar = idwhen2dynvar i vw
-    varrole = KV Na $ type2typ typ
+vmr2item (Vbl (Identifier i _) vc vw,vmr)
+  = DeclVar (varclass2vclass vc)
+            (idwhen2dynvar i vw)
+            (vmr2varrole vmr)
 -- KnownTerm trm
 -- KnownVar typ sub -- implemented
 -- GenericVar
@@ -324,13 +322,13 @@ vmr2item vmr = error ("NYFI: vmr2item "++show vmr)
 
 vmr2varrole :: VarMatchRole -> VarRole
 vmr2varrole (KnownVar typ msub)
-  = KV (sbbl2subable msub) (type2typ typ)
+  = KV (msubable2sbbl msub) (type2typ typ)
 vmr2varrole vmr = error ("NYFI: vmr2varrole "++show vmr)
 
-sbbl2subable :: Maybe Subable -> SBBL
-sbbl2subable Nothing       =  Na
-sbbl2subable (Just False)  =  NS
-sbbl2subable (Just True)   =  SB
+msubable2sbbl :: Maybe Subable -> SBBL
+msubable2sbbl Nothing       =  Na
+msubable2sbbl (Just False)  =  NS
+msubable2sbbl (Just True)   =  SB
 
 lvmr2item lvmr = error ("NYI: lvmr2item "++show lvmr)
 -- KnownVarList vl vars len
@@ -428,9 +426,9 @@ Miscellaneous
 --trm2term vt ENil
 trm2term vt (TCons dv trms) = do
   let  (id,vw) = dynvar2idwhen dv
-  let sbbl = True -- should lookup vt ! when Subable decl. added in
+  let sbbl = lkpSubable (Vbl id ObsV Static) vt
   terms <- sequence $ map (trm2term vt) trms 
-  return $ Cons ArbType sbbl id terms
+  return $ Cons ArbType (sbbl==SB) id terms
 \end{code}
 
 Substitution
@@ -484,6 +482,16 @@ binop2term vt op trm1 trm2 = do
   term1 <- trm2term vt trm1
   term2 <- trm2term vt trm2
   return (term1 `op` term2)
+\end{code}
+
+\subsubsection{Determine Substitutability}
+
+\begin{code}
+lkpSubable :: Variable -> VarTable -> SBBL
+lkpSubable v vt
+  = case lookupVarTable vt v of
+      (KnownVar _ subable)  ->  msubable2sbbl subable
+      _                     ->  Na
 \end{code}
 
 \subsubsection{Substitutions}

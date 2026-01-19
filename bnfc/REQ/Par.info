@@ -67,8 +67,8 @@ Grammar
 	Trm7 -> Trm8                                       (56)
 	Trm8 -> Integer                                    (57)
 	Trm8 -> DynVar                                     (58)
-	Trm8 -> 'true'                                     (59)
-	Trm8 -> 'false'                                    (60)
+	Trm8 -> 'True'                                     (59)
+	Trm8 -> 'False'                                    (60)
 	Trm8 -> 'nil'                                      (61)
 	Trm8 -> DynVar '(' ListTrm ')'                     (62)
 	Trm8 -> 'SubV' Trm '[.' ListTrm '/' ListDynVar '.]'   (63)
@@ -143,40 +143,40 @@ Terminals
 	'DclVar'       { PT _ (TS _ 28) }
 	'Exp'          { PT _ (TS _ 29) }
 	'ExprVars'     { PT _ (TS _ 30) }
-	'Law'          { PT _ (TS _ 31) }
-	'NA'           { PT _ (TS _ 32) }
-	'NS'           { PT _ (TS _ 33) }
-	'Obs'          { PT _ (TS _ 34) }
-	'ObsVars'      { PT _ (TS _ 35) }
-	'Prd'          { PT _ (TS _ 36) }
-	'PredVars'     { PT _ (TS _ 37) }
-	'SB'           { PT _ (TS _ 38) }
-	'SC'           { PT _ (TS _ 39) }
-	'StaticVars'   { PT _ (TS _ 40) }
-	'Sub'          { PT _ (TS _ 41) }
-	'SubL'         { PT _ (TS _ 42) }
-	'SubV'         { PT _ (TS _ 43) }
-	'Theory'       { PT _ (TS _ 44) }
-	'VSC'          { PT _ (TS _ 45) }
-	'[.'           { PT _ (TS _ 46) }
-	'\\/'          { PT _ (TS _ 47) }
-	'assumed'      { PT _ (TS _ 48) }
-	'axiom'        { PT _ (TS _ 49) }
-	'covby'        { PT _ (TS _ 50) }
-	'dcovby'       { PT _ (TS _ 51) }
-	'disj'         { PT _ (TS _ 52) }
-	'div'          { PT _ (TS _ 53) }
-	'false'        { PT _ (TS _ 54) }
-	'fresh'        { PT _ (TS _ 55) }
-	'lst'          { PT _ (TS _ 56) }
-	'mod'          { PT _ (TS _ 57) }
-	'neg'          { PT _ (TS _ 58) }
-	'nil'          { PT _ (TS _ 59) }
-	'none'         { PT _ (TS _ 60) }
-	'proven'       { PT _ (TS _ 61) }
-	'std'          { PT _ (TS _ 62) }
-	'tbot'         { PT _ (TS _ 63) }
-	'true'         { PT _ (TS _ 64) }
+	'False'        { PT _ (TS _ 31) }
+	'Law'          { PT _ (TS _ 32) }
+	'NA'           { PT _ (TS _ 33) }
+	'NS'           { PT _ (TS _ 34) }
+	'Obs'          { PT _ (TS _ 35) }
+	'ObsVars'      { PT _ (TS _ 36) }
+	'Prd'          { PT _ (TS _ 37) }
+	'PredVars'     { PT _ (TS _ 38) }
+	'SB'           { PT _ (TS _ 39) }
+	'SC'           { PT _ (TS _ 40) }
+	'StaticVars'   { PT _ (TS _ 41) }
+	'Sub'          { PT _ (TS _ 42) }
+	'SubL'         { PT _ (TS _ 43) }
+	'SubV'         { PT _ (TS _ 44) }
+	'Theory'       { PT _ (TS _ 45) }
+	'True'         { PT _ (TS _ 46) }
+	'VSC'          { PT _ (TS _ 47) }
+	'[.'           { PT _ (TS _ 48) }
+	'\\/'          { PT _ (TS _ 49) }
+	'assumed'      { PT _ (TS _ 50) }
+	'axiom'        { PT _ (TS _ 51) }
+	'covby'        { PT _ (TS _ 52) }
+	'dcovby'       { PT _ (TS _ 53) }
+	'disj'         { PT _ (TS _ 54) }
+	'div'          { PT _ (TS _ 55) }
+	'fresh'        { PT _ (TS _ 56) }
+	'lst'          { PT _ (TS _ 57) }
+	'mod'          { PT _ (TS _ 58) }
+	'neg'          { PT _ (TS _ 59) }
+	'nil'          { PT _ (TS _ 60) }
+	'none'         { PT _ (TS _ 61) }
+	'proven'       { PT _ (TS _ 62) }
+	'std'          { PT _ (TS _ 63) }
+	'tbot'         { PT _ (TS _ 64) }
 	'ttop'         { PT _ (TS _ 65) }
 	'var'          { PT _ (TS _ 66) }
 	'|'            { PT _ (TS _ 67) }
@@ -240,13 +240,13 @@ State 1
 	%start_pTrm -> . Trm                                (rule 1)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -797,13 +797,13 @@ State 31
 	Trm8 -> '(' . Trm ')'                               (rule 66)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -822,91 +822,7 @@ State 31
 
 State 32
 
-	Trm8 -> 'Sub' . Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 65)
-
-	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
-	'~'            shift, and enter state 39
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 19
-
-	Integer        goto state 20
-	DynVar         goto state 21
-	Trm            goto state 47
-	Trm1           goto state 23
-	Trm2           goto state 24
-	Trm3           goto state 25
-	Trm4           goto state 26
-	Trm5           goto state 27
-	Trm6           goto state 28
-	Trm7           goto state 29
-	Trm8           goto state 30
-
-State 33
-
-	Trm8 -> 'SubL' . Trm '[.' ListDynVar '/' ListDynVar '.]'    (rule 64)
-
-	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
-	'~'            shift, and enter state 39
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 19
-
-	Integer        goto state 20
-	DynVar         goto state 21
-	Trm            goto state 46
-	Trm1           goto state 23
-	Trm2           goto state 24
-	Trm3           goto state 25
-	Trm4           goto state 26
-	Trm5           goto state 27
-	Trm6           goto state 28
-	Trm7           goto state 29
-	Trm8           goto state 30
-
-State 34
-
-	Trm8 -> 'SubV' . Trm '[.' ListTrm '/' ListDynVar '.]'    (rule 63)
-
-	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
-	'~'            shift, and enter state 39
-	L_integ        shift, and enter state 5
-	L_DynVar       shift, and enter state 19
-
-	Integer        goto state 20
-	DynVar         goto state 21
-	Trm            goto state 45
-	Trm1           goto state 23
-	Trm2           goto state 24
-	Trm3           goto state 25
-	Trm4           goto state 26
-	Trm5           goto state 27
-	Trm6           goto state 28
-	Trm7           goto state 29
-	Trm8           goto state 30
-
-State 35
-
-	Trm8 -> 'false' .                                   (rule 60)
+	Trm8 -> 'False' .                                   (rule 60)
 
 	'!='           reduce using rule 60
 	')'            reduce using rule 60
@@ -933,17 +849,130 @@ State 35
 	%eof           reduce using rule 60
 
 
+State 33
+
+	Trm8 -> 'Sub' . Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]'    (rule 65)
+
+	'('            shift, and enter state 31
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
+	'~'            shift, and enter state 39
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 19
+
+	Integer        goto state 20
+	DynVar         goto state 21
+	Trm            goto state 47
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+
+State 34
+
+	Trm8 -> 'SubL' . Trm '[.' ListDynVar '/' ListDynVar '.]'    (rule 64)
+
+	'('            shift, and enter state 31
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
+	'~'            shift, and enter state 39
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 19
+
+	Integer        goto state 20
+	DynVar         goto state 21
+	Trm            goto state 46
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+
+State 35
+
+	Trm8 -> 'SubV' . Trm '[.' ListTrm '/' ListDynVar '.]'    (rule 63)
+
+	'('            shift, and enter state 31
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
+	'~'            shift, and enter state 39
+	L_integ        shift, and enter state 5
+	L_DynVar       shift, and enter state 19
+
+	Integer        goto state 20
+	DynVar         goto state 21
+	Trm            goto state 45
+	Trm1           goto state 23
+	Trm2           goto state 24
+	Trm3           goto state 25
+	Trm4           goto state 26
+	Trm5           goto state 27
+	Trm6           goto state 28
+	Trm7           goto state 29
+	Trm8           goto state 30
+
 State 36
+
+	Trm8 -> 'True' .                                    (rule 59)
+
+	'!='           reduce using rule 59
+	')'            reduce using rule 59
+	'*'            reduce using rule 59
+	'+'            reduce using rule 59
+	'++'           reduce using rule 59
+	','            reduce using rule 59
+	'-'            reduce using rule 59
+	'.'            reduce using rule 59
+	'/'            reduce using rule 59
+	'/\\'          reduce using rule 59
+	':'            reduce using rule 59
+	'<'            reduce using rule 59
+	'<='           reduce using rule 59
+	'=='           reduce using rule 59
+	'==='          reduce using rule 59
+	'==>'          reduce using rule 59
+	'>'            reduce using rule 59
+	'>='           reduce using rule 59
+	'[.'           reduce using rule 59
+	'\\/'          reduce using rule 59
+	'div'          reduce using rule 59
+	'mod'          reduce using rule 59
+	%eof           reduce using rule 59
+
+
+State 37
 
 	Trm7 -> 'neg' . Trm8                                (rule 55)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -951,7 +980,7 @@ State 36
 	DynVar         goto state 21
 	Trm8           goto state 44
 
-State 37
+State 38
 
 	Trm8 -> 'nil' .                                     (rule 61)
 
@@ -980,47 +1009,18 @@ State 37
 	%eof           reduce using rule 61
 
 
-State 38
-
-	Trm8 -> 'true' .                                    (rule 59)
-
-	'!='           reduce using rule 59
-	')'            reduce using rule 59
-	'*'            reduce using rule 59
-	'+'            reduce using rule 59
-	'++'           reduce using rule 59
-	','            reduce using rule 59
-	'-'            reduce using rule 59
-	'.'            reduce using rule 59
-	'/'            reduce using rule 59
-	'/\\'          reduce using rule 59
-	':'            reduce using rule 59
-	'<'            reduce using rule 59
-	'<='           reduce using rule 59
-	'=='           reduce using rule 59
-	'==='          reduce using rule 59
-	'==>'          reduce using rule 59
-	'>'            reduce using rule 59
-	'>='           reduce using rule 59
-	'[.'           reduce using rule 59
-	'\\/'          reduce using rule 59
-	'div'          reduce using rule 59
-	'mod'          reduce using rule 59
-	%eof           reduce using rule 59
-
-
 State 39
 
 	Trm3 -> '~' . Trm4                                  (rule 37)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1140,12 +1140,12 @@ State 49
 	Trm7 -> Trm7 '*' . Trm8                             (rule 52)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1158,12 +1158,12 @@ State 50
 	Trm7 -> Trm7 'div' . Trm8                           (rule 53)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1176,12 +1176,12 @@ State 51
 	Trm7 -> Trm7 'mod' . Trm8                           (rule 54)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1194,13 +1194,13 @@ State 52
 	Trm6 -> Trm6 '+' . Trm7                             (rule 49)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1214,13 +1214,13 @@ State 53
 	Trm5 -> Trm6 '++' . Trm5                            (rule 46)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1236,13 +1236,13 @@ State 54
 	Trm6 -> Trm6 '-' . Trm7                             (rule 50)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1256,13 +1256,13 @@ State 55
 	Trm5 -> Trm6 ':' . Trm5                             (rule 47)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1278,13 +1278,13 @@ State 56
 	Trm4 -> Trm5 '!=' . Trm5                            (rule 40)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1300,13 +1300,13 @@ State 57
 	Trm4 -> Trm5 '<' . Trm5                             (rule 41)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1322,13 +1322,13 @@ State 58
 	Trm4 -> Trm5 '<=' . Trm5                            (rule 42)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1344,13 +1344,13 @@ State 59
 	Trm4 -> Trm5 '==' . Trm5                            (rule 39)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1366,13 +1366,13 @@ State 60
 	Trm4 -> Trm5 '>' . Trm5                             (rule 43)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1388,13 +1388,13 @@ State 61
 	Trm4 -> Trm5 '>=' . Trm5                            (rule 44)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1410,13 +1410,13 @@ State 62
 	Trm3 -> Trm3 '/\\' . Trm4                           (rule 36)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
 
@@ -1433,13 +1433,13 @@ State 63
 	Trm1 -> Trm2 '==>' . Trm1                           (rule 32)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -1460,13 +1460,13 @@ State 64
 	Trm2 -> Trm2 '\\/' . Trm3                           (rule 34)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -1485,13 +1485,13 @@ State 65
 	Trm -> Trm '===' . Trm1                             (rule 30)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -1513,13 +1513,13 @@ State 66
 
 	'('            shift, and enter state 31
 	')'            reduce using rule 67
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -2304,13 +2304,13 @@ State 118
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 67
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -2344,13 +2344,13 @@ State 120
 
 	'('            shift, and enter state 31
 	'/'            reduce using rule 67
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -2455,13 +2455,13 @@ State 128
 	'('            shift, and enter state 31
 	')'            reduce using rule 67
 	'/'            reduce using rule 67
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -2962,13 +2962,13 @@ State 178
 	Item -> 'Conjecture' DynVar '.' . Trm '.' SCond     (rule 16)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19
@@ -3099,13 +3099,13 @@ State 189
 	Item -> 'Law' LawType DynVar '.' . Trm '.' SCond    (rule 17)
 
 	'('            shift, and enter state 31
-	'Sub'          shift, and enter state 32
-	'SubL'         shift, and enter state 33
-	'SubV'         shift, and enter state 34
-	'false'        shift, and enter state 35
-	'neg'          shift, and enter state 36
-	'nil'          shift, and enter state 37
-	'true'         shift, and enter state 38
+	'False'        shift, and enter state 32
+	'Sub'          shift, and enter state 33
+	'SubL'         shift, and enter state 34
+	'SubV'         shift, and enter state 35
+	'True'         shift, and enter state 36
+	'neg'          shift, and enter state 37
+	'nil'          shift, and enter state 38
 	'~'            shift, and enter state 39
 	L_integ        shift, and enter state 5
 	L_DynVar       shift, and enter state 19

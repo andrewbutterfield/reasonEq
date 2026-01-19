@@ -2,15 +2,13 @@
 
 ## URGENT or NEXT
 
-Issue with `true_true` as lawname in `EQV.utp`.
-
-Rebuild grammar and try again....
-
 
 ### Load/Generate
 
 
-We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax. **IN PROOGRESS - can load EQV.thr**
+We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax. **IN PROGRESS - can load and generate `EQV.utp`**
+
+Moving on to `Not`.
 
 ### Matching Improvement
 

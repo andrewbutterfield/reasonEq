@@ -193,7 +193,7 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "ObsVars" 35
+  b "Obs" 35
     (b "<" 18
        (b "-" 9
           (b "*" 5
@@ -206,23 +206,24 @@ resWords =
           (b ">" 23
              (b "===" 21 (b "==" 20 (b "<=" 19 N N) N) (b "==>" 22 N N))
              (b "Conjecture" 25 (b ">=" 24 N N) (b "DclASet" 26 N N)))
-          (b "Law" 31
+          (b "False" 31
              (b "Exp" 29 (b "DclVar" 28 N N) (b "ExprVars" 30 N N))
-             (b "NS" 33 (b "NA" 32 N N) (b "Obs" 34 N N)))))
-    (b "disj" 52
-       (b "Theory" 44
-          (b "StaticVars" 40
-             (b "SB" 38 (b "PredVars" 37 (b "Prd" 36 N N) N) (b "SC" 39 N N))
-             (b "SubL" 42 (b "Sub" 41 N N) (b "SubV" 43 N N)))
-          (b "assumed" 48
-             (b "[." 46 (b "VSC" 45 N N) (b "\\/" 47 N N))
-             (b "covby" 50 (b "axiom" 49 N N) (b "dcovby" 51 N N))))
-       (b "proven" 61
-          (b "mod" 57
-             (b "fresh" 55 (b "false" 54 (b "div" 53 N N) N) (b "lst" 56 N N))
-             (b "nil" 59 (b "neg" 58 N N) (b "none" 60 N N)))
+             (b "NA" 33 (b "Law" 32 N N) (b "NS" 34 N N)))))
+    (b "covby" 52
+       (b "SubV" 44
+          (b "SC" 40
+             (b "PredVars" 38
+                (b "Prd" 37 (b "ObsVars" 36 N N) N) (b "SB" 39 N N))
+             (b "Sub" 42 (b "StaticVars" 41 N N) (b "SubL" 43 N N)))
+          (b "[." 48
+             (b "True" 46 (b "Theory" 45 N N) (b "VSC" 47 N N))
+             (b "assumed" 50 (b "\\/" 49 N N) (b "axiom" 51 N N))))
+       (b "none" 61
+          (b "lst" 57
+             (b "div" 55 (b "disj" 54 (b "dcovby" 53 N N) N) (b "fresh" 56 N N))
+             (b "neg" 59 (b "mod" 58 N N) (b "nil" 60 N N)))
           (b "ttop" 65
-             (b "tbot" 63 (b "std" 62 N N) (b "true" 64 N N))
+             (b "std" 63 (b "proven" 62 N N) (b "tbot" 64 N N))
              (b "|" 67 (b "var" 66 N N) (b "~" 68 N N)))))
   where
   b s n = B bs (TS bs n)

@@ -1,1 +1,19 @@
-Theory EQV . . DclVar Obs eqv . var NA B -> B -> B . Law axiom true . true . none Law axiom eqv_refl . P === P . none Law axiom eqv_assoc . P === Q === R === (P === (Q === R)) . none Law axiom eqv_symm . P === Q === Q === P . none Law axiom id_subst . SubL P [. x / x .] === P . none Law axiom non_subst . SubL P [. e / x .] === P . VSC std P disj lst x . Conjecture eqv_id . true === Q === Q . none Conjecture true_subst . SubL true [. e / x .] === true . none Conjecture eqv_subst . SubL P === Q [. e / x .] === (SubL P [. e / x .] === SubL Q [. e / x .]) . none
+Theory EQV . . 
+
+DclVar Obs eqv . var NA B -> B -> B . 
+
+Law axiom true . True . none 
+Law axiom eqv_refl . P === P . none 
+Law axiom eqv_assoc . P === Q === R === (P === (Q === R)) . none 
+Law axiom eqv_symm . P === Q === Q === P . none 
+Law axiom id_subst . SubL P [. x / x .] === P . none 
+Law axiom non_subst . SubL P [. e / x .] === P 
+. VSC std P disj lst x . 
+
+Conjecture eqv_id . True === Q === Q . none 
+Conjecture true_subst . SubL True [. e / x .] === True . none 
+Conjecture eqv_subst . 
+  SubL P === Q [. e / x .] 
+  === 
+  (SubL P [. e / x .] === SubL Q [. e / x .]) 
+  . none

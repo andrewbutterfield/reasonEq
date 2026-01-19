@@ -138,7 +138,7 @@ VClass
 
 SBBL :: { REQ.Abs.SBBL }
 SBBL
-  : 'NA' { REQ.Abs.NA } | 'SB' { REQ.Abs.SB } | 'NS' { REQ.Abs.NS }
+  : 'NA' { REQ.Abs.Na } | 'SB' { REQ.Abs.SB } | 'NS' { REQ.Abs.NS }
 
 LawType :: { REQ.Abs.LawType }
 LawType
@@ -166,11 +166,11 @@ Trm3
 
 Trm4 :: { REQ.Abs.Trm }
 Trm4
-  : Trm5 '==' Trm5 { REQ.Abs.EQ $1 $3 }
+  : Trm5 '==' Trm5 { REQ.Abs.Eql $1 $3 }
   | Trm5 '!=' Trm5 { REQ.Abs.NE $1 $3 }
-  | Trm5 '<' Trm5 { REQ.Abs.LT $1 $3 }
+  | Trm5 '<' Trm5 { REQ.Abs.Lt $1 $3 }
   | Trm5 '<=' Trm5 { REQ.Abs.LE $1 $3 }
-  | Trm5 '>' Trm5 { REQ.Abs.GT $1 $3 }
+  | Trm5 '>' Trm5 { REQ.Abs.Gt $1 $3 }
   | Trm5 '>=' Trm5 { REQ.Abs.GE $1 $3 }
   | Trm5 { $1 }
 

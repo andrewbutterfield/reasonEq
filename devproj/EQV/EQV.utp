@@ -2,7 +2,7 @@ Theory EQV . .
 
 DclVar Obs eqv . var SB ( B -> ( B -> B ) ) .
 
-Law axiom true_true . True . none
+Law axiom true . True . none
 Law axiom eqv_refl  . P === P . none
 Law axiom eqv_assoc . (P === (Q === R)) === ((P === Q) === R)  . none
 Law axiom eqv_symm  . (P === Q) === (Q === P) . none

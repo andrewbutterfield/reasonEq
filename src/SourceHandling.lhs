@@ -740,18 +740,33 @@ compareIPTheories iTheory pTheory
     iName = thName iTheory ; pName = thName pTheory
 \end{code}
 
-Names are the same, so next we check dependencies:
+Names are the same, so next we check dependencies,
+but also start accumulating discrepancy reports:
 \begin{code}
 compIPDeps :: [String] -> Theory -> Theory ->  String
 compIPDeps sffid iTheory pTheory
-  | iDeps /= pDeps  =  compIPNext (mismatch++sffid) iTheory pTheory
-  | otherwise       =  compIPNext sffid iTheory pTheory
+  | iDeps /= pDeps  =  compIPVarTables (mismatch++sffid) iTheory pTheory
+  | otherwise       =  compIPVarTables sffid iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     mismatch 
-     = [ "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
-       , "Installed parsed not in deps : "++display (pDeps \\ iDeps) ]
+      = [ "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
+        , "Installed parsed not in deps : "++display (pDeps \\ iDeps) ]
     display = intercalate " "
+\end{code}
+
+Check both theories \h{VarTables}:
+\begin{code}
+compIPVarTables :: [String] -> Theory -> Theory -> String
+compIPVarTables sffid iTheory pTheory
+  | iKnown /= pKnown  =  compIPNext (mismatch++sffid) iTheory pTheory
+  | otherwise  =  compIPNext sffid iTheory pTheory
+  where 
+    iKnown = known iTheory ; pKnown = known pTheory
+    -- we should do this variable by variable
+    mismatch
+      = [ "Installed known:\n" ++ show iKnown
+        , "Parsed known:\n"    ++ show pKnown ]
 \end{code}
 
 Leftover:

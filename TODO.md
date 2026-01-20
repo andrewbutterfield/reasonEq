@@ -9,6 +9,24 @@ We now need `load` to compare what is loaded with what is installed.
 
 Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), also logging any new installed laws/conjectures (just in case)
 
+#### Bugs found 
+
+Vartable comparison in `And` theory
+
+Parsed:
+
+```
+VD ("",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TC (Id "B" 0) []) (TF (TC (Id "B" 0) []) (TC (Id "B" 0) []))) (Just True))],fromList [],fromList [])
+```
+
+Installed:
+
+```
+VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])
+```
+
+1. Theory name `And` missing from parsed table.
+2. The parsed bool type is `TC (Id "B" 0) []` when it should be `TG (Id "B" 0) []`.
 ### Matching Improvement
 
 When we use `tcl s` with `(¬R ⟹  ¬(¬P))` we get both L2R and R2L matches

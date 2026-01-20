@@ -11,21 +11,6 @@ Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), als
 
 #### Bugs found 
 
-Vartable comparison in `And` theory
-
-Parsed:
-
-```
-VD ("",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TC (Id "B" 0) []) (TF (TC (Id "B" 0) []) (TC (Id "B" 0) []))) (Just True))],fromList [],fromList [])
-```
-
-Installed:
-
-```
-VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])
-```
-
-1. Theory name `And` missing from parsed table.
 
 ### Matching Improvement
 

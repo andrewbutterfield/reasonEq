@@ -89,6 +89,7 @@ a range of ambiguous situations.
 This requires passing this known data down to the conversions 
 for the sub-components: terms, types, side-conditions, and variables.
 
+\newpage
 \subsection{Variable Handling}
 
 Due to the limitations of what can be expressed using LBNF,
@@ -116,7 +117,9 @@ dynvar2idwhen (DynVar dv)
       Nothing  ->  (jId dv,Static)
       Just (before,[])  -> (jId before,After)
       Just (before,d)   -> (jId before,During d)
+\end{code}
 
+\begin{code}
 idwhen2dynvar :: String -> VarWhen -> DynVar
 idwhen2dynvar i Static      =  DynVar i
 idwhen2dynvar i Before      =  DynVar ('_':i)
@@ -141,7 +144,7 @@ items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
 items2theory items thry = do
   let (defs,rest) = partition isDefItem items
   let (decls,asserts) = partition isDeclItem rest
-  knwn <- decls2vartable decls newVarTable
+  knwn <- decls2vartable decls $ newNamedVarTable $ thName thry
   (lws,cnjs) <- asserts2asns knwn asserts 
   return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
 \end{code}
@@ -193,7 +196,7 @@ defaultWhen = mkDefault
 \end{code}
 Here \h{During ""} is code for ``any dynamic'' (before,after,during).
 
-
+\newpage
 The above defaults can be overridden using the default items.
 \begin{code}
 isDefItem :: Item -> Bool

@@ -583,17 +583,16 @@ subs2trm tm vts lvlvs
 At present the only given type is $\Bool$ (\h{GivenType "B"}).
 \begin{code}
 typ2type :: Typ -> Type
-typ2type TArb  =  ArbType
-typ2type TBot  =  BottomType
-typ2type (TVbl (DynVar dv))  
-  | dv == "B"  =  GivenType $ jId dv
-  | otherwise  =  TypeVar $ jId dv
-typ2type (TFun t1 t2)        
-  =  FunType (typ2type t1) (typ2type t2)
-typ2type (TProd (DynVar dv) ts)  
-  =  TypeCons (jId dv) (map typ2type ts)
-typ2type (TRec (DynVar dv) fs)   
-  =  TypeCons (jId dv) (map typ2type fs)
+typ2type TArb                    =  ArbType
+typ2type TBot                    =  BottomType
+typ2type (TVbl (DynVar dv))      =  mkTypVar dv
+typ2type (TProd (DynVar dv) [])  =  mkTypVar dv
+typ2type (TProd (DynVar dv) ts)  =  TypeCons (jId dv) (map typ2type ts)
+typ2type (TRec (DynVar dv) fs)   =  TypeCons (jId dv) (map typ2type fs)
+typ2type (TFun t1 t2)            =  FunType (typ2type t1) (typ2type t2)
+mkTypVar dv
+  | dv == "B"                    =  GivenType $ jId dv
+  | otherwise                    =  TypeVar $ jId dv
 \end{code}
 
 \subsection{Type to Typ}

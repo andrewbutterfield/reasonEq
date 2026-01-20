@@ -26,7 +26,7 @@ VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B
 ```
 
 1. Theory name `And` missing from parsed table.
-2. The parsed bool type is `TC (Id "B" 0) []` when it should be `TG (Id "B" 0) []`.
+
 ### Matching Improvement
 
 When we use `tcl s` with `(¬R ⟹  ¬(¬P))` we get both L2R and R2L matches

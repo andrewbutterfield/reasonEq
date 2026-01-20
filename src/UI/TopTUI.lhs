@@ -281,9 +281,15 @@ loadTheoryFile [thName] reqs = do
   if haveSource then do 
     theory_text <- readFile fname
     case loadTheory (theories reqs) theory_text of
-      Yes thry ->  do
-        putStrLn ("Parsed as:\n"++show thry)
-        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) thry)
+      Yes pthry ->  do
+        putStrLn ("Parsed as:\n"++show pthry)
+        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
+        putStrLn "\nComparing installed and just-parsed theories\n"
+        case getCurrentTheory reqs of
+          Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
+          Just ithry -> do
+            let report = compareIPTheories ithry pthry
+            putStrLn report
         putStrLn "**** NOT YET INSTALLED ****"
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
   else putStrLn ("loadTheoryFile: cannot find "++fname)

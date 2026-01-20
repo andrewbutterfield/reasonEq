@@ -10,6 +10,7 @@ module SourceHandling (
   term_syntax
 , loadTheory, genTheory
 -- ,loadTerm, genTerm, loadType, genType, loadSideCond, genSideCond
+, compareIPTheories
 )
 where
 
@@ -719,4 +720,43 @@ varclass2vclass :: VarClass -> VClass
 varclass2vclass ObsV  = VarObs
 varclass2vclass ExprV = VarExp
 varclass2vclass PredV = VarPred
+\end{code}
+
+\section{Comparisons}
+
+It helps to be able to compare a theory just parsed from a UTP file
+with the installed theory. 
+Ideally these should be identical, 
+modulo the fact that some conjectures in the installed theory 
+may have been proven, assumed, or deemed to be suspect.
+
+We are going to compare an Installed theory with a Parsed theory:
+\begin{code}
+compareIPTheories :: Theory -> Theory ->  String
+compareIPTheories iTheory pTheory
+  | iName /= pName  =  "Different theories '"++iName++"'/'"++pName++"'"
+  | otherwise  =  compIPDeps [] iTheory pTheory
+  where
+    iName = thName iTheory ; pName = thName pTheory
+\end{code}
+
+Names are the same, so next we check dependencies:
+\begin{code}
+compIPDeps :: [String] -> Theory -> Theory ->  String
+compIPDeps sffid iTheory pTheory
+  | iDeps /= pDeps  =  compIPNext (mismatch++sffid) iTheory pTheory
+  | otherwise       =  compIPNext sffid iTheory pTheory
+  where
+    iDeps = thDeps iTheory ; pDeps = thDeps pTheory
+    mismatch 
+     = [ "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
+       , "Installed parsed not in deps : "++display (pDeps \\ iDeps) ]
+    display = intercalate " "
+\end{code}
+
+Leftover:
+\begin{code}
+compIPNext :: [String] -> Theory -> Theory -> String
+compIPNext sffid iTheory pTheory
+  = unlines $ reverse ("More as yet unchecked":sffid)
 \end{code}

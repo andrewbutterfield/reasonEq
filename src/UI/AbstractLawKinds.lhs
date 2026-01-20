@@ -76,7 +76,8 @@ The overall task breaks down into two main components:
 
 \section{Basic Abstract Steps}
 
-\textbf{NOTE: This module cannot import anything from the xxxTUI modules, and should not bring in anything from AbstractTop either.}
+\textbf{NOTE: This module cannot import anything from the xxxTUI modules, 
+and should not bring in anything from AbstractTop either.}
 
 
 \begin{verbatim}

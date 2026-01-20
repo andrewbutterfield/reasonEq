@@ -5,17 +5,9 @@
 
 ### Load/Generate
 
-Need to add substitutability declarations for names like eqv, not, or, and, etc.
+We now need `load` to compare what is loaded with what is installed.
 
-*We have it when we decl something like "eqv" or "not" using `DclVar`.*
-
-We need to fix `.utp` generation to pickup `TCons` subable settings. **DONE**
-
-Converting to `Terms` now gets `Subable` right.
-
-We need to add code to map between the relevant `reasonEq` types and the `BNFC/UTP` abstract syntax. **IN PROGRESS - can load and generate `EQV.utp`**
-
-Moving on to `Not`.**DONE**
+Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), also logging any new installed laws/conjectures (just in case)
 
 ### Matching Improvement
 

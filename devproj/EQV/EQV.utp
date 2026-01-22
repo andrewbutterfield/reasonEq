@@ -1,6 +1,6 @@
 Theory EQV . .
 
-DclVar Obs eqv . var SB ( B -> ( B -> B ) ) .
+DclVar Obs eqv . var NA ( B -> ( B -> B ) ) .
 
 Law axiom true . True . none
 Law axiom eqv_refl  . P === P . none

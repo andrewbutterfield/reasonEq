@@ -724,6 +724,7 @@ varclass2vclass ExprV = VarExp
 varclass2vclass PredV = VarPred
 \end{code}
 
+\newpage
 \section{Comparisons}
 
 It helps to be able to compare a theory just parsed from a UTP file
@@ -738,10 +739,14 @@ We are going to compare an Installed theory with a Parsed theory:
 \begin{code}
 compareIPTheories :: Theory -> Theory ->  String
 compareIPTheories iTheory pTheory
-  | iName /= pName  =  "Different theories '"++iName++"'/'"++pName++"'"
-  | otherwise  =  compIPDeps [] iTheory pTheory
+  | iName /= pName  =  unlines' mismatch
+  | otherwise       =  compIPDeps [] iTheory pTheory
   where
     iName = thName iTheory ; pName = thName pTheory
+    mismatch 
+      = [ "Installed: "++iName
+        , "Parsed:    "++pName
+        , "Different Theories!", "EXIT", "" ]
 \end{code}
 
 \subsection{Compare Dependencies}
@@ -756,26 +761,37 @@ compIPDeps sffid iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     mismatch 
-      = [ "", "Dependencies differ!"
-        , "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
-        , "Installed parsed not in deps : "++display (pDeps \\ iDeps) ]
+      = [ "Installed deps. not parsed : "++display (iDeps \\ pDeps)
+        , "Parsed deps. not installed : "++display (pDeps \\ iDeps) 
+        , "Dependencies differ!", "" ]
     display = intercalate " "
 \end{code}
 
 \subsection{Compare Variable Tables}
 
+Here we work through the standard and list variables 
+in the parsed \h{VarTable}
+comparing them against those in the installed version.
 \begin{code}
 compIPVarTables :: [String] -> Theory -> Theory -> String
 compIPVarTables sffid iTheory pTheory
-  | iKnown /= pKnown  =  compIPConjectures (mismatch++sffid) iTheory pTheory
-  | otherwise         =  compIPConjectures sffid             iTheory pTheory
+  | iVT /= pVT  =  compIPConjectures (badVT++sffid) iTheory pTheory
+  | iST /= pST  =  compIPConjectures (badST++sffid) iTheory pTheory
+  | iDT /= pDT  =  compIPConjectures (badDT++sffid) iTheory pTheory
+  | otherwise   =  compIPConjectures sffid iTheory pTheory
   where 
-    iKnown = known iTheory ; pKnown = known pTheory
+    iKnown@(VarData (_,iVT,iST,iDT)) = known iTheory
+    pKnown@(VarData (_,pVT,pST,pDT)) = known pTheory
     -- we should do this variable by variable
-    mismatch
-      = [ "", "Vartables differ!"
-        , "Installed known:\n" ++ show iKnown
-        , "Parsed known:\n"    ++ show pKnown ]
+    badVT = [ "Installed VT: " ++ show iVT
+            , "Parsed VT:    " ++ show pVT
+            , "Vtable mismatch", ""]
+    badST = [ "Installed ST: " ++ show iST
+            , "Parsed ST:    " ++ show pST
+            , "Vtable mismatch", ""]
+    badDT = [ "Installed DT: " ++ show iDT
+            , "Parsed DT:    " ++ show pDT
+            , "Vtable mismatch", ""]
 \end{code}
 
 \subsection{Compare Conjectures}
@@ -791,9 +807,9 @@ compIPConjectures sffid iTheory pTheory
     pConjs = conjs pTheory ; iConjs = conjs iTheory ; iLaws = laws iTheory
     -- we should do this variable by variable
     mismatch
-      = [ "", "Conjectures differ!"
-        , "Installed conjectures:\n" ++ show iConjs
-        , "Parsed conjectures:\n"    ++ show pConjs ]
+      = [ "Installed conjectures:\n" ++ show iConjs
+        , "Parsed conjectures:\n"    ++ show pConjs
+        , "Conjectures differ!", "" ]
 \end{code}
 
 \subsection{Compare Laws}
@@ -809,15 +825,17 @@ compIPLaws sffid iTheory pTheory
     pLaws = laws pTheory ; iLaws = laws iTheory ; iConjs = conjs iTheory
     -- we should do this variable by variable
     mismatch
-      = [ "", "Laws differ!"
-        , "Installed laws:\n" ++ show iLaws
-        , "Parsed laws:\n"    ++ show pLaws ]
+      = [ "Installed laws:\n" ++ show iLaws
+        , "Parsed laws:\n"    ++ show pLaws
+        , "Laws differ!", "" ]
 \end{code}
 
-\subsection*{Leftovers}
-Leftover:
+\subsection{Finish}
+
+
 \begin{code}
 compFinish :: [String] -> String
 compFinish sffid 
-  = unlines $ reverse ("Installed vs. Parse Theory check complete.":sffid)
+  = unlines' 
+     $ reverse ("Installed vs. Parse Theory check complete.":"":sffid)
 \end{code}

@@ -7,7 +7,7 @@
 
 We now need `load` to compare what is loaded with what is installed.
 
-Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), also logging any new installed laws/conjectures (just in case)
+Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), also logging any new installed or missing laws/conjectures (just in case)
 
 #### Bugs found 
 

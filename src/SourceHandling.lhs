@@ -732,6 +732,8 @@ Ideally these should be identical,
 modulo the fact that some conjectures in the installed theory 
 may have been proven, assumed, or deemed to be suspect.
 
+\subsection{Compare Theories}
+
 We are going to compare an Installed theory with a Parsed theory:
 \begin{code}
 compareIPTheories :: Theory -> Theory ->  String
@@ -741,6 +743,8 @@ compareIPTheories iTheory pTheory
   where
     iName = thName iTheory ; pName = thName pTheory
 \end{code}
+
+\subsection{Compare Dependencies}
 
 Names are the same, so next we check dependencies,
 but also start accumulating discrepancy reports:
@@ -752,28 +756,68 @@ compIPDeps sffid iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     mismatch 
-      = [ "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
+      = [ "", "Dependencies differ!"
+        , "Installed deps not parsed.   : "++display (iDeps \\ pDeps)
         , "Installed parsed not in deps : "++display (pDeps \\ iDeps) ]
     display = intercalate " "
 \end{code}
 
-Check both theories \h{VarTables}:
+\subsection{Compare Variable Tables}
+
 \begin{code}
 compIPVarTables :: [String] -> Theory -> Theory -> String
 compIPVarTables sffid iTheory pTheory
-  | iKnown /= pKnown  =  compIPNext (mismatch++sffid) iTheory pTheory
-  | otherwise  =  compIPNext sffid iTheory pTheory
+  | iKnown /= pKnown  =  compIPConjectures (mismatch++sffid) iTheory pTheory
+  | otherwise         =  compIPConjectures sffid             iTheory pTheory
   where 
     iKnown = known iTheory ; pKnown = known pTheory
     -- we should do this variable by variable
     mismatch
-      = [ "Installed known:\n" ++ show iKnown
+      = [ "", "Vartables differ!"
+        , "Installed known:\n" ++ show iKnown
         , "Parsed known:\n"    ++ show pKnown ]
 \end{code}
 
+\subsection{Compare Conjectures}
+
+Here we work through the parsed conjectures,
+comparing them against the installed conjectures and (eventually) laws.
+\begin{code}
+compIPConjectures :: [String] -> Theory -> Theory -> String
+compIPConjectures sffid iTheory pTheory
+  | iConjs /= pConjs  =  compIPLaws (mismatch++sffid) iTheory pTheory
+  | otherwise         =  compIPLaws sffid             iTheory pTheory
+  where 
+    pConjs = conjs pTheory ; iConjs = conjs iTheory ; iLaws = laws iTheory
+    -- we should do this variable by variable
+    mismatch
+      = [ "", "Conjectures differ!"
+        , "Installed conjectures:\n" ++ show iConjs
+        , "Parsed conjectures:\n"    ++ show pConjs ]
+\end{code}
+
+\subsection{Compare Laws}
+
+Here we work through the parsed laws,
+comparing them against the installed laws and (eventually) conjectures.
+\begin{code}
+compIPLaws :: [String] -> Theory -> Theory -> String
+compIPLaws sffid iTheory pTheory
+  | iLaws /= pLaws    =  compFinish (mismatch++sffid)
+  | otherwise         =  compFinish sffid
+  where 
+    pLaws = laws pTheory ; iLaws = laws iTheory ; iConjs = conjs iTheory
+    -- we should do this variable by variable
+    mismatch
+      = [ "", "Laws differ!"
+        , "Installed laws:\n" ++ show iLaws
+        , "Parsed laws:\n"    ++ show pLaws ]
+\end{code}
+
+\subsection*{Leftovers}
 Leftover:
 \begin{code}
-compIPNext :: [String] -> Theory -> Theory -> String
-compIPNext sffid iTheory pTheory
-  = unlines $ reverse ("More as yet unchecked":sffid)
+compFinish :: [String] -> String
+compFinish sffid 
+  = unlines $ reverse ("Installed vs. Parse Theory check complete.":sffid)
 \end{code}

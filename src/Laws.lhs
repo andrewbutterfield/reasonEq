@@ -263,7 +263,7 @@ data Provenance
   | Proven String  --  demonstrated by (named) proof
   | Suspect String --  was Proven but a used law has changed
   | Assumed        --  conjecture asserted w/o proof
-  deriving (Eq,Show,Read)
+  deriving (Eq,Ord,Show,Read)
 \end{code}
 
 A law is a named assertion along with its provenance.

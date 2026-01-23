@@ -834,15 +834,53 @@ comparing them against the installed conjectures and (eventually) laws.
 \begin{code}
 compIPConjectures :: [String] -> Theory -> Theory -> String
 compIPConjectures sffid iTheory pTheory
-  | iConjs /= pConjs  =  compIPLaws (mismatch++sffid) iTheory pTheory
-  | otherwise         =  compIPLaws sffid             iTheory pTheory
+  = compIPLaws (troper++sffid) iTheory pTheory
   where 
-    pConjs = conjs pTheory ; iConjs = conjs iTheory ; iLaws = laws iTheory
-    -- we should do this variable by variable
-    mismatch
-      = [ "Installed conjectures:\n" ++ show iConjs
-        , "Parsed conjectures:\n"    ++ show pConjs
-        , "Conjectures differ!", "" ]
+    pCjs = sort $ conjs pTheory
+    iCjs = sort $ conjs iTheory
+    iLws = sort $ laws  iTheory
+    troper = scanConjs [] pCjs iCjs iLws
+
+scanConjs stroper [] iCjs _ 
+  = (("extra installed conj: "++show (map fst iCjs)):stroper)
+scanConjs stroper pCjs@((pnm,_):_) iCjs iLws
+  = scanConjs' stroper pCjs (seek fst pnm iCjs) (seek (fst . fst) pnm iLws)
+
+-- both installed empty
+scanConjs' stroper pCjs [] [] 
+  = (("extra parsed conj: "++show (map fst pCjs)):stroper)
+
+-- installed laws empty
+scanConjs' stroper pCjs@((pnm,passn):pCjs') 
+                   iCjs@((inm,iassn):iCjs') 
+                   []
+  | pnm /= inm  -- inm > pnm
+     = scanConjs (("extra parsed conj:"++pnm):stroper) pCjs' iCjs []
+  | passn /= iassn
+     = scanConjs (("conjectures differ:"++pnm):stroper) pCjs' iCjs' []
+  | otherwise = scanConjs stroper pCjs' iCjs' []
+
+-- installed conjectures empty
+scanConjs' stroper pCjs@((pnm,passn):pCjs') 
+                   [] 
+                   iLws@(((inm,iassn),prv):iLws')
+  | pnm /= inm  -- inm > pnm
+     = scanConjs (("extra parsed conj:"++pnm):stroper) pCjs' [] iLws
+  | passn /= iassn
+     = scanConjs (("conj and law differ:"++pnm):stroper) pCjs' [] iLws'
+  | otherwise = scanConjs stroper pCjs' [] iLws'
+
+-- both installed present
+scanConjs' stroper pCjs@((pnm,passn):pCjs')
+                   iCjs@((icnm,icassn):iCjs')
+                   iLws@(((ilnm,ilassn),prv):iLws')
+  =  (("both installed ("++pnm++") NYI"):stroper)
+
+seek :: Ord a => (as -> a) -> a -> [as] -> [as]
+seek get nm [] = []
+seek get nm xs@(x:xs')
+  | nm < get x  =  seek get nm xs'
+  | otherwise   =  xs
 \end{code}
 
 \subsection{Compare Laws}
@@ -852,15 +890,11 @@ comparing them against the installed laws and (eventually) conjectures.
 \begin{code}
 compIPLaws :: [String] -> Theory -> Theory -> String
 compIPLaws sffid iTheory pTheory
-  | iLaws /= pLaws    =  compFinish (mismatch++sffid)
-  | otherwise         =  compFinish sffid
+  = compFinish ("compIPLaws NYI":sffid)
   where 
-    pLaws = laws pTheory ; iLaws = laws iTheory ; iConjs = conjs iTheory
-    -- we should do this variable by variable
-    mismatch
-      = [ "Installed laws:\n" ++ show iLaws
-        , "Parsed laws:\n"    ++ show pLaws
-        , "Laws differ!", "" ]
+    pLws = sort $ map (fst . fst) $ laws  pTheory
+    iCjs = sort $ map fst         $ conjs iTheory
+    iLws = sort $ map (fst . fst) $ laws  iTheory
 \end{code}
 
 \subsection{Finish}

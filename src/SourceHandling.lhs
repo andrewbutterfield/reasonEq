@@ -790,11 +790,11 @@ compIPVarTables sffid iTheory pTheory
 
 checkVTVars :: VarRoleMap -> VarRoleMap -> [String]
 checkVTVars pvTable ivTable 
-  = mmRep (not $ null pvs_less_ivs) 
+  =    errorReport (not $ null pvs_less_ivs) 
           [trVList $ map StdVar pvs_less_ivs,"Parsed vars not installed:"]
-    ++ mmRep (not $ null ivs_less_pvs)
+    ++ errorReport (not $ null ivs_less_pvs)
              [trVList $ map StdVar ivs_less_pvs,"Installed vars not parsed:"]
-    ++ mmRep (not $ null bothMM) 
+    ++ errorReport (not $ null bothMM) 
              [concat $ map showVdiff bothMM,"Differing var entries"]
   where 
     pvs = M.keys pvTable ; ivs = M.keys ivTable
@@ -808,11 +808,23 @@ checkVTVars pvTable ivTable
         ++ "\n  installed = "++trVarMatchRole vmr2
 
 checkSTLVars :: String -> LVarRoleMap -> LVarRoleMap -> [String]
-checkSTLVars what plvTable ilvTable = [] -- ["checkSTLVars("++what++") NYI"]
-
-mmRep :: Bool -> [String] -> [String] -- mismatch report
-mmRep True  strs = strs
-mmRep False strs = []
+checkSTLVars what plvTable ilvTable 
+  =    errorReport (not $ null pvs_less_ivs)
+         [trVList $ map StdVar pvs_less_ivs,"Parsed vars not installed:"]
+    ++ errorReport (not $ null ivs_less_pvs)
+         [trVList $ map StdVar ivs_less_pvs,"Installed vars not parsed:"]
+    ++ errorReport (not $ null bothMM) 
+         [concat $ map showLVdiff bothMM,"Differing "++what++" entries"]
+  where 
+    pvs = M.keys plvTable ; ivs = M.keys ilvTable
+    pvs_less_ivs = pvs \\ ivs 
+    ivs_less_pvs = ivs \\ pvs
+    both = pvs `intersect` ivs
+    bothMM = checkMaps plvTable ilvTable both
+    showLVdiff (var,lvmr1,lvmr2)
+      = trVar var 
+        ++ ":\n  parsed    = "++trLstVarMatchRole lvmr1
+        ++ "\n  installed = "++trLstVarMatchRole lvmr2
 \end{code}
 
 \subsection{Compare Conjectures}
@@ -862,6 +874,17 @@ compFinish sffid
 \end{code}
 
 \section{Generic Comparison Code}
+
+\subsection{Anomaly Reporting}
+
+This takes a boolean parameter that when true indicates a mismatch of some 
+kind between installed and parsed theories.
+It simplifies generating reports that have a heading plus a list of errors.
+\begin{code}
+errorReport :: Bool -> [String] -> [String] -- mismatch report
+errorReport True  strs = strs
+errorReport False strs = []
+\end{code}
 
 \subsection{Comparing Map Entries}
 

@@ -666,6 +666,7 @@ trVarMatchRoleU = trvmr trIdU
 
 trvmr trid (KnownTerm t)  =  spaced _triangleq ++ trterm trid 0 t
 trvmr trid (KnownVar t (Just True))    =  " (sub) : " ++ trType t
+trvmr trid (KnownVar t (Just False))    =  " (nonsub) : " ++ trType t
 trvmr trid (KnownVar t _)    =  " : " ++ trType t
 trvmr trid GenericVar      =  " generic"
 trvmr trid (InstanceVar gv) =  " inst("++trVar gv++")"

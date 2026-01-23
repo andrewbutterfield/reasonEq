@@ -6,52 +6,54 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module VarData ( VarMatchRole
-               , pattern KnownTerm, pattern KnownVar
-               , pattern GenericVar, pattern InstanceVar, pattern UnknownVar
-               , isKnownConst, isKnownVar
-               , vmrConst, vmrType, vmrInst
-               , LstVarMatchRole
-               , pattern KnownVarList, pattern KnownVarSet
-               , pattern AbstractList, pattern AbstractSet
-               , pattern UnknownListVar
-               , DynamicLstVarRole, IdAndClass
-               , pattern DynamicList, pattern DynamicSet
-               , pattern DynamicAbsList, pattern DynamicAbsSet
-               , VarTable
-               , pattern VarData
-               , vtList, stList, dtList
-               , newVarTable, newNamedVarTable
-               , addKnownConst, addKnownVar, addKnownConstructor
-               , addGenericVar, addInstanceVar
-               , addKnownLListVar, addKnownSListVar
-               , addKnownVarList , addKnownVarSet
-               , addAbstractVarList, addAbstractVarSet
-               , mkKnownConst
-               , mkKnownVar
-               , mkConsVar, mkVarIntro, mkConsIntro
-               , mkPredVar, mkPredIntro
-               , mkAbsSetVar, mkAbsListVar
-               , lookupLVarTs, lookupVarTable, lookupVarTables
-               , lookupLVar, lookupLVarTable, lookupLVarTables
-               , isUnknownVar, isUnknownLVar, isUnknownGVar
-               , gVarIsUnknownVar, gVarIsUnknownLVar
-               , dEq, dvEq, dlEq, dgEq
-               , insideS                    -- member modulo Dynamic
-               , withinS                    -- subset modulo Dynamic
-               , subsumeS                   -- simplifies VarSets
-               , subsumeL                   -- simplifies VarLists
-               , subsumedS                  -- simplify, then withinS
-               , delS, delSl, delL          -- delete modulo Dynamic
-               , removeS, removeSl, removeL -- remove modulo Dynamic
-               , intsctS, intsctSl          -- intersection modulo Dynamic
-               , KnownExpansion
-               , expandKnown
-               , genExpandToList
-               , genExpandToSet
-               , getDynamicObservables
-               , mapVToverVarSet
-               ) where
+module VarData ( 
+  VarMatchRole
+, pattern KnownTerm, pattern KnownVar
+, pattern GenericVar, pattern InstanceVar, pattern UnknownVar
+, isKnownConst, isKnownVar
+, vmrConst, vmrType, vmrInst
+, LstVarMatchRole
+, pattern KnownVarList, pattern KnownVarSet
+, pattern AbstractList, pattern AbstractSet
+, pattern UnknownListVar
+, DynamicLstVarRole, IdAndClass
+, pattern DynamicList, pattern DynamicSet
+, pattern DynamicAbsList, pattern DynamicAbsSet
+, VarRoleMap,  LVarRoleMap, DVarRoleMap 
+, VarTable
+, pattern VarData
+, vTable, lvTable, dvTable, vtList, stList, dtList
+, newVarTable, newNamedVarTable
+, addKnownConst, addKnownVar, addKnownConstructor
+, addGenericVar, addInstanceVar
+, addKnownLListVar, addKnownSListVar
+, addKnownVarList , addKnownVarSet
+, addAbstractVarList, addAbstractVarSet
+, mkKnownConst
+, mkKnownVar
+, mkConsVar, mkVarIntro, mkConsIntro
+, mkPredVar, mkPredIntro
+, mkAbsSetVar, mkAbsListVar
+, lookupLVarTs, lookupVarTable, lookupVarTables
+, lookupLVar, lookupLVarTable, lookupLVarTables
+, isUnknownVar, isUnknownLVar, isUnknownGVar
+, gVarIsUnknownVar, gVarIsUnknownLVar
+, dEq, dvEq, dlEq, dgEq
+, insideS                    -- member modulo Dynamic
+, withinS                    -- subset modulo Dynamic
+, subsumeS                   -- simplifies VarSets
+, subsumeL                   -- simplifies VarLists
+, subsumedS                  -- simplify, then withinS
+, delS, delSl, delL          -- delete modulo Dynamic
+, removeS, removeSl, removeL -- remove modulo Dynamic
+, intsctS, intsctSl          -- intersection modulo Dynamic
+, KnownExpansion
+, expandKnown
+, genExpandToList
+, genExpandToSet
+, getDynamicObservables
+, mapVToverVarSet
+) where
 import Data.Maybe (fromJust)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -264,19 +266,25 @@ we use domain and range types that do not mention temporality.
 We also associate a name with a table, 
 usually that of the theory in which it occurs.
 \begin{code}
+type VarRoleMap  = Map Variable   VarMatchRole
+type LVarRoleMap = Map Variable   LstVarMatchRole
+type DVarRoleMap = Map IdAndClass DynamicLstVarRole
 newtype VarTable
-  = VD ( String
-       , Map Variable   VarMatchRole
-       , Map Variable   LstVarMatchRole
-       , Map IdAndClass DynamicLstVarRole
-       )
+  = VD ( String, VarRoleMap, LVarRoleMap, DVarRoleMap )
   deriving (Eq, Show, Read)
 pattern VarData vardata = VD vardata
 \end{code}
 
 
-We will want to inspect tables.
+We will want to extract maps and conver to list form.
 \begin{code}
+vTable :: VarTable -> VarRoleMap
+vTable (VD (_,vtable, _, _)) = vtable
+lvTable :: VarTable -> LVarRoleMap
+lvTable (VD (_,_, stable, _)) = stable
+dvTable :: VarTable -> LVarRoleMap
+dvTable (VD (_,_, _, dtable)) = M.fromList $ map dtMap $ M.toList dtable
+
 vtList :: VarTable -> [(Variable,VarMatchRole)]
 vtList (VD (_,vtable, _, _)) = M.toList vtable
 stList :: VarTable -> [(Variable,LstVarMatchRole)]

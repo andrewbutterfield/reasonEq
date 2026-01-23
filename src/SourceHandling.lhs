@@ -18,7 +18,7 @@ import Data.Maybe(fromJust)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.List (nub, sort, (\\), intercalate, stripPrefix, partition)
+import Data.List 
 import Data.Char
 
 import NotApplicable
@@ -772,26 +772,47 @@ compIPDeps sffid iTheory pTheory
 Here we work through the standard and list variables 
 in the parsed \h{VarTable}
 comparing them against those in the installed version.
+We don't compare the \h{VarData} names as they are not present in .utp files,
+and are set equal to the theory name when the theory is built.
 \begin{code}
 compIPVarTables :: [String] -> Theory -> Theory -> String
 compIPVarTables sffid iTheory pTheory
-  | iVT /= pVT  =  compIPConjectures (badVT++sffid) iTheory pTheory
-  | iST /= pST  =  compIPConjectures (badST++sffid) iTheory pTheory
-  | iDT /= pDT  =  compIPConjectures (badDT++sffid) iTheory pTheory
-  | otherwise   =  compIPConjectures sffid iTheory pTheory
+  =  let
+       vtErrors = checkVTVars           (vTable pKnown)  (vTable iKnown)
+       stErrors = checkSTLVars "lstvar" (lvTable pKnown) (lvTable iKnown)
+       dtErrors = checkSTLVars "dynvar" (dvTable pKnown) (dvTable iKnown)
+       errors = dtErrors ++ stErrors ++ vtErrors 
+       report = if null errors 
+                then errors 
+                else errors ++ [ "Variable Tables differ!","" ]
+     in compIPConjectures (report++sffid) iTheory pTheory
+  where iKnown = known iTheory ; pKnown = known pTheory
+
+checkVTVars :: VarRoleMap -> VarRoleMap -> [String]
+checkVTVars pvTable ivTable 
+  = mmRep (not $ null pvs_less_ivs) 
+          [trVList $ map StdVar pvs_less_ivs,"Parsed vars not installed:"]
+    ++ mmRep (not $ null ivs_less_pvs)
+             [trVList $ map StdVar ivs_less_pvs,"Installed vars not parsed:"]
+    ++ mmRep (not $ null bothMM) 
+             [concat $ map showVdiff bothMM,"Differing var entries"]
   where 
-    iKnown@(VarData (_,iVT,iST,iDT)) = known iTheory
-    pKnown@(VarData (_,pVT,pST,pDT)) = known pTheory
-    -- we should do this variable by variable
-    badVT = [ "Installed VT: " ++ show iVT
-            , "Parsed VT:    " ++ show pVT
-            , "Vtable mismatch", ""]
-    badST = [ "Installed ST: " ++ show iST
-            , "Parsed ST:    " ++ show pST
-            , "Vtable mismatch", ""]
-    badDT = [ "Installed DT: " ++ show iDT
-            , "Parsed DT:    " ++ show pDT
-            , "Vtable mismatch", ""]
+    pvs = M.keys pvTable ; ivs = M.keys ivTable
+    pvs_less_ivs = pvs \\ ivs 
+    ivs_less_pvs = ivs \\ pvs
+    both = pvs `intersect` ivs
+    bothMM = checkMaps pvTable ivTable both
+    showVdiff (var,vmr1,vmr2)
+      = trVar var 
+        ++ ":\n  parsed    = "++trVarMatchRole vmr1
+        ++ "\n  installed = "++trVarMatchRole vmr2
+
+checkSTLVars :: String -> LVarRoleMap -> LVarRoleMap -> [String]
+checkSTLVars what plvTable ilvTable = [] -- ["checkSTLVars("++what++") NYI"]
+
+mmRep :: Bool -> [String] -> [String] -- mismatch report
+mmRep True  strs = strs
+mmRep False strs = []
 \end{code}
 
 \subsection{Compare Conjectures}
@@ -838,4 +859,25 @@ compFinish :: [String] -> String
 compFinish sffid 
   = unlines' 
      $ reverse ("Installed vs. Parse Theory check complete.":"":sffid)
+\end{code}
+
+\section{Generic Comparison Code}
+
+\subsection{Comparing Map Entries}
+
+This is intended used with keys that are common to both maps.
+\begin{code}
+checkMaps :: (Ord a, Eq c) => Map a c -> Map a c -> [a] -> [(a, c, c)]
+checkMaps map1 map2 keys = concat $ map (checkEntries map1 map2) keys
+
+checkEntries :: (Ord a, Eq c) => Map a c -> Map a c -> a -> [(a, c, c)]
+checkEntries map1 map2 key
+  = case (lkp1,lkp2) of
+      (Just elem1,Just elem2) ->
+        if elem1 == elem2 
+        then []
+        else [(key,elem1,elem2)]
+      _ -> []  -- shouldn't happen, but fail silently anyway
+  where lkp1 = M.lookup key map1 ; lkp2 = M.lookup key map2
+
 \end{code}

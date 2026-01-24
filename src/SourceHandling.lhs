@@ -709,7 +709,7 @@ genvar2dynvar (LstVar lv)  =  LVar $ lstvar2dynvar lv
 lstvar2dynvar :: ListVar -> DynVar
 lstvar2dynvar (LVbl v [] []) = stdvar2dynvar v
 lstvar2dynvar lvar 
-  = error ("NYI cannot handle listvar 'less' lists: "++show lvar)
+  = error ("NYI: cannot handle listvar 'less' lists: "++show lvar)
 \end{code}
 
 \begin{code}
@@ -841,46 +841,69 @@ compIPConjectures sffid iTheory pTheory
     iLws = sort $ laws  iTheory
     troper = scanConjs [] pCjs iCjs iLws
 
+scanConjs :: Eq a => [String]            -- reports already generated
+                  -> [(String, a)]       -- parsed conjectures
+                  -> [(String, a)]       -- installed conjectures
+                  -> [((String, a), b)]  -- installed laws
+                  -> [String]            -- updated reports
 scanConjs stroper [] iCjs _ 
-  = (("extra installed conj: "++show (map fst iCjs)):stroper)
+  | null iCjs  =  stroper
+  | otherwise = (("Extra installed conj: "++show (map fst iCjs)):stroper)
 scanConjs stroper pCjs@((pnm,_):_) iCjs iLws
   = scanConjs' stroper pCjs (seek fst pnm iCjs) (seek (fst . fst) pnm iLws)
+\end{code}
+
+\newpage
+\begin{code}
+scanConjs' :: Eq a => [String]            -- reports already generated
+                   -> [(String, a)]       -- pnm
+                   -> [(String, a)]       -- installed conjectures
+                   -> [((String, a), b)]  -- installed laws
+                   -> [String]            -- updated reports
+
+-- scanConjs' preconditions:
+--     pCjs@[(pnm,_):_]   -- not null
+--     iCjs@[(icnm,_):_]  -- if not null, then icnm >= pnm
+--     iLws@[(ilnm,_):_]  -- if not null, then ilnm >= pnm
 
 -- both installed empty
 scanConjs' stroper pCjs [] [] 
-  = (("extra parsed conj: "++show (map fst pCjs)):stroper)
+  = (("Extra parsed conj: "++show (map fst pCjs)):stroper)
 
 -- installed laws empty
 scanConjs' stroper pCjs@((pnm,passn):pCjs') 
-                   iCjs@((inm,iassn):iCjs') 
+                   iCjs@((icnm,icassn):iCjs') -- icnm >= pnm
                    []
-  | pnm /= inm  -- inm > pnm
-     = scanConjs (("extra parsed conj:"++pnm):stroper) pCjs' iCjs []
-  | passn /= iassn
-     = scanConjs (("conjectures differ:"++pnm):stroper) pCjs' iCjs' []
+  | pnm /= icnm  
+      = scanConjs (("Extra parsed conj:"++pnm):stroper) pCjs' iCjs []
+  | passn /= icassn
+      = scanConjs (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
   | otherwise = scanConjs stroper pCjs' iCjs' []
 
 -- installed conjectures empty
 scanConjs' stroper pCjs@((pnm,passn):pCjs') 
                    [] 
-                   iLws@(((inm,iassn),prv):iLws')
-  | pnm /= inm  -- inm > pnm
-     = scanConjs (("extra parsed conj:"++pnm):stroper) pCjs' [] iLws
-  | passn /= iassn
-     = scanConjs (("conj and law differ:"++pnm):stroper) pCjs' [] iLws'
+                   iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
+  | pnm /= ilnm  
+     = scanConjs (("Extra parsed conj:"++pnm):stroper) pCjs' [] iLws
+  | passn /= ilassn
+     = scanConjs (("Conj and law differ:"++pnm):stroper) pCjs' [] iLws'
   | otherwise = scanConjs stroper pCjs' [] iLws'
 
 -- both installed present
+-- we would not expect icnm == ilnm -- this is a serious issue
 scanConjs' stroper pCjs@((pnm,passn):pCjs')
-                   iCjs@((icnm,icassn):iCjs')
-                   iLws@(((ilnm,ilassn),prv):iLws')
-  =  (("both installed ("++pnm++") NYI"):stroper)
-
-seek :: Ord a => (as -> a) -> a -> [as] -> [as]
-seek get nm [] = []
-seek get nm xs@(x:xs')
-  | nm < get x  =  seek get nm xs'
-  | otherwise   =  xs
+                   iCjs@((icnm,icassn):iCjs')       -- icnm >= pnm
+                   iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
+  | icnm == ilnm
+     =  (("XXXX Name "++icnm++" in installed conjectures and laws"):stroper)
+  | pnm == icnm  -- ilnm > pnm
+     = scanConjs (("NYI: Found "++pnm++" in both conjectures"):stroper)  
+         pCjs' iCjs' iLws
+  | pnm == ilnm -- icnm > pnm
+     = scanConjs (("NYI: Found "++pnm++" in conjecture and law"):stroper)  
+         pCjs' iCjs iLws'
+  | otherwise = scanConjs stroper pCjs' iCjs' iLws'
 \end{code}
 
 \subsection{Compare Laws}
@@ -890,7 +913,7 @@ comparing them against the installed laws and (eventually) conjectures.
 \begin{code}
 compIPLaws :: [String] -> Theory -> Theory -> String
 compIPLaws sffid iTheory pTheory
-  = compFinish ("compIPLaws NYI":sffid)
+  = compFinish ("NYI: compIPLaws":sffid)
   where 
     pLws = sort $ map (fst . fst) $ laws  pTheory
     iCjs = sort $ map fst         $ conjs iTheory
@@ -908,6 +931,18 @@ compFinish sffid
 \end{code}
 
 \section{Generic Comparison Code}
+
+\subsection{Seeking}
+
+Looking for the first component in an ordered list greater that or equal to a specified target, where order is determined by a sub-component.
+\begin{code}
+-- expects xs to be ordered
+seek :: Ord a => (as -> a) -> a -> [as] -> [as]
+seek get nm [] = []
+seek get nm xs@(x:xs')
+  | nm > get x  =  seek get nm xs'
+  | otherwise   =  xs  -- hd xs (if it exists) is >= nm
+\end{code}
 
 \subsection{Anomaly Reporting}
 

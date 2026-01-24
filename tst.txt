@@ -1,8 +1,36 @@
-@aS.assnm:  "contrapositive"
+@PCJS:  
+[ ("eqv_id",ASN )
+, ("eqv_subst",ASN )
+, ("true_subst",ASN )
+]
+@ICJS:  
+[ ("eqv_subst",ASN )
+]
+@ILWS:  
+[ (("eqv_assoc",ASN ),Axiom)
+, (("eqv_id",ASN ),Proven "eqv_id")
+, (("eqv_refl",ASN ),Axiom)
+, (("eqv_symm",ASN ),Axiom)
+, (("id_subst",ASN ),Axiom)
+, (("non_subst",ASN ),Axiom)
+, (("true",ASN ),Axiom)
+, (("true_subst",ASN ),Assumed)]
 
-@LP.mLBN(contrapositive).domatch:  
-[MT {mName = "contrapositive", mAsn = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],([],fromList [])), mClass = MEL, mBind = BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))])),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]])),((Id "imp" 0,VO),BV (VR (Id "imp" 0,VO,WS)))],fromList [],fromList []), mLawPart = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]], mLocSC = ([],fromList []), mLawSC = ([],fromList []), mRepl = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]]},MT {mName = "contrapositive", mAsn = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],([],fromList [])), mClass = MER, mBind = BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "imp" 0,VO),BV (VR (Id "imp" 0,VO,WS))),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS)))],fromList [],fromList []), mLawPart = C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))], mLocSC = ([],fromList []), mLawSC = ([],fromList []), mRepl = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]}]
+scanConjs [] 
+  pCjs = ["eqv_id","eqv_subst""true_subst"] 
+  iCjs = ["eqv_subst"]
+  iLws = ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
 
-@AP.mLBN(contrapositive):  Yes 
-[MT {mName = "contrapositive", mAsn = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],([],fromList [])), mClass = MEL, mBind = BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))])),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]])),((Id "imp" 0,VO),BV (VR (Id "imp" 0,VO,WS)))],fromList [],fromList []), mLawPart = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]], mLocSC = ([],fromList []), mLawSC = ([],fromList []), mRepl = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]]},MT {mName = "contrapositive", mAsn = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]]],([],fromList [])), mClass = MER, mBind = BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "imp" 0,VO),BV (VR (Id "imp" 0,VO,WS))),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS)))],fromList [],fromList []), mLawPart = C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))], mLocSC = ([],fromList []), mLawSC = ([],fromList []), mRepl = C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]}]
-@aS.simp:  ("contrapositive",Rightwards)
+  seek "eqv_id" ["eqv_subst"]  = ["eqv_subst"]
+  seek "eqv_id" ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"] = ["eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
+
+  scanConjs' []  
+  pCjs = ["eqv_id","eqv_subst""true_subst"] 
+  iCjs = ["eqv_subst"]
+  iLws = ["eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
+-- NYI: Found eqv_id in conjecture and law
+
+scanConjs [] 
+  pCjs = ["eqv_id","eqv_subst""true_subst"] 
+  iCjs = ["eqv_subst"]
+  iLws = ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]

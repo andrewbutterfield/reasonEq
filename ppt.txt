@@ -1,29 +1,75 @@
-@GOAL: (¬R ⟹  ¬(¬P))
-
-@aS.assnm:  "contrapositive"
-@mLBN(contrapositive).domatch:
-[ MT { mName = "contrapositive"   
-     , mAsn =  P ⟹  Q ≡ ¬Q ⟹  ¬P
-     , mClass = MEL
-     , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬R, Q  ⟼ ¬(¬P), ⟹   ⟼ ⟹  }
-     , mLawPart = ¬Q ⟹  ¬P
-     , mRepl = ¬(¬(¬P)) ⟹  ¬(¬R) }
-, MT { mName = "contrapositive"
-     , mAsn = P ⟹  Q ≡ ¬Q ⟹  ¬P
-     , mClass = MER
-     , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬P, Q  ⟼ R, ⟹   ⟼ ⟹ , ¬  ⟼ ¬ }
-     , mLawPart = P ⟹  Q
-     , mRepl = ¬P ⟹  R } 
-]
-
-@aS.simp:  ( "contrapositive", Rightwards )
-
-@aS.mtch:  
-MT { mName = "contrapositive"   
-   , mAsn =  P ⟹  Q ≡ ¬Q ⟹  ¬P
-   , mClass = MEL
-   , mBind = { B  ⟼ 𝔹  , P  ⟼ ¬R, Q  ⟼ ¬(¬P), ⟹   ⟼ ⟹  }
-   , mLawPart = ¬Q ⟹  ¬P
-   , mRepl = ¬(¬(¬P)) ⟹  ¬(¬R) }
-
-@cIS.other:  False
+@ICJS:  [("eqv_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList [])))]
+@PCJS:
+[ ( "eqv_id"
+  , ASN
+    ( C
+      ( TG
+        (Id "B" 0) )
+      True
+      (Id "eqv" 0)
+      [ C
+        ( TG
+          (Id "B" 0) )
+        True
+        (Id "eqv" 0)
+        [ K (TG (Id "B" 0)) (VB True)
+        , V T (VR (Id "Q" 0, VP, WS)) ]
+      , V T (VR (Id "Q" 0, VP, WS)) ]
+    , ( []
+      , {} ) ) )
+, ( "eqv_subst"
+  , ASN
+    ( C
+      ( TG
+        (Id "B" 0) )
+      True
+      (Id "eqv" 0)
+      [ S
+        T
+        ( C
+          ( TG
+            (Id "B" 0) )
+          True
+          (Id "eqv" 0)
+          [ V T (VR (Id "P" 0, VP, WS))
+          , V T (VR (Id "Q" 0, VP, WS)) ] )
+        ( SN
+          ( {} )
+          ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "e" 0, VE, WS), [], [])) } ) )
+      , C
+        ( TG
+          (Id "B" 0) )
+        True
+        (Id "eqv" 0)
+        [ S
+          T
+          (V T (VR (Id "P" 0, VP, WS)))
+          ( SN
+            ( {} )
+            ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "e" 0, VE, WS), [], [])) } ) )
+        , S
+          T
+          (V T (VR (Id "Q" 0, VP, WS)))
+          ( SN
+            ( {} )
+            ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "e" 0, VE, WS), [], [])) } ) ) ] ]
+    , ( []
+      , {} ) ) )
+, ( "true_subst"
+  , ASN
+    ( C
+      ( TG
+        (Id "B" 0) )
+      True
+      (Id "eqv" 0)
+      [ S
+        T
+        (K (TG (Id "B" 0)) (VB True))
+        ( SN
+          ( {} )
+          ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "e" 0, VE, WS), [], [])) } ) )
+      , K (TG (Id "B" 0)) (VB True) ]
+    , ( []
+      , {} ) ) ) ]
+@ILWS:  [(("eqv_assoc",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Axiom),(("eqv_id",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],([],fromList []))),Proven "eqv_id"),(("eqv_refl",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList []))),Axiom),(("eqv_symm",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList []))),Axiom),(("id_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 0,VO,WS),[],[]))])),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList []))),Axiom),(("non_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([VSC (GV (VR (Id "P" 0,VP,WS))) (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA NA],fromList []))),Axiom),(("true",ASN (K (TG (Id "B" 0)) (VB True),([],fromList []))),Axiom),(("true_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K (TG (Id "B" 0)) (VB True)],([],fromList []))),Assumed)]
+stapp: empty application!

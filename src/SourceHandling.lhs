@@ -145,8 +145,9 @@ items2theory items thry = do
   let (defs,rest) = partition isDefItem items
   let (decls,asserts) = partition isDeclItem rest
   let defaults = defs2defaults initialDefaults defs
-  knwn <- decls2vartable decls $ newNamedVarTable $ thName thry
-  (lws,cnjs) <- asserts2asns knwn asserts 
+  ctxt@(_,knwn) 
+    <- decls2vartable decls (defaults, newNamedVarTable $ thName thry)
+  (lws,cnjs) <- asserts2asns ctxt asserts 
   return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
 \end{code}
 
@@ -284,39 +285,42 @@ isDeclItem _              =  True
 \end{code}
 
 \begin{code}
-decls2vartable :: MonadFail mf => [Item] -> VarTable -> mf VarTable
+decls2vartable :: MonadFail mf => [Item] -> Context -> mf Context
 decls2vartable [] vtbl = return vtbl
 decls2vartable (item:items) vtbl = do
   vtbl' <- decl2vtentry item vtbl
   decls2vartable items vtbl'
 
-decl2vtentry :: MonadFail mf => Item -> VarTable -> mf VarTable
+decl2vtentry :: MonadFail mf => Item -> Context -> mf Context
 
-decl2vtentry (DeclVar vclass dvar (KV sbbl typ)) vtbl = do
+decl2vtentry (DeclVar vclass dvar (KV sbbl typ)) (dflts,vtbl) = do
   let vc = vclass2varclass vclass
   let (id,vw) = dynvar2idwhen dvar
-  let var = Vbl id vc vw
+  let var = Vbl id vc vw -- dflts ?
   let t = typ2type typ
-  case sbbl of
+  vtbl' <- case sbbl of
     Na  ->  addKnownVar var t vtbl
     SB  ->  addKnownConstructor var t True  vtbl
     NS  ->  addKnownConstructor var t False vtbl
+  return (dflts,vtbl')
 
-decl2vtentry (DeclDLVar vclass dvar dvars) vtbl = do
+decl2vtentry (DeclDLVar vclass dvar dvars) (dflts,vtbl) = do
   let vc = vclass2varclass vclass
   let (id,vw) = dynvar2idwhen dvar
   let lvar = Vbl id vc vw
   let ids = map dynvar2idwhen dvars
   let gvars = map (StdVar . mkVTableKeyVar vc) ids
-  addKnownVarList lvar gvars vtbl
+  vtbl' <- addKnownVarList lvar gvars vtbl
+  return (dflts,vtbl')
 
-decl2vtentry (DeclASet vclass dvar) vtbl = do
+decl2vtentry (DeclASet vclass dvar) (dflts,vtbl) = do
   let vc = vclass2varclass vclass
   let (id,vw) = dynvar2idwhen dvar
   let asvar = Vbl id vc vw
-  addAbstractVarSet asvar vtbl
+  vtbl' <- addAbstractVarSet asvar vtbl
+  return (dflts,vtbl')
   
-decl2vtentry item vtbl = fail  "decl2vtentry nyfi"
+decl2vtentry item (dflts,vtbl) = fail  "decl2vtentry nyfi"
 
 vclass2varclass :: VClass -> VarClass
 vclass2varclass VarObs   =  ObsV
@@ -332,29 +336,29 @@ mkVTableKeyVar vc (id,vw) = Vbl id vc vw
 
 \begin{code}
 asserts2asns :: MonadFail mf 
-             => VarTable -> [Item] -> mf ([Law],[NmdAssertion])
-asserts2asns knwn asserts = ass2asns knwn [] [] asserts
-ass2asns knwn swal sjnoc [] = return (reverse swal,reverse sjnoc)
-ass2asns knwn swal sjnoc (Law ltyp dv tm sc : rest) = do
-  ll <- law2Law knwn ltyp dv tm sc
-  ass2asns knwn (ll++swal) sjnoc rest
-ass2asns knwn swal sjnoc (Conj dv tm sc : rest) = do
-  cnj <- conj2Conj knwn dv tm sc
-  ass2asns knwn swal (cnj:sjnoc) rest
+             => Context -> [Item] -> mf ([Law],[NmdAssertion])
+asserts2asns ctxt asserts = ass2asns ctxt [] [] asserts
+ass2asns ctxt swal sjnoc [] = return (reverse swal,reverse sjnoc)
+ass2asns ctxt swal sjnoc (Law ltyp dv tm sc : rest) = do
+  ll <- law2Law ctxt ltyp dv tm sc
+  ass2asns ctxt (ll++swal) sjnoc rest
+ass2asns ctxt swal sjnoc (Conj dv tm sc : rest) = do
+  cnj <- conj2Conj ctxt dv tm sc
+  ass2asns ctxt swal (cnj:sjnoc) rest
 
 -- we only keep axioms in .utp files !
 law2Law :: MonadFail mf 
-        => VarTable -> LawType -> DynVar -> Trm -> SCond -> mf [Law]
-law2Law knwn LAxiom dv tm sc = do
-  nasn <- conj2Conj knwn dv tm sc
+        => Context -> LawType -> DynVar -> Trm -> SCond -> mf [Law]
+law2Law ctxt LAxiom dv tm sc = do
+  nasn <- conj2Conj ctxt dv tm sc
   return [(nasn,Axiom)]
 law2Law _ _ _ _ _ = return [] -- ignore proofs, and assumptions
 
 conj2Conj :: MonadFail mf 
-        => VarTable -> DynVar -> Trm -> SCond -> mf NmdAssertion
-conj2Conj knwn (DynVar v) trm scond = do
-  term <- trm2term knwn trm
-  sidecond <- scond2sidecond knwn scond
+        => Context -> DynVar -> Trm -> SCond -> mf NmdAssertion
+conj2Conj ctxt (DynVar v) trm scond = do
+  term <- trm2term ctxt trm
+  sidecond <- scond2sidecond ctxt scond
   return (v,mkAsn term sidecond)
 \end{code}
 
@@ -450,68 +454,67 @@ Also missing - default declarations for common variables
 (e.g., ``P'' is typically a static predicate variable).
 
 \begin{code}
-trm2term :: MonadFail mf => VarTable -> Trm -> mf Term
+trm2term :: MonadFail mf => Context -> Trm -> mf Term
 \end{code}
 
 Values
 
 \begin{code}
-trm2term _ TTrue     = return $ Val bool $ Boolean True
-trm2term _ TFalse    = return $ Val bool $ Boolean False
-trm2term vt (EInt i) = return $ Val int  $ Integer i
+trm2term _ TTrue     =  return $ Val bool $ Boolean True
+trm2term _ TFalse    =  return $ Val bool $ Boolean False
+trm2term _ (EInt i)  =  return $ Val int  $ Integer i
 \end{code}
 
 Variables
 
 \begin{code}
-trm2term vt (TmVar dv) = return $ jVar ArbType $ Vbl id vc vw
+trm2term ctxt (TmVar dv) = return $ jVar ArbType $ Vbl id vc vw
   where 
     (id,vw) = dynvar2idwhen dv
-    vc = determineClass vt id vw
+    vc = determineClass ctxt id vw
 \end{code}
 
 Operators
 
 \begin{code}
-trm2term vt (PEqv trm1 trm2) = binop2term vt (===) trm1 trm2
-trm2term vt (PImpl trm1 trm2) = binop2term vt (==>) trm1 trm2
-trm2term vt (POr trm1 trm2) = binop2term vt (\/) trm1 trm2
-trm2term vt (PAnd trm1 trm2) = binop2term vt (/\) trm1 trm2
---trm2term vt (Eql trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (NE trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (Lt trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (LE trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (Gt trm1 trm2) = binop2term vt op trm1 trm2
---trm2term vt (GE trm1 trm2) = binop2term vt op trm1 trm2
-trm2term vt (LCat trm1 trm2) = binop2term vt cat trm1 trm2
-trm2term vt (LCons trm1 trm2) = binop2term vt cons trm1 trm2
-trm2term vt (EAdd trm1 trm2) = binop2term vt add trm1 trm2
-trm2term vt (EMinus trm1 trm2) = binop2term vt sub trm1 trm2
-trm2term vt (EMul trm1 trm2) = binop2term vt mul trm1 trm2
-trm2term vt (EDiv trm1 trm2) = binop2term vt idiv trm1 trm2
-trm2term vt (EMod trm1 trm2) = binop2term vt imod trm1 trm2
+trm2term ctxt (PEqv trm1 trm2) = binop2term ctxt (===) trm1 trm2
+trm2term ctxt (PImpl trm1 trm2) = binop2term ctxt (==>) trm1 trm2
+trm2term ctxt (POr trm1 trm2) = binop2term ctxt (\/) trm1 trm2
+trm2term ctxt (PAnd trm1 trm2) = binop2term ctxt (/\) trm1 trm2
+--trm2term ctxt (Eql trm1 trm2) = binop2term ctxt op trm1 trm2
+--trm2term ctxt (NE trm1 trm2) = binop2term ctxt op trm1 trm2
+--trm2term ctxt (Lt trm1 trm2) = binop2term ctxt op trm1 trm2
+--trm2term ctxt (LE trm1 trm2) = binop2term ctxt op trm1 trm2
+--trm2term ctxt (Gt trm1 trm2) = binop2term ctxt op trm1 trm2
+--trm2term ctxt (GE trm1 trm2) = binop2term ctxt op trm1 trm2
+trm2term ctxt (LCat trm1 trm2) = binop2term ctxt cat trm1 trm2
+trm2term ctxt (LCons trm1 trm2) = binop2term ctxt cons trm1 trm2
+trm2term ctxt (EAdd trm1 trm2) = binop2term ctxt add trm1 trm2
+trm2term ctxt (EMinus trm1 trm2) = binop2term ctxt sub trm1 trm2
+trm2term ctxt (EMul trm1 trm2) = binop2term ctxt mul trm1 trm2
+trm2term ctxt (EDiv trm1 trm2) = binop2term ctxt idiv trm1 trm2
+trm2term ctxt (EMod trm1 trm2) = binop2term ctxt imod trm1 trm2
 \end{code}
 
 Miscellaneous
 
 \begin{code}
---trm2term vt (PNot trm) 
---trm2term vt ENeg trm
---trm2term vt ENil
-trm2term vt (TCons dv trms) = do
+--trm2term ctxt (PNot trm) 
+--trm2term ctxt ENeg trm
+--trm2term ctxt ENil
+trm2term ctxt@(dflts,vt) (TCons dv trms) = do
   let  (id,vw) = dynvar2idwhen dv
   let sbbl = lkpSubable (Vbl id ObsV Static) vt
-  terms <- sequence $ map (trm2term vt) trms 
+  terms <- sequence $ map (trm2term ctxt) trms 
   return $ Cons ArbType (sbbl==SB) id terms
 \end{code}
 
 Substitution
 
 \begin{code}
-trm2term vt (TSubV trm trms tdvs)     =  mkSubst vt trm trms tdvs [] []
-trm2term vt (TSubLV trm rdlvs tdlvs)  =  mkSubst vt trm [] [] rdlvs tdlvs
-trm2term vt (TSubst trm trms tdvs rdlvs tdlvs)
-                                      =  mkSubst vt trm trms tdvs rdlvs tdlvs
+trm2term ctxt (TSubV trm trms tdvs)     =  mkSubst ctxt trm trms tdvs [] []
+trm2term ctxt (TSubLV trm rdlvs tdlvs)   =  mkSubst ctxt trm [] [] rdlvs tdlvs
+trm2term ctxt (TSubst trm trms tdvs rdlvs tdlvs)  =  mkSubst ctxt trm trms tdvs rdlvs tdlvs
 \end{code}
 
 Not yet implemented!
@@ -528,8 +531,8 @@ To determine class, we need to search the variable data table,
 by working through the different classes 
 and searching all three var-table mappings.
 \begin{code}
-determineClass :: VarTable -> Identifier -> VarWhen -> VarClass
-determineClass vt id vw
+determineClass :: Context -> Identifier -> VarWhen -> VarClass
+determineClass (dflts,vt) id vw
   | ifIsVarClass  ObsV   =  ObsV
   | ifIsVarClass  ExprV  =  ExprV
   | ifIsVarClass  PredV  =  PredV
@@ -537,9 +540,9 @@ determineClass vt id vw
   | ifIsLVarClass ExprV  =  ExprV
   | ifIsLVarClass PredV  =  PredV
   | otherwise        
-    =  case M.lookup (head $ idName id) defaultClasses of
-         Nothing  ->  ObsV  -- o or t
-         Just vc  ->  vc  
+    =  case M.lookup (head $ idName id) dflts of
+         Nothing  ->  ObsV  
+         Just (_,vc,_)  ->  vc  
   where
    ifIsVarClass  vc  =  lookupVarTable vt (Vbl id vc vw)  /= UnknownVar
    ifIsLVarClass vc  =  lookupLVarTable vt (Vbl id vc vw) /= UnknownListVar
@@ -551,10 +554,10 @@ determineClass vt id vw
 
 \begin{code}
 binop2term :: MonadFail m 
-           => VarTable -> (Term -> Term -> Term) -> Trm -> Trm -> m Term
-binop2term vt op trm1 trm2 = do
-  term1 <- trm2term vt trm1
-  term2 <- trm2term vt trm2
+           => Context -> (Term -> Term -> Term) -> Trm -> Trm -> m Term
+binop2term ctxt op trm1 trm2 = do
+  term1 <- trm2term ctxt trm1
+  term2 <- trm2term ctxt trm2
   return (term1 `op` term2)
 \end{code}
 
@@ -572,14 +575,14 @@ lkpSubable v vt
 
 \begin{code}
 mkSubst :: MonadFail m
-        => VarTable -> Trm -> [Trm] -> [DynVar] -> [DynVar] -> [DynVar] 
+        => Context -> Trm -> [Trm] -> [DynVar] -> [DynVar] -> [DynVar] 
         -> m Term
-mkSubst vt trm trms tdvs rdlvs tdlvs = do
-  term   <- trm2term vt trm
-  terms  <- sequence $ map (trm2term vt) trms
-  let tvars  = map (dynvar2stdvar vt) tdvs
-  let rlvars = map (dynvar2lstvar vt) rdlvs
-  let tlvars = map (dynvar2lstvar vt) tdlvs
+mkSubst ctxt trm trms tdvs rdlvs tdlvs = do
+  term   <- trm2term ctxt trm
+  terms  <- sequence $ map (trm2term ctxt) trms
+  let tvars  = map (dynvar2stdvar ctxt) tdvs
+  let rlvars = map (dynvar2lstvar ctxt) rdlvs
+  let tlvars = map (dynvar2lstvar ctxt) tdlvs
   return $ Sub ArbType term $ xSubstn (zip tvars terms) (zip tlvars rlvars)
 \end{code}
 Note the lack of error checking!!!
@@ -687,30 +690,30 @@ type2typ typ = error ("NYFI: type2typ "++show typ)
 \subsection{SCond to SideCond}
 
 \begin{code}
-scond2sidecond :: MonadFail mf => VarTable -> SCond -> mf SideCond
+scond2sidecond :: MonadFail mf => Context -> SCond -> mf SideCond
 scond2sidecond _ SCnone = return scTrue
-scond2sidecond vt (SCVSCs vsconds) 
-  = scond2sidecond vt (SCFull vsconds $ VSet [])
-scond2sidecond vt (SCFresh vrset)
-  = scond2sidecond vt (SCFull [] vrset)
-scond2sidecond vt (SCFull vsconds (VSet gvars)) = do
-  let vscs  = map (vscond2varsidecond vt) vsconds
-  let fvs = S.fromList $ map (gvar2genvar vt) gvars
+scond2sidecond ctxt (SCVSCs vsconds) 
+  = scond2sidecond ctxt (SCFull vsconds $ VSet [])
+scond2sidecond ctxt (SCFresh vrset)
+  = scond2sidecond ctxt (SCFull [] vrset)
+scond2sidecond ctxt (SCFull vsconds (VSet gvars)) = do
+  let vscs  = map (vscond2varsidecond ctxt) vsconds
+  let fvs = S.fromList $ map (gvar2genvar ctxt) gvars
   mkSideCond vscs fvs
 \end{code}
 
 \subsubsection{VSCond to VarSideCond}
 
 \begin{code}
-vscond2varsidecond :: VarTable -> VSCond -> VarSideConds
-vscond2varsidecond vt (VSCDisj gv gvs) = vscond2VSC vt disjfrom gv gvs
-vscond2varsidecond vt (VSCCovBy gv gvs) = vscond2VSC vt coveredby gv gvs
-vscond2varsidecond vt (VSCDynCov gv gvs) = vscond2VSC vt dyncovered gv gvs
+vscond2varsidecond :: Context -> VSCond -> VarSideConds
+vscond2varsidecond ctxt (VSCDisj gv gvs) = vscond2VSC ctxt disjfrom gv gvs
+vscond2varsidecond ctxt (VSCCovBy gv gvs) = vscond2VSC ctxt coveredby gv gvs
+vscond2varsidecond ctxt (VSCDynCov gv gvs) = vscond2VSC ctxt dyncovered gv gvs
 
-vscond2VSC :: VarTable -> (GenVar -> VarSet -> VarSideConds)
+vscond2VSC :: Context -> (GenVar -> VarSet -> VarSideConds)
            -> GVar ->  VrSet -> VarSideConds
-vscond2VSC vt op gv (VSet gvs)
-  = gvar2genvar vt gv `op` (S.fromList $ map (gvar2genvar vt) gvs)
+vscond2VSC ctxt op gv (VSet gvs)
+  = gvar2genvar ctxt gv `op` (S.fromList $ map (gvar2genvar ctxt) gvs)
 \end{code}
 
 \subsection{SideCond to SCond}
@@ -750,21 +753,21 @@ varset2vset vs = VSet $ map genvar2dynvar $ S.toList vs
 \subsection{DynVar to GenVar}
 
 \begin{code}
-dynvar2stdvar :: VarTable -> DynVar -> Variable
-dynvar2stdvar vt dyn = Vbl id vc vw where
+dynvar2stdvar :: Context -> DynVar -> Variable
+dynvar2stdvar ctxt dyn = Vbl id vc vw where
   (id,vw) = dynvar2idwhen dyn
-  vc = determineClass vt id vw
+  vc = determineClass ctxt id vw
 \end{code}
 
 \begin{code}
-dynvar2lstvar :: VarTable -> DynVar -> ListVar
-dynvar2lstvar vt dyn = LVbl (dynvar2stdvar vt dyn) [] []
+dynvar2lstvar :: Context -> DynVar -> ListVar
+dynvar2lstvar ctxt dyn = LVbl (dynvar2stdvar ctxt dyn) [] []
 \end{code}
 
 \begin{code}
-gvar2genvar :: VarTable -> GVar -> GenVar
-gvar2genvar vt (SVar dyn) = StdVar $ dynvar2stdvar vt dyn
-gvar2genvar vt (LVar dyn) = LstVar $ dynvar2lstvar vt dyn
+gvar2genvar :: Context -> GVar -> GenVar
+gvar2genvar ctxt (SVar dyn) = StdVar $ dynvar2stdvar ctxt dyn
+gvar2genvar ctxt (LVar dyn) = LstVar $ dynvar2lstvar ctxt dyn
 \end{code}
 
 \subsection{GenVar to DynVar}
@@ -981,8 +984,8 @@ foundBoth :: String -> Assertion -> Assertion -> [String]
 foundBoth header pAssn iAssn
   | pAssn == iAssn  =  [] -- nothing to see here....
   | otherwise
-      = [ "  installed assertion: " ++ trAsn (pdbg "fB.iAssn" iAssn)
-        , "  parsed assertion:    " ++ trAsn (pdbg "fB.pAssn" pAssn)
+      = [ "  installed assertion: " ++ trAsn iAssn
+        , "  parsed assertion:    " ++ trAsn pAssn
         , header
         ]
 \end{code}

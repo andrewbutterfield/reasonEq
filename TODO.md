@@ -2,7 +2,9 @@
 
 ## URGENT or NEXT
 
-Need to type-check parsed theory before checking against installed.
+Need to type-check parsed theory before checking against installed ?
+
+Added `Defaults` to be carried around with `VarTable`.
 
 ### Load/Generate
 

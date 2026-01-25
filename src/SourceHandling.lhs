@@ -268,6 +268,14 @@ setStatic (t,vc,_ )  = (t   , vc   , Static)
 
 \subsubsection{Var-Table Conversions}
 
+We need to include the defaults disucssed above here,
+as they are needed to generate terms,
+and terms are recorded in \h{VarTables}s.
+
+\begin{code}
+type Context = (Defaults,VarTable)
+\end{code}
+
 \begin{code}
 isDeclItem :: Item -> Bool
 isDeclItem (Conj _ _ _)   =  False

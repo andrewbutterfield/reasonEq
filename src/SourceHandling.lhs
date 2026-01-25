@@ -841,11 +841,11 @@ compIPConjectures sffid iTheory pTheory
     iLws = sort $ laws  iTheory
     troper = scanConjs [] pCjs iCjs iLws
 
-scanConjs :: Eq a => [String]            -- reports already generated
-                  -> [(String, a)]       -- parsed conjectures
-                  -> [(String, a)]       -- installed conjectures
-                  -> [((String, a), b)]  -- installed laws
-                  -> [String]            -- updated reports
+scanConjs :: [String]            -- reports already generated
+              -> [NmdAssertion]       -- parsed conjectures
+              -> [NmdAssertion]       -- installed conjectures
+              -> [Law]  -- installed laws
+              -> [String]            -- updated reports
 scanConjs stroper [] iCjs _ 
   | null iCjs  =  stroper
   | otherwise = (("Extra installed conj: "++show (map fst iCjs)):stroper)
@@ -855,11 +855,11 @@ scanConjs stroper pCjs@((pnm,_):_) iCjs iLws
 
 \newpage
 \begin{code}
-scanConjs' :: Eq a => [String]            -- reports already generated
-                   -> [(String, a)]       -- pnm
-                   -> [(String, a)]       -- installed conjectures
-                   -> [((String, a), b)]  -- installed laws
-                   -> [String]            -- updated reports
+scanConjs' :: [String]            -- reports already generated
+                -> [NmdAssertion]       -- pnm
+                -> [NmdAssertion]       -- installed conjectures
+                -> [Law]  -- installed laws
+                -> [String]            -- updated reports
 
 -- scanConjs' preconditions:
 --     pCjs@[(pnm,_):_]   -- not null
@@ -898,12 +898,23 @@ scanConjs' stroper pCjs@((pnm,passn):pCjs')
   | icnm == ilnm
      =  (("XXXX Name "++icnm++" in installed conjectures and laws"):stroper)
   | pnm == icnm  -- ilnm > pnm
-     = scanConjs (("NYI: Found "++pnm++" in both conjectures"):stroper)  
+     = scanConjs (foundBoth ("Both conjectures - "++pnm) passn icassn++stroper)  
          pCjs' iCjs' iLws
   | pnm == ilnm -- icnm > pnm
-     = scanConjs (("NYI: Found "++pnm++" in conjecture and law"):stroper)  
+     = scanConjs (foundBoth ("Conjecture and Law - "++pnm) passn ilassn++stroper)  
          pCjs' iCjs iLws'
   | otherwise = scanConjs stroper pCjs' iCjs' iLws'
+\end{code}
+
+\begin{code}
+foundBoth :: String -> Assertion -> Assertion -> [String]
+foundBoth header pAssn iAssn
+  | pAssn == iAssn  =  [] -- nothing to see here....
+  | otherwise
+      = [ "  installed assertion: " ++ trAsn (pdbg "fB.iAssn" iAssn)
+        , "  parsed assertion:    " ++ trAsn (pdbg "fB.pAssn" pAssn)
+        , header
+        ]
 \end{code}
 
 \subsection{Compare Laws}
@@ -971,5 +982,4 @@ checkEntries map1 map2 key
         else [(key,elem1,elem2)]
       _ -> []  -- shouldn't happen, but fail silently anyway
   where lkp1 = M.lookup key map1 ; lkp2 = M.lookup key map2
-
 \end{code}

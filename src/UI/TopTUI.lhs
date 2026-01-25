@@ -229,7 +229,7 @@ and will replace all/most(?) of the Haskell modules currently used
 genCmd  = "gen"  ; genSpc  = map (const ' ') genCmd
 loadCmd = "load" ; loadSpc = map (const ' ') loadCmd
 genLoadFormat
-  = [ ( genSpc ++ " -- Theory source file: <thryname>.src" )
+  = [ ( genSpc ++ " -- Theory source file: <thryname>-gen.utp" )
     , ( genSpc ++ " -- File format: plain text" ) ]
 \end{code}
 

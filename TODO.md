@@ -2,6 +2,7 @@
 
 ## URGENT or NEXT
 
+Need to type-check parsed theory before checking against installed.
 
 ### Load/Generate
 

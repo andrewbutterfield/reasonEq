@@ -1,36 +1,24 @@
-@PCJS:  
-[ ("eqv_id",ASN )
-, ("eqv_subst",ASN )
-, ("true_subst",ASN )
-]
-@ICJS:  
-[ ("eqv_subst",ASN )
-]
-@ILWS:  
-[ (("eqv_assoc",ASN ),Axiom)
-, (("eqv_id",ASN ),Proven "eqv_id")
-, (("eqv_refl",ASN ),Axiom)
-, (("eqv_symm",ASN ),Axiom)
-, (("id_subst",ASN ),Axiom)
-, (("non_subst",ASN ),Axiom)
-, (("true",ASN ),Axiom)
-, (("true_subst",ASN ),Assumed)]
+@fB.pAssn:  ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V T (VR (Id "Q" 0,VP,WS))],V T (VR (Id "Q" 0,VP,WS))],([],fromList []))
+  parsed assertion:    (true ≡ Q) ≡ Q
+@fB.iAssn:  ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],([],fromList []))
+  installed assertion: (true ≡ Q) ≡ Q
 
-scanConjs [] 
-  pCjs = ["eqv_id","eqv_subst""true_subst"] 
-  iCjs = ["eqv_subst"]
-  iLws = ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
+ASN (
+  C (TG (Id "B" 0)) True (Id "eqv" 0) 
+    [ C (TG (Id "B" 0)) True (Id "eqv" 0) 
+      [ K (TG (Id "B" 0)) (VB True)
+      , V T (VR (Id "Q" 0,VP,WS))
+      ]
+    , V T (VR (Id "Q" 0,VP,WS))
+    ]
+  , ([],fromList []) )
 
-  seek "eqv_id" ["eqv_subst"]  = ["eqv_subst"]
-  seek "eqv_id" ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"] = ["eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
-
-  scanConjs' []  
-  pCjs = ["eqv_id","eqv_subst""true_subst"] 
-  iCjs = ["eqv_subst"]
-  iLws = ["eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
--- NYI: Found eqv_id in conjecture and law
-
-scanConjs [] 
-  pCjs = ["eqv_id","eqv_subst""true_subst"] 
-  iCjs = ["eqv_subst"]
-  iLws = ["eqv_assoc","eqv_id","eqv_refl","eqv_symm","id_subst","non_subst","true","true_subst"]
+ASN (
+  C (TG (Id "B" 0)) True (Id "eqv" 0) 
+    [ C (TG (Id "B" 0)) True (Id "eqv" 0) 
+      [ K (TG (Id "B" 0)) (VB True)
+      , V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
+      ]
+    , V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
+    ]
+  ,([],fromList []) )

@@ -90,7 +90,7 @@ separator DynVar "" ;
 
   Single-letter variables get classifed by default as follows:
  
-  Upper-Case:  Predicate, Static
+  Upper-Case:  Predicate, Static, type bool
   Lower-Case:
     a..h  Expr, Static
     i..n  Obs, Static

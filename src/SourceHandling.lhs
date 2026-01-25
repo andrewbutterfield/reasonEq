@@ -144,6 +144,7 @@ items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
 items2theory items thry = do
   let (defs,rest) = partition isDefItem items
   let (decls,asserts) = partition isDeclItem rest
+  let defaults = defs2defaults initialDefaults defs
   knwn <- decls2vartable decls $ newNamedVarTable $ thName thry
   (lws,cnjs) <- asserts2asns knwn asserts 
   return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
@@ -161,7 +162,7 @@ as evidenced in the book\cite{UTP-book}:
 
 \begin{tabular}{|c|l|}
 \hline
-   A--L,N,P--R,T--Z & Predicate, Static
+   A--L,N,P--R,T--Z & Predicate, Static, bool (!)
 \\ M,S,O & Obs, Dynamic  -- model/script/all observations
 \\ a--h & Expr, Static
 \\ i--n & Obs, Static
@@ -176,27 +177,50 @@ For longer variables we use the above table with their first character.
 \begin{code}
 mkDefault :: [(String,a)] -> Map Char a
 mkDefault sas = M.fromList $ concat $ map twiddle sas
+
 twiddle :: ([a],b) -> [(a,b)]
 twiddle (xs,y) = map (\x -> (x,y)) xs
+
 chkDefault :: a -> Map Char a -> String -> a
 chkDefault dd defMap "" = dd
 chkDefault dd defMap (c:_)
   = case M.lookup c defMap of
       Nothing -> dd
       Just d  -> d
+
 defaultClasses :: Map Char VarClass
 defaultClasses = mkDefault
   [(['A'..'L']++['N']++['P'..'R']++['T'..'Z'],PredV)
   ,("MSO",ObsV)
   ,("abcdefgh",ExprV),("ijklmn",ObsV),("pqrs",PredV),("uvwxyz",ObsV)]
+
+defaultTypes :: Map Char Type
+defaultTypes = mkDefault
+  [(['A'..'L']++['N']++['P'..'R']++['T'..'Z'],bool)
+  ,("MSO",ArbType)
+  ,("abcdefgh",ArbType),("ijklmn",ArbType),("pqrs",bool),("uvwxyz",ArbType)]
+
 defaultWhen :: Map Char VarWhen
 defaultWhen = mkDefault
-  [(['A'..'Z'],Static),
-  ("abcdefghijklmn",Static),("pqrs",Before),("uvwxyz",During "")]
+  [(['A'..'L']++['N']++['P'..'R']++['T'..'Z'],Static)
+  ,("MSO",During "")
+  ,("abcdefghijklmn",Static),("pqrs",Before),("uvwxyz",During "")]
+
+-- ! keep domain of above maps the same !!!!!!!!
+
+type Defaults = Map Char (Type,VarClass,VarWhen)
+initialDefaults :: Defaults
+initialDefaults
+  = M.fromList $ map mrgDefaults 
+     $ ( zip3 (M.toList defaultTypes) 
+              (M.toList defaultClasses) 
+              (M.toList defaultWhen) )
+mrgDefaults ((c1,w1),(c2,w2),(c3,w3)) =  (c1,(w1,w2,w3))
+-- no error checking just now! hope that c1==c2==c3 !
 \end{code}
 Here \h{During ""} is code for ``any dynamic'' (before,after,during).
 
-\newpage
+
 The above defaults can be overridden using the default items.
 \begin{code}
 isDefItem :: Item -> Bool
@@ -207,6 +231,41 @@ isDefItem (DefStatic _) = True;
 isDefItem _ = False
 \end{code}
 
+\begin{code}
+defs2defaults :: Defaults -> [Item] -> Defaults
+defs2defaults currentdefs []  = currentdefs
+defs2defaults currentdefs (def:defs) 
+  = defs2defaults (def2default currentdefs def) defs
+
+def2default :: Defaults -> Item -> Defaults
+def2default currdefs (DefObs dynvars)    
+                        = changedefs setObs currdefs dynvars
+def2default currdefs (DefExpr dynvars)   
+                        =  changedefs setExpr currdefs dynvars
+def2default currdefs (DefPred dynvars)   
+                        =  changedefs setPred currdefs dynvars
+def2default currdefs (DefStatic dynvars) 
+                        =  changedefs setStatic currdefs dynvars
+def2default currdefs _  =  currdefs --shouldn't occur
+
+changedefs chg currdefs [] = currdefs
+changedefs chg currdefs (dynvar:dynvars)
+  = changedefs chg (changedef chg dynvar currdefs) dynvars
+
+changedef chg dyn currdefs
+  = case M.lookup c currdefs of
+      Nothing       ->  M.insert c (chg (ArbType,ObsV,vw)) currdefs
+      Just currdef  ->  M.insert c (chg currdef)           currdefs
+  where
+    (Identifier i _,vw) = dynvar2idwhen dyn
+    c = head i
+
+setObs    (t, _,vw)  = (t   , ObsV , vw    )
+setExpr   (t, _,vw)  = (t   , ExprV, vw    )
+setPred   (_, _,vw)  = (bool, PredV, vw    )
+setStatic (t,vc,_ )  = (t   , vc   , Static)
+\end{code}
+
 \subsubsection{Var-Table Conversions}
 
 \begin{code}
@@ -214,6 +273,9 @@ isDeclItem :: Item -> Bool
 isDeclItem (Conj _ _ _)   =  False
 isDeclItem (Law _ _ _ _)  =  False
 isDeclItem _              =  True
+\end{code}
+
+\begin{code}
 decls2vartable :: MonadFail mf => [Item] -> VarTable -> mf VarTable
 decls2vartable [] vtbl = return vtbl
 decls2vartable (item:items) vtbl = do

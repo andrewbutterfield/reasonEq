@@ -997,11 +997,34 @@ comparing them against the installed laws and (eventually) conjectures.
 \begin{code}
 compIPLaws :: [String] -> Theory -> Theory -> String
 compIPLaws sffid iTheory pTheory
-  = compFinish ("NYI: compIPLaws":sffid)
+  = compFinish (troper++sffid)
   where 
-    pLws = sort $ map (fst . fst) $ laws  pTheory
-    iCjs = sort $ map fst         $ conjs iTheory
-    iLws = sort $ map (fst . fst) $ laws  iTheory
+    pLws = sort $ laws  pTheory
+    iLws = sort $ laws  iTheory
+    iCjs = sort $ conjs iTheory
+    troper = scanLaws [] pLws iLws iCjs
+
+scanLaws :: [String] -> [Law] -> [Law] -> [NmdAssertion] -> [String]
+scanLaws stroper [] iLws _
+  | null iLws  =  stroper
+  | otherwise 
+      = (("Extra installed laws: "++show (map (fst .fst) iLws)):stroper)
+scanLaws stroper pLws@(((pnm,_),_):_) iLws iCjs
+  = scanLaws' stroper pLws (seek (fst . fst) pnm iLws) (seek fst pnm iCjs)
+\end{code}
+
+\begin{code}
+scanLaws' :: [String] -> [Law] -> [Law] -> [NmdAssertion] -> [String]
+
+-- both installed empty
+scanLaws' stroper pLws [] []
+  = (("Extra parsed laws: "++show (map (fst . fst) pLws)):stroper)
+
+-- installed conjectures empty
+scanLaws' stroper pLws@(((pnm,passn),_):pLws')
+                  iLws@(((ilnm,ilassn)):iLws')  -- ilnm >= pnm
+                  []
+  = error "scanLaws' 2nd case NYI"
 \end{code}
 
 \subsection{Finish}

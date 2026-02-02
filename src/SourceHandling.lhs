@@ -939,11 +939,11 @@ scanConjs' :: [String]            -- reports already generated
 --     iCjs@[(icnm,_):_]  -- if not null, then icnm >= pnm
 --     iLws@[(ilnm,_):_]  -- if not null, then ilnm >= pnm
 
--- both installed empty
+-- 1. both installed empty
 scanConjs' stroper pCjs [] [] 
   = (("Extra parsed conj: "++show (map fst pCjs)):stroper)
 
--- installed laws empty
+-- 2. installed laws empty
 scanConjs' stroper pCjs@((pnm,passn):pCjs') 
                    iCjs@((icnm,icassn):iCjs') -- icnm >= pnm
                    []
@@ -953,7 +953,7 @@ scanConjs' stroper pCjs@((pnm,passn):pCjs')
       = scanConjs (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
   | otherwise = scanConjs stroper pCjs' iCjs' []
 
--- installed conjectures empty
+-- 3. installed conjectures empty
 scanConjs' stroper pCjs@((pnm,passn):pCjs') 
                    [] 
                    iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
@@ -963,18 +963,20 @@ scanConjs' stroper pCjs@((pnm,passn):pCjs')
      = scanConjs (("Conj and law differ:"++pnm):stroper) pCjs' [] iLws'
   | otherwise = scanConjs stroper pCjs' [] iLws'
 
--- both installed present
+-- 4. both installed present
 -- we would not expect icnm == ilnm -- this is a serious issue
 scanConjs' stroper pCjs@((pnm,passn):pCjs')
                    iCjs@((icnm,icassn):iCjs')       -- icnm >= pnm
                    iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
   | icnm == ilnm
-     =  (("XXXX Name "++icnm++" in installed conjectures and laws"):stroper)
+     =  (("Same Name '"++ilnm++"' in installed conjecture and law!"):stroper)
   | pnm == icnm  -- ilnm > pnm
-     = scanConjs (foundBoth ("Both conjectures - "++pnm) passn icassn++stroper)  
-         pCjs' iCjs' iLws
+     = scanConjs 
+        (foundBoth ("Both conjectures - "++pnm) passn icassn ++ stroper)  
+        pCjs' iCjs' iLws
   | pnm == ilnm -- icnm > pnm
-     = scanConjs (foundBoth ("Conjecture and Law - "++pnm) passn ilassn++stroper)  
+     = scanConjs 
+         (foundBoth ("Conjecture and Law - "++pnm) passn ilassn ++ stroper)
          pCjs' iCjs iLws'
   | otherwise = scanConjs stroper pCjs' iCjs' iLws'
 \end{code}
@@ -1016,15 +1018,45 @@ scanLaws stroper pLws@(((pnm,_),_):_) iLws iCjs
 \begin{code}
 scanLaws' :: [String] -> [Law] -> [Law] -> [NmdAssertion] -> [String]
 
--- both installed empty
+-- 1. both installed empty
 scanLaws' stroper pLws [] []
   = (("Extra parsed laws: "++show (map (fst . fst) pLws)):stroper)
 
--- installed conjectures empty
+-- 2. installed conjectures empty
 scanLaws' stroper pLws@(((pnm,passn),_):pLws')
-                  iLws@(((ilnm,ilassn)):iLws')  -- ilnm >= pnm
+                  iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
                   []
-  = error "scanLaws' 2nd case NYI"
+  | pnm /= ilnm
+      = scanLaws (("Extra parsed laws"++pnm):stroper) pLws' iLws []
+  | passn /= ilassn
+      = scanLaws (("Laws differ:"++pnm):stroper) pLws' iLws' []
+  | otherwise = scanLaws stroper pLws' iLws' []
+
+-- 3. installed laws empty
+scanLaws' stroper pLws@(((pnm,passn),_):pLws')
+                  []
+                  iCjs@((icnm,icassn):iCjs')   -- icnm >= pnm
+  | pnm /= icnm
+      = scanLaws (("Extra parsed laws"++pnm):stroper) pLws' [] iCjs'
+  | passn /= icassn
+      = scanLaws (("Law and Conj differ:"++pnm):stroper) pLws' [] iCjs'
+  | otherwise = scanLaws stroper pLws' [] iCjs'
+
+-- 4. both installed present
+scanLaws' stroper pLws@(((pnm,passn),_):pLws')
+                  iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
+                  iCjs@((icnm,icassn):iCjs')    -- icnm >= pnm
+  | icnm == ilnm
+     = (("Same Name '"++ilnm++"' in installed law and conjecture!"):stroper)
+  | pnm == ilnm -- icnm > pnm
+     = scanLaws 
+         (foundBoth ("Both laws - "++pnm) passn ilassn ++ stroper)  
+         pLws' iLws' iCjs
+  | pnm == icnm -- ilnm > pnm
+     = scanLaws 
+         (foundBoth ("Law and Conjecture - "++pnm) passn icassn ++ stroper)  
+         pLws' iLws iCjs'
+  | otherwise = scanLaws stroper pLws' iLws' iCjs'
 \end{code}
 
 \subsection{Finish}

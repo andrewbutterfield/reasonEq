@@ -2,6 +2,11 @@
 
 ## URGENT or NEXT
 
+Improved reporting from checker:
+ for every parsed conjecture/law:
+   note it is being checked, and report any anomalies, or say OK
+
+
 Need to type-check parsed theory before checking against installed ?
 
 Added `Defaults` to be carried around with `VarTable`.

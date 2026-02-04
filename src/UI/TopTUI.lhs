@@ -284,7 +284,7 @@ loadTheoryFile [thName] reqs = do
       Yes pthry ->  do
         putStrLn ("Parsed as:\n"++show pthry)
         putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
-        putStrLn "\nComparing installed and just-parsed theories\n"
+        putStrLn "\nComparing current and new theories\n"
         case getCurrentTheory reqs of
           Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
           Just ithry -> do

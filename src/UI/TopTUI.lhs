@@ -282,7 +282,7 @@ loadTheoryFile [thName] reqs = do
     theory_text <- readFile fname
     case loadTheory (theories reqs) theory_text of
       Yes pthry ->  do
-        putStrLn ("Parsed as:\n"++show pthry)
+        -- putStrLn ("Parsed as:\n"++show pthry)
         putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
         putStrLn "\nComparing current and new theories\n"
         case getCurrentTheory reqs of
@@ -294,6 +294,7 @@ loadTheoryFile [thName] reqs = do
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
   else putStrLn ("loadTheoryFile: cannot find "++fname)
   return reqs
+
 loadTheoryFile args reqs = do
   putStrLn ("load: expected single theory name"); return reqs
 \end{code}

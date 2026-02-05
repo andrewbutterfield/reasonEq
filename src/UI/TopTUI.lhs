@@ -283,12 +283,14 @@ loadTheoryFile [thName] reqs = do
     case loadTheory (theories reqs) theory_text of
       Yes pthry ->  do
         -- putStrLn ("Parsed as:\n"++show pthry)
+        depthys <- getTheoryDeps thName (theories reqs)
+        let vts = map known depthys
         putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
         putStrLn "\nComparing current and new theories\n"
         case getCurrentTheory reqs of
           Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
           Just ithry -> do
-            let report = compareIPTheories ithry pthry
+            let report = compareIPTheories (ttail vts) ithry pthry
             putStrLn report
         putStrLn "**** NOT YET INSTALLED ****"
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)

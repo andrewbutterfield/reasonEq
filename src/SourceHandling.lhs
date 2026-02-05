@@ -810,16 +810,14 @@ may have been proven, assumed, or deemed to be suspect.
 
 We are going to compare an Current theory with a Loaded theory:
 \begin{code}
-compareIPTheories :: Theory -> Theory ->  String
-compareIPTheories iTheory pTheory
-  | iName /= pName  =  unlines' mismatch
-  | otherwise       =  compIPDeps [] iTheory pTheory
-  where
-    iName = thName iTheory ; pName = thName pTheory
-    mismatch 
-      = [ "Current: "++iName
-        , "Loaded:  "++pName
-        , "Different Theories!", "EXIT", "" ]
+compareIPTheories :: [VarTable] -> Theory -> Theory ->  String
+compareIPTheories vts iTheory pTheory
+  | iName == pName  =  compIPDeps vts [] iTheory pTheory
+  | otherwise = unlines'  [ "Theory names differ!"
+                          , "  current name is "++iName
+                          , "  loaded name is  "++pName
+                          , "EXITING now" ]
+  where iName = thName iTheory ; pName = thName pTheory
 \end{code}
 
 \subsection{Compare Dependencies}
@@ -827,12 +825,13 @@ compareIPTheories iTheory pTheory
 Names are the same, so next we check dependencies,
 but also start accumulating discrepancy reports:
 \begin{code}
-compIPDeps :: [String] -> Theory -> Theory ->  String
-compIPDeps sffid iTheory pTheory
-  | iDeps /= pDeps  =  compIPVarTables (mismatch++sffid) iTheory pTheory
-  | otherwise       =  compIPVarTables sffid iTheory pTheory
+compIPDeps :: [VarTable] -> [String] -> Theory -> Theory ->  String
+compIPDeps vts sffid iTheory pTheory
+  | iDeps == pDeps  =  compIPVarTables vts (matched++sffid)  iTheory pTheory
+  | otherwise       =  compIPVarTables vts (mismatch++sffid) iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
+    matched = [ "", "Dependencies match OK." ]
     mismatch 
       = [ "Current deps. not in Loaded : "++display (iDeps \\ pDeps)
         , "Loaded deps. not in Current : "++display (pDeps \\ iDeps) 
@@ -848,17 +847,17 @@ comparing them against those in the installed version.
 We don't compare the \h{VarData} names as they are not present in .utp files,
 and are set equal to the theory name when the theory is built.
 \begin{code}
-compIPVarTables :: [String] -> Theory -> Theory -> String
-compIPVarTables sffid iTheory pTheory
+compIPVarTables :: [VarTable] -> [String] -> Theory -> Theory -> String
+compIPVarTables vts sffid iTheory pTheory
   =  let
        vtErrors = checkVTVars           (vTable pKnown)  (vTable iKnown)
        stErrors = checkSTLVars "lstvar" (lvTable pKnown) (lvTable iKnown)
        dtErrors = checkSTLVars "dynvar" (dvTable pKnown) (dvTable iKnown)
        errors = dtErrors ++ stErrors ++ vtErrors 
        report = if null errors 
-                then errors 
-                else errors ++ [ "Variable Tables differ!","" ]
-     in compIPConjectures (report++sffid) iTheory pTheory
+                then [ "", "Variable Tables match OK." ]
+                else errors ++ [ "Variable Tables differ!" ]
+     in compIPConjectures vts (report++sffid) iTheory pTheory
   where iKnown = known iTheory ; pKnown = known pTheory
 
 checkVTVars :: VarRoleMap -> VarRoleMap -> [String]
@@ -905,13 +904,17 @@ checkSTLVars what plvTable ilvTable
 Here we work through the parsed conjectures,
 comparing them against the installed conjectures and (eventually) laws.
 \begin{code}
-compIPConjectures :: [String] -> Theory -> Theory -> String
-compIPConjectures sffid iTheory pTheory
-  = compIPLaws (scanConjs sffid pCjs iCjs iLws) iTheory pTheory
+compIPConjectures :: [VarTable] -> [String] -> Theory -> Theory -> String
+compIPConjectures vts sffid iTheory pTheory
+  = compIPLaws (scanConjs (vtstxt:sffid) pCjs iCjs iLws) iTheory pTheory
   where 
     pCjs = sort $ conjs pTheory
     iCjs = sort $ conjs iTheory
     iLws = sort $ laws  iTheory
+    vtstxt = if null vts
+             then "Have no dependent vartables."
+             else ( "Have "++show (length vts)++ " dependent vartables: " )
+                  ++ concat (intersperse " " (map vTName vts))
 
 scanConjs :: [String]            -- reports already generated
               -> [NmdAssertion]       -- Loaded conjectures

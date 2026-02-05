@@ -22,7 +22,7 @@ module VarData (
 , VarRoleMap,  LVarRoleMap, DVarRoleMap 
 , VarTable
 , pattern VarData
-, vTable, lvTable, dvTable, vtList, stList, dtList
+, vTName, vTable, lvTable, dvTable, vtList, stList, dtList
 , newVarTable, newNamedVarTable
 , addKnownConst, addKnownVar, addKnownConstructor
 , addGenericVar, addInstanceVar
@@ -276,8 +276,10 @@ pattern VarData vardata = VD vardata
 \end{code}
 
 
-We will want to extract maps and conver to list form.
+We will want to extract name and maps and convert to list form.
 \begin{code}
+vTName :: VarTable -> String
+vTName (VD (vtnm,_,_,_)) = vtnm
 vTable :: VarTable -> VarRoleMap
 vTable (VD (_,vtable, _, _)) = vtable
 lvTable :: VarTable -> LVarRoleMap

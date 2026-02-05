@@ -684,7 +684,7 @@ normQVar vv v@(Vbl (Identifier nm _) cls whn)
  = setVarIdNumber (M.findWithDefault 0 (nm,cls,whn) vv) v
 \end{code}
 
-
+\newpage
 \section{Making a Typed Assertion}
 
 \begin{code}

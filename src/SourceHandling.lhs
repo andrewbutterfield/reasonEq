@@ -800,7 +800,7 @@ varclass2vclass PredV = VarPred
 \newpage
 \section{Comparisons}
 
-It helps to be able to compare a theory just parsed from a UTP file (NEW)
+It helps to be able to compare a theory just parsed from a UTP file (LOADED)
 with the installed theory (CURRENT). 
 Ideally these should be identical, 
 modulo the fact that some conjectures in the installed theory 
@@ -808,7 +808,7 @@ may have been proven, assumed, or deemed to be suspect.
 
 \subsection{Compare Theories}
 
-We are going to compare an Current theory with a New theory:
+We are going to compare an Current theory with a Loaded theory:
 \begin{code}
 compareIPTheories :: Theory -> Theory ->  String
 compareIPTheories iTheory pTheory
@@ -818,7 +818,7 @@ compareIPTheories iTheory pTheory
     iName = thName iTheory ; pName = thName pTheory
     mismatch 
       = [ "Current: "++iName
-        , "New:    "++pName
+        , "Loaded:  "++pName
         , "Different Theories!", "EXIT", "" ]
 \end{code}
 
@@ -834,8 +834,8 @@ compIPDeps sffid iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     mismatch 
-      = [ "Current deps. not in New : "++display (iDeps \\ pDeps)
-        , "New deps. not in Current : "++display (pDeps \\ iDeps) 
+      = [ "Current deps. not in Loaded : "++display (iDeps \\ pDeps)
+        , "Loaded deps. not in Current : "++display (pDeps \\ iDeps) 
         , "Dependencies differ!", "" ]
     display = intercalate " "
 \end{code}
@@ -864,9 +864,9 @@ compIPVarTables sffid iTheory pTheory
 checkVTVars :: VarRoleMap -> VarRoleMap -> [String]
 checkVTVars pvTable ivTable 
   =    errorReport (not $ null pvs_less_ivs) 
-          [trVList $ map StdVar pvs_less_ivs,"New vars not in Current:"]
+          [trVList $ map StdVar pvs_less_ivs,"Loaded vars not in Current:"]
     ++ errorReport (not $ null ivs_less_pvs)
-             [trVList $ map StdVar ivs_less_pvs,"Current vars not in New:"]
+             [trVList $ map StdVar ivs_less_pvs,"Current vars not in Loaded:"]
     ++ errorReport (not $ null bothMM) 
              [concat $ map showVdiff bothMM,"Differing var entries"]
   where 
@@ -877,15 +877,15 @@ checkVTVars pvTable ivTable
     bothMM = checkMaps pvTable ivTable both
     showVdiff (var,vmr1,vmr2)
       = trVar var 
-        ++ ":\n  New    = "++trVarMatchRole vmr1
-        ++ "\n  Current = "++trVarMatchRole vmr2
+        ++ ":\n  Loaded  = "++trVarMatchRole vmr1
+        ++  "\n  Current = "++trVarMatchRole vmr2
 
 checkSTLVars :: String -> LVarRoleMap -> LVarRoleMap -> [String]
 checkSTLVars what plvTable ilvTable 
   =    errorReport (not $ null pvs_less_ivs)
-         [trVList $ map StdVar pvs_less_ivs,"New vars not Current:"]
+         [trVList $ map StdVar pvs_less_ivs,"Loaded vars not Current:"]
     ++ errorReport (not $ null ivs_less_pvs)
-         [trVList $ map StdVar ivs_less_pvs,"Current vars not New:"]
+         [trVList $ map StdVar ivs_less_pvs,"Current vars not Loaded:"]
     ++ errorReport (not $ null bothMM) 
          [concat $ map showLVdiff bothMM,"Differing "++what++" entries"]
   where 
@@ -896,8 +896,8 @@ checkSTLVars what plvTable ilvTable
     bothMM = checkMaps plvTable ilvTable both
     showLVdiff (var,lvmr1,lvmr2)
       = trVar var 
-        ++ ":\n  New    = "++trLstVarMatchRole lvmr1
-        ++ "\n  Current = "++trLstVarMatchRole lvmr2
+        ++ ":\n  Loaded  = "++trLstVarMatchRole lvmr1
+        ++  "\n  Current = "++trLstVarMatchRole lvmr2
 \end{code}
 
 \subsection{Compare Conjectures}
@@ -914,7 +914,7 @@ compIPConjectures sffid iTheory pTheory
     iLws = sort $ laws  iTheory
 
 scanConjs :: [String]            -- reports already generated
-              -> [NmdAssertion]       -- New conjectures
+              -> [NmdAssertion]       -- Loaded conjectures
               -> [NmdAssertion]       -- Current conjectures
               -> [Law]  -- Current laws
               -> [String]            -- updated reports
@@ -942,14 +942,14 @@ scanConjs' :: [String]            -- reports already generated
 
 -- 1. both Current empty
 scanConjs' stroper pCjs [] [] 
-  = (("Extra New conjectures: "++show (map fst pCjs)):stroper)
+  = (("Extra Loaded conjectures: "++show (map fst pCjs)):stroper)
 
 -- 2. Current laws empty
 scanConjs' stroper pCjs@((pnm,passn):pCjs') 
                    iCjs@((icnm,icassn):iCjs') -- icnm >= pnm
                    []
   | pnm /= icnm  
-      = scanConjs (("Extra New conjecture:"++pnm):stroper) pCjs' iCjs []
+      = scanConjs (("Extra Loaded conjecture:"++pnm):stroper) pCjs' iCjs []
   | passn /= icassn
       = scanConjs (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
   | otherwise = scanConjs stroper pCjs' iCjs' []
@@ -959,7 +959,7 @@ scanConjs' stroper pCjs@((pnm,passn):pCjs')
                    [] 
                    iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
   | pnm /= ilnm  
-     = scanConjs (("Extra New conj:"++pnm):stroper) pCjs' [] iLws
+     = scanConjs (("Extra Loaded conj:"++pnm):stroper) pCjs' [] iLws
   | passn /= ilassn
      = scanConjs (("Conj and law differ:"++pnm):stroper) pCjs' [] iLws'
   | otherwise = scanConjs stroper pCjs' [] iLws'
@@ -988,7 +988,7 @@ foundBoth header pAssn iAssn
   | pAssn == iAssn  =  [] -- nothing to see here....
   | otherwise
       = [ "  Current assertion: " ++ trAsn iAssn
-        , "  New assertion:    " ++ trAsn pAssn
+        , "  Loaded  assertion: " ++ trAsn pAssn
         , header
         ]
 \end{code}
@@ -1020,14 +1020,14 @@ scanLaws' :: [String] -> [Law] -> [Law] -> [NmdAssertion] -> [String]
 
 -- 1. both Current empty
 scanLaws' stroper pLws [] []
-  = (("Extra New laws: "++show (map (fst . fst) pLws)):stroper)
+  = (("Extra Loaded laws: "++show (map (fst . fst) pLws)):stroper)
 
 -- 2. Current conjectures empty
 scanLaws' stroper pLws@(((pnm,passn),_):pLws')
                   iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
                   []
   | pnm /= ilnm
-      = scanLaws (("Extra New laws"++pnm):stroper) pLws' iLws []
+      = scanLaws (("Extra Loaded laws"++pnm):stroper) pLws' iLws []
   | passn /= ilassn
       = scanLaws (("Laws differ:"++pnm):stroper) pLws' iLws' []
   | otherwise = scanLaws stroper pLws' iLws' []
@@ -1037,7 +1037,7 @@ scanLaws' stroper pLws@(((pnm,passn),_):pLws')
                   []
                   iCjs@((icnm,icassn):iCjs')   -- icnm >= pnm
   | pnm /= icnm
-      = scanLaws (("Extra New laws"++pnm):stroper) pLws' [] iCjs'
+      = scanLaws (("Extra Loaded laws"++pnm):stroper) pLws' [] iCjs'
   | passn /= icassn
       = scanLaws (("Law and Conj differ:"++pnm):stroper) pLws' [] iCjs'
   | otherwise = scanLaws stroper pLws' [] iCjs'

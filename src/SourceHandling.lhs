@@ -833,10 +833,11 @@ compIPDeps vts sffid iTheory pTheory
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     matched = [ "", "Dependencies match OK." ]
     mismatch 
-      = [ "Current deps. not in Loaded : "++display (iDeps \\ pDeps)
-        , "Loaded deps. not in Current : "++display (pDeps \\ iDeps) 
+      = [ "Current deps. not in Loaded : "++ndisplay (iDeps \\ pDeps)
+        , "Loaded deps. not in Current : "++ndisplay (pDeps \\ iDeps) 
         , "Dependencies differ!", "" ]
-    display = intercalate " "
+
+ndisplay = intercalate " "
 \end{code}
 
 \subsection{Compare Variable Tables}
@@ -906,7 +907,7 @@ comparing them against the installed conjectures and (eventually) laws.
 \begin{code}
 compIPConjectures :: [VarTable] -> [String] -> Theory -> Theory -> String
 compIPConjectures vts sffid iTheory pTheory
-  = compIPLaws (scanConjs (vtstxt:sffid) pCjs iCjs iLws) iTheory pTheory
+  = compIPLaws (scanConjs vts sffid pCjs iCjs iLws) iTheory pTheory
   where 
     pCjs = sort $ conjs pTheory
     iCjs = sort $ conjs iTheory
@@ -916,27 +917,30 @@ compIPConjectures vts sffid iTheory pTheory
              else ( "Have "++show (length vts)++ " dependent vartables: " )
                   ++ concat (intersperse " " (map vTName vts))
 
-scanConjs :: [String]            -- reports already generated
-              -> [NmdAssertion]       -- Loaded conjectures
-              -> [NmdAssertion]       -- Current conjectures
-              -> [Law]  -- Current laws
-              -> [String]            -- updated reports
-scanConjs stroper [] iCjs _ 
+scanConjs ::  [VarTable] 
+          ->  [String]        -- reports already generated
+          ->  [NmdAssertion]  -- Loaded conjectures
+          ->  [NmdAssertion]  -- Current conjectures
+          ->  [Law]           -- Current laws
+          ->  [String]        -- updated reports
+scanConjs vts stroper [] iCjs _ 
   | null iCjs  =  stroper
   | otherwise 
-     = ( ("Current conjectures now missing: "++show (map fst iCjs)) : stroper )
-scanConjs stroper pCjs@((pnm,_):_) iCjs iLws
-  = scanConjs' stroper pCjs 
+     = ( ("Current conjectures not in Loaded: "++ndisplay (map fst iCjs)) 
+         : stroper )
+scanConjs vts stroper pCjs@((pnm,_):_) iCjs iLws
+  = scanConjs' vts stroper pCjs 
                (seek fst pnm iCjs) (seek (fst . fst) pnm iLws)
 \end{code}
 
 \newpage
 \begin{code}
-scanConjs' :: [String]            -- reports already generated
-                -> [NmdAssertion]       -- pnm
-                -> [NmdAssertion]       -- Current conjectures
-                -> [Law]  -- Current laws
-                -> [String]            -- updated reports
+scanConjs'  ::  [VarTable]
+            ->  [String]        -- reports already generated
+            ->  [NmdAssertion]  -- Loaded conjectures
+            ->  [NmdAssertion]  -- Current conjectures
+            ->  [Law]           -- Current laws
+            ->  [String]        -- updated reports
 
 -- scanConjs' preconditions:
 --     pCjs@[(pnm,_):_]   -- not null
@@ -944,45 +948,61 @@ scanConjs' :: [String]            -- reports already generated
 --     iLws@[(ilnm,_):_]  -- if not null, then ilnm >= pnm
 
 -- 1. both Current empty
-scanConjs' stroper pCjs [] [] 
-  = (("Extra Loaded conjectures: "++show (map fst pCjs)):stroper)
+scanConjs' vts stroper pCjs [] []
+  | null pCjs   =  stroper
+  | otherwise  
+      = ( ("Loaded conjectures not in Current: "++ndisplay (map fst pCjs))
+          :stroper )
 
 -- 2. Current laws empty
-scanConjs' stroper pCjs@((pnm,passn):pCjs') 
-                   iCjs@((icnm,icassn):iCjs') -- icnm >= pnm
-                   []
+scanConjs' vts stroper pCjs@((pnm,passn):pCjs') 
+                       iCjs@((icnm,icassn):iCjs') -- icnm >= pnm
+                       []
   | pnm /= icnm  
-      = scanConjs (("Extra Loaded conjecture:"++pnm):stroper) pCjs' iCjs []
+      = scanConjs vts 
+          (("Loaded conjecture not in Current:"++pnm):stroper) pCjs' iCjs []
   | passn /= icassn
-      = scanConjs (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
-  | otherwise = scanConjs stroper pCjs' iCjs' []
+      = scanConjs vts
+          (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
+  | otherwise = scanConjs vts stroper pCjs' iCjs' []
 
 -- 3. Current conjectures empty
-scanConjs' stroper pCjs@((pnm,passn):pCjs') 
+scanConjs' vts stroper pCjs@((pnm,passn):pCjs') 
                    [] 
                    iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
   | pnm /= ilnm  
-     = scanConjs (("Extra Loaded conj:"++pnm):stroper) pCjs' [] iLws
+     = scanConjs vts
+         (("Loaded conjecture not in Current:"++pnm):stroper) pCjs' [] iLws
   | passn /= ilassn
-     = scanConjs (("Conj and law differ:"++pnm):stroper) pCjs' [] iLws'
-  | otherwise = scanConjs stroper pCjs' [] iLws'
+     = scanConjs vts
+         ( foundBoth 
+             ("Loaded Conjecture and Current law differ ("++pnm++")") 
+             passn ilassn ++ stroper ) 
+         pCjs' [] iLws'
+  | otherwise = scanConjs vts stroper pCjs' [] iLws'
 
 -- 4. both Current present
 -- we would not expect icnm == ilnm -- this is a serious issue
-scanConjs' stroper pCjs@((pnm,passn):pCjs')
-                   iCjs@((icnm,icassn):iCjs')       -- icnm >= pnm
-                   iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
+scanConjs' vts stroper pCjs@((pnm,passn):pCjs')
+                       iCjs@((icnm,icassn):iCjs')       -- icnm >= pnm
+                       iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
   | icnm == ilnm
-     =  (("Same Name '"++ilnm++"' in Current conjecture and law!"):stroper)
+     =  ( ("Same Name '"++ilnm++"' in Current conjecture and law!")
+          : "*** Current Theory may be broken ***"
+          : stroper )
   | pnm == icnm  -- ilnm > pnm
-     = scanConjs 
-        (foundBoth ("Both conjectures - "++pnm) passn icassn ++ stroper)  
+     = scanConjs vts 
+        ( foundBoth ("Conjectures differ ("++pnm++")") 
+                    passn icassn ++ stroper )  
         pCjs' iCjs' iLws
   | pnm == ilnm -- icnm > pnm
-     = scanConjs 
-         (foundBoth ("Conjecture and Law - "++pnm) passn ilassn ++ stroper)
+     = scanConjs vts
+         ( foundBoth 
+             ("Loaded Conjecture and Current Law differ ("++pnm++")") 
+             passn ilassn 
+           ++ stroper )
          pCjs' iCjs iLws'
-  | otherwise = scanConjs stroper pCjs' iCjs' iLws'
+  | otherwise = scanConjs vts stroper pCjs' iCjs' iLws'
 \end{code}
 
 \begin{code}

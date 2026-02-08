@@ -1071,10 +1071,11 @@ scanLaws' vts stroper pLws [] []
 
 -- 2. Current conjectures empty
 scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
-                  iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
-                  []
+                      iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
+                      []
   | pnm /= ilnm
-      = scanLaws vts (("Extra Loaded laws"++pnm):stroper) pLws' iLws []
+      = scanLaws vts 
+         (("Loaded law not in Current"++pnm):stroper) pLws' iLws []
   | passn /= ilassn
       = scanLaws vts (("Laws differ:"++pnm):stroper) pLws' iLws' []
   | otherwise = scanLaws vts stroper pLws' iLws' []
@@ -1084,17 +1085,25 @@ scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
                   []
                   iCjs@((icnm,icassn):iCjs')   -- icnm >= pnm
   | pnm /= icnm
-      = scanLaws vts (("Extra Loaded laws"++pnm):stroper) pLws' [] iCjs'
+      = scanLaws vts 
+         (("Loaded laws not in Current "++pnm):stroper) pLws' [] iCjs'
   | passn /= icassn
-      = scanLaws vts (("Law and Conj differ:"++pnm):stroper) pLws' [] iCjs'
+      = scanLaws vts 
+           ( foundBoth 
+               ("Loaded Law and Current Conjecture differ:"++pnm)
+               passn icassn ++ stroper ) 
+          pLws' [] iCjs'
   | otherwise = scanLaws vts stroper pLws' [] iCjs'
 
 -- 4. both Current present
+-- we would not expect icnm == ilnm -- this is a serious issue
 scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
                   iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
                   iCjs@((icnm,icassn):iCjs')    -- icnm >= pnm
   | icnm == ilnm
-     = (("Same Name '"++ilnm++"' in Current law and conjecture!"):stroper)
+     = ( ("Same Name '"++ilnm++"' in Current law and conjecture!")
+         : "*** Current Theory may be broken ***"
+         : stroper )
   | pnm == ilnm -- icnm > pnm
      = scanLaws vts 
          (foundBoth ("Both laws - "++pnm) passn ilassn ++ stroper)  

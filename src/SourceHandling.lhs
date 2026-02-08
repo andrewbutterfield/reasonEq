@@ -964,7 +964,10 @@ scanConjs' vts stroper pCjs@((pnm,passn):pCjs')
           (("Loaded conjecture not in Current:"++pnm):stroper) pCjs' iCjs []
   | passn /= icassn
       = scanConjs vts
-          (("Conjectures differ:"++pnm):stroper) pCjs' iCjs' []
+          ( foundBoth 
+              ("Conjectures differ:"++pnm)
+              passn icassn ++ stroper ) 
+          pCjs' iCjs' []
   | otherwise = scanConjs vts stroper pCjs' iCjs' []
 
 -- 3. Current conjectures empty
@@ -1042,8 +1045,8 @@ scanLaws :: [VarTable]
 scanLaws vts stroper [] iLws _
   | null iLws  =  stroper
   | otherwise 
-      = ( ("Current laws not in loaded: "++show (map (fst .fst) iLws))
-          :stroper )
+      = ( ("Current laws not in loaded: "++ndisplay (map (fst .fst) iLws))
+          : stroper )
 scanLaws vts stroper pLws@(((pnm,_),_):_) iLws iCjs
   = scanLaws' vts stroper pLws 
               (seek (fst . fst) pnm iLws) (seek fst pnm iCjs)
@@ -1077,7 +1080,10 @@ scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
       = scanLaws vts 
          (("Loaded law not in Current"++pnm):stroper) pLws' iLws []
   | passn /= ilassn
-      = scanLaws vts (("Laws differ:"++pnm):stroper) pLws' iLws' []
+      = scanLaws vts 
+          ( foundBoth ("Laws differ ("++pnm++")")
+            passn ilassn ++ stroper ) 
+          pLws' iLws' []
   | otherwise = scanLaws vts stroper pLws' iLws' []
 
 -- 3. Current laws empty
@@ -1090,7 +1096,7 @@ scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
   | passn /= icassn
       = scanLaws vts 
            ( foundBoth 
-               ("Loaded Law and Current Conjecture differ:"++pnm)
+               ("Loaded Law and Current Conjecture differ ("++pnm++")")
                passn icassn ++ stroper ) 
           pLws' [] iCjs'
   | otherwise = scanLaws vts stroper pLws' [] iCjs'
@@ -1106,11 +1112,15 @@ scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')
          : stroper )
   | pnm == ilnm -- icnm > pnm
      = scanLaws vts 
-         (foundBoth ("Both laws - "++pnm) passn ilassn ++ stroper)  
+         ( foundBoth ("Laws differ ("++pnm++")") 
+                      passn ilassn ++ stroper )  
          pLws' iLws' iCjs
   | pnm == icnm -- ilnm > pnm
      = scanLaws vts 
-         (foundBoth ("Law and Conjecture - "++pnm) passn icassn ++ stroper)  
+         ( foundBoth 
+             ("Loaded Law and Current Conjecture differ ("++pnm++")") 
+             passn icassn 
+           ++ stroper )  
          pLws' iLws iCjs'
   | otherwise = scanLaws vts stroper pLws' iLws' iCjs'
 \end{code}

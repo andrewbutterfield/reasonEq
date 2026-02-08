@@ -694,6 +694,8 @@ mkTypedAsn vts term sc
       But msgs                 ->  addTypeInfo sc ArbType term M.empty
       Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
 
+addTypeInfo :: SideCond -> Type -> Term -> TypeSubst
+            -> (Assertion, CanonicalMap)
 addTypeInfo sc typ term typsub 
   = let (tvstyps,tvmap) = typeVarEquivalence typsub
         asn = mkAsn term sc

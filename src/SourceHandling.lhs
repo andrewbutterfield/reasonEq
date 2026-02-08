@@ -1042,7 +1042,8 @@ scanLaws :: [VarTable]
 scanLaws vts stroper [] iLws _
   | null iLws  =  stroper
   | otherwise 
-      = (("Current laws not in loaded: "++show (map (fst .fst) iLws)):stroper)
+      = ( ("Current laws not in loaded: "++show (map (fst .fst) iLws))
+          :stroper )
 scanLaws vts stroper pLws@(((pnm,_),_):_) iLws iCjs
   = scanLaws' vts stroper pLws 
               (seek (fst . fst) pnm iLws) (seek fst pnm iCjs)
@@ -1056,9 +1057,17 @@ scanLaws' :: [VarTable]
           -> [NmdAssertion]  -- Current conjectures 
           -> [String]        -- updated reports
 
+-- scanLaws' preconditions :
+-- pLws@ [(pnm,_):_]  -- not null
+-- iLws@ [(ilnm,_):_] -- if not null , then ilnm >= pnm
+-- iCjs@ [(icnm,_):_] -- if not null , then icnm >= pnm
+
 -- 1. both Current empty
 scanLaws' vts stroper pLws [] []
-  = (("Extra Loaded laws: "++show (map (fst . fst) pLws)):stroper)
+  | null pLws  =  stroper
+  | otherwise
+      = ( ("Loaded laws not in Current:: "++ndisplay (map (fst . fst) pLws))
+          :stroper )
 
 -- 2. Current conjectures empty
 scanLaws' vts stroper pLws@(((pnm,passn),_):pLws')

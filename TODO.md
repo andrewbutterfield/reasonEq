@@ -2,7 +2,8 @@
 
 ## URGENT or NEXT
 
-
+We have typing in the loaded theory check,
+but we need to  ensure the relevant `VarTable` is at the top of `vts`.
 
 Need to type-check parsed theory before checking against installed ? YES
 

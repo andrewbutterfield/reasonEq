@@ -16,6 +16,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , lam,  eLam,  pLam
            , binderClass
            , termtype, settype
+           , termDifference
            , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
@@ -43,7 +44,9 @@ import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
-
+\end{code}
+\newpage
+\begin{code}
 import Utilities
 import LexBase
 import Variables
@@ -57,13 +60,8 @@ import Test.Framework.Providers.HUnit (testCase)
 import Debugger
 \end{code}
 
-\section{AST Introduction}
-
-We implement a abstract syntax tree for a notion of ``terms''
-that cover both expressions and predicates.
 
 
-\newpage
 \section{Terms}
 
 We want to implement a collection of terms that include
@@ -170,7 +168,7 @@ and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
 We identify predicates as terms whose type is $\Bool$.
 
-\newpage
+
 \subsection{Terms}
 
 We have a single term type (\verb"Term"),
@@ -197,6 +195,7 @@ readTerm :: String -> Term
 readTerm = read
 \end{code}
 
+\newpage
 We  need to have a correlation between some terms
 and the variables they use.
 In particular the \texttt{Type} of a \texttt{V} \texttt{Term}
@@ -218,7 +217,6 @@ pattern VTyp typ v                =   VT typ v
 \end{code}
 
 
-
 Smart constructors for variables and binders.
 
 Variable must match term-class.
@@ -237,7 +235,6 @@ eVar t v = var t v
 pVar t v = var bool v
 \end{code}
 
-\newpage
 All variables in a binder variable-set must have the same class.
 \begin{code}
 bnd typ n vs tm
@@ -306,8 +303,24 @@ settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm
 settype typ (Sub _ tm s)              =  (Sub typ tm s)     
 settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
 settype _ t                          =  t
+\end{code}
 
--- NEEDED TO BUILD EXPRESSIONS
+
+We need a comparison that can return what differs:
+this can be a sub-term or a type.
+\begin{code}
+termDifference :: Term -> Term -> Maybe (Either (Term,Term) (Type,Type))
+termDifference t1 t2
+  | t1 == t2      =  Nothing
+  | typ1 /= typ2  =  Just (Right (typ1,typ2))
+  | otherwise     =  Just (Left (t1,t2)) -- should recurse in to divergence
+  where
+    typ1 = termtype t1 ; typ2 = termtype t2
+\end{code}
+
+
+Joining types, needed to build expressions
+\begin{code}
 join2Types :: Term -> Term -> Type
 join2Types t1 t2 = reconcile2Types (termtype t1) (termtype t2)
 
@@ -329,6 +342,7 @@ isAtomic (V _ _)  =  True
 isAtomic _        =  False
 \end{code}
 
+\newpage
 Pulling out variables:
 \begin{code}
 theVar :: Term -> Variable

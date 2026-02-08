@@ -1017,11 +1017,35 @@ and flags them if different.
 foundBoth :: String -> Assertion -> Assertion -> [String]
 foundBoth header pAssn iAssn
   | pAssn == iAssn  =  [] -- nothing to see here....
-  | otherwise
-      = [ "  Current assertion: " ++ trAsn iAssn
-        , "  Loaded  assertion: " ++ trAsn pAssn
+  | pType /= iType
+      = [ "  Current type:" ++ trType iType
+        , "  Loaded  type:" ++ trType pType
+        , "  Type Difference:\n"  ++ showTermDiff diffTerm
+        , header
+        ] 
+  | pTerm /= iTerm
+      = [ "  Current term:" ++ trTerm 0 iTerm
+        , "  Loaded  term:" ++ trTerm 0 pTerm
+        , "  Term Difference:\n"  ++ showTermDiff diffTerm
+        , header
+        ] 
+  | otherwise -- must be the side-condition
+      = [ "  Current side-cond: " ++ trSideCond iSC
+        , "  Loaded  side-cond: " ++ trSideCond pSC
         , header
         ]
+  where 
+    (pTerm,pSC) = unwrapASN pAssn ; pType = termtype pTerm
+    (iTerm,iSC) = unwrapASN iAssn ; iType = termtype iTerm
+    diffTerm = termDifference iTerm pTerm
+
+showTermDiff Nothing = "none"
+showTermDiff (Just (Left (term1,term2)))
+  = unlines' [ "    Current Term: "++trTerm 0 term1
+             , "    Loaded  Term:  "++trTerm 0 term2 ]
+showTermDiff (Just (Right (typ1,typ2)))
+  = unlines' [ "    Current Type: "++trType typ1
+             , "    Loaded  Type:  "++trType typ2]
 \end{code}
 
 \newpage

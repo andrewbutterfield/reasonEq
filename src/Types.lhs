@@ -107,6 +107,7 @@ arbpred  =  bool -- was TF TB bool, now deprecated
 isEType  =  (/= bool)
 \end{code}
 
+\newpage
 \subsection{Sub-Typing}
 
 We say that $\tau_1$ is a subtype of $\tau_2$ ($\tau_1\subseteq_T\tau_2$)
@@ -185,6 +186,7 @@ isSubTypeOf t1 t2
     _              `areSFOf` _   =  False
 \end{code}
 
+\newpage
 We also need to reconcile a pair of types, 
 returning a type that is at least as general as both.
 \begin{code}

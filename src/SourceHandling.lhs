@@ -971,19 +971,21 @@ scanConjs' vts stroper pCjs@((pnm,passn):pCjs')
   | otherwise = scanConjs vts stroper pCjs' iCjs' []
 
 -- 3. Current conjectures empty
-scanConjs' vts stroper pCjs@((pnm,passn):pCjs') 
+scanConjs' vts stroper pCjs@((pnm,passn@(Assertion pterm psc)):pCjs') 
                    [] 
                    iLws@(((ilnm,ilassn),prv):iLws') -- ilnm >= pnm
   | pnm /= ilnm  
      = scanConjs vts
          (("Loaded conjecture not in Current:"++pnm):stroper) pCjs' [] iLws
-  | passn /= ilassn
+  | passnt /= ilassn
      = scanConjs vts
          ( foundBoth 
              ("Loaded Conjecture and Current law differ ("++pnm++")") 
-             passn ilassn ++ stroper ) 
+             passnt ilassn ++ stroper ) 
          pCjs' [] iLws'
   | otherwise = scanConjs vts stroper pCjs' [] iLws'
+  where
+    (passnt,_) = mkTypedAsn vts pterm psc
 
 -- 4. both Current present
 -- we would not expect icnm == ilnm -- this is a serious issue

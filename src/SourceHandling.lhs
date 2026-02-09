@@ -1033,7 +1033,7 @@ scanConjs' ivts pvts stroper pCjs@((pnm,passn@(Assertion pterm psc)):pCjs')
          pCjs' [] iLws'
   | otherwise = scanConjs ivts pvts stroper pCjs' [] iLws'
   where
-    (passnt,_) = mkTypedAsn (pdbg "PVTS" pvts) pterm psc
+    (passnt,_) = mkTypedAsn pvts pterm psc
 
 -- 4. both Current present
 -- we would not expect icnm == ilnm -- this is a serious issue
@@ -1065,23 +1065,28 @@ and flags them if different.
 foundBoth :: String -> Assertion -> Assertion -> [String]
 foundBoth header pAssn iAssn
   | pAssn == iAssn  =  [] -- nothing to see here....
-  | pType /= iType
-      = [ "  Type Difference:\n"  ++ showTermDiff diffTerm
-        , header
-        ] 
-  | pTerm /= iTerm
-      = [ "  Term Difference:\n"  ++ showTermDiff diffTerm
-        , header
-        ] 
-  | otherwise -- must be the side-condition
-      = [ "  Current side-cond: " ++ trSideCond iSC
-        , "  Loaded  side-cond: " ++ trSideCond pSC
+  | pSC /= iSC 
+      = [ "  Side-Condition Difference:"
+        , "    Current side-cond: " ++ trSideCond iSC
+        , "    Loaded  side-cond: " ++ trSideCond pSC
         , header
         ]
+  | otherwise
+      = case termDiffModuloTypes iTerm pTerm of
+        Nothing -> ["  types differ",header]
+        Just (path,iDiff,pDiff) 
+          -> [ "    Current Term: "++trTerm 0 iDiff
+             , "    Type: "++trType (termtype iDiff)
+             , "    Loaded  Term: "++trTerm 0 pDiff
+             , "    Type: "++trType (termtype pDiff)
+             , "    path to divergence: "++show path
+             , "  Term Difference (modulo types):"
+             , header
+             ]
   where 
     (pTerm,pSC) = unwrapASN pAssn ; pType = termtype pTerm
     (iTerm,iSC) = unwrapASN iAssn ; iType = termtype iTerm
-    diffTerm = termDifference iTerm pTerm
+    
 
 showTermDiff Nothing = "none"
 showTermDiff (Just (Left (term1,term2)))

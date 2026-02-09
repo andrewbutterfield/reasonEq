@@ -16,7 +16,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , lam,  eLam,  pLam
            , binderClass
            , termtype, settype
-           , termDifference
+           , termDifference, termDiffModuloTypes
            , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
@@ -313,9 +313,40 @@ termDifference :: Term -> Term -> Maybe (Either (Term,Term) (Type,Type))
 termDifference t1 t2
   | t1 == t2      =  Nothing
   | typ1 /= typ2  =  Just (Right (typ1,typ2))
-  | otherwise     =  Just (Left (t1,t2)) -- should recurse in to divergence
+  | otherwise     =  Just (Left (t1,t2)) -- should recurse in to divergence?
   where
     typ1 = termtype t1 ; typ2 = termtype t2
+\end{code}
+
+\begin{code}
+termDiffModuloTypes :: Term -> Term -> Maybe ([Int],Term,Term)
+termDiffModuloTypes t1 t2 = tDMT [] t1 t2
+
+tDMT :: [Int] -> Term -> Term -> Maybe ([Int],Term,Term)
+tDMT path t1@(Val _ k1) t2@(Val _ k2)
+  | k1 /= k2  = Just (path,t1,t2)
+  | otherwise = Nothing
+tDMT path t1@(Var _ v1) t2@(Var _ v2)
+  | v1 /= v2  = Just (path,t1,t2)
+  | otherwise = Nothing
+tDMT path t1@(Cons _ sb1 n1 ts1) t2@(Cons _ sb2 n2 ts2)
+  | sb1 /= sb2  =  Just (path,t1,t2)
+  | n1 /= n2  =  Just (path,t1,t2)
+  | otherwise  
+     =  case tsDMT path 1 ts1 ts2 of
+          Just path' -> Just (path',t1,t2)
+          Nothing -> Nothing
+tDMT path t1@(Sub _ tm1 _) t2@(Sub _ tm2 _) = tDMT (path++[1]) tm1 tm2
+tDMT path t1 t2 = Just ((path++[-1]),t1,t2)
+
+tsDMT :: [Int] -> Int -> [Term] -> [Term] -> Maybe ([Int])
+tsDMT _ _ [] [] = Nothing
+tsDMT path i [] (_:_) = Just (path++[i])
+tsDMT path i (_:_) [] = Just (path++[i])
+tsDMT path i (t1:ts1) (t2:ts2)
+  = case tDMT (path++[i]) t1 t2 of
+      Nothing -> tsDMT path (i+1) ts1 ts2
+      Just (path',t1,t2) -> Just path'
 \end{code}
 
 

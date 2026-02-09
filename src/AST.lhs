@@ -302,7 +302,7 @@ settype typ (Bnd _ n vs tm)           =  fromJust $ bnd typ n vs tm
 settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm 
 settype typ (Sub _ tm s)              =  (Sub typ tm s)     
 settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
-settype _ t                          =  t
+settype _ t                           =  t
 \end{code}
 
 

@@ -84,12 +84,13 @@ genTheory theory = printTree $ theory2thry theory
 
 Here we provide bidirectional conversions between the native \reasonEq\ types
 and those used in \h{bnfc/REQ}.
-We start with theories, because the known variable data is needed to resolve
+
+We start with variables, followed by theories, 
+because known variable data along with some defaults is needed to resolve
 a range of ambiguous situations.
 This requires passing this known data down to the conversions 
 for the sub-components: terms, types, side-conditions, and variables.
 
-\newpage
 \subsection{Variable Handling}
 
 Due to the limitations of what can be expressed using LBNF,
@@ -127,30 +128,6 @@ idwhen2dynvar i After       =  DynVar (i++['_'])
 idwhen2dynvar i (During d)  = DynVar (i++('_':d))
 \end{code}
 
-\newpage
-\subsection{Thry to Theory}
-
-\begin{code}
-thry2theory :: MonadFail mf => Thry -> mf Theory
-thry2theory (Thr thNm deps items)
-  = items2theory items $
-    thName_ (dyn2str thNm) $
-    thDeps_ (map dyn2str deps) $
-    nullTheory
-
-dyn2str (DynVar str) = str
-
-items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
-items2theory items thry = do
-  let (defs,rest) = partition isDefItem items
-  let (decls,asserts) = partition isDeclItem rest
-  let defaults = defs2defaults initialDefaults defs
-  ctxt@(_,knwn) 
-    <- decls2vartable decls (defaults, newNamedVarTable $ thName thry)
-  (lws,cnjs) <- asserts2asns ctxt asserts 
-  return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
-\end{code}
-
 \subsubsection{Default Variable Attributes}
 
 Given a variable represented using a \h{DynVar} ($x, \_x, x\_, x\_d $), 
@@ -167,7 +144,7 @@ as evidenced in the book\cite{UTP-book}:
 \\ M,S,O & Obs, Dynamic  -- model/script/all observations
 \\ a--h & Expr, Static
 \\ i--n & Obs, Static
-\\ p--s & Pred, Before  
+\\ p--s & Pred, Before, bool 
 \\ u--z & Obs, Dynamic
 \\ \multicolumn{2}{|c|}{not sure about o or t}
 \\\hline
@@ -212,7 +189,11 @@ defaultOK
   = M.keys defaultClasses == M.keys defaultTypes
     &&
     M.keys defaultTypes == M.keys defaultWhen
+\end{code}
 
+\newpage
+Bringing it all together:
+\begin{code}
 type Defaults = Map Char (Type,VarClass,VarWhen)
 initialDefaults :: Defaults
 initialDefaults
@@ -225,8 +206,22 @@ mrgDefaults ((c1,w1),(c2,w2),(c3,w3)) =  (c1,(w1,w2,w3))
 \end{code}
 Here \h{During ""} is code for ``any dynamic'' (before,after,during).
 
+We provide a way to convert \h{Defaults} into a default \h{VarTable},
+simply by entering the variables as \h{KnownVar}s
+\begin{code}
+default2vartable :: Defaults -> VarTable
+default2vartable defs
+  = insertDef2VT (newNamedVarTable "defaults") (M.toList defs)
 
-The above defaults can be overridden using the default items.
+insertDef2VT vt [] = vt
+insertDef2VT vt ((nc,(typ,vc,vw)):rest)
+  = case addKnownVar (Vbl (jId [nc]) vc vw) typ vt of
+      Nothing   ->  insertDef2VT vt rest
+      Just vt'  ->  insertDef2VT vt' rest
+\end{code}
+
+
+The above defaults can be overridden using the default \h{.utp} items.
 \begin{code}
 isDefItem :: Item -> Bool
 isDefItem (DefObs _) = True;
@@ -271,6 +266,7 @@ setPred   (_, _,vw)  = (bool, PredV, vw    )
 setStatic (t,vc,_ )  = (t   , vc   , Static)
 \end{code}
 
+\newpage
 \subsubsection{Var-Table Conversions}
 
 We need to include the defaults disucssed above here,
@@ -290,10 +286,10 @@ isDeclItem _              =  True
 
 \begin{code}
 decls2vartable :: MonadFail mf => [Item] -> Context -> mf Context
-decls2vartable [] vtbl = return vtbl
-decls2vartable (item:items) vtbl = do
-  vtbl' <- decl2vtentry item vtbl
-  decls2vartable items vtbl'
+decls2vartable [] ctxt = return ctxt
+decls2vartable (item:items) ctxt = do
+  ctxt' <- decl2vtentry item ctxt
+  decls2vartable items ctxt'
 
 decl2vtentry :: MonadFail mf => Item -> Context -> mf Context
 
@@ -324,7 +320,8 @@ decl2vtentry (DeclASet vclass dvar) (dflts,vtbl) = do
   vtbl' <- addAbstractVarSet asvar vtbl
   return (dflts,vtbl')
   
-decl2vtentry item (dflts,vtbl) = fail  "decl2vtentry nyfi"
+decl2vtentry item (dflts,vtbl) 
+  = fail  ("decl2vtentry nyfi: "++show item)
 
 vclass2varclass :: VClass -> VarClass
 vclass2varclass VarObs   =  ObsV
@@ -334,6 +331,32 @@ vclass2varclass VarPred  =  PredV
 mkVTableKeyVar :: VarClass -> (Identifier,VarWhen) -> Variable
 mkVTableKeyVar vc (id,vw) = Vbl id vc vw
 \end{code}
+
+
+\newpage
+\subsection{Thry to Theory}
+
+\begin{code}
+thry2theory :: MonadFail mf => Thry -> mf Theory
+thry2theory (Thr thNm deps items)
+  = items2theory items $
+    thName_ (dyn2str thNm) $
+    thDeps_ (map dyn2str deps) $
+    nullTheory
+
+dyn2str (DynVar str) = str
+
+items2theory :: MonadFail mf => [Item] -> Theory -> mf Theory
+items2theory items thry = do
+  let (defs,rest) = partition isDefItem items
+  let (decls,asserts) = partition isDeclItem rest
+  let defaults = defs2defaults initialDefaults defs
+  ctxt@(_,knwn) 
+    <- decls2vartable decls (defaults, newNamedVarTable $ thName thry)
+  (lws,cnjs) <- asserts2asns ctxt asserts 
+  return $ conjs_ cnjs $ laws_ lws $ known_ knwn thry
+\end{code}
+
 
 \newpage
 \subsubsection{Assertion Conversions}
@@ -517,9 +540,11 @@ trm2term ctxt@(dflts,vt) (TCons dv trms) = do
 Substitution
 
 \begin{code}
-trm2term ctxt (TSubV trm trms tdvs)     =  mkSubst ctxt trm trms tdvs [] []
-trm2term ctxt (TSubLV trm rdlvs tdlvs)   =  mkSubst ctxt trm [] [] rdlvs tdlvs
-trm2term ctxt (TSubst trm trms tdvs rdlvs tdlvs)  =  mkSubst ctxt trm trms tdvs rdlvs tdlvs
+trm2term ctxt (TSubV trm trms tdvs) =  mkSubst ctxt trm trms tdvs [] []
+trm2term ctxt (TSubLV trm rdlvs tdlvs)   
+  =  mkSubst ctxt trm [] [] rdlvs tdlvs
+trm2term ctxt (TSubst trm trms tdvs rdlvs tdlvs)  
+  =  mkSubst ctxt trm trms tdvs rdlvs tdlvs
 \end{code}
 
 Not yet implemented!
@@ -723,9 +748,10 @@ scond2sidecond ctxt (SCFull vsconds (VSet gvars)) = do
 
 \begin{code}
 vscond2varsidecond :: Context -> VSCond -> VarSideConds
-vscond2varsidecond ctxt (VSCDisj gv gvs) = vscond2VSC ctxt disjfrom gv gvs
+vscond2varsidecond ctxt (VSCDisj gv gvs)  = vscond2VSC ctxt disjfrom gv gvs
 vscond2varsidecond ctxt (VSCCovBy gv gvs) = vscond2VSC ctxt coveredby gv gvs
-vscond2varsidecond ctxt (VSCDynCov gv gvs) = vscond2VSC ctxt dyncovered gv gvs
+vscond2varsidecond ctxt (VSCDynCov gv gvs) 
+                                         = vscond2VSC ctxt dyncovered gv gvs
 
 vscond2VSC :: Context -> (GenVar -> VarSet -> VarSideConds)
            -> GVar ->  VrSet -> VarSideConds
@@ -836,7 +862,8 @@ compareIPTheories vts iTheory pTheory
                           , "EXITING now" ]
   where 
     iName = thName iTheory ; pName = thName pTheory
-    ivts = known iTheory : vts ; pvts = known pTheory : vts
+    ivts = known iTheory : vts 
+    pvts = known pTheory : (vts ++ [default2vartable initialDefaults])
 \end{code}
 
 \subsection{Compare Dependencies}
@@ -844,10 +871,13 @@ compareIPTheories vts iTheory pTheory
 Names are the same, so next we check dependencies,
 but also start accumulating discrepancy reports:
 \begin{code}
-compIPDeps :: [VarTable] -> [VarTable] -> [String] -> Theory -> Theory ->  String
+compIPDeps :: [VarTable] -> [VarTable] -> [String] 
+           -> Theory -> Theory ->  String
 compIPDeps ivts pvts sffid iTheory pTheory
-  | iDeps == pDeps  =  compIPVarTables ivts pvts (matched++sffid)  iTheory pTheory
-  | otherwise       =  compIPVarTables ivts pvts (mismatch++sffid) iTheory pTheory
+  | iDeps == pDeps 
+      = compIPVarTables ivts pvts (matched++sffid)  iTheory pTheory
+  | otherwise      
+      = compIPVarTables ivts pvts (mismatch++sffid) iTheory pTheory
   where
     iDeps = thDeps iTheory ; pDeps = thDeps pTheory
     matched = [ "", "Dependencies match OK." ]
@@ -868,7 +898,8 @@ comparing them against those in the installed version.
 We don't compare the \h{VarData} names as they are not present in .utp files,
 and are set equal to the theory name when the theory is built.
 \begin{code}
-compIPVarTables :: [VarTable] -> [VarTable] -> [String] -> Theory -> Theory -> String
+compIPVarTables :: [VarTable] -> [VarTable] -> [String] 
+                -> Theory -> Theory -> String
 compIPVarTables ivts pvts sffid iTheory pTheory
   =  let
        vtErrors = checkVTVars           (vTable pKnown)  (vTable iKnown)
@@ -926,13 +957,15 @@ checkSTLVars what plvTable ilvTable
 Here we work through the parsed conjectures,
 comparing them against the installed conjectures and (eventually) laws.
 \begin{code}
-compIPConjectures :: [VarTable] -> [VarTable] -> [String] -> Theory -> Theory -> String
+compIPConjectures :: [VarTable] -> [VarTable] -> [String] 
+                  -> Theory -> Theory -> String
 compIPConjectures ivts pvts sffid iTheory pTheory
-  = compIPLaws ivts pvts (scanConjs ivts pvts sffid pCjs iCjs iLws) iTheory pTheory
+  = compIPLaws ivts pvts scannedConjs iTheory pTheory
   where 
     pCjs = sort $ conjs pTheory
     iCjs = sort $ conjs iTheory
     iLws = sort $ laws  iTheory
+    scannedConjs = scanConjs ivts pvts sffid pCjs iCjs iLws
 
 scanConjs ::  [VarTable] -> [VarTable]
           ->  [String]        -- reports already generated
@@ -1033,15 +1066,11 @@ foundBoth :: String -> Assertion -> Assertion -> [String]
 foundBoth header pAssn iAssn
   | pAssn == iAssn  =  [] -- nothing to see here....
   | pType /= iType
-      = [ "  Current type:" ++ trType iType
-        , "  Loaded  type:" ++ trType pType
-        , "  Type Difference:\n"  ++ showTermDiff diffTerm
+      = [ "  Type Difference:\n"  ++ showTermDiff diffTerm
         , header
         ] 
   | pTerm /= iTerm
-      = [ "  Current term:" ++ trTerm 0 iTerm
-        , "  Loaded  term:" ++ trTerm 0 pTerm
-        , "  Term Difference:\n"  ++ showTermDiff diffTerm
+      = [ "  Term Difference:\n"  ++ showTermDiff diffTerm
         , header
         ] 
   | otherwise -- must be the side-condition
@@ -1057,10 +1086,10 @@ foundBoth header pAssn iAssn
 showTermDiff Nothing = "none"
 showTermDiff (Just (Left (term1,term2)))
   = unlines' [ "    Current Term: "++trTerm 0 term1
-             , "    Loaded  Term:  "++trTerm 0 term2 ]
+             , "    Loaded  Term: "++trTerm 0 term2 ]
 showTermDiff (Just (Right (typ1,typ2)))
   = unlines' [ "    Current Type: "++trType typ1
-             , "    Loaded  Type:  "++trType typ2]
+             , "    Loaded  Type: "++trType typ2 ]
 \end{code}
 
 \newpage
@@ -1069,7 +1098,8 @@ showTermDiff (Just (Right (typ1,typ2)))
 Here we work through the parsed laws,
 comparing them against the installed laws and (eventually) conjectures.
 \begin{code}
-compIPLaws :: [VarTable] -> [VarTable] -> [String] -> Theory -> Theory -> String
+compIPLaws :: [VarTable] -> [VarTable] -> [String] 
+           -> Theory -> Theory -> String
 compIPLaws ivts pvts sffid iTheory pTheory
   = compFinish (scanLaws ivts pvts sffid pLws iLws iCjs)
   where 

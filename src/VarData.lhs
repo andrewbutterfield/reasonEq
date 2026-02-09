@@ -733,9 +733,17 @@ seekType vt id vw
       vmr -> extractTypeFromVMR vmr
 
 seekClassType :: VarTable -> Identifier -> VarWhen -> VarMatchRole
-seekClassType vt id vw = lookupVarTable vt (Vbl id ObsV vw)
+seekClassType vt id vw 
+  = case lookupVarTable vt (Vbl id ObsV vw) of
+    UnknownVar ->
+      case lookupVarTable vt (Vbl id ExprV vw) of
+      UnknownVar -> lookupVarTable vt (Vbl id PredV vw)
+      vmr -> vmr
+    vmr -> vmr
 
-extractTypeFromVMR vmr = Nothing
+extractTypeFromVMR (KnownTerm t)     =  Just $ termtype t
+extractTypeFromVMR (KnownVar typ _)  =  Just $ typ
+extractTypeFromVMR _                 =  Nothing
 \end{code}
 
 \newpage

@@ -1,24 +1,2 @@
-@fB.pAssn:  ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V T (VR (Id "Q" 0,VP,WS))],V T (VR (Id "Q" 0,VP,WS))],([],fromList []))
-  parsed assertion:    (true ≡ Q) ≡ Q
-@fB.iAssn:  ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [K (TG (Id "B" 0)) (VB True),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],([],fromList []))
-  installed assertion: (true ≡ Q) ≡ Q
-
-ASN (
-  C (TG (Id "B" 0)) True (Id "eqv" 0) 
-    [ C (TG (Id "B" 0)) True (Id "eqv" 0) 
-      [ K (TG (Id "B" 0)) (VB True)
-      , V T (VR (Id "Q" 0,VP,WS))
-      ]
-    , V T (VR (Id "Q" 0,VP,WS))
-    ]
-  , ([],fromList []) )
-
-ASN (
-  C (TG (Id "B" 0)) True (Id "eqv" 0) 
-    [ C (TG (Id "B" 0)) True (Id "eqv" 0) 
-      [ K (TG (Id "B" 0)) (VB True)
-      , V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
-      ]
-    , V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
-    ]
-  ,([],fromList []) )
+@PVTS:  
+[VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList []),VD ("defaults",fromList [(VR (Id "A" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "B" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "C" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "D" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "E" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "F" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "G" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "H" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "I" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "J" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "K" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "L" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "N" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "P" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "Q" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "R" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "T" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "U" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "V" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "W" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "X" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "Y" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "Z" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "a" 0,VE,WS),KV T Nothing),(VR (Id "b" 0,VE,WS),KV T Nothing),(VR (Id "c" 0,VE,WS),KV T Nothing),(VR (Id "d" 0,VE,WS),KV T Nothing),(VR (Id "e" 0,VE,WS),KV T Nothing),(VR (Id "f" 0,VE,WS),KV T Nothing),(VR (Id "g" 0,VE,WS),KV T Nothing),(VR (Id "h" 0,VE,WS),KV T Nothing),(VR (Id "i" 0,VO,WS),KV T Nothing),(VR (Id "j" 0,VO,WS),KV T Nothing),(VR (Id "k" 0,VO,WS),KV T Nothing),(VR (Id "l" 0,VO,WS),KV T Nothing),(VR (Id "m" 0,VO,WS),KV T Nothing),(VR (Id "n" 0,VO,WS),KV T Nothing),(VR (Id "p" 0,VP,WB),KV (TG (Id "B" 0)) Nothing),(VR (Id "q" 0,VP,WB),KV (TG (Id "B" 0)) Nothing),(VR (Id "r" 0,VP,WB),KV (TG (Id "B" 0)) Nothing),(VR (Id "s" 0,VP,WB),KV (TG (Id "B" 0)) Nothing)],fromList [],fromList [])]

@@ -1000,7 +1000,7 @@ scanConjs' ivts pvts stroper pCjs@((pnm,passn@(Assertion pterm psc)):pCjs')
          pCjs' [] iLws'
   | otherwise = scanConjs ivts pvts stroper pCjs' [] iLws'
   where
-    (passnt,_) = mkTypedAsn pvts pterm psc
+    (passnt,_) = mkTypedAsn (pdbg "PVTS" pvts) pterm psc
 
 -- 4. both Current present
 -- we would not expect icnm == ilnm -- this is a serious issue

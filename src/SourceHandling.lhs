@@ -472,10 +472,11 @@ trm2term _ (EInt i)  =  return $ Val int  $ Integer i
 Variables
 
 \begin{code}
-trm2term ctxt (TmVar dv) = return $ jVar ArbType $ Vbl id vc vw
+trm2term ctxt (TmVar dv) = return $ jVar typ $ Vbl id vc vw
   where 
     (id,vw) = dynvar2idwhen dv
     vc = determineClass ctxt id vw
+    typ = determineType ctxt id vw
 \end{code}
 
 Operators
@@ -550,8 +551,20 @@ determineClass (dflts,vt) id vw
   where
    ifIsVarClass  vc  =  lookupVarTable vt (Vbl id vc vw)  /= UnknownVar
    ifIsLVarClass vc  =  lookupLVarTable vt (Vbl id vc vw) /= UnknownListVar
+\end{code}
+
+\subsubsection{Determine Type}
 
 
+\begin{code}
+determineType :: Context -> Identifier -> VarWhen -> Type
+determineType (dflts,vt) id vw
+  = case seekType vt id vw of
+      Just typ -> typ
+      Nothing  ->
+        case M.lookup (head $ idName id) dflts of
+          Nothing         ->  ArbType
+          Just (typ,_,_)  ->  typ
 \end{code}
 
 \subsubsection{Binary Operation to Term}

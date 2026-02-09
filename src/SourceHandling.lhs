@@ -208,6 +208,10 @@ defaultWhen = mkDefault
   ,("abcdefghijklmn",Static),("pqrs",Before),("uvwxyz",During "")]
 
 -- ! keep domain of above maps the same !!!!!!!!
+defaultOK 
+  = M.keys defaultClasses == M.keys defaultTypes
+    &&
+    M.keys defaultTypes == M.keys defaultWhen
 
 type Defaults = Map Char (Type,VarClass,VarWhen)
 initialDefaults :: Defaults

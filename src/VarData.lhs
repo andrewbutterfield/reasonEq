@@ -38,6 +38,7 @@ module VarData (
 , lookupLVar, lookupLVarTable, lookupLVarTables
 , isUnknownVar, isUnknownLVar, isUnknownGVar
 , gVarIsUnknownVar, gVarIsUnknownLVar
+, seekType
 , dEq, dvEq, dlEq, dgEq
 , insideS                    -- member modulo Dynamic
 , withinS                    -- subset modulo Dynamic
@@ -715,6 +716,26 @@ lookupLVarTable (VD (_,_,_,dtable)) lvar@(Vbl i vc vw)
  = case M.lookup (i,vc) dtable of
      Nothing    ->  UL
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
+\end{code}
+
+\newpage
+\section{Specific Knowledge Lookup}
+
+These are lookups that seek specific kinds of information about a variable.
+Currently, 
+we want sometimes to determine the class or type associated with a variable,
+without caring about its specific role.
+\begin{code}
+seekType :: VarTable -> Identifier -> VarWhen -> Maybe Type
+seekType vt id vw 
+  = case seekClassType vt id vw of
+      UnknownVar -> Nothing
+      vmr -> extractTypeFromVMR vmr
+
+seekClassType :: VarTable -> Identifier -> VarWhen -> VarMatchRole
+seekClassType vt id vw = lookupVarTable vt (Vbl id ObsV vw)
+
+extractTypeFromVMR vmr = Nothing
 \end{code}
 
 \newpage

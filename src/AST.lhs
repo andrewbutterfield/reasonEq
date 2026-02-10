@@ -15,7 +15,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
-           , termtype, settype
+           , termtype, settype, termtypes
            , termDifference, termDiffModuloTypes
            , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
@@ -303,6 +303,16 @@ settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm
 settype typ (Sub _ tm s)              =  (Sub typ tm s)     
 settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
 settype _ t                           =  t
+
+termtypes :: Term -> [Type] -- inorder traverse for types
+termtypes (Val typ _)                 =  [typ]
+termtypes (Var typ _)                 =  [typ]
+termtypes (Cons typ _ _ ts)           =  typ : concat (map termtypes ts)
+termtypes (Bnd typ n vl tm)           =  typ : termtypes tm
+termtypes (Lam typ n vs tm)           =  typ : termtypes tm
+termtypes (Cls i tm)                   =  arbpred : termtypes tm
+termtypes (Sub typ tm s)              =  typ : termtypes tm
+termtypes (Iter typ sa na si ni lvs)  =  [typ]
 \end{code}
 
 

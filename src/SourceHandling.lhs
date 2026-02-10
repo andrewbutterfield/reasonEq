@@ -909,7 +909,8 @@ compIPVarTables ivts pvts sffid iTheory pTheory
        report = if null errors 
                 then [ "", "Variable Tables match OK." ]
                 else errors ++ [ "Variable Tables differ!" ]
-     in compIPConjectures ivts pvts (report++sffid) iTheory pTheory
+     -- in compIPConjectures ivts pvts (report++sffid) iTheory pTheory
+     in compIPLaws ivts pvts (report++sffid) iTheory pTheory
   where iKnown = known iTheory ; pKnown = known pTheory
 
 checkVTVars :: VarRoleMap -> VarRoleMap -> [String]
@@ -952,6 +953,114 @@ checkSTLVars what plvTable ilvTable
 \end{code}
 
 \newpage
+\subsection{Compare Laws}
+
+Here we work through the parsed laws,
+comparing them against the installed laws and (eventually) conjectures.
+\begin{code}
+compIPLaws :: [VarTable] -> [VarTable] -> [String] 
+           -> Theory -> Theory -> String
+compIPLaws ivts pvts sffid iTheory pTheory
+  = compIPConjectures ivts pvts scannedLaws iTheory pTheory
+  -- = compFinish (scanLaws ivts pvts sffid pLws iLws iCjs)
+  -- = compIPLaws ivts pvts scannedConjs iTheory pTheory
+  where 
+    pLws = sort $ laws  pTheory
+    iLws = sort $ laws  iTheory
+    iCjs = sort $ conjs iTheory
+    -- scannedConjs = scanConjs ivts pvts sffid pCjs iCjs iLws
+    scannedLaws = scanLaws ivts pvts sffid pLws iLws iCjs
+
+scanLaws :: [VarTable] -> [VarTable] 
+         -> [String]        -- reports so far
+         -> [Law]           -- Loaded laws
+         -> [Law]           -- Current laws
+         -> [NmdAssertion]  -- Current conjectures 
+         -> [String]        -- updated reports
+scanLaws ivts pvts stroper [] iLws _
+  | null iLws  =  stroper
+  | otherwise 
+      = ( ("Current laws not in loaded: "++ndisplay (map (fst .fst) iLws))
+          : stroper )
+scanLaws ivts pvts stroper pLws@(((pnm,_),_):_) iLws iCjs
+  = scanLaws' ivts pvts stroper pLws 
+              (seek (fst . fst) pnm iLws) (seek fst pnm iCjs)
+\end{code}
+
+\begin{code}
+scanLaws' :: [VarTable] -> [VarTable] 
+          -> [String]        -- reports so far
+          -> [Law]           -- Loaded laws
+          -> [Law]           -- Current laws
+          -> [NmdAssertion]  -- Current conjectures 
+          -> [String]        -- updated reports
+
+-- scanLaws' preconditions :
+-- pLws@ [(pnm,_):_]  -- not null
+-- iLws@ [(ilnm,_):_] -- if not null , then ilnm >= pnm
+-- iCjs@ [(icnm,_):_] -- if not null , then icnm >= pnm
+
+-- 1. both Current empty
+scanLaws' ivts pvts stroper pLws [] []
+  | null pLws  =  stroper
+  | otherwise
+      = ( ("Loaded laws not in Current:: "++ndisplay (map (fst . fst) pLws))
+          :stroper )
+
+-- 2. Current conjectures empty
+scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
+                      iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
+                      []
+  | pnm /= ilnm
+      = scanLaws ivts pvts 
+         (("Loaded law not in Current"++pnm):stroper) pLws' iLws []
+  | passn /= ilassn
+      = scanLaws ivts pvts 
+          ( foundBoth ("Laws differ ("++pnm++")")
+            passn ilassn ++ stroper ) 
+          pLws' iLws' []
+  | otherwise = scanLaws ivts pvts stroper pLws' iLws' []
+
+-- 3. Current laws empty
+scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
+                  []
+                  iCjs@((icnm,icassn):iCjs')   -- icnm >= pnm
+  | pnm /= icnm
+      = scanLaws ivts pvts 
+         (("Loaded laws not in Current "++pnm):stroper) pLws' [] iCjs'
+  | passn /= icassn
+      = scanLaws ivts pvts 
+           ( foundBoth 
+               ("Loaded Law and Current Conjecture differ ("++pnm++")")
+               passn icassn ++ stroper ) 
+          pLws' [] iCjs'
+  | otherwise = scanLaws ivts pvts stroper pLws' [] iCjs'
+
+-- 4. both Current present
+-- we would not expect icnm == ilnm -- this is a serious issue
+scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
+                  iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
+                  iCjs@((icnm,icassn):iCjs')    -- icnm >= pnm
+  | icnm == ilnm
+     = ( ("Same Name '"++ilnm++"' in Current law and conjecture!")
+         : "*** Current Theory may be broken ***"
+         : stroper )
+  | pnm == ilnm -- icnm > pnm
+     = scanLaws ivts pvts 
+         ( foundBoth ("Laws differ ("++pnm++")") 
+                      passn ilassn ++ stroper )  
+         pLws' iLws' iCjs
+  | pnm == icnm -- ilnm > pnm
+     = scanLaws ivts pvts 
+         ( foundBoth 
+             ("Loaded Law and Current Conjecture differ ("++pnm++")") 
+             passn icassn 
+           ++ stroper )  
+         pLws' iLws iCjs'
+  | otherwise = scanLaws ivts pvts stroper pLws' iLws' iCjs'
+\end{code}
+
+\newpage
 \subsection{Compare Conjectures}
 
 Here we work through the parsed conjectures,
@@ -960,12 +1069,14 @@ comparing them against the installed conjectures and (eventually) laws.
 compIPConjectures :: [VarTable] -> [VarTable] -> [String] 
                   -> Theory -> Theory -> String
 compIPConjectures ivts pvts sffid iTheory pTheory
-  = compIPLaws ivts pvts scannedConjs iTheory pTheory
+--   = compFinish (scanLaws ivts pvts sffid pLws iLws iCjs)
+  -- = compIPLaws ivts pvts scannedConjs iTheory pTheory
+  = compFinish (scanConjs ivts pvts sffid pCjs iCjs iLws)
   where 
     pCjs = sort $ conjs pTheory
     iCjs = sort $ conjs iTheory
     iLws = sort $ laws  iTheory
-    scannedConjs = scanConjs ivts pvts sffid pCjs iCjs iLws
+    -- scannedConjs = scanConjs ivts pvts sffid pCjs iCjs iLws
 
 scanConjs ::  [VarTable] -> [VarTable]
           ->  [String]        -- reports already generated
@@ -1071,9 +1182,14 @@ foundBoth header pAssn iAssn
         , "    Loaded  side-cond: " ++ trSideCond pSC
         , header
         ]
-  | otherwise
+  | otherwise -- pAssn /= iAssn && pSC == iSC
       = case termDiffModuloTypes iTerm pTerm of
-        Nothing -> ["  types differ",header]
+        Nothing -- must be types that differ 
+          -> [ "    Loaded  types: "++showtypes pTerm
+             , "    Current types: "++showtypes iTerm
+             , "    Loaded Term: " ++ trTerm 0 pTerm
+             , "  types differ"
+             , header ] 
         Just (path,iDiff,pDiff) 
           -> [ "    Current Term: "++trTerm 0 iDiff
              , "    Type: "++trType (termtype iDiff)
@@ -1086,120 +1202,10 @@ foundBoth header pAssn iAssn
   where 
     (pTerm,pSC) = unwrapASN pAssn ; pType = termtype pTerm
     (iTerm,iSC) = unwrapASN iAssn ; iType = termtype iTerm
-    
-
-showTermDiff Nothing = "none"
-showTermDiff (Just (Left (term1,term2)))
-  = unlines' [ "    Current Term: "++trTerm 0 term1
-             , "    Loaded  Term: "++trTerm 0 term2 ]
-showTermDiff (Just (Right (typ1,typ2)))
-  = unlines' [ "    Current Type: "++trType typ1
-             , "    Loaded  Type: "++trType typ2 ]
+    showtypes term 
+      = filter (not .isSpace) $ intercalate "," $ map trType $ termtypes term
 \end{code}
 
-\newpage
-\subsection{Compare Laws}
-
-Here we work through the parsed laws,
-comparing them against the installed laws and (eventually) conjectures.
-\begin{code}
-compIPLaws :: [VarTable] -> [VarTable] -> [String] 
-           -> Theory -> Theory -> String
-compIPLaws ivts pvts sffid iTheory pTheory
-  = compFinish (scanLaws ivts pvts sffid pLws iLws iCjs)
-  where 
-    pLws = sort $ laws  pTheory
-    iLws = sort $ laws  iTheory
-    iCjs = sort $ conjs iTheory
-
-scanLaws :: [VarTable] -> [VarTable] 
-         -> [String]        -- reports so far
-         -> [Law]           -- Loaded laws
-         -> [Law]           -- Current laws
-         -> [NmdAssertion]  -- Current conjectures 
-         -> [String]        -- updated reports
-scanLaws ivts pvts stroper [] iLws _
-  | null iLws  =  stroper
-  | otherwise 
-      = ( ("Current laws not in loaded: "++ndisplay (map (fst .fst) iLws))
-          : stroper )
-scanLaws ivts pvts stroper pLws@(((pnm,_),_):_) iLws iCjs
-  = scanLaws' ivts pvts stroper pLws 
-              (seek (fst . fst) pnm iLws) (seek fst pnm iCjs)
-\end{code}
-
-\begin{code}
-scanLaws' :: [VarTable] -> [VarTable] 
-          -> [String]        -- reports so far
-          -> [Law]           -- Loaded laws
-          -> [Law]           -- Current laws
-          -> [NmdAssertion]  -- Current conjectures 
-          -> [String]        -- updated reports
-
--- scanLaws' preconditions :
--- pLws@ [(pnm,_):_]  -- not null
--- iLws@ [(ilnm,_):_] -- if not null , then ilnm >= pnm
--- iCjs@ [(icnm,_):_] -- if not null , then icnm >= pnm
-
--- 1. both Current empty
-scanLaws' ivts pvts stroper pLws [] []
-  | null pLws  =  stroper
-  | otherwise
-      = ( ("Loaded laws not in Current:: "++ndisplay (map (fst . fst) pLws))
-          :stroper )
-
--- 2. Current conjectures empty
-scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
-                      iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
-                      []
-  | pnm /= ilnm
-      = scanLaws ivts pvts 
-         (("Loaded law not in Current"++pnm):stroper) pLws' iLws []
-  | passn /= ilassn
-      = scanLaws ivts pvts 
-          ( foundBoth ("Laws differ ("++pnm++")")
-            passn ilassn ++ stroper ) 
-          pLws' iLws' []
-  | otherwise = scanLaws ivts pvts stroper pLws' iLws' []
-
--- 3. Current laws empty
-scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
-                  []
-                  iCjs@((icnm,icassn):iCjs')   -- icnm >= pnm
-  | pnm /= icnm
-      = scanLaws ivts pvts 
-         (("Loaded laws not in Current "++pnm):stroper) pLws' [] iCjs'
-  | passn /= icassn
-      = scanLaws ivts pvts 
-           ( foundBoth 
-               ("Loaded Law and Current Conjecture differ ("++pnm++")")
-               passn icassn ++ stroper ) 
-          pLws' [] iCjs'
-  | otherwise = scanLaws ivts pvts stroper pLws' [] iCjs'
-
--- 4. both Current present
--- we would not expect icnm == ilnm -- this is a serious issue
-scanLaws' ivts pvts stroper pLws@(((pnm,passn),_):pLws')
-                  iLws@(((ilnm,ilassn),_):iLws')  -- ilnm >= pnm
-                  iCjs@((icnm,icassn):iCjs')    -- icnm >= pnm
-  | icnm == ilnm
-     = ( ("Same Name '"++ilnm++"' in Current law and conjecture!")
-         : "*** Current Theory may be broken ***"
-         : stroper )
-  | pnm == ilnm -- icnm > pnm
-     = scanLaws ivts pvts 
-         ( foundBoth ("Laws differ ("++pnm++")") 
-                      passn ilassn ++ stroper )  
-         pLws' iLws' iCjs
-  | pnm == icnm -- ilnm > pnm
-     = scanLaws ivts pvts 
-         ( foundBoth 
-             ("Loaded Law and Current Conjecture differ ("++pnm++")") 
-             passn icassn 
-           ++ stroper )  
-         pLws' iLws iCjs'
-  | otherwise = scanLaws ivts pvts stroper pLws' iLws' iCjs'
-\end{code}
 
 \subsection{Finish}
 

@@ -1,6 +1,6 @@
 \chapter{Top-level TUI}
 \begin{verbatim}
-Copyright (c) Andrew Butterfield 2017--25
+Copyright (c) Andrew Butterfield 2017--26
               Saqid Zardari      2023
               Aaron Bruce        2023
 
@@ -275,6 +275,9 @@ cmdLoad
     , loadTheoryFile )
 
 loadTheoryFile [thName] reqs = do
+  -- NEED TO CHECK PRE-EXISTING THEORY HAS NO LIVE PROOFS!!!!!!!
+  -- A LOT SHOULD LIVE IN ABSTRACT LEVEL
+  putStrLn "\n****WARNING: not currently checking for LIVE PROOFS****\n"
   let fname = projectDir reqs </> thName </> thName <.> "utp" 
   putStrLn("loading from "++fname)
   haveSource <- doesFileExist fname
@@ -292,7 +295,14 @@ loadTheoryFile [thName] reqs = do
           Just ithry -> do
             let report = compareIPTheories (ttail vts) ithry pthry
             putStrLn report
-        putStrLn "**** NOT YET INSTALLED ****"
+            putStrLn "\n****WARNING: not currently checking for LIVE PROOFS****\n"
+            putStr "\nInstall (y/n)? "
+            hFlush stdout
+            response <- fmap trim getLine
+            if take 1 response == "y"
+            then do
+               putStrLn ("** INSTALL '"++thName++"' NYI **")
+            else putStrLn ("Theory '"++thName++"' not installed")            
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
   else putStrLn ("loadTheoryFile: cannot find "++fname)
   return reqs
@@ -387,7 +397,7 @@ restoreState [nm] reqs = do
   then ( if old
           then do putStr "keep change? (y/N)? "
                   hFlush stdout
-                  response <- fmap trim $ getLine
+                  response <- fmap trim getLine
                   if take 1 response == "y"
                   then return $ changed $ theories_ theories' reqs
                   else return reqs

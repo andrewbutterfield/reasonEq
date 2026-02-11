@@ -2,14 +2,10 @@
 
 ## URGENT or NEXT
 
-We have typing in the loaded theory check,
-but we need to  ensure the relevant `VarTable` is at the top of `vts`.
+**IMPORTANT:**
+*When a law is recorded in a justification, is its provenance recorded?*
 
-Need to type-check parsed theory before checking against installed ? YES
-
-Need to re-think reporting (needs more clarity).
-
-Added `Defaults` to be carried around with `VarTable`.
+Moving part of `TopTUI.loadTheoryFile` to `AbstractTop`.
 
 ### Load/Generate
 

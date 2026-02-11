@@ -284,8 +284,8 @@ loadTheoryFile [thName] reqs = do
   if haveSource then do 
     theory_text <- readFile fname
     case loadTheory (theories reqs) theory_text of
-      --  BEGIN MOVE TO AbstractTop.something or other
       Yes pthry ->  do
+--  BEGIN MOVE TO (new) AbstractTop.something or other
         -- putStrLn ("Parsed as:\n"++show pthry)
         depthys <- getTheoryDeps thName (theories reqs)
         let vts = map known depthys
@@ -295,7 +295,7 @@ loadTheoryFile [thName] reqs = do
           Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
           Just ithry -> do
             let report = compareIPTheories (ttail vts) ithry pthry
-            -- END MOVE TO AbstractTop. returning report here
+-- END MOVE TO AbstractTop. returning report here
             putStrLn report
             putStrLn "\n****WARNING: not currently checking for LIVE PROOFS****\n"
             putStr "\nInstall (y/n)? "

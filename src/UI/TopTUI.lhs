@@ -262,7 +262,7 @@ generateState2 theory reqs = do
 \end{code}
 
 
-\subsection{Load \protect\reasonEq\ Theory}
+\subsection{Load Theory Text}
 
 \begin{code}
 cmdLoad :: REqCmdDescr
@@ -277,38 +277,28 @@ cmdLoad
     , loadTheoryFile )
 
 loadTheoryFile [thName] reqs = do
-  -- NEED TO CHECK PRE-EXISTING THEORY HAS NO LIVE PROOFS!!!!!!!
-  -- A LOT SHOULD LIVE IN ABSTRACT LEVEL
-  putStrLn "\n****WARNING: not currently checking for LIVE PROOFS****\n"
-  let fname = projectDir reqs </> thName </> thName <.> "utp" 
-  putStrLn("loading from "++fname)
-  haveSource <- doesFileExist fname
-  if haveSource then do 
-    theory_text <- readFile fname
-    case loadTheory (theories reqs) theory_text of
-      Yes pthry ->  do -- report <- loadReqTheory pthry reqs
---  BEGIN MOVE TO (new) AbstractTop.something or other
-        -- putStrLn ("Parsed as:\n"++show pthry)
-        depthys <- getTheoryDeps thName (theories reqs)
-        let vts = map known depthys
-        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
-        putStrLn "\nComparing current and new theories\n"
-        case getCurrentTheory reqs of
-          Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
-          Just ithry -> do
-            let report = compareIPTheories (ttail vts) ithry pthry
--- END MOVE TO AbstractTop. returning report here
-            putStrLn report
-            putStrLn "\n****WARNING: not currently checking for LIVE PROOFS****\n"
-            putStr "\nInstall (y/n)? "
-            hFlush stdout
-            response <- fmap trim getLine
-            if take 1 response == "y"
-            then do
-               putStrLn ("** INSTALL '"++thName++"' NYI **")
-            else putStrLn ("Theory '"++thName++"' not installed")            
-      But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
-  else putStrLn ("loadTheoryFile: cannot find "++fname)
+  let (haveproofs,msg) = checkLiveProofs thName reqs
+  if haveproofs then 
+    putStrLn ("Cannot load theory: "++msg)
+  else do
+    let fname = projectDir reqs </> thName </> thName <.> "utp" 
+    putStrLn("loading from "++fname)
+    haveSource <- doesFileExist fname
+    if haveSource then do 
+      theory_text <- readFile fname
+      case loadTheory (theories reqs) theory_text of
+        Yes pthry ->  do
+          report <- checkLoadedTheory pthry reqs
+          putStrLn report
+          putStr "\nInstall (y/n)? "
+          hFlush stdout
+          response <- fmap trim getLine
+          if take 1 response == "y"
+          then do
+              putStrLn ("** INSTALL '"++thName++"' NYI **")
+          else putStrLn ("Theory '"++thName++"' not installed")            
+        But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
+    else putStrLn ("loadTheoryFile: cannot find "++fname)
   return reqs
 
 loadTheoryFile args reqs = do

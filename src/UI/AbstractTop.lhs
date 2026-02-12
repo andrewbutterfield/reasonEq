@@ -20,7 +20,8 @@ module UI.AbstractTop
 , observeCompleteProofs -- top
 , setCurrentTheory -- top
 , showCurrentTheory -- top
-, loadReqTheory -- top
+, checkLiveProofs
+, checkLoadedTheory -- top
 , newConjecture -- top
 , readConjecture -- top
 , assumeConjecture -- top
@@ -200,27 +201,27 @@ showCurrentTheory thnm reqs
         ->  return (showTheoryLong (trTerm 0, trSideCond) thry)
 \end{code}
 
-\subsection{Load \protect\reasonEq\ Theory}
+\subsection{Check Loaded Theory}
 
 \begin{code}
-loadReqTheory :: MonadFail m => Theory -> REqState -> m String
-loadReqTheory pthry reqs
-  = fail ("loadTheory "++thName pthry++" NYI")
+checkLiveProofs :: String -> REqState -> (Bool,String)
+checkLiveProofs thNm reqs
+  = let liveTheories  = map (fst . fst)  $ M.toList $ liveProofs reqs
+    in if thNm `elem` liveTheories
+       then (True,"liveproofs for '"++thNm++"' found.")
+       else (False,"")
 \end{code}
-\begin{verbatim}
---  BEGIN MOVE TO (new) AbstractTop.something or other
-        -- putStrLn ("Parsed as:\n"++show pthry)
-        depthys <- getTheoryDeps thName (theories reqs)
-        let vts = map known depthys
-        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
-        putStrLn "\nComparing current and new theories\n"
-        case getCurrentTheory reqs of
-          Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
-          Just ithry -> do
-            let report = compareIPTheories (ttail vts) ithry pthry
--- END MOVE TO AbstractTop. returning report here
-\end{verbatim}
 
+\begin{code}
+checkLoadedTheory :: MonadFail m => Theory -> REqState -> m String
+checkLoadedTheory pthry reqs = do
+  let pThName = thName pthry 
+  depthys <- getTheoryDeps pThName (theories reqs)
+  let vts = map known depthys
+  case getTheory pThName $ theories reqs of
+    Nothing -> return ("No theory named "++pThName++" installed.")
+    Just ithry -> return $ compareIPTheories (ttail vts) ithry pthry
+\end{code}
 
 \newpage
 \subsection{Adding a new conjecture}

@@ -2,18 +2,11 @@
 
 ## URGENT or NEXT
 
-Not sure why this results in a runtime error - called from a monadic context!
-
-```
-devproj.EQV> load EQV
-loading from devproj/EQV/EQV.utp
-req: user error (getTheoryDeps - No such theory: 'EQUIV')
-```
+add `newTheory`, `replaceTheory`, and `changeTheory` to `AbstractTUI`.
 
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
-Moving part of `TopTUI.loadTheoryFile` to `AbstractTop`.
 
 ### Load/Generate
 

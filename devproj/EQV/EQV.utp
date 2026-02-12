@@ -1,4 +1,4 @@
-Theory EQV . .
+Theory EQUIV . .
 
 DclVar Obs eqv . var SB ( B -> ( B -> B ) ) .
 

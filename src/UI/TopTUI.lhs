@@ -337,7 +337,7 @@ saveState [nm] reqs
     in
     case getTheory nm' $ theories reqs of
       Nothing
-       -> do putStrLn ("No such theory: '"++nm'++"'")
+       -> do putStrLn ("saveState: No such theory: '"++nm'++"'")
              return reqs
       Just thry
        -> do saveNamedTheory (projectDir reqs) (nm',thry)

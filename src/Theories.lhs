@@ -298,7 +298,7 @@ given a starting point:
 getTheoryDeps :: MonadFail m => String -> TheoryDAG -> m [Theory]
 getTheoryDeps nm theories
   = case getSDAGdeps nm $ sdag theories of
-      []  ->  fail ("No such theory: '"++nm++"'")
+      []  ->  fail ("getTheoryDeps - No such theory: '"++nm++"'")
       deps  ->  sequence $ map (lookin $ tmap theories) deps
   where
     lookin mapt nm
@@ -687,7 +687,7 @@ showTheoryLaws dm thry
 
 showNamedTheory dm thnm thrys
   = case M.lookup thnm $ tmap thrys of
-      Nothing -> ("No such theory: "++thnm)
+      Nothing -> ("showNamedTheory - No such theory: "++thnm)
       Just thry -> showTheoryLong dm thry
 
 showTheoryLong dm thry

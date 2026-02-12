@@ -34,7 +34,8 @@ module Theories
  , assumeConj, assumeConjRange, assumeDepConj, lawDemote
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
- , showTheoryLong, showTheoryShort, showTheoryLaws
+ , showTheoryLong, showTheoryShort, showTheoryStd
+ , showTheoryLaws
  , showTheoryKnowns
  , lawClassify, lawDepClassify
  ) where
@@ -703,6 +704,8 @@ showTheoryLong dm thry
       , "ClassifiedLaws:", showClassyLaws (lwkinds thry)]
     )
   where deps = thDeps thry
+
+showTheoryStd = showTheoryLong (trTerm 0, trSideCond)
 \end{code}
 
 

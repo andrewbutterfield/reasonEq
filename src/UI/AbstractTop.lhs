@@ -139,7 +139,7 @@ observeCurrTheory :: REqState -> String
 observeCurrTheory reqs
  = case getCurrentTheory reqs of
      Nothing    ->  "No current theory."
-     Just thry  ->  showTheoryLong (trTerm 0, trSideCond) thry
+     Just thry  ->  showTheoryStd thry
 \end{code}
 
 \subsection{Observing Current Conjectures}

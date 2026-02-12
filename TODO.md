@@ -3,7 +3,7 @@
 ## URGENT or NEXT
 
 **IMPORTANT:**
-*When a law is recorded in a justification, is its provenance recorded?*
+*When a law is recorded in a justification, is its provenance recorded?* **NO**
 
 Moving part of `TopTUI.loadTheoryFile` to `AbstractTop`.
 

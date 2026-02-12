@@ -262,6 +262,8 @@ generateState2 theory reqs = do
 \end{code}
 
 
+\subsection{Load \protect\reasonEq\ Theory}
+
 \begin{code}
 cmdLoad :: REqCmdDescr
 cmdLoad
@@ -284,7 +286,7 @@ loadTheoryFile [thName] reqs = do
   if haveSource then do 
     theory_text <- readFile fname
     case loadTheory (theories reqs) theory_text of
-      Yes pthry ->  do
+      Yes pthry ->  do -- report <- loadReqTheory pthry reqs
 --  BEGIN MOVE TO (new) AbstractTop.something or other
         -- putStrLn ("Parsed as:\n"++show pthry)
         depthys <- getTheoryDeps thName (theories reqs)

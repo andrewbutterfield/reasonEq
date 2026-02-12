@@ -20,6 +20,7 @@ module UI.AbstractTop
 , observeCompleteProofs -- top
 , setCurrentTheory -- top
 , showCurrentTheory -- top
+, loadReqTheory -- top
 , newConjecture -- top
 , readConjecture -- top
 , assumeConjecture -- top
@@ -195,8 +196,30 @@ showCurrentTheory :: MonadFail m => String -> REqState -> m String
 showCurrentTheory thnm reqs
   = case getTheory thnm $ theories reqs of
       Nothing  ->  fail ("No theory named '"++thnm++"'.")
-      Just thry   ->  return (showTheoryLong (trTerm 0, trSideCond) thry)
+      Just thry   
+        ->  return (showTheoryLong (trTerm 0, trSideCond) thry)
 \end{code}
+
+\subsection{Load \protect\reasonEq\ Theory}
+
+\begin{code}
+loadReqTheory :: MonadFail m => Theory -> REqState -> m String
+loadReqTheory pthry reqs
+  = fail ("loadTheory "++thName pthry++" NYI")
+\end{code}
+\begin{verbatim}
+--  BEGIN MOVE TO (new) AbstractTop.something or other
+        -- putStrLn ("Parsed as:\n"++show pthry)
+        depthys <- getTheoryDeps thName (theories reqs)
+        let vts = map known depthys
+        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) pthry)
+        putStrLn "\nComparing current and new theories\n"
+        case getCurrentTheory reqs of
+          Nothing -> putStrLn ("Can't find current theory: "++currTheory reqs)
+          Just ithry -> do
+            let report = compareIPTheories (ttail vts) ithry pthry
+-- END MOVE TO AbstractTop. returning report here
+\end{verbatim}
 
 
 \newpage

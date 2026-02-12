@@ -117,7 +117,8 @@ observeLaws reqs _       =  observe_laws reqs (trTerm 0,  trSideCond )
 observe_laws reqs renderers
   -- = let thrys = getAllTheories $ theories reqs
   = let thrys = getTheoryDeps' (currTheory reqs) $ theories reqs
-    in hdr ++ (intercalate hdr $ map (showTheoryLaws renderers) $ reverse thrys)
+    in hdr ++ ( intercalate hdr $ map (showTheoryLaws renderers) 
+                $ reverse thrys)
   where hdr = "\n---\n"
 \end{code}
 
@@ -196,9 +197,8 @@ after a command that has modified it.
 showCurrentTheory :: MonadFail m => String -> REqState -> m String
 showCurrentTheory thnm reqs
   = case getTheory thnm $ theories reqs of
-      Nothing  ->  fail ("No theory named '"++thnm++"'.")
-      Just thry   
-        ->  return (showTheoryLong (trTerm 0, trSideCond) thry)
+      Nothing    ->  fail ("No theory named '"++thnm++"'.")
+      Just thry  ->  return (showTheoryStd thry)
 \end{code}
 
 \subsection{Check Loaded Theory}
@@ -213,14 +213,15 @@ checkLiveProofs thNm reqs
 \end{code}
 
 \begin{code}
-checkLoadedTheory :: MonadFail m => Theory -> REqState -> m String
-checkLoadedTheory pthry reqs = do
-  let pThName = thName pthry 
-  depthys <- getTheoryDeps pThName (theories reqs)
-  let vts = map known depthys
-  case getTheory pThName $ theories reqs of
-    Nothing -> return ("No theory named "++pThName++" installed.")
-    Just ithry -> return $ compareIPTheories (ttail vts) ithry pthry
+checkLoadedTheory :: Theory -> REqState -> (Bool,String)
+checkLoadedTheory pthry reqs
+  = let
+      pNm = thName pthry 
+      depthys = getTheoryDeps' pNm (theories reqs)
+      vts = map known depthys
+    in  case getTheory pNm $ theories reqs of
+          Nothing    -> (False,"No theory named "++pNm++" installed.")
+          Just ithry -> (True,compareIPTheories (ttail vts) ithry pthry)
 \end{code}
 
 \newpage

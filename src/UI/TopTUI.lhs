@@ -270,33 +270,41 @@ cmdLoad
   = ( loadCmd
     , "loads theory from text file"
     , unlines
-        ( (loadCmd ++ " <thry> -- load theory from <thry>.utp")
+        ( (loadCmd ++ " <thry> -- loads theory from <thry>.utp")
+        : (loadSpc ++ "        -- error if theory name is not <thry>")
         : (loadSpc ++ "        -- warns if it modifies an existing theory" )
         : (loadSpc ++ "        -- creates a new theory if none exists" )
         : genLoadFormat )
     , loadTheoryFile )
 
-loadTheoryFile [thName] reqs = do
-  let (haveproofs,msg) = checkLiveProofs thName reqs
+loadTheoryFile [thNm] reqs = do
+  let (haveproofs,msg) = checkLiveProofs thNm reqs
   if haveproofs then 
     putStrLn ("Cannot load theory: "++msg)
   else do
-    let fname = projectDir reqs </> thName </> thName <.> "utp" 
+    let fname = projectDir reqs </> thNm </> thNm <.> "utp" 
     putStrLn("loading from "++fname)
     haveSource <- doesFileExist fname
     if haveSource then do 
       theory_text <- readFile fname
       case loadTheory (theories reqs) theory_text of
         Yes pthry ->  do
-          report <- checkLoadedTheory pthry reqs
-          putStrLn report
-          putStr "\nInstall (y/n)? "
-          hFlush stdout
-          response <- fmap trim getLine
-          if take 1 response == "y"
-          then do
-              putStrLn ("** INSTALL '"++thName++"' NYI **")
-          else putStrLn ("Theory '"++thName++"' not installed")            
+          let pNm = thName pthry
+          if pNm == thNm then do
+            putStrLn $ unlines' [ "Loaded theory:", showTheoryStd pthry ]
+            let (exists,report) = checkLoadedTheory pthry reqs
+            putStrLn report
+            putStr "\nInstall (y/n)? "
+            hFlush stdout
+            response <- fmap trim getLine
+            if take 1 response == "y"
+            then do
+                putStrLn ("** INSTALL '"++thNm++"' NYI **")
+            else putStrLn ("Theory '"++thNm++"' not installed")
+          else putStrLn $ unlines' -- pNm /= thNm
+            [ "Theory name must match '.utp' filename!"
+            , "  File Name: "++(thNm <.> "utp")
+            , "  Theory name inside file: "++pNm ]            
         But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
     else putStrLn ("loadTheoryFile: cannot find "++fname)
   return reqs

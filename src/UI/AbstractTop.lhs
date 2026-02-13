@@ -20,6 +20,7 @@ module UI.AbstractTop
 , observeCompleteProofs -- top
 , setCurrentTheory -- top
 , showCurrentTheory -- top
+, newREqTheory, repREqTheory, chgREqTheory
 , checkLiveProofs
 , checkLoadedTheory -- top
 , newConjecture -- top
@@ -201,6 +202,7 @@ showCurrentTheory thnm reqs
       Just thry  ->  return (showTheoryStd thry)
 \end{code}
 
+
 \subsection{Check Loaded Theory}
 
 \begin{code}
@@ -223,6 +225,51 @@ checkLoadedTheory pthry reqs
           Nothing    -> (False,"No theory named "++pNm++" installed.")
           Just ithry -> (True,compareIPTheories (ttail vts) ithry pthry)
 \end{code}
+
+\subsection{Change Theories}
+
+Adds a new theory, complaining if one with the same name exists.
+\begin{code}
+newREqTheory :: MonadFail mf => Theory -> REqState -> mf REqState
+newREqTheory newthry reqs = do
+  let tnm = thName newthry
+  let tdag = theories reqs
+  case getTheory tnm tdag of
+    Just _   ->  fail ("new-theory: theory "++tnm++" already exists")
+    Nothing  ->  do
+      tdag' <- addTheory newthry tdag
+      return $ changed $ theories_ tdag' $ reqs
+\end{code}
+
+Relaces an existing theory, complaining if none with the same name exists.
+\begin{code}
+repREqTheory :: MonadFail mf => Theory -> REqState -> mf REqState
+repREqTheory revisedThry reqs = do
+  let tnm = thName revisedThry
+  let tdag = theories reqs
+  case getTheory tnm tdag of
+    Nothing  ->  fail ("repl-theory: theory "++tnm++" doesn't exist")
+    Just _   ->  do
+      tdag' <- replaceTheory tnm revisedThry tdag
+      return $ changed $ theories_ tdag' $ reqs
+\end{code}
+
+Updates theories to have the given theory,
+regardless of whether one with the same name is already present.
+\begin{code}
+chgREqTheory :: MonadFail mf => Theory -> REqState -> mf REqState
+chgREqTheory thry reqs = do
+  let tnm = thName thry
+  let tdag = theories reqs
+  case getTheory tnm tdag of
+    Nothing  ->  do
+      tdag' <- addTheory thry tdag
+      return $ changed $ theories_ tdag' $ reqs
+    Just _   ->  do
+      tdag' <- replaceTheory tnm thry tdag
+      return $ changed $ theories_ tdag' $ reqs 
+\end{code}
+
 
 \newpage
 \subsection{Adding a new conjecture}

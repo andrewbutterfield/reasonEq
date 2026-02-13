@@ -2,7 +2,7 @@
 
 ## URGENT or NEXT
 
-add `newTheory`, `replaceTheory`, and `changeTheory` to `AbstractTUI`.
+added `newREqTheory`, `repREqTheory`, `chgREqTheory` to `AbstractTop`.
 
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**

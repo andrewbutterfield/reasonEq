@@ -30,7 +30,6 @@ module UI.AbstractTop
 , classifyLaw -- top
 , newProof1 -- top
 , newProof2 -- top
-, resumeProof -- UNUSED -- implemented directly in TopTUI
 , observeSettings -- both       ----v ?
 , modifyProofSettings -- both    ----^ ?
 )
@@ -463,18 +462,6 @@ shadowFreeSub sc bvs (Substn es _)
                              =  all (shadowFree' sc bvs) $ map snd $ S.toList es
 \end{code}
 
-\subsection{Resuming a Proof}
-
-\begin{code}
-resumeProof :: MonadFail m => Int -> REqState -> m LiveProof
-resumeProof i reqs
-  = case M.elems $ liveProofs reqs of
-      []     ->  fail "No current live proofs."
-      [prf]  ->  return prf
-      prfs   ->  if 1 <= i && i <= length prfs
-                 then return $ prfs!!(i-1)
-                 else fail "No such live proof."
-\end{code}
 
 \subsection{Proof Settings}
 

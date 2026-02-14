@@ -24,8 +24,8 @@ Grammar
 	Item -> 'DclVar' VClass DynVar '.' VarRole '.'     (13)
 	Item -> 'DclDLVar' VClass DynVar '.' ListDynVar '.'   (14)
 	Item -> 'DclASet' VClass DynVar '.'                (15)
-	Item -> 'Conjecture' DynVar '.' Trm '.' SCond      (16)
-	Item -> 'Law' LawType DynVar '.' Trm '.' SCond     (17)
+	Item -> 'Law' LawType DynVar '.' Trm '.' SCond     (16)
+	Item -> 'Conjecture' DynVar '.' Trm '.' SCond      (17)
 	VarRole -> 'var' SBBL Typ                          (18)
 	VClass -> 'Obs'                                    (19)
 	VClass -> 'Exp'                                    (20)
@@ -2666,7 +2666,7 @@ State 146
 
 State 147
 
-	Item -> 'Conjecture' . DynVar '.' Trm '.' SCond     (rule 16)
+	Item -> 'Conjecture' . DynVar '.' Trm '.' SCond     (rule 17)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2714,7 +2714,7 @@ State 151
 
 State 152
 
-	Item -> 'Law' . LawType DynVar '.' Trm '.' SCond    (rule 17)
+	Item -> 'Law' . LawType DynVar '.' Trm '.' SCond    (rule 16)
 
 	'assumed'      shift, and enter state 166
 	'axiom'        shift, and enter state 167
@@ -2864,7 +2864,7 @@ State 164
 
 State 165
 
-	Item -> 'Law' LawType . DynVar '.' Trm '.' SCond    (rule 17)
+	Item -> 'Law' LawType . DynVar '.' Trm '.' SCond    (rule 16)
 
 	L_DynVar       shift, and enter state 19
 
@@ -2945,7 +2945,7 @@ State 175
 
 State 176
 
-	Item -> 'Conjecture' DynVar . '.' Trm '.' SCond     (rule 16)
+	Item -> 'Conjecture' DynVar . '.' Trm '.' SCond     (rule 17)
 
 	'.'            shift, and enter state 178
 
@@ -2959,7 +2959,7 @@ State 177
 
 State 178
 
-	Item -> 'Conjecture' DynVar '.' . Trm '.' SCond     (rule 16)
+	Item -> 'Conjecture' DynVar '.' . Trm '.' SCond     (rule 17)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -3024,7 +3024,7 @@ State 182
 
 State 183
 
-	Item -> 'Law' LawType DynVar . '.' Trm '.' SCond    (rule 17)
+	Item -> 'Law' LawType DynVar . '.' Trm '.' SCond    (rule 16)
 
 	'.'            shift, and enter state 189
 
@@ -3096,7 +3096,7 @@ State 188
 
 State 189
 
-	Item -> 'Law' LawType DynVar '.' . Trm '.' SCond    (rule 17)
+	Item -> 'Law' LawType DynVar '.' . Trm '.' SCond    (rule 16)
 
 	'('            shift, and enter state 31
 	'False'        shift, and enter state 32
@@ -3158,7 +3158,7 @@ State 192
 
 State 193
 
-	Item -> 'Conjecture' DynVar '.' Trm . '.' SCond     (rule 16)
+	Item -> 'Conjecture' DynVar '.' Trm . '.' SCond     (rule 17)
 	Trm -> Trm . '===' Trm1                             (rule 30)
 
 	'.'            shift, and enter state 194
@@ -3167,7 +3167,7 @@ State 193
 
 State 194
 
-	Item -> 'Conjecture' DynVar '.' Trm '.' . SCond     (rule 16)
+	Item -> 'Conjecture' DynVar '.' Trm '.' . SCond     (rule 17)
 
 	'SC'           shift, and enter state 7
 	'VSC'          shift, and enter state 8
@@ -3202,7 +3202,7 @@ State 197
 
 State 198
 
-	Item -> 'Law' LawType DynVar '.' Trm . '.' SCond    (rule 17)
+	Item -> 'Law' LawType DynVar '.' Trm . '.' SCond    (rule 16)
 	Trm -> Trm . '===' Trm1                             (rule 30)
 
 	'.'            shift, and enter state 201
@@ -3247,7 +3247,7 @@ State 200
 
 State 201
 
-	Item -> 'Law' LawType DynVar '.' Trm '.' . SCond    (rule 17)
+	Item -> 'Law' LawType DynVar '.' Trm '.' . SCond    (rule 16)
 
 	'SC'           shift, and enter state 7
 	'VSC'          shift, and enter state 8
@@ -3335,30 +3335,7 @@ State 207
 
 State 208
 
-	Item -> 'Conjecture' DynVar '.' Trm '.' SCond .     (rule 16)
-
-	'Conjecture'   reduce using rule 16
-	'DclASet'      reduce using rule 16
-	'DclDLVar'     reduce using rule 16
-	'DclVar'       reduce using rule 16
-	'ExprVars'     reduce using rule 16
-	'Law'          reduce using rule 16
-	'ObsVars'      reduce using rule 16
-	'PredVars'     reduce using rule 16
-	'StaticVars'   reduce using rule 16
-	%eof           reduce using rule 16
-
-
-State 209
-
-	VarRole -> 'var' SBBL Typ .                         (rule 18)
-
-	'.'            reduce using rule 18
-
-
-State 210
-
-	Item -> 'Law' LawType DynVar '.' Trm '.' SCond .    (rule 17)
+	Item -> 'Conjecture' DynVar '.' Trm '.' SCond .     (rule 17)
 
 	'Conjecture'   reduce using rule 17
 	'DclASet'      reduce using rule 17
@@ -3370,6 +3347,29 @@ State 210
 	'PredVars'     reduce using rule 17
 	'StaticVars'   reduce using rule 17
 	%eof           reduce using rule 17
+
+
+State 209
+
+	VarRole -> 'var' SBBL Typ .                         (rule 18)
+
+	'.'            reduce using rule 18
+
+
+State 210
+
+	Item -> 'Law' LawType DynVar '.' Trm '.' SCond .    (rule 16)
+
+	'Conjecture'   reduce using rule 16
+	'DclASet'      reduce using rule 16
+	'DclDLVar'     reduce using rule 16
+	'DclVar'       reduce using rule 16
+	'ExprVars'     reduce using rule 16
+	'Law'          reduce using rule 16
+	'ObsVars'      reduce using rule 16
+	'PredVars'     reduce using rule 16
+	'StaticVars'   reduce using rule 16
+	%eof           reduce using rule 16
 
 
 -----------------------------------------------------------------------------

@@ -124,8 +124,8 @@ Item
   | 'DclVar' VClass DynVar '.' VarRole '.' { REQ.Abs.DeclVar $2 $3 $5 }
   | 'DclDLVar' VClass DynVar '.' ListDynVar '.' { REQ.Abs.DeclDLVar $2 $3 $5 }
   | 'DclASet' VClass DynVar '.' { REQ.Abs.DeclASet $2 $3 }
-  | 'Conjecture' DynVar '.' Trm '.' SCond { REQ.Abs.Conj $2 $4 $6 }
   | 'Law' LawType DynVar '.' Trm '.' SCond { REQ.Abs.Law $2 $3 $5 $7 }
+  | 'Conjecture' DynVar '.' Trm '.' SCond { REQ.Abs.Conj $2 $4 $6 }
 
 VarRole :: { REQ.Abs.VarRole }
 VarRole : 'var' SBBL Typ { REQ.Abs.KV $2 $3 }

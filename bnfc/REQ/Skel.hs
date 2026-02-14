@@ -32,8 +32,8 @@ transItem x = case x of
   REQ.Abs.DeclVar vclass dynvar varrole -> failure x
   REQ.Abs.DeclDLVar vclass dynvar dynvars -> failure x
   REQ.Abs.DeclASet vclass dynvar -> failure x
-  REQ.Abs.Conj dynvar trm scond -> failure x
   REQ.Abs.Law lawtype dynvar trm scond -> failure x
+  REQ.Abs.Conj dynvar trm scond -> failure x
 
 transVarRole :: REQ.Abs.VarRole -> Result
 transVarRole x = case x of

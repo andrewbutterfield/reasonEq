@@ -63,8 +63,8 @@ All other symbols are terminals.
   |  |  **|**  | ``DclVar`` //VClass// //DynVar// ``.`` //VarRole// ``.``
   |  |  **|**  | ``DclDLVar`` //VClass// //DynVar// ``.`` //[DynVar]// ``.``
   |  |  **|**  | ``DclASet`` //VClass// //DynVar// ``.``
-  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Trm// ``.`` //SCond//
   |  |  **|**  | ``Law`` //LawType// //DynVar// ``.`` //Trm// ``.`` //SCond//
+  |  |  **|**  | ``Conjecture`` //DynVar// ``.`` //Trm// ``.`` //SCond//
   | //VarRole// | -> | ``var`` //SBBL// //Typ//
   | //VClass// | -> | ``Obs``
   |  |  **|**  | ``Exp``

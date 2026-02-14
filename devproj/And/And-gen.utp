@@ -1,1 +1,15 @@
-Theory And . Or Not EQV . DclVar Obs and . var SB B -> B -> B . Law axiom golden_rule . P /\ Q === (P === Q === P \/ Q) . none Conjecture and_symm . P /\ Q === Q /\ P . none Conjecture and_assoc . P /\ Q /\ R === P /\ (Q /\ R) . none Conjecture and_idem . P /\ P === P . none Conjecture and_unit . P /\ True === P . none Conjecture and_zero . P /\ False === False . none Conjecture and_and_distr . P /\ (Q /\ R) === P /\ Q /\ (P /\ R) . none Conjecture contradiction . P /\ not (P) === False . none Conjecture and_subst . SubL P /\ Q [. e / x .] === SubL P [. e / x .] /\ SubL Q [. e / x .] . none
+Theory And .
+  Or Not EQV .
+
+DclVar Obs and . var SB B -> B -> B .
+
+Law axiom golden_rule . P /\ Q === (P === Q === P \/ Q) . none
+
+Conjecture and_symm . P /\ Q === Q /\ P . none
+Conjecture and_assoc . P /\ Q /\ R === P /\ (Q /\ R) . none
+Conjecture and_idem . P /\ P === P . none
+Conjecture and_unit . P /\ True === P . none
+Conjecture and_zero . P /\ False === False . none
+Conjecture and_and_distr . P /\ (Q /\ R) === P /\ Q /\ (P /\ R) . none
+Conjecture contradiction . P /\ not (P) === False . none
+Conjecture and_subst . SubL P /\ Q [. e / x .] === SubL P [. e / x .] /\ SubL Q [. e / x .] . none

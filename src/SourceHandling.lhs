@@ -79,25 +79,46 @@ genTheory :: Theory -> String
 genTheory theory 
   = let (Thr dynThNm dynDeps items) = theory2thry theory
     in unlines'
-         ( ("Theory "++printTree dynThNm++" ."++printDeps dynDeps)
-           : map genItem items )
-  where
-    printDeps deps
-      | null deps = " ."
-      | otherwise = "\n  "++printTree deps++" ."
+         [ "Theory "++printTree dynThNm++" ."++printDeps dynDeps
+         , process (groupItems items) ]
+
+printDeps :: [DynVar] -> String
+printDeps deps
+  | null deps = " ."
+  | otherwise = "\n  "++printTree deps++" ."
+
 
 groupItems :: [Item] -> ([Item],[Item],[Item],[Item])
-groupItems items
-  = ( filter isDef items
-    , filter isDecl items
-    , filter isLaw items
-    , filter isConj items )
+groupItems items = grp ([],[],[],[]) items
+  where 
+  grp (sfed,slced,swal,sjnoc) [] 
+    = (reverse sfed,reverse slced,reverse swal,reverse sjnoc)
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DefObs _):items) = grp (itm:sfed,slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DefExpr _):items) = grp (itm:sfed,slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DefPred _):items) = grp (itm:sfed,slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DefStatic _):items) = grp (itm:sfed,slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DeclVar _ _ _):items) = grp (sfed,itm:slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DeclDLVar _ _ _):items) = grp (sfed,itm:slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(DeclASet _ _):items) = grp (sfed,itm:slced,swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(Law _ _ _ _):items) = grp (sfed,slced,itm:swal,sjnoc) items
+  grp (sfed,slced,swal,sjnoc) 
+      (itm@(Conj _ _ _):items) = grp (sfed,slced,swal,itm:sjnoc) items
 
-isDef _ = False  -- TEMPORARY
-isDecl item = not(isLaw item || isConj item)
-isLaw (Law _ _ _ _) = True ; isLaw _ = False
-isConj (Conj _ _ _) = True ; isConj _ = False
-
+process :: ([Item],[Item],[Item],[Item]) -> String
+process (defs,decls,laws,conjs)
+  = display defs ++ display decls ++ display laws ++ display conjs
+ 
+display :: [Item] -> String
+display [] = ""
+display items@(_:_) = '\n' : unlines (map genItem items)
 
 genItem :: Item -> String
 genItem item = printTree item

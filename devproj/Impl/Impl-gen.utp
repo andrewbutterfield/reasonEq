@@ -1,0 +1,31 @@
+Theory Impl .
+  AOI And Or Not EQV .
+DclVar Obs imp . var SB B -> B -> B .
+Law axiom imp_def . P ==> Q === (P \/ Q === Q) . none
+Conjecture imp_def2 . P ==> Q === not (P) \/ Q . none
+Conjecture imp_meet . P ==> Q === (P /\ Q === P) . none
+Conjecture contrapositive . P ==> Q === not (Q) ==> not (P) . none
+Conjecture imp_eqv_distr . P ==> (Q === R) === (P ==> Q === P ==> R) . none
+Conjecture shunting . P /\ Q ==> R === P ==> Q ==> R . none
+Conjecture GS3_66 . P /\ (P ==> Q) === P /\ Q . none
+Conjecture GS3_67 . P /\ (Q ==> P) === P . none
+Conjecture GS3_68 . P \/ (P ==> Q) === True . none
+Conjecture GS3_69 . P \/ (Q ==> P) === Q ==> P . none
+Conjecture GS3_70 . P \/ Q ==> P /\ Q === (P === Q) . none
+Conjecture imp_refl . P ==> P === True . none
+Conjecture imp_r_zero . P ==> True === True . none
+Conjecture imp_l_unit . True ==> P === P . none
+Conjecture not_def2 . P ==> False === not (P) . none
+Conjecture GS3_75 . False ==> P === True . none
+Conjecture imp_trans . (P ==> Q) /\ (Q ==> R) ==> P ==> R . none
+Conjecture eqv_imp_trans . (P === Q) /\ (Q ==> R) ==> P ==> R . none
+Conjecture imp_eqv_trans . (P ==> Q) /\ (Q === R) ==> P ==> R . none
+Conjecture strengthen_ante . P /\ Q ==> P . none
+Conjecture weaken_cnsq . P ==> P \/ Q . none
+Conjecture ante_or_distr . P \/ Q ==> R === (P ==> R) /\ (Q ==> R) . none
+Conjecture ante_and_distr . P /\ Q ==> R === (P ==> R) \/ (Q ==> R) . none
+Conjecture cnsq_and_distr . P ==> Q \/ R === (P ==> Q) \/ (P ==> R) . none
+Conjecture cnsq_and_distr . P ==> Q /\ R === (P ==> Q) /\ (P ==> R) . none
+Conjecture ante_as_imp . (P ==> Q) ==> R === (not (P) ==> R) /\ (Q ==> R) . none
+Conjecture imp_subst . SubL P ==> Q [. e / x .] === SubL P [. e / x .] ==> SubL Q [. e / x .] . none
+Conjecture conj_imp_conj . P /\ Q ==> R /\ S . none

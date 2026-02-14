@@ -73,9 +73,21 @@ loadTheory thrys text
       Right thry  ->  thry2theory thry
 \end{code}
 
+Here we want some nice line-breaks.
 \begin{code}
 genTheory :: Theory -> String
-genTheory theory = printTree $ theory2thry theory
+genTheory theory 
+  = let (Thr dynThNm dynDeps items) = theory2thry theory
+    in unlines'
+         ( ("Theory "++printTree dynThNm++" ."++printDeps dynDeps)
+           : map genItem items )
+  where
+    printDeps deps
+      | null deps = " ."
+      | otherwise = "\n  "++printTree deps++" ."
+
+genItem :: Item -> String
+genItem item = printTree item
 \end{code}
 
 

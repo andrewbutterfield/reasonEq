@@ -21,8 +21,8 @@ data Item
     | DeclVar VClass DynVar VarRole
     | DeclDLVar VClass DynVar [DynVar]
     | DeclASet VClass DynVar
-    | Conj DynVar Trm SCond
     | Law LawType DynVar Trm SCond
+    | Conj DynVar Trm SCond
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data VarRole = KV SBBL Typ

@@ -86,6 +86,19 @@ genTheory theory
       | null deps = " ."
       | otherwise = "\n  "++printTree deps++" ."
 
+groupItems :: [Item] -> ([Item],[Item],[Item],[Item])
+groupItems items
+  = ( filter isDef items
+    , filter isDecl items
+    , filter isLaw items
+    , filter isConj items )
+
+isDef _ = False  -- TEMPORARY
+isDecl item = not(isLaw item || isConj item)
+isLaw (Law _ _ _ _) = True ; isLaw _ = False
+isConj (Conj _ _ _) = True ; isConj _ = False
+
+
 genItem :: Item -> String
 genItem item = printTree item
 \end{code}

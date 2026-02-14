@@ -155,8 +155,8 @@ DefStatic. Item ::= "StaticVars" [DynVar] "." ;
 DeclVar.   Item ::= "DclVar" VClass DynVar "." VarRole "."    ;  -- KV
 DeclDLVar. Item ::= "DclDLVar" VClass DynVar "." [DynVar] "." ;  -- DL
 DeclASet.  Item ::= "DclASet" VClass DynVar "."               ;  -- DAS
-Conj.      Item ::= "Conjecture" DynVar "." Trm "." SCond  ;
 Law.       Item ::= "Law" LawType DynVar "." Trm "." SCond  ;
+Conj.      Item ::= "Conjecture" DynVar "." Trm "." SCond  ;
 
 KV. VarRole ::= "var" SBBL Typ ;
 

@@ -153,8 +153,8 @@ instance Print REQ.Abs.Item where
     REQ.Abs.DeclVar vclass dynvar varrole -> prPrec i 0 (concatD [doc (showString "DclVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 varrole, doc (showString ".")])
     REQ.Abs.DeclDLVar vclass dynvar dynvars -> prPrec i 0 (concatD [doc (showString "DclDLVar"), prt 0 vclass, prt 0 dynvar, doc (showString "."), prt 0 dynvars, doc (showString ".")])
     REQ.Abs.DeclASet vclass dynvar -> prPrec i 0 (concatD [doc (showString "DclASet"), prt 0 vclass, prt 0 dynvar, doc (showString ".")])
-    REQ.Abs.Conj dynvar trm scond -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 trm, doc (showString "."), prt 0 scond])
     REQ.Abs.Law lawtype dynvar trm scond -> prPrec i 0 (concatD [doc (showString "Law"), prt 0 lawtype, prt 0 dynvar, doc (showString "."), prt 0 trm, doc (showString "."), prt 0 scond])
+    REQ.Abs.Conj dynvar trm scond -> prPrec i 0 (concatD [doc (showString "Conjecture"), prt 0 dynvar, doc (showString "."), prt 0 trm, doc (showString "."), prt 0 scond])
 
 instance Print REQ.Abs.VarRole where
   prt i = \case

@@ -1,11 +1,13 @@
 # To Do
 
-## URGENT or NEXT
-
-added `newREqTheory`, `repREqTheory`, `chgREqTheory` to `AbstractTop`.
-
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
+
+## URGENT or NEXT
+
+Improve output formatting of `gen` command.
+
+Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
 
 ### Load/Generate

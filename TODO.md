@@ -9,6 +9,18 @@ Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
+From `EQV` to `Impl` works fine.
+
+At `Equal` we get 
+
+```
+🛠 devproj.Equal*> load Equal
+loading from devproj/Equal/Equal.utp
+theory parse failed
+trm2term nyfi
+Eql (TmVar (DynVar "e")) (TmVar (DynVar "e"))
+```
+
 
 ### Load/Generate
 

@@ -1,0 +1,10 @@
+Theory Equal .
+  Impl EQV .
+
+DclVar Obs eq . var SB t -> t -> B .
+
+Law axiom eq_refl . e == e . none
+Law axiom eq_symm . e == f === f == e . none
+Law axiom eq_trans . e == f /\ f == g ==> e == g . none
+
+Conjecture eq_subst . SubL e == f [. e / x .] === SubL e [. e / x .] == SubL f [. e / x .] . none

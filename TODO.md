@@ -11,6 +11,15 @@ Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
 From `EQV` to `Equal` works fine.
 
+With `Arith` we find that `mod` and `div` are expected in a `Trm` context,
+and don't play well in a `DclVar`.
+
+```
+5: DclVar Obs div . var SB Z -> Z -> Z .
+col 12 -------^
+syntax error at line 5, column 12 before `div'
+```
+
 `Forall` is next....
 
 ### Load/Generate

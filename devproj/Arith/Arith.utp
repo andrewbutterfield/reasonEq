@@ -1,11 +1,13 @@
 Theory Arith .
   Impl EQV Equal .
+
 DclVar Obs add . var SB Z -> Z -> Z .
 DclVar Obs div . var SB Z -> Z -> Z .
 DclVar Obs mod . var SB Z -> Z -> Z .
 DclVar Obs mul . var SB Z -> Z -> Z .
 DclVar Obs neg . var SB Z -> Z .
 DclVar Obs sub . var SB Z -> Z -> Z .
+
 Law axiom neg_def . neg (e) == 0 - e . none
 Law axiom add_l_unit . 0 + e == e . none
 Law axiom add_r_unit . e + 0 == e . none
@@ -31,5 +33,6 @@ Law axiom add_inv . e + neg (e) == 0 . none
 Law axiom sub_alt_def . e - f == e + neg (f) . none
 Law axiom mul_div_same . e * f div f == e . none
 Law axiom mul_mod_same . e * f mod f == 0 . none
+
 Conjecture mul_sub_distr . e * (f - g) == e * f - e * g . none
 Conjecture neg_zero . neg (0) == 0 . none

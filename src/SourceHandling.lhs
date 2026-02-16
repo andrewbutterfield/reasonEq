@@ -555,7 +555,7 @@ trm2term ctxt (PEqv trm1 trm2) = binop2term ctxt (===) trm1 trm2
 trm2term ctxt (PImpl trm1 trm2) = binop2term ctxt (==>) trm1 trm2
 trm2term ctxt (POr trm1 trm2) = binop2term ctxt (\/) trm1 trm2
 trm2term ctxt (PAnd trm1 trm2) = binop2term ctxt (/\) trm1 trm2
---trm2term ctxt (Eql trm1 trm2) = binop2term ctxt op trm1 trm2
+trm2term ctxt (Eql trm1 trm2) = binop2term ctxt isEqualTo trm1 trm2
 --trm2term ctxt (NE trm1 trm2) = binop2term ctxt op trm1 trm2
 --trm2term ctxt (Lt trm1 trm2) = binop2term ctxt op trm1 trm2
 --trm2term ctxt (LE trm1 trm2) = binop2term ctxt op trm1 trm2

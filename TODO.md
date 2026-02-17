@@ -13,12 +13,25 @@ From `EQV` to `Equal` works fine.
 
 With `Arith` we find that `mod` and `div` are expected in a `Trm` context,
 and don't play well in a `DclVar`.
+ 
+Now sorted by changing `builtin/Arithmetic` names `mod`/`div` to `imod`/`idiv`.
+
+Now see this:
 
 ```
-5: DclVar Obs div . var SB Z -> Z -> Z .
-col 12 -------^
-syntax error at line 5, column 12 before `div'
+Variable Tables differ!
+Differing var entries
++:
+  Loaded  =  (sub) : Z⟶ Z⟶ Z
+  Current =  (sub) : ℤ⟶ ℤ⟶ ℤidiv:
+  Loaded  =  (sub) : Z⟶ Z⟶ Z
+  Current =  (sub) : ℤ⟶ ℤ⟶ ℤimod:
+  Loaded  =  (sub) : Z⟶ Z⟶ Z
+  Current =  (sub) : ℤ⟶ ℤ⟶ ℤ*:
 ```
+
+Need to fix ℤ/Z and formatting of difference report.
+
 
 `Forall` is next....
 

@@ -67,8 +67,8 @@ i_neg = jId "neg" ; negIntro = mkConsIntro i_neg intf_1 True
 i_add = jId "add" ; addIntro = mkConsIntro i_add intf_2 True
 i_sub = jId "sub" ; subIntro = mkConsIntro i_sub intf_2 True
 i_mul = jId "mul" ; mulIntro = mkConsIntro i_mul intf_2 True
-i_div = jId "div" ; divIntro = mkConsIntro i_div intf_2 True
-i_mod = jId "mod" ; modIntro = mkConsIntro i_mod intf_2 True
+i_div = jId "idiv" ; divIntro = mkConsIntro i_div intf_2 True
+i_mod = jId "imod" ; modIntro = mkConsIntro i_mod intf_2 True
 \end{code}
 
 \begin{code}

@@ -190,6 +190,11 @@ separator Item "" ;
    0  |                      |                              | ===
       | >> >>=               |                              |
       |                      |                              | $ $! seq   
+
+We get issues where "operators" div,mod,rem,quot end up being treated as
+infix binary operators by the parser, so cannot occur in other contexts,
+such as their own declarsatios. So we will use '%' and '/' in the syntax
+to represent them. Also we have a similar issue with neg and '-' .
 -}
 PEqv.   Trm  ::= Trm "===" Trm1 ;
 PImpl.  Trm1 ::= Trm2 "==>" Trm1 ;
@@ -208,9 +213,9 @@ LCons.  Trm5 ::= Trm6  ":"  Trm5 ;
 EAdd.   Trm6 ::= Trm6  "+"  Trm7 ;
 EMinus. Trm6 ::= Trm6  "-"  Trm7 ;
 EMul.   Trm7 ::= Trm7  "*"  Trm8 ;
-EDiv.   Trm7 ::= Trm7 "div" Trm8 ;
-EMod.   Trm7 ::= Trm7 "mod" Trm8 ;
-ENeg.   Trm7 ::= "neg" Trm8 ;
+EDiv.   Trm7 ::= Trm7 "/" Trm8 ;
+EMod.   Trm7 ::= Trm7 "%" Trm8 ;
+ENeg.   Trm7 ::= "-" Trm8 ;
 EInt.   Trm8 ::= Integer ;
 TmVar.  Trm8 ::= DynVar ;
 TTrue.  Trm8 ::= "True" ;

@@ -2,8 +2,8 @@ Theory Arith .
   Impl EQV Equal .
 
 DclVar Obs add . var SB Z -> Z -> Z .
-DclVar Obs div . var SB Z -> Z -> Z .
-DclVar Obs mod . var SB Z -> Z -> Z .
+DclVar Obs idiv . var SB Z -> Z -> Z .
+DclVar Obs imod . var SB Z -> Z -> Z .
 DclVar Obs mul . var SB Z -> Z -> Z .
 DclVar Obs neg . var SB Z -> Z .
 DclVar Obs sub . var SB Z -> Z -> Z .
@@ -24,15 +24,15 @@ Law axiom mul_symm . e * f == f * e . none
 Law axiom mul_assoc . e * (f * g) == e * f * g . none
 Law axiom mul_cancel . e * f == e * g === f == g . none
 Law axiom neg_mul_distr . neg (e) * f == neg (e * f) . none
-Law axiom div_r_unit . e div 1 == e . none
-Law axiom div_r_unit . 0 div e == 0 . none
-Law axiom div_self . e div e == 1 . none
-Law axiom neg_div_distr . neg (e) div f == neg (e div f) . none
+Law axiom div_r_unit . idiv (e, 1) == e . none
+Law axiom div_r_unit . idiv (0, e) == 0 . none
+Law axiom div_self . idiv (e, e) == 1 . none
+Law axiom neg_div_distr . idiv (neg (e), f) == neg (idiv (e, f)) . none
 Law axiom mul_add_distr . e * (f + g) == e * f + e * g . none
 Law axiom add_inv . e + neg (e) == 0 . none
 Law axiom sub_alt_def . e - f == e + neg (f) . none
-Law axiom mul_div_same . e * f div f == e . none
-Law axiom mul_mod_same . e * f mod f == 0 . none
+Law axiom mul_div_same . idiv (e * f, f) == e . none
+Law axiom mul_mod_same . imod (e * f, f) == 0 . none
 
 Conjecture mul_sub_distr . e * (f - g) == e * f - e * g . none
 Conjecture neg_zero . neg (0) == 0 . none

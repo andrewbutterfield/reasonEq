@@ -966,7 +966,7 @@ checkVTVars pvTable ivTable
     ++ errorReport (not $ null ivs_less_pvs)
          [trVList $ map StdVar ivs_less_pvs,"Current vars not in Loaded:"]
     ++ errorReport (not $ null bothMM) 
-         [concat $ map showVdiff bothMM,"Differing var entries"]
+         [intercalate "\n" $ map showVdiff bothMM,"Differing var entries"]
   where 
     pvs = M.keys pvTable ; ivs = M.keys ivTable
     pvs_less_ivs = pvs \\ ivs 
@@ -985,7 +985,8 @@ checkSTLVars what plvTable ilvTable
     ++ errorReport (not $ null ivs_less_pvs)
          [trVList $ map StdVar ivs_less_pvs,"Current vars not Loaded:"]
     ++ errorReport (not $ null bothMM) 
-         [concat $ map showLVdiff bothMM,"Differing "++what++" entries"]
+         [ intercalate "\n" $ 
+                 map showLVdiff bothMM,"Differing "++what++" entries" ]
   where 
     pvs = M.keys plvTable ; ivs = M.keys ilvTable
     pvs_less_ivs = pvs \\ ivs 

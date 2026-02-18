@@ -21,7 +21,7 @@ make -f rmake
 For deployment:
 
 ```
-cd .../reasonEq/bnfc
+cd ../reasonEq/bnfc
 bnfc -d -m REQ.lbnf
 make
 source deploy.sh

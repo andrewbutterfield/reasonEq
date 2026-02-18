@@ -208,27 +208,35 @@ Lt.     Trm4 ::= Trm5 "<" Trm5 ;
 LE.     Trm4 ::= Trm5 "<=" Trm5 ;
 Gt.     Trm4 ::= Trm5 ">" Trm5 ;
 GE.     Trm4 ::= Trm5 ">=" Trm5 ;
+
 LCat.   Trm5 ::= Trm6  "++" Trm5 ;
 LCons.  Trm5 ::= Trm6  ":"  Trm5 ;
+
 EAdd.   Trm6 ::= Trm6  "+"  Trm7 ;
 EMinus. Trm6 ::= Trm6  "-"  Trm7 ;
+
 EMul.   Trm7 ::= Trm7  "*"  Trm8 ;
 EDiv.   Trm7 ::= Trm7 "/" Trm8 ;
 EMod.   Trm7 ::= Trm7 "%" Trm8 ;
 ENeg.   Trm7 ::= "-" Trm8 ;
-EInt.   Trm8 ::= Integer ;
-TmVar.  Trm8 ::= DynVar ;
-TTrue.  Trm8 ::= "True" ;
-TFalse. Trm8 ::= "False" ;
-ENil.   Trm8 ::= "nil" ;
-TCons.  Trm8 ::= DynVar "(" [Trm] ")" ;
-TSubV.  Trm8  ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
-TSubLV. Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
-TSubst. Trm8 ::= "Sub" Trm 
+
+EInt.    Trm8 ::= Integer ;
+TmVar.   Trm8 ::= DynVar ;
+TTrue.   Trm8 ::= "True" ;
+TFalse.  Trm8 ::= "False" ;
+ENil.    Trm8 ::= "nil" ;
+TCons.   Trm8 ::= DynVar "(" [Trm] ")" ;
+TBndSet. Trm8 ::= "BndS"  DynVar "[" [DynVar] "]" Trm ;
+TBndLst. Trm8 ::= "BndL" DynVar "[" [DynVar] "]" Trm ;
+
+TSubV.   Trm8 ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
+TSubLV.  Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
+TSubst.  Trm8 ::= "Sub" Trm 
                      "[." [Trm] "/" [DynVar] 
                           "|" 
                           [DynVar] "/" [DynVar]
                      ".]" ;
+
 coercions Trm 8 ;
 separator Trm "," ;
 

@@ -11,7 +11,9 @@ Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
 From `EQV` to `Arith` works fine.
 
-`Forall` is next....
+`Forall` is next ...
+
+This requires providing `Bnd` *and* `Iter` (one-point rule!)
 
 ### Load/Generate
 

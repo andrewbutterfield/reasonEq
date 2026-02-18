@@ -9,29 +9,7 @@ Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
-From `EQV` to `Equal` works fine.
-
-With `Arith` we find that `mod` and `div` are expected in a `Trm` context,
-and don't play well in a `DclVar`.
- 
-Now sorted by changing `builtin/Arithmetic` names `mod`/`div` to `imod`/`idiv`.
-
-Now see this:
-
-```
-Variable Tables differ!
-Differing var entries
-+:
-  Loaded  =  (sub) : Z⟶ Z⟶ Z
-  Current =  (sub) : ℤ⟶ ℤ⟶ ℤidiv:
-  Loaded  =  (sub) : Z⟶ Z⟶ Z
-  Current =  (sub) : ℤ⟶ ℤ⟶ ℤimod:
-  Loaded  =  (sub) : Z⟶ Z⟶ Z
-  Current =  (sub) : ℤ⟶ ℤ⟶ ℤ*:
-```
-
-Need to fix ℤ/Z and formatting of difference report.
-
+From `EQV` to `Arith` works fine.
 
 `Forall` is next....
 

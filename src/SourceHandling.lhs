@@ -744,7 +744,15 @@ subs2trm tm vts lvlvs
 
 \subsection{Typ to Type}
 
-At present the only given type is $\Bool$ (\h{GivenType "B"}).
+At present the only recognised given types and type-constructors are:
+
+\begin{tabular}{lc}
+   $\Bool$  & \h{"B"}
+\\ $\Int$   & \h{"Z"}
+\\ $\Nat$   & \h{"N"}
+\\ $\power$ & \h{"P"}
+\\ $\star$  & \h{"*"}
+\end{tabular}
 \begin{code}
 typ2type :: Typ -> Type
 typ2type TArb                    =  ArbType
@@ -755,8 +763,9 @@ typ2type (TProd (DynVar dv) ts)  =  TypeCons (jId dv) (map typ2type ts)
 typ2type (TRec (DynVar dv) fs)   =  TypeCons (jId dv) (map typ2type fs)
 typ2type (TFun t1 t2)            =  FunType (typ2type t1) (typ2type t2)
 mkTypVar dv
-  | dv == "B"                    =  GivenType $ jId dv
+  | dv `elem` givens             =  GivenType $ jId dv
   | otherwise                    =  TypeVar $ jId dv
+  where givens = ["B","N","P","Z","*"]
 \end{code}
 
 \subsection{Type to Typ}

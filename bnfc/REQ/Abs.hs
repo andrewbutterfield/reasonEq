@@ -63,11 +63,12 @@ data Trm
     | TFalse
     | ENil
     | TCons DynVar [Trm]
-    | TBndSet DynVar [DynVar] Trm
-    | TBndLst DynVar [DynVar] Trm
+    | TBndSet DynVar [GVar] Trm
+    | TBndLst DynVar [GVar] Trm
     | TSubV Trm [Trm] [DynVar]
     | TSubLV Trm [DynVar] [DynVar]
     | TSubst Trm [Trm] [DynVar] [DynVar] [DynVar]
+    | TIter DynVar DynVar [DynVar]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Typ

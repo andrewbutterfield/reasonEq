@@ -226,8 +226,8 @@ TTrue.   Trm8 ::= "True" ;
 TFalse.  Trm8 ::= "False" ;
 ENil.    Trm8 ::= "nil" ;
 TCons.   Trm8 ::= DynVar "(" [Trm] ")" ;
-TBndSet. Trm8 ::= "BndS"  DynVar "[" [DynVar] "]" Trm ;
-TBndLst. Trm8 ::= "BndL" DynVar "[" [DynVar] "]" Trm ;
+TBndSet. Trm8 ::= "BndS"  DynVar "[" [GVar] "]" Trm ;
+TBndLst. Trm8 ::= "BndL" DynVar "[" [GVar] "]" Trm ;
 
 TSubV.   Trm8 ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
 TSubLV.  Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
@@ -236,6 +236,8 @@ TSubst.  Trm8 ::= "Sub" Trm
                           "|" 
                           [DynVar] "/" [DynVar]
                      ".]" ;
+
+TIter.   Trm8 ::= "Iter" DynVar DynVar "[" [DynVar] "]" ;
 
 coercions Trm 8 ;
 separator Trm "," ;

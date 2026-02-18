@@ -171,7 +171,7 @@ idwhen2dynvar :: String -> VarWhen -> DynVar
 idwhen2dynvar i Static      =  DynVar i
 idwhen2dynvar i Before      =  DynVar ('_':i)
 idwhen2dynvar i After       =  DynVar (i++['_'])
-idwhen2dynvar i (During d)  = DynVar (i++('_':d))
+idwhen2dynvar i (During d)  =  DynVar (i++('_':d))
 \end{code}
 
 \subsubsection{Default Variable Attributes}
@@ -685,14 +685,26 @@ term2trm (Val _ (Integer i)) = EInt i
 term2trm (Var _ (Vbl (Identifier i _) vc vw)) 
   = TmVar (idwhen2dynvar i vw)
 term2trm (Cons typ sb n ts) = cons2trm sb n ts
--- term2trm (Bnd  typ n vs tm)
+term2trm (Bnd  typ (Identifier n _) vs tm)
+  = TBndSet (idwhen2dynvar n Static) 
+            (map genvar2gvar $ S.toList vs)
+            (term2trm tm)
 -- term2trm (Lam  typ n vl tm)
 -- term2trm (Cls      n    tm)
 term2trm (Sub typ tm (Substn fvs lvs)) 
   = subs2trm tm (S.toList fvs) (S.toList lvs)
--- term2trm (Iter typ sa na si ni lvs)
+term2trm (Iter typ 
+               sa (Identifier na _) 
+               si (Identifier ni _) 
+               lvs)
+  = TIter (idwhen2dynvar na Static) 
+          (idwhen2dynvar ni Static)
+          (map lvar2dynvar lvs)
 -- term2trm (VTyp typ v)
 term2trm tm = error ("NYI: term2trm "++show tm)
+
+lvar2dynvar (LVbl (Vbl (Identifier i _) vc vw) _ _) 
+  = idwhen2dynvar i vw
 
 cons2trm :: Subable -> Identifier -> [Term] -> Trm
 -- we ignore subable now but it should be added to TCons
@@ -820,11 +832,11 @@ vscond2VSC ctxt op gv (VSet gvs)
 sidecond2scond :: SideCond -> SCond
 sidecond2scond ([],fvs)
   | S.null fvs  =  SCnone
-  | otherwise   =  SCFresh $ VSet $ map genvar2dynvar $ S.toList fvs
+  | otherwise   =  SCFresh $ VSet $ map genvar2gvar $ S.toList fvs
 sidecond2scond (vscs,fvs)
   | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond vscs
   | otherwise   =  SCFull (concat $ map varsidecond2vscond vscs)
-                          (VSet $ map genvar2dynvar $ S.toList fvs)
+                          (VSet $ map genvar2gvar $ S.toList fvs)
 
 varsidecond2vscond :: VarSideConds -> [VSCond]
 varsidecond2vscond (VSC gv nvsD nvsC nvsCd)
@@ -834,18 +846,18 @@ varsidecond2vscond (VSC gv nvsD nvsC nvsCd)
 
 mkDisj _  NA        =  []
 mkDisj gv (The vsD) 
-  =  [VSCDisj (genvar2dynvar gv) (varset2vset vsD) ]
+  =  [VSCDisj (genvar2gvar gv) (varset2vset vsD) ]
 
 mkCovby _ NA = []
 mkCovby gv (The vsC)   
-  =  [VSCCovBy (genvar2dynvar gv) (varset2vset vsC) ]
+  =  [VSCCovBy (genvar2gvar gv) (varset2vset vsC) ]
 
 mkDynCon _ NA = []
 mkDynCon gv (The vsCd)  
-  =  [VSCDisj (genvar2dynvar gv) (varset2vset vsCd) ]
+  =  [VSCDisj (genvar2gvar gv) (varset2vset vsCd) ]
 
 varset2vset :: VarSet -> VrSet
-varset2vset vs = VSet $ map genvar2dynvar $ S.toList vs
+varset2vset vs = VSet $ map genvar2gvar $ S.toList vs
 \end{code}
 
 \subsection{DynVar to GenVar}
@@ -871,9 +883,9 @@ gvar2genvar ctxt (LVar dyn) = LstVar $ dynvar2lstvar ctxt dyn
 \subsection{GenVar to DynVar}
 
 \begin{code}
-genvar2dynvar :: GenVar -> GVar
-genvar2dynvar (StdVar v)   =  SVar $ stdvar2dynvar  v
-genvar2dynvar (LstVar lv)  =  LVar $ lstvar2dynvar lv
+genvar2gvar :: GenVar -> GVar
+genvar2gvar (StdVar v)   =  SVar $ stdvar2dynvar  v
+genvar2gvar (LstVar lv)  =  LVar $ lstvar2dynvar lv
 \end{code}
 
 \begin{code}
@@ -886,6 +898,12 @@ lstvar2dynvar lvar
 \begin{code}
 stdvar2dynvar :: Variable -> DynVar
 stdvar2dynvar (Vbl (Identifier i _) _ vw) = idwhen2dynvar i vw
+\end{code}
+
+\begin{code}
+genvar2dynvar :: GenVar -> DynVar
+genvar2dynvar (StdVar v)   =  stdvar2dynvar  v
+genvar2dynvar (LstVar lv)  =  lstvar2dynvar lv
 \end{code}
 
 \begin{code}

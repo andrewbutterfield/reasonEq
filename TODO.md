@@ -9,9 +9,9 @@ Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
-From `EQV` to `Arith` works fine.
+From `EQV` to `Forall` works (reasonably) fine.
 
-`Forall` is next ...
+`Exists` is next ...
 
 With `trm2term .. (TIter ... dlvs)` we use `liv` to get list-variables.
 We need to use the `Context` parameter to set the variable class correctly.

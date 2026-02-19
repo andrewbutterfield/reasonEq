@@ -618,7 +618,9 @@ trm2term ctxt (TIter mrg fun dlvs) = do
   return $ Iter ArbType False mrgid False funid lvs
  where 
    liv :: Context -> (Identifier,VarWhen) -> ListVar
-   liv ctxt (id,vw) = LVbl (Vbl id ObsV vw) [] []
+   liv ctxt (id,vw) = 
+     let vc = determineClass ctxt id vw
+     in  LVbl (Vbl id vc vw) [] []
 \end{code}
 
 

@@ -611,8 +611,14 @@ trm2term ctxt (TSubst trm trms tdvs rdlvs tdlvs)
 Iteration
 
 \begin{code}
-trm2term ctxt (TIter mrg fun dlvs) = fail "TITER NYI"
---   = return $ Iter ArbType False (mrg) False (mrg)
+trm2term ctxt (TIter mrg fun dlvs) = do
+  let (mrgid,_) = dynvar2idwhen mrg
+  let (funid,_) = dynvar2idwhen fun
+  let lvs = map (liv ctxt . dynvar2idwhen) dlvs
+  return $ Iter ArbType False mrgid False funid lvs
+ where 
+   liv :: Context -> (Identifier,VarWhen) -> ListVar
+   liv ctxt (id,vw) = LVbl (Vbl id ObsV vw) [] []
 \end{code}
 
 

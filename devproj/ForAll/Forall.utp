@@ -1,14 +1,14 @@
 Theory Forall .
   Equal Impl AOI And Or Not EQV .
 
-Law axiom forall_remove . BndS forall [] P === P . VSC std P disj lst x .
-Law axiom forall_one_point . BndS forall [] Iter and eq [x e] ==> P === BndS forall [] SubL P [. e / x .] . VSC lst e disj lst x .
-Law axiom forall_and_distr . BndS forall [] P /\ Q === BndS forall [] P /\ BndS forall [] Q . none
-Law axiom or_forall_scope . P \/ BndS forall [] Q === BndS forall [] P \/ BndS forall [] Q . VSC std P disj lst x .
-Law axiom forall_inst . BndS forall [] P ==> BndS forall [] SubL P [. e / x .] . none
-Law axiom forall_alpha_rename . BndS forall [] P === BndS forall [] SubL P [. y / x .] . VSC std P disj lst y .
+Law axiom forall_remove . BndS forall [lst x] P === P . VSC std P disj lst x .
+Law axiom forall_one_point . BndS forall [lst x, lst y] Iter and eq [x e] ==> P === BndS forall [lst y] SubL P [. e / x .] . VSC lst e disj lst x .
+Law axiom forall_and_distr . BndS forall [lst x] P /\ Q === BndS forall [lst x] P /\ BndS forall [lst x] Q . none
+Law axiom or_forall_scope . P \/ BndS forall [lst x, lst y] Q === BndS forall [lst x] P \/ BndS forall [lst y] Q . VSC std P disj lst x .
+Law axiom forall_inst . BndS forall [lst x, lst y] P ==> BndS forall [lst y] SubL P [. e / x .] . none
+Law axiom forall_alpha_rename . BndS forall [lst x] P === BndS forall [lst y] SubL P [. y / x .] . VSC std P disj lst y .
 
-Conjecture forall_true . BndS forall [] True === True . none
-Conjecture forall_swap . BndS forall [] BndS forall [] P === BndS forall [] BndS forall [] P . none
-Conjecture forall_idem . BndS forall [] BndS forall [] P === BndS forall [] P . VSC lst x covby lst y .
+Conjecture forall_true . BndS forall [lst x] True === True . none
+Conjecture forall_swap . BndS forall [lst y] BndS forall [lst y] P === BndS forall [lst y] BndS forall [lst x] P . none
+Conjecture forall_idem . BndS forall [lst x] BndS forall [lst y] P === BndS forall [lst y] P . VSC lst x covby lst y .
 Conjecture one_point . Iter and eq [x e] /\ P === SubL P [. e / x .] . VSC lst e disj lst x .

@@ -13,7 +13,10 @@ From `EQV` to `Arith` works fine.
 
 `Forall` is next ...
 
-This requires providing `Bnd` *and* `Iter` (one-point rule!)
+With `trm2term .. (TIter ... dlvs)` we use `liv` to get list-variables.
+We need to use the `Context` parameter to set the variable class correctly.
+
+In `x$=e$` we have observation `x$` and expresion `e$`.
 
 ### Load/Generate
 

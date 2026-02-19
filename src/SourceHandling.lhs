@@ -548,7 +548,7 @@ trm2term ctxt (TmVar dv) = return $ jVar typ $ Vbl id vc vw
     typ = determineType ctxt id vw
 \end{code}
 
-Operators
+Operators/Constants
 
 \begin{code}
 trm2term ctxt (PEqv trm1 trm2) = binop2term ctxt (===) trm1 trm2
@@ -568,19 +568,34 @@ trm2term ctxt (EMinus trm1 trm2) = binop2term ctxt sub trm1 trm2
 trm2term ctxt (EMul trm1 trm2) = binop2term ctxt mul trm1 trm2
 trm2term ctxt (EDiv trm1 trm2) = binop2term ctxt idiv trm1 trm2
 trm2term ctxt (EMod trm1 trm2) = binop2term ctxt imod trm1 trm2
-\end{code}
-
-Miscellaneous
-
-\begin{code}
 --trm2term ctxt (PNot trm) 
 --trm2term ctxt ENeg trm
 --trm2term ctxt ENil
+\end{code}
+
+Constructors
+
+\begin{code}
 trm2term ctxt@(dflts,vt) (TCons dv trms) = do
   let  (id,vw) = dynvar2idwhen dv
   let sbbl = lkpSubable (Vbl id ObsV Static) vt
   terms <- sequence $ map (trm2term ctxt) trms 
   return $ Cons ArbType (sbbl==SB) id terms
+\end{code}
+
+Binders
+
+\begin{code}
+trm2term ctxt (TBndSet binder bvars trm) = do
+  let  (id,vw) = dynvar2idwhen binder
+  let gvars = map (gvar2genvar ctxt) bvars
+  term <- trm2term ctxt trm
+  bnd ArbType id (S.fromList gvars) term
+trm2term ctxt (TBndLst binder bvars trm) = do
+  let  (id,vw) = dynvar2idwhen binder
+  let gvars = map (gvar2genvar ctxt) bvars
+  term <- trm2term ctxt trm
+  lam ArbType id gvars term
 \end{code}
 
 Substitution
@@ -592,6 +607,14 @@ trm2term ctxt (TSubLV trm rdlvs tdlvs)
 trm2term ctxt (TSubst trm trms tdvs rdlvs tdlvs)  
   =  mkSubst ctxt trm trms tdvs rdlvs tdlvs
 \end{code}
+
+Iteration
+
+\begin{code}
+trm2term ctxt (TIter mrg fun dlvs) = fail "TITER NYI"
+--   = return $ Iter ArbType False (mrg) False (mrg)
+\end{code}
+
 
 Not yet implemented!
 

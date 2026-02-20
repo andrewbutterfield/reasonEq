@@ -71,7 +71,7 @@ This requires a design-specific  semantics for both assignment and skip.
 \begin{code}
 p1 = arbpred
 i_asg        =  assignmentId
-p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
+p_asg        =  jVar p1 $ Vbl i_asg PredV Static
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
 simassign vts lvlvs  =  Sub p1 p_asg $ xSubstn vts lvlvs

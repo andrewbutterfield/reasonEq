@@ -455,7 +455,7 @@ known2items :: VarTable -> [Item]
 known2items vt
   =    (vtable2items $ vtList vt)
     ++ (stable2items $ stList vt) 
-    ++ (stable2items $ dtList vt) -- maps dtable into stable (Before)
+    ++ (stable2items $ d2sList vt) -- maps dtable into stable (Before)
     -- !!!!!  not good - we cannot read dynsamkc entries back!!!
 
 vtable2items vtl = map vmr2item  vtl
@@ -1020,9 +1020,9 @@ compIPVarTables :: [VarTable] -> [VarTable] -> [String]
                 -> Theory -> Theory -> String
 compIPVarTables ivts pvts sffid iTheory pTheory
   =  let
-       vtErrors = checkVTVars           (vTable pKnown)  (vTable iKnown)
-       stErrors = checkSTLVars "lstvar" (lvTable pKnown) (lvTable iKnown)
-       dtErrors = checkSTLVars "dynvar" (dvTable pKnown) (dvTable iKnown)
+       vtErrors = checkVTVars  (vTable pKnown)  (vTable iKnown)
+       stErrors = checkSTLVars (lvTable pKnown) (lvTable iKnown)
+       dtErrors = checkDTLVars (dvTable pKnown) (dvTable iKnown)
        errors = dtErrors ++ stErrors ++ vtErrors 
        report = if null errors 
                 then [ "", "Variable Tables match OK." ]
@@ -1050,15 +1050,15 @@ checkVTVars pvTable ivTable
         ++ ":\n  Loaded  = "++trVarMatchRole vmr1
         ++  "\n  Current = "++trVarMatchRole vmr2
 
-checkSTLVars :: String -> LVarRoleMap -> LVarRoleMap -> [String]
-checkSTLVars what plvTable ilvTable 
+checkSTLVars :: LVarRoleMap -> LVarRoleMap -> [String]
+checkSTLVars plvTable ilvTable 
   =    errorReport (not $ null pvs_less_ivs)
          [trVList $ map StdVar pvs_less_ivs,"Loaded vars not Current:"]
     ++ errorReport (not $ null ivs_less_pvs)
          [trVList $ map StdVar ivs_less_pvs,"Current vars not Loaded:"]
     ++ errorReport (not $ null bothMM) 
          [ intercalate "\n" $ 
-                 map showLVdiff bothMM,"Differing "++what++" entries" ]
+                 map showLVdiff bothMM,"Differing lstvar entries" ]
   where 
     pvs = M.keys plvTable ; ivs = M.keys ilvTable
     pvs_less_ivs = pvs \\ ivs 
@@ -1069,6 +1069,27 @@ checkSTLVars what plvTable ilvTable
       = trVar var 
         ++ ":\n  Loaded  = "++trLstVarMatchRole lvmr1
         ++  "\n  Current = "++trLstVarMatchRole lvmr2
+
+checkDTLVars :: DVarRoleMap -> DVarRoleMap -> [String]
+checkDTLVars pdvTable idvTable 
+  =    errorReport (not $ null pvs_less_ivs)
+         [trVList $ map (StdVar . iac2var) pvs_less_ivs,"Loaded vars not Current:"]
+    ++ errorReport (not $ null ivs_less_pvs)
+         [trVList $ map (StdVar . iac2var) ivs_less_pvs,"Current vars not Loaded:"]
+    ++ errorReport (not $ null bothMM) 
+         [ intercalate "\n" $ 
+                 map showLVdiff bothMM,"Differing dynvar entries" ]
+  where 
+    pvs = M.keys pdvTable ; ivs = M.keys idvTable
+    -- pvs = map iac2var pics ; ivs = map iac2var iics
+    pvs_less_ivs = pvs \\ ivs 
+    ivs_less_pvs = ivs \\ pvs
+    both = pvs `intersect` ivs
+    bothMM = checkMaps pdvTable idvTable both
+    showLVdiff (iac,dvmr1,dvmr2)
+      = show iac 
+        ++ ":\n  Loaded  = "++show dvmr1
+        ++  "\n  Current = "++show dvmr2
 \end{code}
 
 \newpage

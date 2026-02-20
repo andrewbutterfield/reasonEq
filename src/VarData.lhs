@@ -16,13 +16,14 @@ module VarData (
 , pattern KnownVarList, pattern KnownVarSet
 , pattern AbstractList, pattern AbstractSet
 , pattern UnknownListVar
-, DynamicLstVarRole, IdAndClass
+, DynamicLstVarRole, IdAndClass, iac2var
 , pattern DynamicList, pattern DynamicSet
 , pattern DynamicAbsList, pattern DynamicAbsSet
 , VarRoleMap,  LVarRoleMap, DVarRoleMap 
 , VarTable
 , pattern VarData
-, vTName, vTable, lvTable, dvTable, vtList, stList, dtList
+, vTName, vTable, lvTable, dvTable
+, vtList, stList, dtList, d2sList
 , newVarTable, newNamedVarTable
 , addKnownConst, addKnownVar, addKnownConstructor
 , addGenericVar, addInstanceVar
@@ -203,6 +204,9 @@ must match the same list/set of (``after'') variables.
 \begin{code}
 type IdAndClass = (Identifier, VarClass)
 
+iac2var :: IdAndClass -> Variable
+iac2var (i,vc) = Vbl i vc Before
+
 data DynamicLstVarRole -- Dynamic ListVar Matching Roles
  = DL [Identifier]      -- Known-list, Variable identifiers
       [Identifier]      -- Known-list, List-Variable identifiers
@@ -286,17 +290,20 @@ vTable (VD (_,vtable, _, _)) = vtable
 lvTable :: VarTable -> LVarRoleMap
 lvTable (VD (_,_, stable, _)) = stable
 -- this should return DynamicLstVarRole !!!!!
-dvTable :: VarTable -> LVarRoleMap
-dvTable (VD (_,_, _, dtable)) = M.fromList $ map dtMap $ M.toList dtable
+dvTable :: VarTable -> DVarRoleMap
+dvTable (VD (_,_, _, dtable)) =  dtable
 
 vtList :: VarTable -> [(Variable,VarMatchRole)]
 vtList (VD (_,vtable, _, _)) = M.toList vtable
 stList :: VarTable -> [(Variable,LstVarMatchRole)]
 stList (VD (_,_, stable, _)) = M.toList stable
-dtList :: VarTable -> [(Variable,LstVarMatchRole)]
-dtList (VD (_,_, _, dtable)) = map dtMap $ M.toList dtable
+dtList :: VarTable -> [(IdAndClass,DynamicLstVarRole)]
+dtList (VD (_,_,_, dtable)) = M.toList dtable
+d2sList :: VarTable -> [(Variable,LstVarMatchRole)]
+d2sList (VD (_,_, _, dtable)) = map dtMap $ M.toList dtable
 
-dtMap ((i,vc),dlvr) = ( Vbl i vc Before, mapDLVRtoLVMR vc Before dlvr )
+dtMap (iac@(_,vc),dlvr) 
+  = ( iac2var iac, mapDLVRtoLVMR vc Before dlvr )
 \end{code}
 
 

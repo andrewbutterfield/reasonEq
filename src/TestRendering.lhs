@@ -697,7 +697,7 @@ trVarTableU = trvartable trIdU
 trvartable trid vt
  = unlines' (   map (trvtvv trid) (vtList vt)
              ++ map (trvtlv trid) (stList vt)
-             ++ map (trvtlv trid) (dtList vt)
+             ++ map (trvtlv trid) (d2sList vt)
             )
 
 trvtvv trid (v,vmr)   =  trVar v ++ trvmr trid    vmr

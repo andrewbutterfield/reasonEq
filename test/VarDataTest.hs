@@ -74,19 +74,19 @@ tst_vardata_inserts -- not run as standard regression
          ( vtList (aKC j ti $ aKV i ArbType newVarTable)
            @?= [(i,KnownVar ArbType),(j,KnownConst ti)] )
      , testCase "aKL: lu ^= [glu] fails"
-         ( dtList (aKL lu [glu] newVarTable)
+         ( d2sList (aKL lu [glu] newVarTable)
            @?= [(vlu,KnownVarList [glu] [] 0)] )
      , testCase "aKL: lu ^= [gi] fails"
-         ( dtList (aKL lu [gi] newVarTable)
+         ( d2sList (aKL lu [gi] newVarTable)
            @?= [(vlu,KnownVarList [gi] [] 0)] )
      , testCase "aKL: lu ^= [gv] fails"
-         ( dtList (aKL lu [gv] newVarTable)
+         ( d2sList (aKL lu [gv] newVarTable)
            @?= [(vlu,KnownVarList [gv] [] 0)] )
      , testCase "aKL.aKV: i : tau, then lu ^= [gi] fails"
-         ( dtList (aKL lu [gi] $ aKV i ArbType newVarTable)
+         ( d2sList (aKL lu [gi] $ aKV i ArbType newVarTable)
            @?= [(vlu,KnownVarList [gi] [] 0)] )
-     , testCase "dtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
-         ( dtList (aKL lu [gv] $ aKV v ArbType newVarTable)
+     , testCase "d2sList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
+         ( d2sList (aKL lu [gv] $ aKV v ArbType newVarTable)
            @?= [(vlu,KnownVarList [gv] [] 0)] )
      , testCase "vtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( vtList (aKL lu [gv] $ aKV v ArbType newVarTable)
@@ -277,7 +277,7 @@ tst_addKnownListVar
      , testCase "lv |-> <ls>, set and list!"
         ( addKnownVarList vlv [gls] iltVarData @?= Nothing )
      , testCase "lv |-> {ll}, set and list - succeeds"
-        ( dtList (aKS lv (sngl gll) iltVarData)
+        ( d2sList (aKS lv (sngl gll) iltVarData)
           @?= [(vll,KnownVarList [] [] 0)
               ,(vls,KnownVarSet S.empty S.empty 0)
               ,(vlv,KnownVarSet (sngl gll) S.empty 0)] )
@@ -296,7 +296,7 @@ tst_addKnownListVar
         ( addKnownVarList vlf [StdVar len,StdVar len] iltVarData @?= Nothing )
      -- successful entries
      , testCase "lu |-> [], succeeds"
-        ( dtList (aKL lu [] iltVarData)
+        ( d2sList (aKL lu [] iltVarData)
          @?= [(vll,KnownVarList [] [] 0)
              ,(vls,KnownVarSet S.empty S.empty 0)
              ,(vlu,KnownVarList [] [] 0)] )

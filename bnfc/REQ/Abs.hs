@@ -65,6 +65,7 @@ data Trm
     | TCons DynVar [Trm]
     | TBndSet DynVar [GVar] Trm
     | TBndLst DynVar [GVar] Trm
+    | TClose DynVar Trm
     | TSubV Trm [Trm] [DynVar]
     | TSubLV Trm [DynVar] [DynVar]
     | TSubst Trm [Trm] [DynVar] [DynVar] [DynVar]

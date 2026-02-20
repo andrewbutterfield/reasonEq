@@ -1,0 +1,17 @@
+Theory Closure .
+  Exists Forall Equal Impl AOI And Or Not EQV .
+
+Law axiom uclose_def . Close universal P === BndS forall [lst x] P . VSC std P covby lst x .
+Law axiom sat_def . Close existential P === not (Close universal not (P)) . none
+
+Conjecture univ_id_on_closed . Close universal P === P . VSC std P covby .
+Conjecture univ_true . Close universal True === True . none
+Conjecture univ_False . Close universal False === False . none
+Conjecture uclose_idem . Close universal Close universal P === Close universal P . none
+Conjecture and_uclose_distr . Close universal P /\ Close universal Q === Close universal P /\ Q . none
+Conjecture univ_forall_closed . BndS forall [lst x] Close universal P === Close universal P . none
+Conjecture univ_exists_closed . BndS exists [lst x] Close universal P === Close universal P . none
+Conjecture univ_inst . Close universal P ==> P . none
+Conjecture univ_inst_gen . Close universal P ==> SubL P [. e / x .] . none
+Conjecture univ_mono . Close universal P ==> Q ==> Close universal P ==> Close universal Q . none
+Conjecture necessary_poss . Close existential P ==> Close universal Close existential P . none

@@ -9,7 +9,7 @@ Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
-From `EQV` to `Exists` works (reasonably) fine.
+From `EQV` to `Closure` works (reasonably) fine.
 
 `Sets` is next ...
 

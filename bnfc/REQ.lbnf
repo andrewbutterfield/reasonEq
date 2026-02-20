@@ -229,6 +229,8 @@ TCons.   Trm8 ::= DynVar "(" [Trm] ")" ;
 TBndSet. Trm8 ::= "BndS"  DynVar "[" [GVar] "]" Trm ;
 TBndLst. Trm8 ::= "BndL" DynVar "[" [GVar] "]" Trm ;
 
+TClose.  Trm8 ::= "Close" DynVar Trm ;
+
 TSubV.   Trm8 ::= "SubV" Trm "[." [Trm] "/" [DynVar] ".]" ;
 TSubLV.  Trm8 ::= "SubL" Trm  "[." [DynVar] "/" [DynVar] ".]" ;
 TSubst.  Trm8 ::= "Sub" Trm 

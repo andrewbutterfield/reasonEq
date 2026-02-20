@@ -56,50 +56,51 @@ import REQ.Lex
   '>='         { PT _ (TS _ 25)     }
   'BndL'       { PT _ (TS _ 26)     }
   'BndS'       { PT _ (TS _ 27)     }
-  'Conjecture' { PT _ (TS _ 28)     }
-  'DclASet'    { PT _ (TS _ 29)     }
-  'DclDLVar'   { PT _ (TS _ 30)     }
-  'DclVar'     { PT _ (TS _ 31)     }
-  'Exp'        { PT _ (TS _ 32)     }
-  'ExprVars'   { PT _ (TS _ 33)     }
-  'False'      { PT _ (TS _ 34)     }
-  'Iter'       { PT _ (TS _ 35)     }
-  'Law'        { PT _ (TS _ 36)     }
-  'NA'         { PT _ (TS _ 37)     }
-  'NS'         { PT _ (TS _ 38)     }
-  'Obs'        { PT _ (TS _ 39)     }
-  'ObsVars'    { PT _ (TS _ 40)     }
-  'Prd'        { PT _ (TS _ 41)     }
-  'PredVars'   { PT _ (TS _ 42)     }
-  'SB'         { PT _ (TS _ 43)     }
-  'SC'         { PT _ (TS _ 44)     }
-  'StaticVars' { PT _ (TS _ 45)     }
-  'Sub'        { PT _ (TS _ 46)     }
-  'SubL'       { PT _ (TS _ 47)     }
-  'SubV'       { PT _ (TS _ 48)     }
-  'Theory'     { PT _ (TS _ 49)     }
-  'True'       { PT _ (TS _ 50)     }
-  'VSC'        { PT _ (TS _ 51)     }
-  '['          { PT _ (TS _ 52)     }
-  '[.'         { PT _ (TS _ 53)     }
-  '\\/'        { PT _ (TS _ 54)     }
-  ']'          { PT _ (TS _ 55)     }
-  'assumed'    { PT _ (TS _ 56)     }
-  'axiom'      { PT _ (TS _ 57)     }
-  'covby'      { PT _ (TS _ 58)     }
-  'dcovby'     { PT _ (TS _ 59)     }
-  'disj'       { PT _ (TS _ 60)     }
-  'fresh'      { PT _ (TS _ 61)     }
-  'lst'        { PT _ (TS _ 62)     }
-  'nil'        { PT _ (TS _ 63)     }
-  'none'       { PT _ (TS _ 64)     }
-  'proven'     { PT _ (TS _ 65)     }
-  'std'        { PT _ (TS _ 66)     }
-  'tbot'       { PT _ (TS _ 67)     }
-  'ttop'       { PT _ (TS _ 68)     }
-  'var'        { PT _ (TS _ 69)     }
-  '|'          { PT _ (TS _ 70)     }
-  '~'          { PT _ (TS _ 71)     }
+  'Close'      { PT _ (TS _ 28)     }
+  'Conjecture' { PT _ (TS _ 29)     }
+  'DclASet'    { PT _ (TS _ 30)     }
+  'DclDLVar'   { PT _ (TS _ 31)     }
+  'DclVar'     { PT _ (TS _ 32)     }
+  'Exp'        { PT _ (TS _ 33)     }
+  'ExprVars'   { PT _ (TS _ 34)     }
+  'False'      { PT _ (TS _ 35)     }
+  'Iter'       { PT _ (TS _ 36)     }
+  'Law'        { PT _ (TS _ 37)     }
+  'NA'         { PT _ (TS _ 38)     }
+  'NS'         { PT _ (TS _ 39)     }
+  'Obs'        { PT _ (TS _ 40)     }
+  'ObsVars'    { PT _ (TS _ 41)     }
+  'Prd'        { PT _ (TS _ 42)     }
+  'PredVars'   { PT _ (TS _ 43)     }
+  'SB'         { PT _ (TS _ 44)     }
+  'SC'         { PT _ (TS _ 45)     }
+  'StaticVars' { PT _ (TS _ 46)     }
+  'Sub'        { PT _ (TS _ 47)     }
+  'SubL'       { PT _ (TS _ 48)     }
+  'SubV'       { PT _ (TS _ 49)     }
+  'Theory'     { PT _ (TS _ 50)     }
+  'True'       { PT _ (TS _ 51)     }
+  'VSC'        { PT _ (TS _ 52)     }
+  '['          { PT _ (TS _ 53)     }
+  '[.'         { PT _ (TS _ 54)     }
+  '\\/'        { PT _ (TS _ 55)     }
+  ']'          { PT _ (TS _ 56)     }
+  'assumed'    { PT _ (TS _ 57)     }
+  'axiom'      { PT _ (TS _ 58)     }
+  'covby'      { PT _ (TS _ 59)     }
+  'dcovby'     { PT _ (TS _ 60)     }
+  'disj'       { PT _ (TS _ 61)     }
+  'fresh'      { PT _ (TS _ 62)     }
+  'lst'        { PT _ (TS _ 63)     }
+  'nil'        { PT _ (TS _ 64)     }
+  'none'       { PT _ (TS _ 65)     }
+  'proven'     { PT _ (TS _ 66)     }
+  'std'        { PT _ (TS _ 67)     }
+  'tbot'       { PT _ (TS _ 68)     }
+  'ttop'       { PT _ (TS _ 69)     }
+  'var'        { PT _ (TS _ 70)     }
+  '|'          { PT _ (TS _ 71)     }
+  '~'          { PT _ (TS _ 72)     }
   L_integ      { PT _ (TI $$)       }
   L_DynVar     { PT _ (T_DynVar $$) }
 
@@ -207,6 +208,7 @@ Trm8
   | DynVar '(' ListTrm ')' { REQ.Abs.TCons $1 $3 }
   | 'BndS' DynVar '[' ListGVar ']' Trm { REQ.Abs.TBndSet $2 $4 $6 }
   | 'BndL' DynVar '[' ListGVar ']' Trm { REQ.Abs.TBndLst $2 $4 $6 }
+  | 'Close' DynVar Trm { REQ.Abs.TClose $2 $3 }
   | 'SubV' Trm '[.' ListTrm '/' ListDynVar '.]' { REQ.Abs.TSubV $2 $4 $6 }
   | 'SubL' Trm '[.' ListDynVar '/' ListDynVar '.]' { REQ.Abs.TSubLV $2 $4 $6 }
   | 'Sub' Trm '[.' ListTrm '/' ListDynVar '|' ListDynVar '/' ListDynVar '.]' { REQ.Abs.TSubst $2 $4 $6 $8 $10 }

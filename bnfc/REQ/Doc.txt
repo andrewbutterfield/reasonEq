@@ -24,16 +24,17 @@ DynVar literals are recognized by the regular expression
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in REQ are the following:
-  | ``BndL`` | ``BndS`` | ``Conjecture`` | ``DclASet``
-  | ``DclDLVar`` | ``DclVar`` | ``Exp`` | ``ExprVars``
-  | ``False`` | ``Iter`` | ``Law`` | ``NA``
-  | ``NS`` | ``Obs`` | ``ObsVars`` | ``Prd``
-  | ``PredVars`` | ``SB`` | ``SC`` | ``StaticVars``
-  | ``Sub`` | ``SubL`` | ``SubV`` | ``Theory``
-  | ``True`` | ``VSC`` | ``assumed`` | ``axiom``
-  | ``covby`` | ``dcovby`` | ``disj`` | ``fresh``
-  | ``lst`` | ``nil`` | ``none`` | ``proven``
-  | ``std`` | ``tbot`` | ``ttop`` | ``var``
+  | ``BndL`` | ``BndS`` | ``Close`` | ``Conjecture``
+  | ``DclASet`` | ``DclDLVar`` | ``DclVar`` | ``Exp``
+  | ``ExprVars`` | ``False`` | ``Iter`` | ``Law``
+  | ``NA`` | ``NS`` | ``Obs`` | ``ObsVars``
+  | ``Prd`` | ``PredVars`` | ``SB`` | ``SC``
+  | ``StaticVars`` | ``Sub`` | ``SubL`` | ``SubV``
+  | ``Theory`` | ``True`` | ``VSC`` | ``assumed``
+  | ``axiom`` | ``covby`` | ``dcovby`` | ``disj``
+  | ``fresh`` | ``lst`` | ``nil`` | ``none``
+  | ``proven`` | ``std`` | ``tbot`` | ``ttop``
+  | ``var`` |  |  |
 
 The symbols used in REQ are the following:
   | . | === | ==> | \/
@@ -113,6 +114,7 @@ All other symbols are terminals.
   |  |  **|**  | //DynVar// ``(`` //[Trm]// ``)``
   |  |  **|**  | ``BndS`` //DynVar// ``[`` //[GVar]// ``]`` //Trm//
   |  |  **|**  | ``BndL`` //DynVar// ``[`` //[GVar]// ``]`` //Trm//
+  |  |  **|**  | ``Close`` //DynVar// //Trm//
   |  |  **|**  | ``SubV`` //Trm// ``[.`` //[Trm]// ``/`` //[DynVar]// ``.]``
   |  |  **|**  | ``SubL`` //Trm// ``[.`` //[DynVar]// ``/`` //[DynVar]// ``.]``
   |  |  **|**  | ``Sub`` //Trm// ``[.`` //[Trm]// ``/`` //[DynVar]// ``|`` //[DynVar]// ``/`` //[DynVar]// ``.]``

@@ -211,6 +211,7 @@ instance Print REQ.Abs.Trm where
     REQ.Abs.TCons dynvar trms -> prPrec i 8 (concatD [prt 0 dynvar, doc (showString "("), prt 0 trms, doc (showString ")")])
     REQ.Abs.TBndSet dynvar gvars trm -> prPrec i 8 (concatD [doc (showString "BndS"), prt 0 dynvar, doc (showString "["), prt 0 gvars, doc (showString "]"), prt 0 trm])
     REQ.Abs.TBndLst dynvar gvars trm -> prPrec i 8 (concatD [doc (showString "BndL"), prt 0 dynvar, doc (showString "["), prt 0 gvars, doc (showString "]"), prt 0 trm])
+    REQ.Abs.TClose dynvar trm -> prPrec i 8 (concatD [doc (showString "Close"), prt 0 dynvar, prt 0 trm])
     REQ.Abs.TSubV trm trms dynvars -> prPrec i 8 (concatD [doc (showString "SubV"), prt 0 trm, doc (showString "[."), prt 0 trms, doc (showString "/"), prt 0 dynvars, doc (showString ".]")])
     REQ.Abs.TSubLV trm dynvars1 dynvars2 -> prPrec i 8 (concatD [doc (showString "SubL"), prt 0 trm, doc (showString "[."), prt 0 dynvars1, doc (showString "/"), prt 0 dynvars2, doc (showString ".]")])
     REQ.Abs.TSubst trm trms dynvars1 dynvars2 dynvars3 -> prPrec i 8 (concatD [doc (showString "Sub"), prt 0 trm, doc (showString "[."), prt 0 trms, doc (showString "/"), prt 0 dynvars1, doc (showString "|"), prt 0 dynvars2, doc (showString "/"), prt 0 dynvars3, doc (showString ".]")])

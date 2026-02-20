@@ -596,6 +596,10 @@ trm2term ctxt (TBndLst binder bvars trm) = do
   let gvars = map (gvar2genvar ctxt) bvars
   term <- trm2term ctxt trm
   lam ArbType id gvars term
+trm2term ctxt (TClose closer trm) = do
+  let  (id,_) = dynvar2idwhen closer
+  term <- trm2term ctxt trm
+  return $ Cls id term
 \end{code}
 
 Substitution
@@ -720,8 +724,12 @@ term2trm (Bnd  typ (Identifier n _) vs tm)
   = TBndSet (idwhen2dynvar n Static) 
             (map genvar2gvar $ S.toList vs)
             (term2trm tm)
--- term2trm (Lam  typ n vl tm)
--- term2trm (Cls      n    tm)
+term2trm (Lam  typ (Identifier n _) vl tm)
+  = TBndLst (idwhen2dynvar n Static) 
+            (map genvar2gvar vl)
+            (term2trm tm)
+term2trm (Cls (Identifier n _) tm) 
+  = TClose (idwhen2dynvar n Static) (term2trm tm)
 term2trm (Sub typ tm (Substn fvs lvs)) 
   = subs2trm tm (S.toList fvs) (S.toList lvs)
 term2trm (Iter typ 

@@ -86,6 +86,7 @@ transTrm x = case x of
   REQ.Abs.TCons dynvar trms -> failure x
   REQ.Abs.TBndSet dynvar gvars trm -> failure x
   REQ.Abs.TBndLst dynvar gvars trm -> failure x
+  REQ.Abs.TClose dynvar trm -> failure x
   REQ.Abs.TSubV trm trms dynvars -> failure x
   REQ.Abs.TSubLV trm dynvars1 dynvars2 -> failure x
   REQ.Abs.TSubst trm trms dynvars1 dynvars2 dynvars3 -> failure x

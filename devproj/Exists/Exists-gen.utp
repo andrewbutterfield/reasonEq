@@ -1,0 +1,14 @@
+Theory Exists .
+  Forall Equal Impl AOI And Or Not EQV .
+
+Law axiom exists_def . BndS exists [lst x] P === not (BndS forall [lst x] not (P)) . none
+
+Conjecture exists_remove . BndS exists [lst x] P === P . VSC std P disj lst x .
+Conjecture exists_false . BndS exists [lst x] False === False . none
+Conjecture exists_one_point . BndS exists [lst x, lst y] Iter and eq [x e] /\ P === BndS exists [lst y] SubL P [. e / x .] . VSC lst e disj lst x .
+Conjecture exists_or_distr . BndS exists [lst x] P \/ Q === BndS exists [lst x] P \/ BndS exists [lst x] Q . none
+Conjecture and_exists_scope . P /\ BndS exists [lst x, lst y] Q === BndS exists [lst x] P /\ BndS exists [lst y] Q . VSC std P disj lst x .
+Conjecture exists_gen . BndS exists [lst y] SubL P [. e / x .] ==> BndS exists [lst x, lst y] P . none
+Conjecture exists_alpha_rename . BndS exists [lst x] P === BndS exists [lst y] SubL P [. y / x .] . VSC std P disj lst y .
+Conjecture exists_swap . BndS exists [lst x] BndS exists [lst y] P === BndS exists [lst y] BndS exists [lst x] P . none
+Conjecture exists_idem . BndS exists [lst x] BndS exists [lst x] P === BndS exists [lst x] P . none

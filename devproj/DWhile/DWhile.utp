@@ -1,0 +1,27 @@
+Theory DWhile .
+  Designs UWhile UBase Closure Exists Forall Equal Impl AOI And Or Not EQV .
+
+DclVar Obs asg . var NS t -> t -> B .
+
+Law axiom asg_def . SubL asg [. _e // _x .] === design (True, Iter and eq [x_ _e ] /\ Iter and eq [O_ _O ]) . none
+Law axiom var_list_fusion . Iter and eq [x_ _x ] /\ Iter and eq [O_ _O ] === Iter and eq [O_ _O ] . none
+Law axiom II_def . II === design (True, Iter and eq [O_ _O ]) . none
+Law axiom bot_def . bot === design (False, True) . none
+Law axiom top_def . top === design (True, False) . none
+
+Conjecture asg_simple . SubV asg [. _e // _x .] === design (True, x_ == _e /\ Iter and eq [O_ _O ]) . none
+Conjecture asg_unchanged . SubV asg [. _e // _x .] === SubV asg [. _e, _y // _x _y .] . none
+Conjecture asg_seq_same . sqcmp (SubV asg [. _e // _x .], SubV asg [. _f // _x .]) === SubV asg [. SubV _f [. _e // _x .] // _x .] . VSC std _e disj lst _O;
+std _f disj lst _O;
+std _x disj lst _O .
+Conjecture asg_seq_cond . sqcmp (SubV asg [. _e // _x .], cond (P, _b, Q)) === cond (sqcmp (SubV asg [. _e // _x .], P), SubV _b [. _e // _x .], sqcmp (SubV asg [. _e // _x .], Q)) . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std _b disj lst _O;
+std _e disj lst _O;
+std _x disj lst _O .
+Conjecture sqcmp_runit . sqcmp (R, II) === R . VSC std II disj lst _O, lst O_;
+std R disj lst _O, lst O_ .
+Conjecture sqcmp_lunit . sqcmp (II, R) === R . VSC std II disj lst _O, lst O_;
+std R disj lst _O, lst O_ .
+Conjecture bot_true . bot === True . none
+Conjecture top_nok . top === not (_ok) . none

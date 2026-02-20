@@ -9,9 +9,12 @@ Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 
-From `EQV` to `Closure`, and `Sets`,`Lists` work (reasonably) fine.
+Working (reasonably) well:
+ Logic: `EQV` .. `Closure`,
+ Math: `Arith`,`Sets`,`Lists`
+ UTP: `UBase`
 
-`UBase` is next ...
+ Next: `UWhile`
 
 
 ### Load/Generate

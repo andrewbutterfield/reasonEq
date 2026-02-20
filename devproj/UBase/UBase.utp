@@ -1,0 +1,17 @@
+Theory UBase .
+  Closure Exists Forall Equal Impl AOI And Or Not EQV .
+
+DclVar Prd bot . var NA B .
+DclVar Obs refines . var SB B -> B -> B .
+DclVar Obs sqcap . var SB B -> B -> B .
+DclVar Prd top . var NA B .
+
+Law axiom refines_def . refines (P, Q) === Close universal P ==> Q . none
+Law axiom sqcap_def . sqcap (P, Q) === P \/ Q . none
+
+Conjecture refines_lor_distr . refines (P \/ Q, R) === refines (P, R) /\ refines (Q, R) . none
+Conjecture refines_trans . refines (P, Q) /\ refines (Q, R) ==> refines (P, R) . none
+Conjecture sqcap_symm . sqcap (P, Q) === sqcap (Q, P) . none
+Conjecture sqcap_assoc . sqcap (P, sqcap (Q, R)) === sqcap (sqcap (P, Q), R) . none
+Conjecture sqcap_idem . sqcap (P, P) === P . none
+Conjecture sqcap_distr . sqcap (P, sqcap (Q, R)) === sqcap (sqcap (P, Q), sqcap (P, R)) . none

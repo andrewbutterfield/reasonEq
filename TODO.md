@@ -14,9 +14,9 @@ Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
 Working (reasonably) well:
  Logic: `EQV` .. `Closure`,
  Math: `Arith`,`Sets`,`Lists`
- UTP: `UBase`, `UWhile`
+ UTP: `UBase`, `UWhile`, `Designs`
 
- Next: `Designs`
+ Next: `DWhile`
 
 
 ### Load/Generate

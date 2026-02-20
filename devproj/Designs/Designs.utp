@@ -1,0 +1,33 @@
+Theory Designs .
+  UWhile UBase AOI And Or Not EQV .
+
+DclVar Obs H1 . var NA B -> B .
+DclVar Obs H2 . var NA B -> B .
+DclVar Obs H3 . var NA B -> B .
+DclVar Obs H4 . var NA B -> B .
+DclVar Obs design . var NA B -> B -> B .
+DclVar Obs _ok . var NA B .
+DclVar Obs ok_ . var NA B .
+
+Law axiom design_def . design (P, Q) === _ok /\ P ==> ok_ /\ Q . none
+Law axiom mkH1_def . mkH1 (R) === _ok ==> R . none
+Law axiom H1_def . H1 (R) === R == (_ok ==> R) . none
+Law axiom H2_def . H2 (R) === refines (SubV R [. False // ok_ .], SubV R [. True // ok_ .]) . none
+Law axiom mkH3_def . mkH3 (R) === sqcmp (R, II) . none
+Law axiom H3_def . H3 (R) === R == sqcmp (R, II) . none
+Law axiom H4_def . H4 (R) === sqcmp (R, True) . none
+
+Conjecture design_sqcmp_lzero . sqcmp (True, design (P, Q)) === True . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std _ok disj lst _O;
+std ok_ disj lst O_ .
+Conjecture H1_sat_lzero_lunit . H1 (R) === sqcmp (True, R) == True /\ sqcmp (II, R) == R . VSC std R disj lst _O, lst O_;
+std _ok disj lst _O;
+std ok_ disj lst O_ .
+Conjecture mkH1_idem . (_ok ==> _ok ==> R) == (_ok ==> R) . none
+Conjecture mkH1_mono . refines (P, Q) ==> refines (_ok ==> P, _ok ==> Q) . none
+Conjecture H3_absorbs_right_skip . H3 (sqcmp (design (p, Q), II)) === design (p, Q) . VSC std Q disj lst _O, lst O_;
+std p disj lst _O .
+Conjecture H4_is_feasible . H4 (R) === Close universal BndS exists [lst O_] R . VSC std R disj lst _O, lst O_;
+std _ok disj lst _O;
+std ok_ disj lst O_ .

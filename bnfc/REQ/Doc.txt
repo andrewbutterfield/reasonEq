@@ -32,9 +32,8 @@ The reserved words used in REQ are the following:
   | ``StaticVars`` | ``Sub`` | ``SubL`` | ``SubV``
   | ``Theory`` | ``True`` | ``VSC`` | ``assumed``
   | ``axiom`` | ``covby`` | ``dcovby`` | ``disj``
-  | ``fresh`` | ``lst`` | ``nil`` | ``none``
-  | ``proven`` | ``std`` | ``tbot`` | ``ttop``
-  | ``var`` |  |  |
+  | ``fresh`` | ``lst`` | ``none`` | ``proven``
+  | ``std`` | ``tbot`` | ``ttop`` | ``var``
 
 The symbols used in REQ are the following:
   | . | === | ==> | \/
@@ -43,8 +42,8 @@ The symbols used in REQ are the following:
   | ++ | : | + | -
   | * | / | % | (
   | ) | [ | ] | [.
-  | .] | | | , | ->
-  | (: | :) | ; |
+  | // | .] | | | ,
+  | -> | (: | :) | ;
 
 ===Comments===
 There are no single-line comments in the grammar. There are no multiple-line comments in the grammar.
@@ -110,14 +109,13 @@ All other symbols are terminals.
   |  |  **|**  | //DynVar//
   |  |  **|**  | ``True``
   |  |  **|**  | ``False``
-  |  |  **|**  | ``nil``
   |  |  **|**  | //DynVar// ``(`` //[Trm]// ``)``
   |  |  **|**  | ``BndS`` //DynVar// ``[`` //[GVar]// ``]`` //Trm//
   |  |  **|**  | ``BndL`` //DynVar// ``[`` //[GVar]// ``]`` //Trm//
   |  |  **|**  | ``Close`` //DynVar// //Trm//
-  |  |  **|**  | ``SubV`` //Trm// ``[.`` //[Trm]// ``/`` //[DynVar]// ``.]``
-  |  |  **|**  | ``SubL`` //Trm// ``[.`` //[DynVar]// ``/`` //[DynVar]// ``.]``
-  |  |  **|**  | ``Sub`` //Trm// ``[.`` //[Trm]// ``/`` //[DynVar]// ``|`` //[DynVar]// ``/`` //[DynVar]// ``.]``
+  |  |  **|**  | ``SubV`` //Trm// ``[.`` //[Trm]// ``//`` //[DynVar]// ``.]``
+  |  |  **|**  | ``SubL`` //Trm// ``[.`` //[DynVar]// ``//`` //[DynVar]// ``.]``
+  |  |  **|**  | ``Sub`` //Trm// ``[.`` //[Trm]// ``//`` //[DynVar]// ``|`` //[DynVar]// ``//`` //[DynVar]// ``.]``
   |  |  **|**  | ``Iter`` //DynVar// //DynVar// ``[`` //[DynVar]// ``]``
   |  |  **|**  | ``(`` //Trm// ``)``
   | //[Trm]// | -> | **eps**

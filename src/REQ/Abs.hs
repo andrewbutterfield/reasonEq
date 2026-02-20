@@ -61,7 +61,6 @@ data Trm
     | TmVar DynVar
     | TTrue
     | TFalse
-    | ENil
     | TCons DynVar [Trm]
     | TBndSet DynVar [GVar] Trm
     | TBndLst DynVar [GVar] Trm

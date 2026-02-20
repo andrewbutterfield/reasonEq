@@ -771,7 +771,7 @@ cons2trm sb (Identifier i _) ts
   | otherwise  =  TCons (idwhen2dynvar i Static) trms
   where trms =  map term2trm ts
 
-balance rel [] = ENil
+balance rel [] = TmVar (DynVar "zero_eqv")
 balance rel [trm]  =  trm
 balance rel [trm1,trm2] = rel trm1 trm2
 balance rel trms = rel (balance rel before) (balance rel after)

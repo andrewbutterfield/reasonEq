@@ -1,0 +1,38 @@
+Theory Lists .
+  Impl EQV Equal Forall Arith Sets .
+
+DclVar Obs cat . var SB star t -> star t -> star t .
+DclVar Obs cons . var SB t -> star t -> star t .
+DclVar Obs elems . var SB star t -> P t .
+DclVar Obs hd . var SB star t -> t .
+DclVar Obs len . var SB star t -> Z .
+DclVar Obs nil . var NA star t .
+DclVar Obs pfx . var SB star t -> star t -> B .
+DclVar Obs rev . var SB star t -> star t .
+DclVar Obs tl . var SB star t -> star t .
+
+Law axiom nil_cons_disj . nil == x : sigma === False . none
+Law axiom cons_equality . x : s1 == y : s2 === x == y /\ s1 == s2 . none
+Law axiom list_induction . LP === SubV LP [. nil // sigma .] /\ (LP ==> SubV LP [. x : sigma // sigma .]) . none
+Law axiom hd_def . hd (x : sigma) == x . none
+Law axiom tl_def . tl (x : sigma) == sigma . none
+Law axiom nil_cat_def . nil ++ sigma == sigma . none
+Law axiom cons_cat_def . (x : s1) ++ s2 == x : s1 ++ s2 . none
+Law axiom nil_pfx_def . pfx (nil, sigma) . none
+Law axiom cons_pfx_def . pfx (x : s1, y : s2) === x == y /\ pfx (s1, s2) . none
+Law axiom s_pfx_nil . pfx (sigma, nil) === sigma == nil . none
+Law axiom rev_nil_def . rev (nil) == nil . none
+Law axiom rev_cons_def . rev (x : sigma) == rev (sigma) ++ seq (x) . none
+Law axiom elems_nil_def . elems (nil) == emptyset . none
+Law axiom elems_cons_def . elems (x : sigma) == union (set (x), elems (sigma)) . none
+Law axiom len_nil_def . len (nil) == 0 . none
+Law axiom len_cons_def . len (x : sigma) == 1 + len (sigma) . none
+
+Conjecture hd_cons_tl . hd (x : sigma) : tl (x : sigma) == x : sigma . none
+Conjecture cat_nil . sigma ++ nil == sigma . none
+Conjecture cat_assoc . s1 ++ s2 ++ s3 == (s1 ++ s2) ++ s3 . none
+Conjecture rev_rev_id . rev (rev (sigma)) == sigma . none
+Conjecture rev_cat . rev (s1 ++ s2) == rev (s2) ++ rev (s1) . none
+Conjecture elems_cat . union (elems (s1 ++ s2) == elems (s1), elems (s2)) . none
+Conjecture len_cat . len (s1 ++ s2) == len (s1) + len (s2) . none
+Conjecture len_rev . len (rev (sigma)) == len (sigma) . none

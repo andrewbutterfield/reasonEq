@@ -1,0 +1,40 @@
+Theory Sets .
+  Impl EQV Equal Forall Arith .
+
+DclVar Obs card . var SB P t -> Z .
+DclVar Obs emptyset . var NA P t .
+DclVar Obs intsct . var SB P t -> P t -> P t .
+DclVar Obs mbr . var SB t -> P t -> B .
+DclVar Obs sdiff . var SB P t -> P t -> P t .
+DclVar Obs subseteq . var SB P t -> P t -> B .
+DclVar Obs union . var SB P t -> P t -> P t .
+
+Law axiom mbr_emptyset . mbr (x, emptyset) == False . none
+Law axiom mbr_singleton . mbr (x, set (y)) == (x == y) . none
+Law axiom set_eq_def . S1 == S2 === BndS forall [std x] mbr (x, S1) === mbr (x, S2) . none
+Law axiom subseteq_def . subseteq (S1, S2) === BndS forall [std x] mbr (x, S1) ==> mbr (x, S2) . none
+Law axiom mbr_union_def . mbr (x, union (S1, S2)) === mbr (x, S1) \/ mbr (x, S2) . none
+Law axiom mbr_intsct_def . mbr (x, intsct (S1, S2)) === mbr (x, S1) /\ mbr (x, S2) . none
+Law axiom mbr_sdiff_def . mbr (x, sdiff (S1, S2)) === mbr (x, S1) /\ not (mbr (x, S2)) . none
+Law axiom card_emptyset_def . card (emptyset) == 0 . none
+Law axiom card_single_def . card (set (x)) == 1 . none
+Law axiom card_union_def . card (union (S1, S2)) == card (S1) + card (S2) - card (intsct (S1, S2)) . none
+
+Conjecture mbr_set_self . mbr (x, set (x)) == True . none
+Conjecture union_r_unit . union (S, emptyset) == S . none
+Conjecture union_symm . union (S1, S2) == union (S2, S1) . none
+Conjecture union_assoc . union (S1, union (S2, S3)) == union (union (S1, S2), S3) . none
+Conjecture intsct_zero . intsct (S, emptyset) == emptyset . none
+Conjecture intsct_symm . intsct (S1, S2) == intsct (S2, S1) . none
+Conjecture intsct_assoc . intsct (S1, intsct (S2, S3)) == intsct (intsct (S1, S2), S3) . none
+Conjecture sdiff_r_unit . sdiff (S, emptyset) == S . none
+Conjecture sdiff_l_assoc . sdiff (sdiff (S1, S2), S3) == sdiff (S1, union (S2, S3)) . none
+Conjecture sdiff_r_assoc . sdiff (S1, sdiff (S2, S3)) == union (sdiff (S1, S2), intsct (S1, S3)) . none
+Conjecture union_intsct_distr . intsct (union (S1, S2), S3) == union (intsct (S1, S3), intsct (S2, S3)) . none
+Conjecture intsct_union_distr . union (intsct (S1, S2), S3) == intsct (union (S1, S3), union (S2, S3)) . none
+Conjecture union_sdiff_distr . sdiff (union (S1, S2), S3) == union (sdiff (S1, S3), sdiff (S2, S3)) . none
+Conjecture intsct_sdiff_distr . sdiff (intsct (S1, S2), S3) == intsct (sdiff (S1, S3), sdiff (S2, S3)) . none
+Conjecture sdiff_union_r_distr . sdiff (S1, union (S2, S3)) == intsct (sdiff (S1, S2), sdiff (S1, S3)) . none
+Conjecture sdiff_intsct_r_distr . sdiff (S1, intsct (S2, S3)) == union (sdiff (S1, S2), sdiff (S1, S3)) . none
+Conjecture sdiff_union_l_distr . union (sdiff (S1, S2), S3) == sdiff (union (S1, S3), sdiff (S2, S3)) . none
+Conjecture sdiff_intsct_l_distr . intsct (sdiff (S1, S2), S3) == sdiff (intsct (S1, S3), S2) . none

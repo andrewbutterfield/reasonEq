@@ -285,6 +285,7 @@ vTable :: VarTable -> VarRoleMap
 vTable (VD (_,vtable, _, _)) = vtable
 lvTable :: VarTable -> LVarRoleMap
 lvTable (VD (_,_, stable, _)) = stable
+-- this should return DynamicLstVarRole !!!!!
 dvTable :: VarTable -> LVarRoleMap
 dvTable (VD (_,_, _, dtable)) = M.fromList $ map dtMap $ M.toList dtable
 

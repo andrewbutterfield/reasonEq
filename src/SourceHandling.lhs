@@ -456,39 +456,45 @@ known2items vt
   =    (vtable2items $ vtList vt)
     ++ (stable2items $ stList vt) 
     ++ (stable2items $ dtList vt) -- maps dtable into stable (Before)
+    -- !!!!!  not good - we cannot read dynsamkc entries back!!!
 
 vtable2items vtl = map vmr2item  vtl
 stable2items stl = map lvmr2item stl
 
-vmr2item (Vbl (Identifier i _) vc vw,vmr)
-  = DeclVar (varclass2vclass vc)
-            (idwhen2dynvar i vw)
-            (vmr2varrole vmr)
+vmr2item :: (Variable, VarMatchRole) -> Item
+
+vmr2item (v,(KnownVar typ msub))
+  = let (vcls,dynvar) = v2cdyn v
+    in  DeclVar vcls dynvar (KV (msubable2sbbl msub) (type2typ typ))
+-- NYI:
 -- KnownTerm trm
--- KnownVar typ sub -- implemented
 -- GenericVar
 -- InstanceVar
 -- UnknownVar
 vmr2item vmr = error ("NYFI: vmr2item "++show vmr)
 
-vmr2varrole :: VarMatchRole -> VarRole
-vmr2varrole (KnownVar typ msub)
-  = KV (msubable2sbbl msub) (type2typ typ)
-vmr2varrole vmr = error ("NYFI: vmr2varrole "++show vmr)
+v2cdyn :: Variable -> (VClass,DynVar)
+v2cdyn (Vbl (Identifier i _) vc vw) 
+  = (varclass2vclass vc,idwhen2dynvar i vw)
 
 msubable2sbbl :: Maybe Subable -> SBBL
 msubable2sbbl Nothing       =  Na
 msubable2sbbl (Just False)  =  NS
 msubable2sbbl (Just True)   =  SB
 
-lvmr2item lvmr = error ("NYI: lvmr2item "++show lvmr)
+lvmr2item :: (Variable, LstVarMatchRole) -> Item
+lvmr2item (v,AbstractSet)
+  = let (vcls,dynvar) = v2cdyn v
+    in  DeclASet vcls dynvar
+-- NYI:
 -- KnownVarList vl vars len
 -- KnownVarSet  vs vars siz
 -- AbstractList
--- AbstractSet -- ipmlemented
 -- UnknownListVar
+lvmr2item vlvmr = error ("NYI: lvmr2item "++show vlvmr)
 
--- DynamicList vis lvis expand len -- implemented
+--dlvr2item :: (IdAndClass,DynamicLstVarRole) -> Item
+-- DynamicList vis lvis expand len -- represented
 -- DynamicSet vis lvis expand len
 -- DynamicAbsList
 -- DynamicAbsSet

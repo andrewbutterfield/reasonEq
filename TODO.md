@@ -5,6 +5,8 @@
 
 ## URGENT or NEXT
 
+We need to keep `DynamicLstVarRole` data and not covnert it to LVMR form!!!
+
 Improve output formatting of `gen` command.
 
 Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.

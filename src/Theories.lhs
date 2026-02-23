@@ -701,6 +701,8 @@ showTheoryLong dm thry
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry) 
+      -- WANT TO SHOW THE CLASSIFED LAWS HERE !!!!
+      -- not just name them and describe their direction
       , "ClassifiedLaws:", showClassyLaws (lwkinds thry)]
     )
   where deps = thDeps thry

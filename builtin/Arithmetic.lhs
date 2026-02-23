@@ -313,12 +313,29 @@ cjMulSubDistr = ( "mul" -.- "sub" -.- "distr"
 \end{code}
 
 
+$$
+\begin{array}{lll}
+   (e+0) * (f*(1-0)) - (0+(e*1)) * (g + (e-e)) && \QNAME{arith-simp-test}
+\end{array}
+$$\par\vspace{-4pt}
+\begin{code}
+cjArithSimpTest = 
+  ( "arith" -.- "simp" -.- "test"
+  , ( (e `add` zero) `mul` (f `mul` (one `sub` zero)) 
+      `sub` 
+      (zero `add` (e `mul` one) `mul` (g `add` (e `sub` e)))
+    )
+  )
+\end{code}
+
+
 \begin{code}
 arithmeticConjectures :: [NmdAssertion]
 arithmeticConjectures
   = map (mkNmdAsn . addSCtrue) 
      [ cjMulSubDistr
      , cjNegZero
+     , cjArithSimpTest
      ]
 \end{code}
 

@@ -1,0 +1,20 @@
+
+
+add_l_unit     0 + e          -->  e 
+add_r_unit     e + 0          -->  e 
+add_cancel     e + f = e + g  -->  f = g 
+sub_r_unit     e - 0          -->  e 
+sub_zero       e - e          -->  0 
+mul_l_unit     1 * e          -->  e 
+mul_r_unit     e * 1          -->  e 
+mul_l_zero     0 * e          -->  0 
+mul_r_zero     e * 0          -->  0 
+mul_cancel     e * f = e * g  -->  f = g 
+div_r_unit     idiv(e,1)      -->  e 
+div_r_unit     idiv(0,e)      -->  0 
+div_self       idiv(e,e)      -->  1 
+mul_add_distr  e * (f + g)    <--  e * f + e * g 
+add_inv        e + (-e)       -->  0 
+sub_alt_def    e - f          <--  e + (-f) 
+mul_div_same   idiv(e * f,f)  -->  e 
+mul_mod_same   imod(e * f,f)  -->  0 

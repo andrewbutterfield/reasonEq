@@ -12,8 +12,8 @@ BEGIN LIST LAWS
 (("sub_zero",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 (("mul_l_unit",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [K (TG (Id "Z" 0)) (VI 1),V T (VR (Id "e" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
 (("mul_r_unit",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
-(("mul_l_unit",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
-(("mul_r_unit",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("mul_l_zero",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("mul_r_zero",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 (("mul_symm",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]],([],fromList []))),Axiom)
 (("mul_assoc",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
 (("mul_cancel",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
@@ -29,6 +29,25 @@ BEGIN LIST LAWS
 (("mul_mod_same",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "imod" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("neg_def",Rightwards)
+("add_l_unit",Leftwards)
+("add_r_unit",Leftwards)
+("add_cancel",Leftwards)
+("sub_r_unit",Leftwards)
+("sub_zero",Leftwards)
+("mul_l_unit",Leftwards)
+("mul_r_unit",Leftwards)
+("mul_l_zero",Leftwards)
+("mul_r_zero",Leftwards)
+("mul_cancel",Leftwards)
+("div_r_unit",Leftwards)
+("div_r_unit",Leftwards)
+("div_self",Leftwards)
+("mul_add_distr",Rightwards)
+("add_inv",Leftwards)
+("sub_alt_def",Rightwards)
+("mul_div_same",Leftwards)
+("mul_mod_same",Leftwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

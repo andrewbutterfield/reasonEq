@@ -163,9 +163,9 @@ axMulLUnit = ( "mul" -.- "l" -.- "unit",
                (one `mul` e) `isEqualTo` e )
 axMulRUnit = ( "mul" -.- "r" -.- "unit",
                (e `mul` one) `isEqualTo` e )
-axMulLZero = ( "mul" -.- "l" -.- "unit",
+axMulLZero = ( "mul" -.- "l" -.- "zero",
                (zero `mul` e) `isEqualTo` zero )
-axMulRZero = ( "mul" -.- "r" -.- "unit",
+axMulRZero = ( "mul" -.- "r" -.- "zero",
                (e `mul` zero) `isEqualTo` zero )
 axMulSymm = ( "mul" -.- "symm",
                (e `mul` f) `isEqualTo` (f `mul` e) )

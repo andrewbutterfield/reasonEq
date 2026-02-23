@@ -455,11 +455,11 @@ known2items :: VarTable -> [Item]
 known2items vt
   =    (vtable2items $ vtList vt)
     ++ (stable2items $ stList vt) 
-    ++ (stable2items $ d2sList vt) -- maps dtable into stable (Before)
-    -- !!!!!  not good - we cannot read dynsamkc entries back!!!
+    ++ (dtable2items $ dtList vt) 
 
 vtable2items vtl = map vmr2item  vtl
 stable2items stl = map lvmr2item stl
+dtable2items dtl = map dlvr2item dtl
 
 vmr2item :: (Variable, VarMatchRole) -> Item
 
@@ -493,12 +493,19 @@ lvmr2item (v,AbstractSet)
 -- UnknownListVar
 lvmr2item vlvmr = error ("NYI: lvmr2item "++show vlvmr)
 
---dlvr2item :: (IdAndClass,DynamicLstVarRole) -> Item
+dlvr2item :: (IdAndClass,DynamicLstVarRole) -> Item
+dlvr2item (iac,DynamicList vis _ _ _)
+  = let (vcls,dynvar) = v2cdyn $ iac2var iac
+    in DeclDLVar vcls dynvar $ map mkBeforeDynvar vis
+-- NYI:
 -- DynamicList vis lvis expand len -- represented
 -- DynamicSet vis lvis expand len
 -- DynamicAbsList
 -- DynamicAbsSet
+dlvr2item iacdlvr = error ("NYI: dlvr2item "++show iacdlvr)
 
+mkBeforeDynvar :: Identifier -> DynVar
+mkBeforeDynvar (Identifier i _) = idwhen2dynvar i Before
 \end{code}
 
 \subsubsection{Laws to Items}

@@ -1,0 +1,40 @@
+Theory UTCP .
+  Designs UWhile Sets Closure Exists Forall Equal Impl AOI And Or Not EQV .
+
+DclVar Obs A . var NS P LE -> B -> P LE -> B .
+DclVar Obs X . var NS P LE -> B -> P LE -> P LE -> B .
+DclVar Obs atom . var NS B -> B .
+DclVar Obs cpll . var SB B -> B -> B .
+DclVar Obs cplus . var SB B -> B -> B .
+DclVar Obs cseq . var SB B -> B -> B .
+DclVar Obs cskip . var NA B .
+DclVar Obs cstar . var SB B -> B .
+DclVar Obs g . var NA GE .
+DclVar Obs in . var NA LE .
+DclVar Obs _ls . var NA P LE .
+DclVar Obs ls_ . var NA P LE .
+DclVar Obs out . var NA LE .
+DclVar Obs _s . var NA S .
+DclVar Obs s_ . var NA S .
+DclDLVar Obs _O . _s _ls .
+
+Law axiom X_def . X (E, a, R, N) === subseteq (E, _ls) /\ a /\ ls_ == union (sdiff (_ls, R), N) . VSC std E disj lst _O, lst O_;
+std N disj lst _O, lst O_;
+std R disj lst _O, lst O_;
+std a disj std _s, std s_ .
+Law axiom A_def . A (E, a, N) === X (E, a, E, N) . VSC std E disj lst _O, lst O_;
+std N disj lst _O, lst O_;
+std a disj std _s, std s_ .
+
+Conjecture ls_union_N . subseteq (S, union (_ls, N)) === subseteq (sdiff (S, N), _ls) . none
+Conjecture A_alt . A (E, a, N) === subseteq (E, _ls) /\ a /\ ls_ == union (sdiff (_ls, E), N) . VSC std E disj lst _O, lst O_;
+std N disj lst _O, lst O_;
+std a disj std _s, std s_ .
+Conjecture X_X_comp . sqcmp (X (E1, a, R1, N1), X (E2, b, R2, N2)) === intsct (E2, sdiff (R1, N1)) == emptyset /\ X (union (E1, sdiff (E2, N1)), sqcmp (a, b), union (R1, R2), union (sdiff (N1, R2), N2)) . VSC std E1 disj lst _O, lst O_;
+std E2 disj lst _O, lst O_;
+std N1 disj lst _O, lst O_;
+std N2 disj lst _O, lst O_;
+std R1 disj lst _O, lst O_;
+std R2 disj lst _O, lst O_;
+std a disj std _s, std s_;
+std b disj std _s, std s_ .

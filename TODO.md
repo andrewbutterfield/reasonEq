@@ -11,6 +11,11 @@ It should be automatic
 
  - whenever a theory is loaded, or a conjecture is proven.
 
+ - `showClassyLaws` only shows name and direction, 
+    but really should also display the formula itself.
+    This requires having a `Theory` argument.
+    Rendering should be done in `Theories.lhs` rather than from `Classifier`.
+
 
 `SourceHandling` Working (reasonably) well:
  Logic: `EQV` .. `Closure`,

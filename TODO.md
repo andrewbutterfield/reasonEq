@@ -5,25 +5,18 @@
 
 ## URGENT or NEXT
 
-We need to keep `DynamicLstVarRole` data and not covnert it to LVMR form!!!
+### Law Classification
 
-Improve output formatting of `gen` command.
+It should be automatic
 
-Working from `EQV` up, use `gen`, then rename result so it gets `load`ed.
+ - whenever a theory is loaded, or a conjecture is proven.
 
-Working (reasonably) well:
+
+`SourceHandling` Working (reasonably) well:
  Logic: `EQV` .. `Closure`,
  Math: `Arith`,`Sets`,`Lists`
- UTP: `UBase`, `UWhile`, `Designs`, `DWhile`
+ UTP: `UBase`, `UWhile`, `Designs`, `DWhile`, `UTCP`.
 
- Next: `UTCP`
-
-
-### Load/Generate
-
-We now need `load` to compare what is loaded with what is installed.
-
-Vartables, axioms, conjectures (incl. those now proven/assume/suspect laws), also logging any new installed or missing laws/conjectures (just in case)
 
 #### Bugs found 
 

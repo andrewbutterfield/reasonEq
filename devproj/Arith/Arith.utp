@@ -18,8 +18,8 @@ Law axiom sub_r_unit . e - 0 == e . none
 Law axiom sub_zero . e - e == 0 . none
 Law axiom mul_l_unit . 1 * e == e . none
 Law axiom mul_r_unit . e * 1 == e . none
-Law axiom mul_l_unit . 0 * e == 0 . none
-Law axiom mul_r_unit . e * 0 == 0 . none
+Law axiom mul_l_zero . 0 * e == 0 . none
+Law axiom mul_r_zero . e * 0 == 0 . none
 Law axiom mul_symm . e * f == f * e . none
 Law axiom mul_assoc . e * (f * g) == e * f * g . none
 Law axiom mul_cancel . e * f == e * g === f == g . none
@@ -36,3 +36,4 @@ Law axiom mul_mod_same . imod (e * f, f) == 0 . none
 
 Conjecture mul_sub_distr . e * (f - g) == e * f - e * g . none
 Conjecture neg_zero . neg (0) == 0 . none
+Conjecture arith_simp_test . (e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e)) . none

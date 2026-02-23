@@ -155,16 +155,16 @@ proofREPLConfig
 
 This repl runs a proof.
 \begin{code}
-proofREPL reqs liveProof
- = do (reqs',liveProof) 
-       <- runREPL
-                       (clear++"Prover starting...\n"++ observeSettings 
-                       (liveSettings liveProof))
-                       proofREPLConfig
-                       (reqs,liveProof)
-      return reqs'
+proofREPL reqs liveProof = do 
+  (reqs',liveProof) 
+    <- runREPL ( clear ++ "Prover starting...\n"
+                 ++ observeSettings (liveSettings liveProof) )
+               proofREPLConfig
+               (reqs,liveProof)
+  return reqs'
 \end{code}
 
+\newpage
 \section{Proof Settings}
 
 Showing proof settings:

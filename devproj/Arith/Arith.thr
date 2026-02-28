@@ -27,6 +27,9 @@ BEGIN LIST LAWS
 (("sub_alt_def",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "f" 0,VE,WS))]]],([],fromList []))),Axiom)
 (("mul_div_same",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "idiv" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
 (("mul_mod_same",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "imod" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("mul_sub_distr",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "sub" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList []))),Assumed)
+(("neg_zero",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Assumed)
+(("arith_simp_test",ASN (C (TG (Id "Z" 0)) True (Id "sub" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [K (TG (Id "Z" 0)) (VI 1),K (TG (Id "Z" 0)) (VI 0)]]],C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [K (TG (Id "Z" 0)) (VI 0),C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)]],C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "g" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]]]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
 ("neg_def",Right2Left)
@@ -52,8 +55,5 @@ END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD
 BEGIN LIST CONJECTURES
-("mul_sub_distr",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "sub" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList [])))
-("neg_zero",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList [])))
-("arith_simp_test",ASN (C (TG (Id "Z" 0)) True (Id "sub" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [K (TG (Id "Z" 0)) (VI 1),K (TG (Id "Z" 0)) (VI 0)]]],C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [K (TG (Id "Z" 0)) (VI 0),C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)]],C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "g" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]]]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Arith

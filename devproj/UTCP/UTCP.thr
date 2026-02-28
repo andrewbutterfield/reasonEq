@@ -8,8 +8,6 @@ END LIST LAWS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
-X_def
-A_def
 END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 ("ls_union_N",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "sdiff" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]],([],fromList [])))

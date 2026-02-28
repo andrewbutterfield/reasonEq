@@ -760,7 +760,7 @@ showSimp lws (smpName,dir)
            , "     " ++ trTerm 0 tm )   
 
 showDir :: Direction -> String
-showDir Leftwards   =  "-->"
-showDir Rightwards  =  "<--"
+showDir Left2Right   =  "-->"
+showDir Right2Left  =  "<--"
 \end{code}
 

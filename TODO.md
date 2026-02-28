@@ -5,6 +5,9 @@
 
 ## URGENT or NEXT
 
+Working on proof of `X_X_comp` in `UTCP`.
+
+This exposes the need for good pretty-printing.
 
 ### Law Classification
 

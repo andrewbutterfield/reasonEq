@@ -683,7 +683,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
-      , "ClassifiedLaws:", showClassyLaws (lwkinds thry)
+      , "ClassifiedLaws:", showClassyLaws (laws thry) (lwkinds thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -703,7 +703,7 @@ showTheoryLong dm thry
       , "Conjectures:", showConjs dm (conjs thry) 
       -- WANT TO SHOW THE CLASSIFED LAWS HERE !!!!
       -- not just name them and describe their direction
-      , "ClassifiedLaws:", showClassyLaws (lwkinds thry)]
+      , "ClassifiedLaws:", showClassyLaws (laws thry) (lwkinds thry)]
     )
   where deps = thDeps thry
 
@@ -715,3 +715,52 @@ showTheoryStd = showTheoryLong (trTerm 0, trSideCond)
 showTheoryKnowns :: Theory -> String
 showTheoryKnowns thry = trVarTable (known thry)
 \end{code}
+
+\subsubsection{Classifier Display}
+
+\begin{code}
+showClassyLaws :: [Law] -> ClassifiedLaws -> String
+showClassyLaws tlaws alaws = unlines'
+  [ "  simplifiers:"  ++ showSimps tlaws (simps alaws)
+  , "  folds/unfolds:"  ++ showFolds tlaws (folds alaws) ]
+
+-- folds
+showFolds :: [Law] -> [String] -> String
+showFolds _ []         =  " none."
+showFolds lws xs = concat $ map (showFold lws) xs
+
+showFold :: [Law] -> String -> String
+showFold lws fldName  
+  = "\n    " ++ fldName ++ details
+  where 
+    details = case lawLookup lws fldName of
+                Nothing  ->  ""
+                Just ((lname,Assertion tm sc),prov)
+                  -> "    " ++ trTerm 0 tm
+
+lawLookup :: MonadFail mf => [Law] -> String -> mf Law
+lawLookup [] name = fail ("Law '"++name++"' not found")
+lawLookup (lw@((lname,_),_):lws) name
+  | name == lname  =  return lw
+  | otherwise      =  lawLookup lws name
+
+-- simplifiers
+showSimps :: [Law] -> [(String,Direction)] -> String
+showSimps _ []         =  " none."
+showSimps lws xs = concat $ map (showSimp lws) xs
+
+showSimp :: [Law] -> (String,Direction) -> String
+showSimp lws (smpName,dir)  
+  =  "\n    "  ++ before ++ smpName ++ after
+  where
+    (before,after) = case lawLookup lws smpName of
+      Nothing ->  ("","")
+      Just ((lname,Assertion tm sc),prov)
+        -> ( showDir dir++"  "
+           , "     " ++ trTerm 0 tm )   
+
+showDir :: Direction -> String
+showDir Leftwards   =  "-->"
+showDir Rightwards  =  "<--"
+\end{code}
+

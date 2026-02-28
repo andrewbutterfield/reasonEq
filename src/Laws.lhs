@@ -1,4 +1,4 @@
-\section{Laws}
+\chapter{Laws}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018--2022
 
@@ -38,7 +38,7 @@ import Debugger
 We define types for assertions and laws.
 
 \newpage
-\subsection{Logic Signature}
+\section{Logic Signature}
 
 To make the matching work effectively,
 we have to identify which constructs play key logical roles,
@@ -82,7 +82,7 @@ theImp = jId "imp"
 
 
 \newpage
-\subsection{Predicate Conditioning}
+\section{Predicate Conditioning}
 
 We also want to provide a way to ``condition'' predicates
 to facilitate matching  and proof flexibility.
@@ -130,7 +130,7 @@ collectAnte t = ([],t)
 \end{code}
 
 \newpage
-\subsection{Associative Grouping}
+\section{Associative Grouping}
 
 \begin{code}
 flattenAssoc :: MonadFail m => Identifier -> Term -> m Term
@@ -246,7 +246,7 @@ gSplit mOp i ts
 \end{code}
 
 \newpage
-\subsection{Laws}
+\section{Laws}
 
 
 Conjectures, hypotheses and laws always have names,
@@ -297,7 +297,7 @@ labelAsAssumed nasn  =  (nasn, Assumed)
 \end{code}
 
 \newpage
-\subsection{Showing Laws}
+\section{Showing Laws}
 
 \textbf{This should all be done via proper generic rendering code}
 

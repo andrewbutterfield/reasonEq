@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Classifier 
-  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws, showClassyLaws
+  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws
   , catClassyLaws
   , addClassyLaws
   , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
@@ -111,32 +111,6 @@ data ClassifiedLaws = ClassifiedLaws
   deriving (Eq,Show,Read)
 
 nullClassifiedLaws  = ClassifiedLaws { simps = [], folds = [] }
-\end{code}
-
-\subsubsection{Classifier Display}
-
-\begin{code}
-showDir :: Direction -> String
-showDir Leftwards  = "Leftwards"
-showDir Rightwards = "Rightwards"
-
-simpStr :: (String, Direction) -> String
-simpStr sim = "(" ++ fst sim ++ "," ++ showDir (snd sim) ++ ")"
-
-showSimps :: [(String, Direction)] -> Int -> String
-showSimps [] _ = ""
-showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
-showSimps (x:xs) n = "\n\t" ++ show n ++ ". " 
-                     ++ simpStr x ++ showSimps xs (n + 1)
-
-showFolds :: [String] -> Int -> String
-showFolds [] _ = ""
-showFolds (x:[]) n = "\n\t" ++ show n ++ ". " ++ x
-showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
-
-showClassyLaws alaws = unlines'
-  [ "  simplifiers:"  ++ showSimps (simps alaws) 1
-  , "  folds/unfolds:"  ++ showFolds (folds alaws) 1 ]
 \end{code}
 
 

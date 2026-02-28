@@ -5,24 +5,12 @@
 
 ## URGENT or NEXT
 
-Found that what should be be `mult_x_zero` is in fact `mult_x_unit`, clashing with the unit laws!!!!
 
 ### Law Classification
 
 It should be automatic
 
  - whenever a theory is loaded, or a conjecture is proven.
-
- - `showClassyLaws` only shows name and direction, 
-    but really should also display the formula itself.
-    This requires having a `Theory` argument.
-    Rendering should be done in `Theories.lhs` rather than from `Classifier`.
-
-
-`SourceHandling` Working (reasonably) well:
- Logic: `EQV` .. `Closure`,
- Math: `Arith`,`Sets`,`Lists`
- UTP: `UBase`, `UWhile`, `Designs`, `DWhile`, `UTCP`.
 
 
 #### Bugs found 

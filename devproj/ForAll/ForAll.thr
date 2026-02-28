@@ -10,6 +10,11 @@ BEGIN LIST LAWS
 (("forall_alpha_rename",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "y" 0,VO,WS),[],[]))])))],([VSC (GV (VR (Id "P" 0,VP,WS))) (The (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])) NA NA],fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("forall_remove",Left2Right)
+("forall_one_point",Left2Right)
+("forall_and_distr",Right2Left)
+("or_forall_scope",Right2Left)
+("forall_alpha_rename",Right2Left)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

@@ -13,6 +13,13 @@ END LIST LAWS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+design_def
+mkH1_def
+H1_def
+H2_def
+mkH3_def
+H3_def
+H4_def
 END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 ("design_sqcmp_lzero",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id "sqcmp" 0) [K (TG (Id "B" 0)) (VB True),C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],K (TG (Id "B" 0)) (VB True)],([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [])))

@@ -35,6 +35,8 @@ library
       Matching
       NotApplicable
       Persistence
+      PrettyPrint
+      PrettyTerms
       ProgramIdentity
       ProofMatch
       Proofs

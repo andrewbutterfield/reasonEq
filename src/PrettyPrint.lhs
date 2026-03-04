@@ -13,6 +13,10 @@ import Utilities
 import Data.List
 \end{code}
 
+\begin{code}
+ind i = replicate i ' '
+\end{code}
+
 Our pretty printer handles atomic pieces, which render as is,
 and composite parts, defined as a list of parts, along with descriptions
 of the left and right delimiters and a separator part.

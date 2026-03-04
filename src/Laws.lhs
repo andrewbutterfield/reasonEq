@@ -325,7 +325,7 @@ showNmdAssns dm nasns  =  numberList (showNmdAssn dm $ nameWidth nasns)  nasns
 nameWidth nasns = maximum $ map (nicelength . truelawname . fst) nasns
 
 showNmdAssn (showT,showSC) w (nm,(Assertion trm sc))
-  =    ldq ++ nmh ++ rdq ++ pad w nmh
+  =    ldq ++ nmh ++ rdq ++ pads w nmh
        ++ "  " ++ showT trm ++ "  "++showSC sc
   where nmh = truelawname nm
 

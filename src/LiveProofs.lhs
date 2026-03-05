@@ -1008,8 +1008,8 @@ showLiveProof liveProof
 \begin{code}
 -- displays whole proof in proof REPL
 -- temporary
-dispLiveProof :: LiveProof -> String
-dispLiveProof liveProof
+dispLiveProof :: Int -> LiveProof -> String
+dispLiveProof ww liveProof
  = unlines $
        shProof liveProof
        ++

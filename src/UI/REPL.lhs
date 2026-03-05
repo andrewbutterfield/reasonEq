@@ -109,8 +109,10 @@ that does not change during its lifetime:
 data REPLConfig state
   = REPLC {
       replDisplay :: Bool -> Int -> state -> String
-            -- justHelped :: Bool, true if help messages have just been printed
-            -- windowWidth :: Int, current window width if available, else 80
+            -- justHelped :: Bool, 
+            -- true if help messages have just been printed
+            -- windowWidth :: Int, 
+            -- current window width if available, else 80
     , replPrompt :: state -> String
     , replEOFReplacement :: [String]
     , replParser :: REPLParser

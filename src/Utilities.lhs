@@ -27,7 +27,7 @@ module Utilities (
 , pulledFrom, getitem, choose
 , injMap, extdBij, bijExtend
 , pspace, spacep, space2p, spaced, intcalNN
--- , pads
+, pads
 , splitBetween
 , splitLast, splitAround
 , brkspn, brkspnBy, splice

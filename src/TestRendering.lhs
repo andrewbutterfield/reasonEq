@@ -58,7 +58,7 @@ import VarData
 import Binding
 import Matching
 import TermZipper
-import PrettyTerms
+
 
 import Debugger
 \end{code}

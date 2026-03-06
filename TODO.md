@@ -5,9 +5,14 @@
 
 ## URGENT or NEXT
 
+This exposes the need for good pretty-printing.
+
+We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
+We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.
+
 Working on proof of `X_X_comp` in `UTCP`.
 
-This exposes the need for good pretty-printing.
+
 
 ### Law Classification
 

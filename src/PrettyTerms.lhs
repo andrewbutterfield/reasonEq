@@ -1,6 +1,9 @@
 \chapter{Pretty Terms}
 \begin{code}
-module PrettyTerms where
+module PrettyTerms (
+  ppTermZip
+) 
+where
 import Utilities
 import qualified Data.Map as M
 import Data.List
@@ -10,11 +13,17 @@ import Symbols
 import Debug.Trace
 import PrettyPrint
 import AST
+import TestRendering
 -- import CalcTypes
 -- import PrettyMark
 -- import StdPrecedences
 \end{code}
 
+\section{Pretty-printing a Term Zipper}
+
+\begin{code}
+ppTermZip ww tz = trTermZip tz
+\end{code}
 
 \section{Marking}\label{hb:marking}
 
@@ -66,7 +75,7 @@ noStyles = const Nothing
 plainShow :: Int -> Dict -> Term -> String
 plainShow w d pr = render w $ showp d noStyles 0 pr
 
-type Dict = ()
+type Dict = () -- placeholder
 
 pmdshow :: Int -> Dict -> MarkStyle -> MTerm -> String
 pmdshow w d msf mpr = render w $ mshowp d msf 0 mpr

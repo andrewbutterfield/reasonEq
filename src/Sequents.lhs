@@ -51,6 +51,7 @@ import Theories
 
 import Symbols
 import TestRendering
+import PrettyTerms
 
 import Debugger
 \end{code}
@@ -750,14 +751,14 @@ dispConjParts ww fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
   =  (dispHypotheses $ getHypotheses' seq')
      : [ _vdash ]
      ++ dispGoal ww tz sc
-     ++ dispContext fp tz "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
+     ++ dispContext fp tz "Hypothesis: " 
+          (trTerm 0 horig++"  "++trSideCond sc)
   where
      hthry =  nullTheory { 
                 thName   =  hn
               , laws     =  (reverse hbef ++ haft)
               , known    =  hk
               }
-
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm

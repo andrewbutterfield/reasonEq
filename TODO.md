@@ -5,6 +5,8 @@
 
 ## URGENT or NEXT
 
+### Proof of `X_X_comp` in `UTCP`.
+
 This exposes the need for good pretty-printing.
 
 We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
@@ -13,8 +15,10 @@ We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.
 In `Proofs` we have `showProofs` that displays completed proofs.
 This is activated in the top-level using the command `sh P <lawname>`.
 This should use `ppTermZip` as well.
+**this requires changes to `REPL` !!!**
+*Defer until prover PP is done*
 
-Working on proof of `X_X_comp` in `UTCP`.
+
 
 
 
@@ -27,6 +31,10 @@ It should be automatic
 
 #### Bugs found 
 
+In `X_X_comp` proof:
+
+Applying substitution `ls[O$_1/O$']` should result in `ls`, 
+but in fact stays unchanged, despite that we have `O  ≜ ⟨s,ls⟩`.
 
 ### Matching Improvement
 

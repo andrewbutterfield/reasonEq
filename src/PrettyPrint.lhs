@@ -103,7 +103,7 @@ ppc lpp rpp sepp pps
    where len = length xs
 \end{code}
 
-A useful utility for putting space around things (typically operators):
+A useful utility for putting (single) spacec around things (typically operators):
 \begin{code}
 pad :: String -> String
 pad s = ' ':s++" "

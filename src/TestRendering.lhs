@@ -16,9 +16,11 @@ module TestRendering (
  , trType, typdbg
  , trCMap, cmapdbg
  , trValue
- , trTerm, trTermU, trmdbg, trmsdbg
+ , trTerm, trTermU, trterm
+ , trmdbg, trmsdbg
  , trSub, trSubU
- , trTermZip, trTermZipU
+ , trTermZip, trTermZipU, trtz
+ , markfocus
  , trSideCond, trSideCondU, scdbg, vscdbg
  , trDiffs, trDiffsU, fdifdbg
  , trFreeVars, trFreeVarsU, fvsdbg
@@ -564,8 +566,11 @@ trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 
 We mark the focus, exit the zipper, and render as normal.
 \begin{code}
+trTermZip,trTermZipU :: (Term, [Term']) -> String
 trTermZip = trtz trId
 trTermZipU = trtz trIdU
+
+trtz :: (Identifier -> String) -> (Term, [Term']) -> String
 trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 

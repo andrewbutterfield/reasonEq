@@ -22,7 +22,8 @@ import TestRendering
 \section{Pretty-printing a Term Zipper}
 
 \begin{code}
-ppTermZip ww tz = trTermZip tz
+ppTermZip 0  tz = trTermZip tz
+ppTermZip ww tz = trTermZip tz -- for now
 \end{code}
 
 \section{Marking}\label{hb:marking}

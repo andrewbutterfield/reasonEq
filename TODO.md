@@ -10,6 +10,10 @@ This exposes the need for good pretty-printing.
 We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
 We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.
 
+In `Proofs` we have `showProofs` that displays completed proofs.
+This is activated in the top-level using the command `sh P <lawname>`.
+This should use `ppTermZip` as well.
+
 Working on proof of `X_X_comp` in `UTCP`.
 
 
@@ -35,7 +39,7 @@ However only the first match is used by `applySimp`:
 
 *Instead it should try all the returned matches.*
 
-
+tr
 ## PLAN
 
 ###

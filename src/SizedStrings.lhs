@@ -43,6 +43,7 @@ styleCyan    = Colour '6'
 styleWhite   = Colour '7' --light grey!!
 \end{code}
 
+\newpage
 Implementation details
 \begin{code}
 showStyle :: Style -> String
@@ -107,6 +108,7 @@ ssc lss rss seps sss
    where len = length xs
 \end{code}
 
+\newpage
 A useful utility for putting (single) spacec around things (typically operators):
 \begin{code}
 pad :: String -> String
@@ -149,7 +151,7 @@ paren outerp innerp pp = pp
 \end{code}
 
 
-
+\newpage
 \section{Simple Rendering}
 
 It is useful to get the string produced
@@ -207,6 +209,8 @@ data Layout = NL | Ind Int | Txt String deriving Show
 
 type SLayout = (Layout,[Style])
 \end{code}
+
+\newpage
 We obtain the final string by merging \h{Fmt} with \h{Txt} on either
 side before calling \h{unlines}
 (otherwise formatting commands introduce spurious linebreaks).
@@ -258,6 +262,7 @@ layout ss w i (SS _ (SSC lpp rpp seps sss))
  where s = max (sssize lpp) (sssize seps)
 \end{code}
 
+\newpage
 The helpers, \h{layout'} and \h{layout''}
 need to track outer (\h{w i}) and inner (\h{w' i'}) values
 of width and indentation.

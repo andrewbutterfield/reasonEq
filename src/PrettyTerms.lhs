@@ -13,7 +13,7 @@ import Symbols
 import LexBase
 import AST
 import TermZipper
-import PrettyPrint
+import SizedStrings
 import TestRendering
 
 import Debugger
@@ -36,7 +36,7 @@ pptz trid ww (t,wayup) = ppterm trid ww 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 
 Top level functions for a term,
-which basically transforms it to the \h{PP} type,
+which basically transforms it to the \h{SS} type,
 and then uses the window-width to guide the line layout.
 \begin{code}
 ppTerm, ppTermU :: Int     -- window width
@@ -54,13 +54,15 @@ ppterm trid ww p t = mklayout ww $ mkpp trid p t
 \section{Annotation (Sub-)Term Lengths}
 
 \begin{code}
-mkpp :: (Identifier -> String) -> Int -> Term -> PP
-mkpp trid p t = ppa (trterm trid p t) -- for now
+mkpp :: (Identifier -> String) -> Int -> Term -> SS
+mkpp trid p t = ssa (trterm trid p t) -- for now
+\end{code}
 
 \section{Perform Width-based Layout}
 
-mklayout :: Int -> PP -> String
-mklayout ww (PP _ (PPA s)) = s -- for now
+\begin{code}
+mklayout :: Int -> SS -> String
+mklayout ww (SS _ (SSA s)) = s -- for now
 mklayout ww pp = "mklayout NYFI"
 \end{code}
 
@@ -125,26 +127,26 @@ mklayout ww pp = "mklayout NYFI"
 
 % Pretty-printing predicates.
 % \begin{code}
-% mshowp :: Dict -> MarkStyle -> Int -> MTerm -> PP
+% mshowp :: Dict -> MarkStyle -> Int -> MTerm -> SS
 % mshowp d msf p mpr@( pr, MT ms _)
 %  = sshowp $ catMaybes $ map msf ms
 %  where
 %   sshowp []  =  mshowp0 d msf p mpr
 %   sshowp (s:ss) = pps s $ sshowp ss
 
-% mshowp0 :: Dict -> MarkStyle -> Int -> MTerm -> PP
+% mshowp0 :: Dict -> MarkStyle -> Int -> MTerm -> SS
 % mshowp0 _ _ _ _ = undefined
-% -- mshowp0 d _ _ (T, _)  = ppa _true
-% -- mshowp0 d _ _ (F, _)  = ppa _false
-% -- mshowp0 d _ _ (PVar p, _)  = ppa p
+% -- mshowp0 d _ _ (T, _)  = ssa _true
+% -- mshowp0 d _ _ (F, _)  = ssa _false
+% -- mshowp0 d _ _ (PVar p, _)  = ssa p
 % -- mshowp0 d _ p (Equal e1 e2, _)
 % --   = paren p precEq
-% --       $ ppopen' (ppa " = ")
-% --                 [ppa $ edshow d e1, ppa $ edshow d e2]
-% -- mshowp0 d _ p (Atm e, _) = ppa $ edshow d e
+% --       $ ppopen' (ssa " = ")
+% --                 [ssa $ edshow d e1, ssa $ edshow d e2]
+% -- mshowp0 d _ p (Atm e, _) = ssa $ edshow d e
 % -- mshowp0 d msf p (PSub pr sub, MT _ mts)
 % --   = pplist $ [ subCompShow msf mts d precSbs 1 pr
-% --              , ppa $ showSub d sub ]
+% --              , ssa $ showSub d sub ]
 
 % -- mshowp0 d msf p (Comp cname pargs, MT _ mts)
 % -- = case plookup cname d of
@@ -157,7 +159,7 @@ mklayout ww pp = "mklayout NYFI"
 %  = Int       -- precedence level for sub-component
 %    -> Int    -- sub-component number
 %    -> Term -- sub-component
-%    -> PP
+%    -> SS
 
 % subCompShow :: MarkStyle -> [MTree] -> Dict
 %             -> SubCompPrint
@@ -169,17 +171,17 @@ mklayout ww pp = "mklayout NYFI"
 % --   = mshowp d msf p $ buildMarks subpr
 
 % stdCshow :: Dict -> MarkStyle -> String -> [MTree] -> [Term]
-%          -> PP
+%          -> SS
 % stdCshow d msf cname mts pargs
-%  = pplist [ ppa cname
+%  = pplist [ ssa cname
 %           , ppclosed "(" ")" ","
 %             $ ppwalk 1 (subCompShow msf mts d 0) pargs ]
 
-% ppwalk :: Int -> (Int -> Term -> PP) -> [Term] -> [PP]
+% ppwalk :: Int -> (Int -> Term -> SS) -> [Term] -> [SS]
 % ppwalk _ _ []            =  []
 % ppwalk i sCS (arg:args)  =  (sCS i arg) : ppwalk (i+1) sCS args
 
-% showp :: Dict -> MarkStyle -> Int -> Term -> PP
+% showp :: Dict -> MarkStyle -> Int -> Term -> SS
 % showp d ms p pr = mshowp d ms p $ buildMarks pr
 
 % -- ppSuper d e = _supStr $ edshow d e

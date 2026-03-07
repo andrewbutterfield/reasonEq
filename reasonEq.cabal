@@ -35,7 +35,6 @@ library
       Matching
       NotApplicable
       Persistence
-      PrettyPrint
       PrettyTerms
       ProgramIdentity
       ProofMatch
@@ -50,6 +49,7 @@ library
       SAT
       Sequents
       SideCond
+      SizedStrings
       SourceHandling
       StratifiedDAG
       Substitution

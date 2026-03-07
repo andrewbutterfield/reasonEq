@@ -1,11 +1,11 @@
-\chapter{Pretty Printer}
+\chapter{Sized String Structures}
 \begin{code}
-module PrettyPrint
+module SizedStrings
  ( Style(..)
  , styleRed, styleMagenta
- , PP(..), PP'(..)
- , ppa,pad,pps,ppc
- , ppnul,ppopen',ppopen,ppsopen,pplist,ppbracket,ppclosed
+ , SS(..), SS'(..)
+ , ssa,pad,sss,ssc
+ , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren
  , renderIn,render )
 where
@@ -61,47 +61,47 @@ reset = putStrLn resetStyle -- useful in GHCi to tidy up!
 \end{code}
 
 
-\section{Pretty-Printing Types}
+\section{Sized String Types}
 
 \begin{eqnarray*}
-  pp &::=& pp_{atom} |  pp_{ldelim} ~ pp_{delim} ~ pp_{sep} ~ pp^*
+  ss &::=& ss_{atom} \mid  ss_{ldelim} ~ ss_{delim} ~ ss_{sep} ~ ss^*
 \end{eqnarray*}
 We implement these using two mutually recursive datatypes where
-the top level-one (\h{PP}) wraps the above structure with an integer that gives the
+the top level-one (\h{SS}) wraps the above structure with an integer that gives the
 rendered length of the structure, at each level.
 \begin{code}
-data PP = PP Int PP' deriving (Eq,Ord,Show)
+data SS = SS Int SS' deriving (Eq,Ord,Show)
 
-data PP' = PPA String          -- atom
-         | PPS Style PP       -- style
-         | PPC PP PP PP [PP]  -- rdelim ldelim sep pps
+data SS' = SSA String          -- atom
+         | SSS Style SS       -- style
+         | SSC SS SS SS [SS]  -- rdelim ldelim sep sss
          deriving (Eq,Ord,Show)
 
 -- useful query
-ppsize :: PP -> Int
-ppsize (PP s _) = s
+sssize :: SS -> Int
+sssize (SS s _) = s
 \end{code}
 
 
 \section{Smart Constructors}
 
-We build smart versions of the \h{PPA}, \h{PPS} and \h{PPC}
+We build smart versions of the \h{SSA}, \h{SSS} and \h{SSC}
 constructors
 that automatically accumulate the length information.
 \begin{code}
-ppa :: String -> PP
-ppa str = PP (length str) $ PPA str
+ssa :: String -> SS
+ssa str = SS (length str) $ SSA str
 
-pps :: Style -> PP -> PP
-pps style pp@(PP len _) = PP len $ PPS style pp
+sss :: Style -> SS -> SS
+sss style ss@(SS len _) = SS len $ SSS style ss
 
-ppc :: PP -> PP -> PP -> [PP] -> PP
-ppc lpp rpp sepp pps
- = PP pplen $ PPC lpp rpp sepp pps
+ssc :: SS -> SS -> SS -> [SS] -> SS
+ssc lss rss seps sss
+ = SS sslen $ SSC lss rss seps sss
  where
-  pplen = ppsize lpp + ppsize rpp + seps pps * ppsize sepp
-          + sum (map ppsize pps)
-  seps xs
+  sslen = sssize lss + sssize rss + sepsize sss * sssize seps
+          + sum (map sssize sss)
+  sepsize xs
    | len == 0  =  0
    | otherwise  =  len - 1
    where len = length xs
@@ -116,35 +116,35 @@ pad s = ' ':s++" "
 We then provide some useful builders for common idioms,
 mostly where delimiters and separators are atomic.
 \begin{code}
-ppnul :: PP -- the empty string
-ppnul = ppa ""
+ssnul :: SS -- the empty string
+ssnul = ssa ""
 
-ppopen' :: PP -> [PP] -> PP
-ppopen' = ppc ppnul ppnul
+ssopen' :: SS -> [SS] -> SS
+ssopen' = ssc ssnul ssnul
 
-ppopen :: String -> [PP] -> PP
-ppopen sepstr pps = ppopen' (ppa sepstr) pps
+ssopen :: String -> [SS] -> SS
+ssopen sepstr sss = ssopen' (ssa sepstr) sss
 
-ppsopen :: Style -> String -> [PP] -> PP
-ppsopen style sepstr ppp = ppopen' (pps style $ ppa sepstr) ppp
+sssopen :: Style -> String -> [SS] -> SS
+sssopen style sepstr ppp = ssopen' (sss style $ ssa sepstr) ppp
 
-pplist :: [PP] -> PP
-pplist = ppopen ""
+sslist :: [SS] -> SS
+sslist = ssopen ""
 
-ppbracket :: String -> PP -> String -> PP
-ppbracket lbr pp rbr = ppclosed lbr rbr "" [pp]
+ssbracket :: String -> SS -> String -> SS
+ssbracket lbr pp rbr = ssclosed lbr rbr "" [pp]
 
-ppclosed :: String -> String -> String -> [PP] -> PP
-ppclosed lstr rstr sepstr pps
-  = ppc (ppa lstr) (ppa rstr) (ppa sepstr) pps
+ssclosed :: String -> String -> String -> [SS] -> SS
+ssclosed lstr rstr sepstr sss
+  = ssc (ssa lstr) (ssa rstr) (ssa sepstr) sss
 \end{code}
 Code to add parentheses when required by a change in current precedence level.
 This assume that lower precedence values mean looser binding,
 so if the inner is looser than the outer we need to bracket it.
 \begin{code}
-paren :: Int -> Int -> PP -> PP
-paren outerp innerp (PP w (PPC _ _ sepp pps))
- | innerp < outerp  =  ppc (ppa "(") (ppa ")") sepp pps
+paren :: Int -> Int -> SS -> SS
+paren outerp innerp (SS w (SSC _ _ seps sss))
+ | innerp < outerp  =  ssc (ssa "(") (ssa ")") seps sss
 paren outerp innerp pp = pp
 \end{code}
 
@@ -153,32 +153,32 @@ paren outerp innerp pp = pp
 \section{Simple Rendering}
 
 It is useful to get the string produced
-if a \h{PP} is all rendered on one line.
+if a \h{SS} is all rendered on one line.
 \begin{code}
-ppstr :: [Style] -> PP -> String
+ppstr :: [Style] -> SS -> String
 
-ppstr _ (PP _ (PPA str)) = str
+ppstr _ (SS _ (SSA str)) = str
 
-ppstr stls (PP _ (PPS style pp))
+ppstr stls (SS _ (SSS style pp))
  = concat [ showStyle style -- set new style style
           , ppstr (style:stls) pp -- recurse with styles updated
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
 
-ppstr stls (PP _ (PPC lpp rpp sepp []))
+ppstr stls (SS _ (SSC lpp rpp seps []))
                               = ppstr stls lpp ++ ppstr stls rpp
 
-ppstr stls (PP _ (PPC lpp rpp sepp pps))
- | ppsize lpp == 0  =  pppps stls rpp sepp pps
- | otherwise        =  ppstr stls lpp ++ pppps stls rpp sepp pps
+ppstr stls (SS _ (SSC lpp rpp seps sss))
+ | sssize lpp == 0  =  pppps stls rpp seps sss
+ | otherwise        =  ppstr stls lpp ++ pppps stls rpp seps sss
  where
 
-  pppps :: [Style] -> PP -> PP -> [PP] -> String
-  pppps stls rpp sepp []        =  ppstr stls rpp
-  pppps stls rpp sepp [pp]      =  ppstr stls pp ++ ppstr stls rpp
-  pppps stls rpp sepp (pp:pps)
-    =  ppstr stls pp ++ ppstr stls sepp ++ pppps stls rpp sepp pps
+  pppps :: [Style] -> SS -> SS -> [SS] -> String
+  pppps stls rpp seps []        =  ppstr stls rpp
+  pppps stls rpp seps [pp]      =  ppstr stls pp ++ ppstr stls rpp
+  pppps stls rpp seps (pp:sss)
+    =  ppstr stls pp ++ ppstr stls seps ++ pppps stls rpp seps sss
 \end{code}
 
 
@@ -190,10 +190,10 @@ We provide the desired column width at the top level,
 along with an specified initial indentation
 or one set to zero.
 \begin{code}
-renderIn :: Int -> Int -> PP -> String
+renderIn :: Int -> Int -> SS -> String
 renderIn w0 ind = fmtShow . layout [] (w0-ind) ind
 
-render :: Int -> PP -> String
+render :: Int -> SS -> String
 render w0 = renderIn w0 0
 \end{code}
 
@@ -242,20 +242,20 @@ The main recursive layout algorithm has a width and indentation parameter
 the sum of these is always constant.
 \begin{code}
 -- w+i is constant;  w+i=w0 above
-layout :: [Style] ->Int -> Int -> PP -> [SLayout]
+layout :: [Style] ->Int -> Int -> SS -> [SLayout]
 
 -- handle style changes
-layout ss w i (PP _ (PPS s pp)) = layout (s:ss) w i pp
+layout ss w i (SS _ (SSS s pp)) = layout (s:ss) w i pp
 
 -- 1st three cases: cannot break, or can fit on line
-layout ss _ i (PP _ (PPA str))          =  [(Txt str,ss)]
-layout ss _ i pp@(PP _ (PPC _ _ _ []))  =  [(Txt $ ppstr ss pp, ss)]
-layout ss w i pp@(PP s _)  | s <= w     =  [(Txt $ ppstr ss pp, ss)]
+layout ss _ i (SS _ (SSA str))          =  [(Txt str,ss)]
+layout ss _ i pp@(SS _ (SSC _ _ _ []))  =  [(Txt $ ppstr ss pp, ss)]
+layout ss w i pp@(SS s _)  | s <= w     =  [(Txt $ ppstr ss pp, ss)]
 
 -- case when non-trivial comp and it is too wide
-layout ss w i (PP _ (PPC lpp rpp sepp pps))
- = layout' ss w i (w-s) (i+s) lpp rpp sepp pps -- pps not null
- where s = max (ppsize lpp) (ppsize sepp)
+layout ss w i (SS _ (SSC lpp rpp seps sss))
+ = layout' ss w i (w-s) (i+s) lpp rpp seps sss -- sss not null
+ where s = max (sssize lpp) (sssize seps)
 \end{code}
 
 The helpers, \h{layout'} and \h{layout''}
@@ -265,26 +265,26 @@ of width and indentation.
 -- we need to split it up
 
 -- singleton case:   lpp \n pp \n rpp
-layout' ss w i w' i' lpp rpp sepp [pp]
+layout' ss w i w' i' lpp rpp seps [pp]
  = layout ss w i lpp
    ++ (NL,ss) : (Ind i',ss) : layout ss w' i' pp
    ++ (NL,ss) : (Ind i, ss) : layout ss w i rpp
 
 -- general case
-layout' ss w i w' i' lpp@(PP lw _) rpp sepp (pp:pps)
+layout' ss w i w' i' lpp@(SS lw _) rpp seps (pp:sss)
  = (Txt $ ppstr ss lpp, ss) : (Ind (i'-(i+lw)),ss) -- header line
                         : (layout ss w' i' pp)
    ++
-   (NL,ss) : layout'' ss w i w' i' rpp sepp pps -- pps not null
+   (NL,ss) : layout'' ss w i w' i' rpp seps sss -- sss not null
 
-layout'' ss w i w' i' rpp@(PP rw _) sepp@(PP sw _) [pp]
- = (Ind i,ss) : (Txt $ ppstr ss sepp, ss)
+layout'' ss w i w' i' rpp@(SS rw _) seps@(SS sw _) [pp]
+ = (Ind i,ss) : (Txt $ ppstr ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
    ++ [(Txt $ ppstr ss rpp,ss)]
 
-layout'' ss w i w' i' rpp sepp@(PP sw _) (pp:pps)
- = (Ind i,ss) : (Txt $ ppstr ss sepp, ss)
+layout'' ss w i w' i' rpp seps@(SS sw _) (pp:sss)
+ = (Ind i,ss) : (Txt $ ppstr ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
    ++
-   (NL,ss) : layout'' ss w i w' i' rpp sepp pps -- pps not null
+   (NL,ss) : layout'' ss w i w' i' rpp seps sss -- sss not null
 \end{code}

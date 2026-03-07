@@ -765,7 +765,8 @@ showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
 -- dispGoal will soon invoke functions in PrettyTerms to render this.
 dispGoal ww tz sc
-  = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
+--   = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
+  = [ ppTermZip ww tz++"\n "++blue (trSideCond sc) ]
 
 dispType :: TermZip -> [ String ]
 dispType (trm,_) = [ " :: " ++ trType (termtype trm) ]

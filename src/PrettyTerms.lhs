@@ -48,14 +48,27 @@ ppTermU = ppterm trIdU
 
 ppterm :: (Identifier -> String) -- renders identifiers as strings
        -> Int -> Int -> Term -> String
-ppterm trid ww p t = mklayout ww $ mkpp trid p t 
+ppterm trid ww p t = mklayout ww $ mkss trid p t 
 \end{code}
 
-\section{Annotation (Sub-)Term Lengths}
+\section{Render as Sized Strings}
 
 \begin{code}
-mkpp :: (Identifier -> String) -> Int -> Term -> SS
-mkpp trid p t = ssa (trterm trid p t) -- for now
+mkss :: (Identifier -> String) -> Int -> Term -> SS
+\end{code}
+
+\begin{code}
+mkss trid p (Cons typ sb n ts)          = ssa "C typ sb n ts"
+mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
+mkss trid p (Lam  typ n vl tm)          = ssa "L typ n vl tm"
+mkss trid p (Cls      n    tm)          = ssa "X n tm"
+mkss trid p (Sub  typ      tm s)        = ssa "S typ tm s"
+mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
+\end{code}
+
+Remaining term cases are atomic, so become \h{SSA}:
+\begin{code}
+mkss trid p t = ssa (trterm trid p t) -- 
 \end{code}
 
 \section{Perform Width-based Layout}
@@ -63,7 +76,7 @@ mkpp trid p t = ssa (trterm trid p t) -- for now
 \begin{code}
 mklayout :: Int -> SS -> String
 mklayout ww (SS _ (SSA s)) = s -- for now
-mklayout ww pp = "mklayout NYFI"
+mklayout ww ss = ss2str [] ss
 \end{code}
 
 % \section{Marking}\label{hb:marking}

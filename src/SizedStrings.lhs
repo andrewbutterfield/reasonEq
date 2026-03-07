@@ -7,6 +7,7 @@ module SizedStrings
  , ssa,pad,sss,ssc
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren
+ , ss2str
  , renderIn,render )
 where
 import Utilities
@@ -134,7 +135,7 @@ sslist :: [SS] -> SS
 sslist = ssopen ""
 
 ssbracket :: String -> SS -> String -> SS
-ssbracket lbr pp rbr = ssclosed lbr rbr "" [pp]
+ssbracket lbr ss rbr = ssclosed lbr rbr "" [ss]
 
 ssclosed :: String -> String -> String -> [SS] -> SS
 ssclosed lstr rstr sepstr sss
@@ -147,7 +148,7 @@ so if the inner is looser than the outer we need to bracket it.
 paren :: Int -> Int -> SS -> SS
 paren outerp innerp (SS w (SSC _ _ seps sss))
  | innerp < outerp  =  ssc (ssa "(") (ssa ")") seps sss
-paren outerp innerp pp = pp
+paren outerp innerp ss = ss
 \end{code}
 
 
@@ -157,30 +158,30 @@ paren outerp innerp pp = pp
 It is useful to get the string produced
 if a \h{SS} is all rendered on one line.
 \begin{code}
-ppstr :: [Style] -> SS -> String
+ss2str :: [Style] -> SS -> String
 
-ppstr _ (SS _ (SSA str)) = str
+ss2str _ (SS _ (SSA str)) = str
 
-ppstr stls (SS _ (SSS style pp))
+ss2str stls (SS _ (SSS style ss))
  = concat [ showStyle style -- set new style style
-          , ppstr (style:stls) pp -- recurse with styles updated
+          , ss2str (style:stls) ss -- recurse with styles updated
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
 
-ppstr stls (SS _ (SSC lpp rpp seps []))
-                              = ppstr stls lpp ++ ppstr stls rpp
+ss2str stls (SS _ (SSC lss rss seps []))
+                              = ss2str stls lss ++ ss2str stls rss
 
-ppstr stls (SS _ (SSC lpp rpp seps sss))
- | sssize lpp == 0  =  pppps stls rpp seps sss
- | otherwise        =  ppstr stls lpp ++ pppps stls rpp seps sss
+ss2str stls (SS _ (SSC lss rss seps sss))
+ | sssize lss == 0  =  pppps stls rss seps sss
+ | otherwise        =  ss2str stls lss ++ pppps stls rss seps sss
  where
 
   pppps :: [Style] -> SS -> SS -> [SS] -> String
-  pppps stls rpp seps []        =  ppstr stls rpp
-  pppps stls rpp seps [pp]      =  ppstr stls pp ++ ppstr stls rpp
-  pppps stls rpp seps (pp:sss)
-    =  ppstr stls pp ++ ppstr stls seps ++ pppps stls rpp seps sss
+  pppps stls rss seps []        =  ss2str stls rss
+  pppps stls rss seps [ss]      =  ss2str stls ss ++ ss2str stls rss
+  pppps stls rss seps (ss:sss)
+    =  ss2str stls ss ++ ss2str stls seps ++ pppps stls rss seps sss
 \end{code}
 
 
@@ -249,17 +250,17 @@ the sum of these is always constant.
 layout :: [Style] ->Int -> Int -> SS -> [SLayout]
 
 -- handle style changes
-layout ss w i (SS _ (SSS s pp)) = layout (s:ss) w i pp
+layout ss w i (SS _ (SSS s ss')) = layout (s:ss) w i ss'
 
 -- 1st three cases: cannot break, or can fit on line
 layout ss _ i (SS _ (SSA str))          =  [(Txt str,ss)]
-layout ss _ i pp@(SS _ (SSC _ _ _ []))  =  [(Txt $ ppstr ss pp, ss)]
-layout ss w i pp@(SS s _)  | s <= w     =  [(Txt $ ppstr ss pp, ss)]
+layout ss _ i ss'@(SS _ (SSC _ _ _ []))  =  [(Txt $ ss2str ss ss', ss)]
+layout ss w i ss'@(SS s _)  | s <= w     =  [(Txt $ ss2str ss ss', ss)]
 
 -- case when non-trivial comp and it is too wide
-layout ss w i (SS _ (SSC lpp rpp seps sss))
- = layout' ss w i (w-s) (i+s) lpp rpp seps sss -- sss not null
- where s = max (sssize lpp) (sssize seps)
+layout ss w i (SS _ (SSC lss rss seps sss))
+ = layout' ss w i (w-s) (i+s) lss rss seps sss -- sss not null
+ where s = max (sssize lss) (sssize seps)
 \end{code}
 
 \newpage
@@ -269,27 +270,27 @@ of width and indentation.
 \begin{code}
 -- we need to split it up
 
--- singleton case:   lpp \n pp \n rpp
-layout' ss w i w' i' lpp rpp seps [pp]
- = layout ss w i lpp
+-- singleton case:   lss \n pp \n rss
+layout' ss w i w' i' lss rss seps [pp]
+ = layout ss w i lss
    ++ (NL,ss) : (Ind i',ss) : layout ss w' i' pp
-   ++ (NL,ss) : (Ind i, ss) : layout ss w i rpp
+   ++ (NL,ss) : (Ind i, ss) : layout ss w i rss
 
 -- general case
-layout' ss w i w' i' lpp@(SS lw _) rpp seps (pp:sss)
- = (Txt $ ppstr ss lpp, ss) : (Ind (i'-(i+lw)),ss) -- header line
+layout' ss w i w' i' lss@(SS lw _) rss seps (pp:sss)
+ = (Txt $ ss2str ss lss, ss) : (Ind (i'-(i+lw)),ss) -- header line
                         : (layout ss w' i' pp)
    ++
-   (NL,ss) : layout'' ss w i w' i' rpp seps sss -- sss not null
+   (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
 
-layout'' ss w i w' i' rpp@(SS rw _) seps@(SS sw _) [pp]
- = (Ind i,ss) : (Txt $ ppstr ss seps, ss)
+layout'' ss w i w' i' rss@(SS rw _) seps@(SS sw _) [pp]
+ = (Ind i,ss) : (Txt $ ss2str ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
-   ++ [(Txt $ ppstr ss rpp,ss)]
+   ++ [(Txt $ ss2str ss rss,ss)]
 
-layout'' ss w i w' i' rpp seps@(SS sw _) (pp:sss)
- = (Ind i,ss) : (Txt $ ppstr ss seps, ss)
+layout'' ss w i w' i' rss seps@(SS sw _) (pp:sss)
+ = (Ind i,ss) : (Txt $ ss2str ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
    ++
-   (NL,ss) : layout'' ss w i w' i' rpp seps sss -- sss not null
+   (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
 \end{code}

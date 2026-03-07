@@ -19,9 +19,10 @@ import TestRendering
 import Debugger
 \end{code}
 
+\newpage
 \section{Pretty-printing a Term Zipper}
 
-
+Top level function definitions for the zipper:
 \begin{code}
 ppTermZip, ppTermZipU :: Int      -- window width
                       -> TermZip  -- term zipper
@@ -34,7 +35,9 @@ pptz trid 0  (t,wayup) = trterm trid    0 $ exitTZ (markfocus t,wayup)
 pptz trid ww (t,wayup) = ppterm trid ww 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 
-
+Top level functions for a term,
+which basically transforms it to the \h{PP} type,
+and then uses the window-width to guide the line layout.
 \begin{code}
 ppTerm, ppTermU :: Int     -- window width
                 -> Int     -- top precendence level
@@ -46,9 +49,15 @@ ppTermU = ppterm trIdU
 ppterm :: (Identifier -> String) -- renders identifiers as strings
        -> Int -> Int -> Term -> String
 ppterm trid ww p t = mklayout ww $ mkpp trid p t 
+\end{code}
 
+\section{Annotation (Sub-)Term Lengths}
+
+\begin{code}
 mkpp :: (Identifier -> String) -> Int -> Term -> PP
 mkpp trid p t = ppa (trterm trid p t) -- for now
+
+\section{Perform Width-based Layout}
 
 mklayout :: Int -> PP -> String
 mklayout ww (PP _ (PPA s)) = s -- for now
@@ -72,7 +81,7 @@ mklayout ww pp = "mklayout NYFI"
 % \end{code}
 
 % Marked predicates are marks paired with a predicate,
-% denoted by the \texttt{MTerm} datatype:
+% denoted by the \h{MTerm} datatype:
 % \begin{code}
 % type MTerm = ( Term, MTree )
 % \end{code}

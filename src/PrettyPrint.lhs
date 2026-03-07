@@ -67,7 +67,7 @@ reset = putStrLn resetStyle -- useful in GHCi to tidy up!
   pp &::=& pp_{atom} |  pp_{ldelim} ~ pp_{delim} ~ pp_{sep} ~ pp^*
 \end{eqnarray*}
 We implement these using two mutually recursive datatypes where
-the top level-one (\texttt{PP}) wraps the above structure with an integer that gives the
+the top level-one (\h{PP}) wraps the above structure with an integer that gives the
 rendered length of the structure, at each level.
 \begin{code}
 data PP = PP Int PP' deriving (Eq,Ord,Show)
@@ -76,12 +76,16 @@ data PP' = PPA String          -- atom
          | PPS Style PP       -- style
          | PPC PP PP PP [PP]  -- rdelim ldelim sep pps
          deriving (Eq,Ord,Show)
+
+-- useful query
+ppsize :: PP -> Int
+ppsize (PP s _) = s
 \end{code}
 
 
 \section{Smart Constructors}
 
-We build smart versions of the \texttt{PPA}, \texttt{PPS} and \texttt{PPC}
+We build smart versions of the \h{PPA}, \h{PPS} and \h{PPC}
 constructors
 that automatically accumulate the length information.
 \begin{code}
@@ -93,10 +97,10 @@ pps style pp@(PP len _) = PP len $ PPS style pp
 
 ppc :: PP -> PP -> PP -> [PP] -> PP
 ppc lpp rpp sepp pps
- = PP len $ PPC lpp rpp sepp pps
+ = PP pplen $ PPC lpp rpp sepp pps
  where
-  len = ppsize lpp + ppsize rpp + seps pps * ppsize sepp
-         + sum (map ppsize pps)
+  pplen = ppsize lpp + ppsize rpp + seps pps * ppsize sepp
+          + sum (map ppsize pps)
   seps xs
    | len == 0  =  0
    | otherwise  =  len - 1
@@ -148,12 +152,9 @@ paren outerp innerp pp = pp
 
 \section{Simple Rendering}
 
-It is useful to get the size of a \texttt{PP}, as well as the string produced
-if it is all rendered on one line.
+It is useful to get the string produced
+if a \h{PP} is all rendered on one line.
 \begin{code}
-ppsize :: PP -> Int
-ppsize (PP s _) = s
-
 ppstr :: [Style] -> PP -> String
 
 ppstr _ (PP _ (PPA str)) = str
@@ -206,8 +207,8 @@ data Layout = NL | Ind Int | Txt String deriving Show
 
 type SLayout = (Layout,[Style])
 \end{code}
-We obtain the final string by merging \texttt{Fmt} with \texttt{Txt} on either
-side before calling \texttt{unlines}
+We obtain the final string by merging \h{Fmt} with \h{Txt} on either
+side before calling \h{unlines}
 (otherwise formatting commands introduce spurious linebreaks).
 \begin{code}
 lstr NL         =  "\n"
@@ -257,8 +258,8 @@ layout ss w i (PP _ (PPC lpp rpp sepp pps))
  where s = max (ppsize lpp) (ppsize sepp)
 \end{code}
 
-The helpers, \texttt{layout'} and \texttt{layout''}
-need to track outer (\texttt{w i}) and inner (\texttt{w' i'}) values
+The helpers, \h{layout'} and \h{layout''}
+need to track outer (\h{w i}) and inner (\h{w' i'}) values
 of width and indentation.
 \begin{code}
 -- we need to split it up

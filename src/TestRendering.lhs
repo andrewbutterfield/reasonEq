@@ -71,8 +71,8 @@ We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
 
 We support two ways of viewing identifiers,
-one (\texttt{trXXX}) that hides the ``unique number'' component,
-and another (\texttt{trXXXU}) that displays it.
+one (\h{trXXX}) that hides the ``unique number'' component,
+and another (\h{trXXXU}) that displays it.
 
 NEW: lets provide debug support here too!
 
@@ -356,7 +356,7 @@ trterm trid _ (Iter tk _ na _ ni lvs)
 
 \subsubsection{Rendering Constructions}
 
-A \texttt{Cons}-node with one subterm
+A \h{Cons}-node with one subterm
 may need special handling
 a marked focus term needs highlighting:
 \begin{code}

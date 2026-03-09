@@ -66,6 +66,7 @@ We start with some pre-defined \h{SS} values:
 ss_lpar = ssa "(" ; ss_rpar = ssa ")"
 \end{code}
 
+$$ \lnot t \quad \lnot (t) \qquad  (-t) \quad -t $$
 \begin{code}
 mkss trid p (Cons typ sb i@(Identifier nm _) [t])
   | i == focusMark  =  sss styleMagenta $ mkss trid p t

@@ -142,7 +142,7 @@ ssclosed lstr rstr sepstr sss
   = ssc (ssa lstr) (ssa rstr) (ssa sepstr) sss
 \end{code}
 Code to add parentheses when required by a change in current precedence level.
-This assume that lower precedence values mean looser binding,
+This assumes that lower precedence values mean a looser binding,
 so if the inner is looser than the outer we need to bracket it.
 \begin{code}
 paren :: Int -> Int -> SS -> SS

@@ -57,8 +57,34 @@ ppterm trid ww p t = mklayout ww $ mkss trid p t
 mkss :: (Identifier -> String) -> Int -> Term -> SS
 \end{code}
 
+\subsection*{Constructor Terms}
+
+Here we effectively re-implement the definition of \h{TestRendering.trterm}.
+
+We start with some pre-defined \h{SS} values:
 \begin{code}
--- mkss trid p (Cons typ sb n ts)          = ssa "C typ sb n ts"
+ss_lpar = ssa "(" ; ss_rpar = ssa ")"
+\end{code}
+
+\begin{code}
+mkss trid p (Cons typ sb i@(Identifier nm _) [t])
+  | i == focusMark  =  sss styleMagenta $ mkss trid p t
+  | nm == "not"     =  mkss_not nm t
+  | nm == "neg"     =  mkss_neg nm t
+  where
+    ss_nm    =  ssa nm
+    ss_0_t   =  mkss trid 0  t
+    ss_99_t  =  mkss trid 99 t
+    mkss_not nm t
+      | isAtomic t  =  sslist [ss_nm,ss_99_t]
+      | otherwise   =  sslist [ss_nm,ss_lpar,ss_0_t,ss_rpar]
+    mkss_neg nm t
+      | isAtomic t  =  sslist [ss_lpar,ss_nm,ss_0_t,ss_rpar]      
+      | otherwise   =  sslist [ss_nm,ss_99_t]
+\end{code}
+
+\subsection{Not Yet Done}
+\begin{code}
 -- mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
 -- mkss trid p (Lam  typ n vl tm)          = ssa "L typ n vl tm"
 -- mkss trid p (Cls      n    tm)          = ssa "X n tm"
@@ -66,6 +92,7 @@ mkss :: (Identifier -> String) -> Int -> Term -> SS
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
 \end{code}
 
+\subsection*{Basic Terms}
 Remaining term cases are atomic, so become \h{SSA}:
 \begin{code}
 mkss trid p t = ssa (trterm trid p t) 

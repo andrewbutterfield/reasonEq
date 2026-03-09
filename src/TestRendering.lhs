@@ -20,7 +20,7 @@ module TestRendering (
  , trmdbg, trmsdbg
  , trSub, trSubU
  , trTermZip, trTermZipU, trtz
- , markfocus
+ , markfocus, focusMark
  , trSideCond, trSideCondU, scdbg, vscdbg
  , trDiffs, trDiffsU, fdifdbg
  , trFreeVars, trFreeVarsU, fvsdbg

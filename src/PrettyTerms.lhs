@@ -63,12 +63,14 @@ Here we effectively re-implement the definition of \h{TestRendering.trterm}.
 
 We start with some pre-defined \h{SS} values:
 \begin{code}
-ss_lpar = ssa "(" ; ss_rpar = ssa ")"
+ss_lpar   =  ssa "("  
+ss_rpar   =  ssa ")"
+ss_comma  =  ssa ","
 \end{code}
 
 $$ \lnot t \quad \lnot (t) \qquad  (-t) \quad -t $$
 \begin{code}
-mkss trid p (Cons typ sb i@(Identifier nm _) [t])
+mkss trid p (Cons _ _ i@(Identifier nm _) [t])
   | i == focusMark  =  sss styleMagenta $ mkss trid p t
   | nm == "not"     =  mkss_not nm t
   | nm == "neg"     =  mkss_neg nm t
@@ -84,6 +86,45 @@ mkss trid p (Cons typ sb i@(Identifier nm _) [t])
       | otherwise   =  sslist [ss_nm,ss_99_t]
 \end{code}
 
+\newpage
+
+$$ p \cond b q $$
+\begin{code}
+mkss trid ctxtp (Cons _ _ opn@(Identifier nm _) [p,b,q])
+ | nm == "cond"  
+    =  ssBracketIf 
+         (opp <= ctxtp)
+         (sslist [ ss_opp_p, lif, ss_0_b, rif, ss_opp_q ] )
+ where
+   ss_opp_p =  mkss trid opp p
+   ss_0_b   =  mkss trid 0   b
+   ss_opp_q =  mkss trid opp q
+   lif = ssa "lif" ; rif = ssa "rif"
+   (opp,_) = opkind nm
+\end{code}
+
+$$ p \circledast q $$
+\begin{code}
+mkss trid ctxtp (Cons _ _ (Identifier opn _) [t1,t2])
+ | isOp  =  ssBracketIf 
+              (opp <= ctxtp)
+              (sslist [ ss_opp_t1, ss_opn, ss_opp_t2 ] )
+ where
+   ss_opp_t1 = mkss trid opp t1
+   ss_opn    = ssa opn
+   ss_opp_t2 = mkss trid opp t2
+   prcs@(opp,fixity) = opkind opn
+   isOp = fixity /= NotInfix
+\end{code}
+
+Any other constructor is rendered as a standard function call:
+$$ f(t_1,\dots,t_n)$$
+\begin{code}
+mkss trid _ (Cons _ _ (Identifier f _) ts)
+  =  sslist [ ssa f
+            , ssc ss_lpar ss_comma ss_rpar (map (mkss trid 0) ts) ]
+\end{code}
+
 \subsection{Not Yet Done}
 \begin{code}
 -- mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
@@ -97,6 +138,13 @@ mkss trid p (Cons typ sb i@(Identifier nm _) [t])
 Remaining term cases are atomic, so become \h{SSA}:
 \begin{code}
 mkss trid p t = ssa (trterm trid p t) 
+\end{code}
+
+\subsection*{Support Functions}
+
+\begin{code}
+ssBracketIf True  ss  =  sslist [ss_lpar,ss,ss_rpar]
+ssBracketIf False ss  =  ss
 \end{code}
 
 \section{Perform Width-based Layout}

@@ -397,7 +397,7 @@ as their context precedence.
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
  | isOp  =  trBracketIf (opp <= ctxtp)
               ( trterm trid opp t1
-                ++ " " ++ trId opn ++ " "
+                ++ " " ++ trid opn ++ " "
                 ++ trterm trid opp t2 )
  where
    prcs@(opp,fixity) = opkind nm
@@ -424,7 +424,7 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
        (Cons _ _ opn' ts') | opn == opn'  
           ->  trterm trid ctxtp $ Cons tk sub opn (tsI++ts')
        _  ->  trBracketIf (opp <= ctxtp)
-                  $ intercalate (trId opn) 
+                  $ intercalate (trid opn) 
                   $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity)  =  opkind nm
@@ -442,7 +442,7 @@ as their context precedence.
 \begin{code}
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trId opn) 
+                        $ intercalate (trid opn) 
                         $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity) = opkind nm

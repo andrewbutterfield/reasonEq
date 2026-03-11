@@ -368,7 +368,7 @@ trterm trid ctxtp (Cons tk _ s [t])
  where  
   trnot s t
     | isAtomic t  =  trid s ++ trterm trid 99 t    
-    | otherwise   =  (trid s)++"("++trterm trid 0 t++")"
+    | otherwise   =  trid s++"("++trterm trid 0 t++")"
   trunary s t
     | isAtomic t  =  '(':(trid s)++trterm trid 0 t++")"
     | otherwise   =  trid s ++ trterm trid 99 t
@@ -435,8 +435,6 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
      =  let (xs',y) = splitAtEnd xs
         in (x:xs',y)
 \end{code}
-
-
 
 Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence

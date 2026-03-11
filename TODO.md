@@ -5,6 +5,15 @@
 
 ## URGENT or NEXT
 
+When we use `trterm` we get:  
+`(e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e))`
+
+When we use `mkss` we get:
+`(e+0)*(f*(1-0))+-((0+e*1)*(g+(e-e)))`
+
+Why is space missing?  Why has `x-y` become `x+-y` ?
+
+
 ### Proof of `X_X_comp` in `UTCP`.
 
 This exposes the need for good pretty-printing.

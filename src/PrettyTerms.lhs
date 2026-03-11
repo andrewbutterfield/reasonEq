@@ -131,7 +131,7 @@ mkss trid ctxtp (Cons _ _ opi@(Identifier opn _) [t1,t2])
               (sslist [ ss_opp_t1, ss_opn, ss_opp_t2 ] )
  where
    ss_opp_t1 = mkss trid opp t1
-   ss_opn    = ssa $ trid opi
+   ss_opn    = ssa $ pad $ trid opi
    ss_opp_t2 = mkss trid opp t2
    prcs@(opp,fixity) = opkind opn
    isOp = fixity /= NotInfix

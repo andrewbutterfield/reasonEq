@@ -65,8 +65,9 @@ ss_lngl   =  ssa _langle ;  ss_rngl  =  ssa _rangle
 \begin{code}
 mkss :: (Identifier -> String) -> Int -> Term -> SS
 \end{code}
+Here we effectively re-implement the definition of \h{TestRendering.trterm}.
 
-\subsection*{Atomic Terms}
+\subsection{Atomic Terms}
 
 \begin{code}
 mkss trid p (Val tk k)  =  ssa $ trValue k
@@ -75,16 +76,20 @@ mkss trid p (VTyp t v)  =  ssa ( "("++trVar v++":"++trType t++")" )
 \end{code}
 
 
-\subsection*{Constructor Terms}
+\subsection{Constructor Terms}
 
+We have a lot of partial special cases, 
+depending on the constructor name, and the number of sub-terms.
+By partial we mean that we match against specific names and numbers,
+but fall through if those matches fail, to try other cases.
 
-
-Here we effectively re-implement the definition of \h{TestRendering.trterm}.
+\subsubsection{Single Sub-Term}
 
 A \h{Cons}-node with one subterm
-may need special handling,
-and a marked focus term needs highlighting.
-$$ \lnot t \quad \lnot (t) \qquad  (-t) \quad -t $$
+may need special handling.
+A marked focus term needs highlighting, 
+while logic and arithmetic negation require specific handling.
+$$ {\h{$t$}} \qquad \lnot t \quad \lnot (t) \qquad  (-t) \quad -t $$
 \begin{code}
 mkss trid p (Cons _ _ i@(Identifier nm _) [t])
   | i == focusMark  =  sss styleMagenta $ mkss trid p t
@@ -102,9 +107,9 @@ mkss trid p (Cons _ _ i@(Identifier nm _) [t])
       | otherwise   =  sslist [ss_nm,ss_99_t]
 \end{code}
 
-\newpage
+\subsubsection{Infix-like Ternary Operators}
 
-Rendering an ``infix-like'' ternary operator.
+E.g, the UTP if-then-else:
 $$ p \cond b q $$
 \begin{code}
 mkss trid ctxtp (Cons _ _ opn@(Identifier nm _) [p,b,q])
@@ -120,33 +125,41 @@ mkss trid ctxtp (Cons _ _ opn@(Identifier nm _) [p,b,q])
    (opp,_) = opkind nm
 \end{code}
 
-Rendering an infix operator with exactly two arguments.
-We ensure that sub-terms are rendered with the infix operator precedence
-as their context precedence.
-$$ p \circledast q $$
-\begin{code}
-mkss trid ctxtp (Cons _ _ opi@(Identifier opn _) [t1,t2])
- | isOp  =  ssBracketIf 
-              (opp <= ctxtp)
-              (sslist [ ss_opp_t1, ss_opn, ss_opp_t2 ] )
- where
-   ss_opp_t1 = mkss trid opp t1
-   ss_opn    = ssa $ pad $ trid opi
-   ss_opp_t2 = mkss trid opp t2
-   prcs@(opp,fixity) = opkind opn
-   isOp = fixity /= NotInfix
-\end{code}
+% \subsubsection{Infix Binary Operators}
+
+% $$ p \circledast q    \qquad\textit{v.s.} \qquad (p \circledast q) $$
+
+% We ensure that sub-terms are rendered with the infix operator precedence
+% as their context precedence.
+% \begin{code}
+% mkss trid ctxtp (Cons _ _ opi@(Identifier opn _) [t1,t2])
+%  | isOp  =  ssBracketIf 
+%               (opp <= ctxtp)
+%               (sslist [ ss_opp_t1, ss_opn, ss_opp_t2 ] )
+%  where
+%    ss_opp_t1 = mkss trid opp t1
+%    ss_opn    = ssa $ pad $ trid opi
+%    ss_opp_t2 = mkss trid opp t2
+%    prcs@(opp,fixity) = opkind opn
+%    isOp = fixity /= NotInfix
+% \end{code}
+
+\subsubsection{Left-Associated Binary Operators}
 
 Rendering a left-infix operator when the first sub-term uses the same operator
 $$op(\seqof{op(es)}\cat fs) = op(es\cat fs)$$
 \begin{code}
 mkss trid ctxtp (Cons tk sub opn@(Identifier nm _) 
-                  (Cons _ _ opn' ts':ts))
- | isLFix && opn == opn'  =  mkss trid ctxtp $ Cons tk sub opn (ts'++ts)
- where
-   prcs@(opp,fixity) = opkind nm
-   isLFix = fixity == LAssoc
+                (Cons _ _ opn' ts':ts))
+  | isLFix && opn == opn'  =  mkss trid ctxtp $ Cons tk sub opn (ts'++ts)
+  where
+    prcs@(opp,fixity) = opkind nm
+    isLFix = fixity == LAssoc
 \end{code}
+
+\newpage
+
+\subsubsection{Right-Associated Binary Operators}
 
 Rendering a right-infix operator when the last sub-term uses the same operator
 $$op(es \cat \seqof{op(fs)}) = op(es\cat fs)$$
@@ -157,7 +170,7 @@ mkss trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
        (Cons _ _ opn' ts') | opn == opn'  
           ->  mkss trid ctxtp $ Cons tk sub opn (tsI++ts')
        _  ->  ssBracketIf (opp <= ctxtp)
-                  $ ssopen (trid opn)
+                  $ ssopen (pad $ trid opn)
                   $ map (mkss trid opp) ts
  where
    prcs@(opp,fixity)  =  opkind nm
@@ -169,18 +182,25 @@ mkss trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
         in (x:xs',y)
 \end{code}
 
-Rendering an infix operator with two or more arguments.
+\subsubsection{Infix with two or more arguments}
+
+$$ p \circledast q \circledast \dots \circledast r
+   \qquad\textit{v.s.} \qquad 
+   (p \circledast q \circledast \dots \circledast r)
+$$
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
 mkss trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  ssBracketIf (opp <= ctxtp)
-                        $ ssopen (trid opn) 
+                        $ ssopen (pad $ trid opn) 
                         $ map (mkss trid opp) ts
  where
    prcs@(opp,fixity) = opkind nm
    isOp = fixity /= NotInfix
 \end{code}
+
+\subsubsection{Containing Constructs}
 
 We have some containers such as sets, lists and UTCP roots:
 \begin{code}
@@ -194,6 +214,8 @@ mkss trid _ (Cons tk _ n ts)
     trRoot (Val _ (Boolean b))  =  if b then ssa "!" else ssnul
     trRoot _                    =  ssnul
 \end{code}
+
+\subsubsection{Tailored Function Application}
 
 We sometimes tailor standard functional application a little bit,
 i.e., $X$ and $A$ in the UTCP theory.
@@ -212,7 +234,7 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
   where mkssts = map (mkss trid 0) ts
 \end{code}
 
-\subsection{Not Yet Done}
+\subsection*{Not Yet Done}
 \begin{code}
 -- mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
 -- mkss trid p (Lam  typ n vl tm)          = ssa "L typ n vl tm"
@@ -221,13 +243,13 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
 \end{code}
 
-\subsection*{Basic Terms}
+\subsection{Basic Terms}
 Remaining term cases are atomic, so become \h{SSA}:
 \begin{code}
 mkss trid p t = ssa (trterm trid p t) 
 \end{code}
 
-\subsection*{Support Functions}
+\subsection{Support Functions}
 
 \begin{code}
 ssBracketIf True  ss  =  sslist [ss_lpar,ss,ss_rpar]

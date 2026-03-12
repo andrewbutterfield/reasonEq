@@ -390,20 +390,6 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
    isMix3 = fixity == MixFix
 \end{code}
 
-Rendering an infix operator with exactly two arguments.
-We ensure that sub-terms are rendered with the infix operator precedence
-as their context precedence.
-\begin{code}
-trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
- | isOp  =  trBracketIf (opp <= ctxtp)
-              ( trterm trid opp t1
-                ++ " " ++ trid opn ++ " "
-                ++ trterm trid opp t2 )
- where
-   prcs@(opp,fixity) = opkind nm
-   isOp = fixity /= NotInfix
-\end{code}
-
 Rendering a left-infix operator when the first sub-term uses the same operator
 $$op(\seqof{op(es)}\cat fs) = op(es\cat fs)$$
 \begin{code}
@@ -424,7 +410,7 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
        (Cons _ _ opn' ts') | opn == opn'  
           ->  trterm trid ctxtp $ Cons tk sub opn (tsI++ts')
        _  ->  trBracketIf (opp <= ctxtp)
-                  $ intercalate (trid opn) 
+                  $ intercalate (" " ++ trid opn ++ " ") 
                   $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity)  =  opkind nm
@@ -436,13 +422,33 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
         in (x:xs',y)
 \end{code}
 
+% Rendering an infix operator with exactly two arguments.
+% $$ p \circledast q $$
+% We ensure that sub-terms are rendered with the infix operator precedence
+% as their context precedence.
+% \begin{code}
+% trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
+%  | isOp  =  trBracketIf (opp <= ctxtp)
+%               ( trterm trid opp t1
+%                 ++ " " ++ trid opn ++ " "
+%                 ++ trterm trid opp t2 )
+%  where
+%    prcs@(opp,fixity) = opkind nm
+%    isOp = fixity /= NotInfix
+% \end{code}
+
+
 Rendering an infix operator with two or more arguments.
+$$ p \circledast q \circledast \dots \circledast r
+   \qquad\textit{v.s.} \qquad 
+   (p \circledast q \circledast \dots \circledast r)
+$$
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trid opn) 
+                        $ intercalate (" " ++ trid opn ++ " ") 
                         $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity) = opkind nm

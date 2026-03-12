@@ -283,6 +283,14 @@ If the sized-string is atomic, we cannot split it:
 \begin{code}
 splitlayout _ (SSA str) = [str]
 \end{code}
+If we have a style, 
+we recurse with it applied,
+then prepend the showStyle and append the reset and setStyles stuff (TBD).
+\begin{code}
+splitlayout _ (SSS style ss) = [ss2str [style] ss]
+\end{code}
+
+
 Rest, in progress, just render as string:
 \begin{code}
 splitlayout _ sss' = [ss'2str [] sss']

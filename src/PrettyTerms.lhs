@@ -226,6 +226,9 @@ mkss trid _ (Cons tk _ n ts)
   where mkssts = map (mkss trid 99) ts
 \end{code}
 
+\subsubsection{Function Application}
+
+
 Any other constructor is rendered as a standard function call:
 $$ f(t_1,\dots,t_n)$$
 \begin{code}
@@ -235,6 +238,7 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
 \end{code}
 
 \subsection*{Not Yet Done}
+For now we let these fall through to the atomic term case below.
 \begin{code}
 -- mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
 -- mkss trid p (Lam  typ n vl tm)          = ssa "L typ n vl tm"
@@ -243,7 +247,7 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
 \end{code}
 
-\subsection{Basic Terms}
+\subsection{Atomic Terms}
 Remaining term cases are atomic, so become \h{SSA}:
 \begin{code}
 mkss trid p t = ssa (trterm trid p t) 
@@ -256,13 +260,43 @@ ssBracketIf True  ss  =  sslist [ss_lpar,ss,ss_rpar]
 ssBracketIf False ss  =  ss
 \end{code}
 
+\newpage
+
 \section{Perform Width-based Layout}
 
+Given (terminal) width $W$ and and a sized string of size $s$,
+if $s \leq W$ then we render as a one-liner,
+otherwise we explore how to split over multiple lines.
 \begin{code}
 mklayout :: Int -> SS -> String
-mklayout ww (SS _ (SSA s)) = s -- for now
-mklayout ww ss = ss2str [] ss
+mklayout ww (SS s ss')
+  | s <= ww    =  ss'2str [] ss'
+  | otherwise  =  unlines' $ splitlayout ww ss'
 \end{code}
+
+Given a (too-wide) sized-string,
+we can try to see how best to split it across lines.
+\begin{code}
+splitlayout :: Int -> SS' -> [String]
+\end{code}
+If the sized-string is atomic, we cannot split it:
+\begin{code}
+splitlayout _ (SSA str) = [str]
+\end{code}
+Rest, in progress, just render as string:
+\begin{code}
+splitlayout _ sss' = [ss'2str [] sss']
+\end{code}
+
+\begin{verbatim}
+data SS' = SSA String          -- atom
+         | SSS Style SS       -- style
+         | SSC SS SS SS [SS]  -- rdelim ldelim sep sss
+\end{verbatim}
+
+
+Note: If the sized-string is atomic, it cannot be split.
+
 
 % \section{Marking}\label{hb:marking}
 

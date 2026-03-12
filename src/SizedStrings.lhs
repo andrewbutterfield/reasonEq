@@ -7,7 +7,7 @@ module SizedStrings
  , ssa,pad,sss,ssc
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren
- , ss2str
+ , ss2str, ss'2str
  , renderIn,render )
 where
 import Utilities
@@ -159,20 +159,22 @@ It is useful to get the string produced
 if a \h{SS} is all rendered on one line.
 \begin{code}
 ss2str :: [Style] -> SS -> String
+ss2str stls (SS _ ss') = ss'2str stls ss'
 
-ss2str _ (SS _ (SSA str)) = str
+ss'2str :: [Style] -> SS' -> String
+ss'2str _ (SSA str) = str
 
-ss2str stls (SS _ (SSS style ss))
+ss'2str stls (SSS style ss)
  = concat [ showStyle style -- set new style style
           , ss2str (style:stls) ss -- recurse with styles updated
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
 
-ss2str stls (SS _ (SSC lss rss seps []))
-                              = ss2str stls lss ++ ss2str stls rss
+ss'2str stls (SSC lss rss seps [])
+  =  ss2str stls lss ++ ss2str stls rss
 
-ss2str stls (SS _ (SSC lss rss seps sss))
+ss'2str stls (SSC lss rss seps sss)
  | sssize lss == 0  =  pppps stls rss seps sss
  | otherwise        =  ss2str stls lss ++ pppps stls rss seps sss
  where

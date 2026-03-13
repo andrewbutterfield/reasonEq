@@ -3,6 +3,9 @@
 module SizedStrings
  ( Style(..)
  , styleRed, styleMagenta
+ , showStyle
+ , resetStyle, setUnderline, setColour
+ , setStyle
  , SS(..), SS'(..)
  , ssa,pad,sss,ssc
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
@@ -51,7 +54,7 @@ showStyle :: Style -> String
 showStyle Underline   =  setUnderline
 showStyle (Colour c)  =  setColour c
 
-resetStyle :: String
+-- \ESC[ is CSI ;  \ESC[Xm  is CSI X m  or SGR
 resetStyle            =  "\ESC[m\STX"
 setUnderline          =  "\ESC[4m\STX"
 setColour colourCode  =  "\ESC[3"++colourCode:"m\STX"

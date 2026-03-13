@@ -1014,7 +1014,7 @@ dispLiveProof ww liveProof
        shProof liveProof
        ++
        ( displayMatches prfSet (mtchCtxts liveProof) mtchs
-         : [ "-----------("++dcount++"/"++mcount++")" -- underline "           "
+         : [ show ww++" -----------("++dcount++"/"++mcount++")" -- underline "           "
            , dispSeqZip ww (fPath liveProof) 
                            (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)

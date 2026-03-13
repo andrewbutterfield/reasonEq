@@ -271,29 +271,48 @@ otherwise we explore how to split over multiple lines.
 mklayout :: Int -> SS -> String
 mklayout ww (SS s ss')
   | s <= ww    =  ss'2str [] ss'
-  | otherwise  =  unlines' $ splitlayout ww ss'
+  | otherwise  =  unlines' $ splitlayout' ww ss'
 \end{code}
 
 Given a (too-wide) sized-string,
 we can try to see how best to split it across lines.
 \begin{code}
-splitlayout :: Int -> SS' -> [String]
+splitlayout :: Int -> SS  -> [String]
+splitlayout ww (SS s ss') = splitlayout' ww  ss'
+\end{code}
+
+\begin{code}
+splitlayout' :: Int -> SS' -> [String]
 \end{code}
 If the sized-string is atomic, we cannot split it:
 \begin{code}
-splitlayout _ (SSA str) = [str]
+splitlayout' ww (SSA str) = [str]
 \end{code}
 If we have a style, 
 we recurse with it applied,
 then prepend the showStyle and append the reset and setStyles stuff (TBD).
 \begin{code}
-splitlayout _ (SSS style ss) = [ss2str [style] ss]
+splitlayout' ww (SSS style ss)
+  = let strs = splitlayout ww ss
+    in bracketStrings 
+        (showStyle style) 
+        strs 
+        (resetStyle ++ setStyle [])
 \end{code}
 
 
 Rest, in progress, just render as string:
 \begin{code}
-splitlayout _ sss' = [ss'2str [] sss']
+splitlayout' _ sss' = [ss'2str [] sss']
+\end{code}
+
+\begin{code}
+bracketStrings :: String -> [String] -> String -> [String]
+bracketStrings pres [] posts = [pres,posts]
+bracketStrings pres [str] posts = [pres++str,posts]
+bracketStrings pres strs posts 
+  = premrg pres $ reverse $ pstmrg posts $ reverse strs
+  where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
 \end{code}
 
 \begin{verbatim}
@@ -303,7 +322,6 @@ data SS' = SSA String          -- atom
 \end{verbatim}
 
 
-Note: If the sized-string is atomic, it cannot be split.
 
 
 % \section{Marking}\label{hb:marking}

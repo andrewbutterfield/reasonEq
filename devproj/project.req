@@ -23,13 +23,13 @@ TS = False
 FV = True
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [K (TG (Id "Z" 0)) (VI 1),K (TG (Id "Z" 0)) (VI 0)]],[Cons' (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)]] [],Cons' (TG (Id "Z" 0)) True (Id "sub" 0) [] [C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [K (TG (Id "Z" 0)) (VI 0),C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)]],C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "g" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]]]]])
+TERMZIP = (C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [K (TG (Id "Z" 0)) (VI 0),C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)]],C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "g" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]]],[Cons' (TG (Id "Z" 0)) True (Id "sub" 0) [C (TG (Id "Z" 0)) True (Id "mul" 0) [C (TG (Id "Z" 0)) True (Id "add" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],C (TG (Id "Z" 0)) True (Id "mul" 0) [V T (VR (Id "f" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "sub" 0) [K (TG (Id "Z" 0)) (VI 1),K (TG (Id "Z" 0)) (VI 0)]]]] []])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.arith_simp_test", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1,2]
+FPATH: [2]
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

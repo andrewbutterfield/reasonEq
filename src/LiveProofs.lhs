@@ -1014,7 +1014,7 @@ dispLiveProof ww liveProof
        shProof liveProof
        ++
        ( displayMatches prfSet (mtchCtxts liveProof) mtchs
-         : [ show ww++" -----------("++dcount++"/"++mcount++")" -- underline "           "
+         : [ wwstr++' ':dashes++"("++dcount++"/"++mcount++")" -- underline "           "
            , dispSeqZip ww (fPath liveProof) 
                            (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
@@ -1023,9 +1023,11 @@ dispLiveProof ww liveProof
   where 
     prfSet = liveSettings liveProof
     mtchs = matches liveProof
-    mcount = show $ length mtchs
+    wwstr = lpad 3 $ show ww
+    dashes = replicate (ww-13) '-'
+    mcount = rpad 3 $ show $ length mtchs 
     dmatches = take (maxMatchDisplay prfSet) mtchs
-    dcount = show $ length dmatches
+    dcount = lpad 3 $ show $ length dmatches
     (trm,sc) = unwrapASN $ conjecture liveProof
 
 

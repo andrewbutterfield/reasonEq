@@ -76,7 +76,7 @@ proofREPLdisplay justHelped ww (reqs,liveProof)
   | otherwise   =  unlines' ( clear -- clear screen, move to top-left
                               : disp )
   where
-    disp = [ "WINDOW-WIDTH="++show ww, dispLiveProof ww liveProof ]
+    disp = [ dispLiveProof ww liveProof ]
 
 proofREPLprompt (reqs,liveProof) =  "proof> "
 

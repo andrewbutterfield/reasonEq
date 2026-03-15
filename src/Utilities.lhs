@@ -12,7 +12,7 @@ module Utilities (
 , unlines'
 , issubset, isdisj
 , readBool, readNat
-, trim
+, trim, lpad, rpad
 , zip1, zip2, zip2'
 , nlookup, alookup
 , restrictAList
@@ -306,12 +306,22 @@ peel n xs = ent [] n xs
     | otherwise  =  ent (x:bef) (n-1) xs
 \end{code}
 
-\subsection{Trimming Strings}
+\subsection{Trimming/Padding Strings}
 
 \begin{code}
 trim = ltrim . reverse . ltrim . reverse
 
 ltrim = dropWhile isSpace
+
+lpad size str 
+  | len < size  =  replicate (size-len) ' ' ++ str
+  | otherwise  =  str
+  where len = length str
+
+rpad size str 
+  | len < size  =  str ++ replicate (size-len) ' '
+  | otherwise  =  str
+  where len = length str
 \end{code}
 
 \section{Specialised Zips}

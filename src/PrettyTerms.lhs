@@ -299,11 +299,19 @@ splitlayout' ww (SSS style ss)
         strs 
         (resetStyle ++ setStyle [])
 \end{code}
-
-
-Rest, in progress, just render as string:
+If we have a list ($[1,2,3]$ say),
+render it (for now) as:
+\begin{verbatim}
+[
+1,2,3
+]
+\end{verbatim}
 \begin{code}
-splitlayout' _ sss' = [ss'2str [] sss']
+splitlayout' ww (SSC ldelim rdelim sep sss) 
+  = (ss2str [] ldelim)
+    : ((intercalate [sepstr] $ map (singleton . (ss2str [])) sss)
+    ++ [ss2str [] rdelim])
+  where sepstr = ss2str [] sep
 \end{code}
 
 \begin{code}

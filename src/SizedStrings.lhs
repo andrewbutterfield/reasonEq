@@ -79,7 +79,7 @@ data SS = SS Int SS' deriving (Eq,Ord,Show)
 
 data SS' = SSA String          -- atom
          | SSS Style SS       -- style
-         | SSC SS SS SS [SS]  -- rdelim ldelim sep sss
+         | SSC SS SS SS [SS]  -- ldelim rdelim sep sss
          deriving (Eq,Ord,Show)
 
 -- useful query

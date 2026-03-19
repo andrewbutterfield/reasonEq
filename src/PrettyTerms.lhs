@@ -271,29 +271,29 @@ otherwise we explore how to split over multiple lines.
 mklayout :: Int -> SS -> String
 mklayout ww (SS s ss')
   | s <= ww    =  ss'2str [] ss'
-  | otherwise  =  unlines' $ splitlayout' ww ss'
+  | otherwise  =  unlines' $ splitlayout' ww 0 ss'
 \end{code}
 
 Given a (too-wide) sized-string,
 we can try to see how best to split it across lines.
 \begin{code}
-splitlayout :: Int -> SS  -> [String]
-splitlayout ww (SS s ss') = splitlayout' ww  ss'
+splitlayout :: Int -> Int -> SS  -> [String]
+splitlayout ww i (SS s ss') = splitlayout' ww i ss'
 \end{code}
 
 \begin{code}
-splitlayout' :: Int -> SS' -> [String]
+splitlayout' :: Int -> Int -> SS' -> [String]
 \end{code}
 If the sized-string is atomic, we cannot split it:
 \begin{code}
-splitlayout' ww (SSA str) = [str]
+splitlayout' ww i (SSA str) = [ind i str]
 \end{code}
 If we have a style, 
 we recurse with it applied,
 then prepend the showStyle and append the reset and setStyles stuff (TBD).
 \begin{code}
-splitlayout' ww (SSS style ss)
-  = let strs = splitlayout ww ss
+splitlayout' ww i (SSS style ss)
+  = let strs = splitlayout ww i ss
     in bracketStrings 
         (showStyle style) 
         strs 
@@ -307,12 +307,13 @@ render it (for now) as:
 ]
 \end{verbatim}
 \begin{code}
-splitlayout' ww (SSC ldelim rdelim sep sss) 
-  = (ss2str [] ldelim)
-    : ((intercalate [sepstr] $ map (singleton . (ss2str [])) sss)
-    ++ [ss2str [] rdelim])
-  where sepstr = ss2str [] sep
+splitlayout' ww i (SSC ldelim rdelim sep sss) 
+  = (ss2str i [] ldelim)
+    : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) sss)
+    ++ [ss2str i [] rdelim])
+  where sepstr = ss2str i [] sep
 \end{code}
+
 
 \begin{code}
 bracketStrings :: String -> [String] -> String -> [String]

@@ -19,7 +19,7 @@ module Utilities (
 , extract, findfirst, findlast
 , keyListDiff
 , numberList, numberList'
-, putPP, putShow, pp
+, putPP, putShow, pp, ind
 , hasdup
 , disjoint, overlaps
 , peel
@@ -690,15 +690,16 @@ display1 st = disp1 0 st
 
 disp1 _ (STtext s) = s
 disp1 i (STapp (st:sts)) -- length always >=2, see stapp above,
-  = disp1 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp1 i) sts)
+  = disp1 i st ++  '\n' : (unlines' $ map (ind i . disp1 i) sts)
 disp1 i (STlist []) = "[]"
 disp1 i (STlist (st:sts)) = "[ "++ disp1 (i+2) st ++ disp1c i sts ++ " ]"
 disp1 i (STpair (st:sts)) = "( "++ disp1 (i+2) st ++ disp1c i sts ++ " )"
 
 disp1c i [] = ""
-disp1c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp1 (i+2) st ++ disp1c i sts
+disp1c i (st:sts) = "\n" ++ ind i ", " ++  disp1 (i+2) st ++ disp1c i sts
 
-ind i = replicate i ' '
+ind :: Int -> String -> String
+ind i str = replicate i ' ' ++ str
 \end{code}
 
 \newpage
@@ -718,7 +719,7 @@ disp2 _ (STtext s) = s
 disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
  | st `elem` inlineSets  =  disp2set i sts
  | st `elem` inlineKeys  =  display0 app
- | otherwise = disp2 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp2 i) sts)
+ | otherwise = disp2 i st ++  '\n' : (unlines' $ map (ind i . disp2 i) sts)
 disp2 i (STlist []) = "[]"
 disp2 i (STlist (st:sts)) = "[ "++ disp2 (i+2) st ++ disp2c i sts ++ " ]"
 disp2 i (STpair []) = "()"
@@ -727,7 +728,7 @@ disp2 i tuple@(STpair (STapp (st:_):_))
 disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
 
 disp2c i [] = ""
-disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
+disp2c i (st:sts) = "\n" ++ ind i ", " ++  disp2 (i+2) st ++ disp2c i sts
 
 disp2set i [] = "{}"
 --disp2set i [STlist []] = "{}"

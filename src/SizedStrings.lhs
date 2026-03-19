@@ -17,10 +17,6 @@ import Utilities
 import Data.List
 \end{code}
 
-\begin{code}
-ind i = replicate i ' '
-\end{code}
-
 Our pretty printer handles atomic pieces, which render as is,
 and composite parts, defined as a list of parts, along with descriptions
 of the left and right delimiters and a separator part.
@@ -161,32 +157,32 @@ paren outerp innerp ss = ss
 It is useful to get the string produced
 if a \h{SS} is all rendered on one line.
 \begin{code}
-ss2str :: [Style] -> SS -> String
-ss2str stls (SS _ ss') = ss'2str stls ss'
+ss2str :: Int -> [Style] -> SS -> String
+ss2str i stls (SS _ ss') = ind i $ ss'2str stls ss'
 
 ss'2str :: [Style] -> SS' -> String
 ss'2str _ (SSA str) = str
 
 ss'2str stls (SSS style ss)
  = concat [ showStyle style -- set new style style
-          , ss2str (style:stls) ss -- recurse with styles updated
+          , ss2str 0 (style:stls) ss -- recurse with styles updated
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
 
 ss'2str stls (SSC lss rss seps [])
-  =  ss2str stls lss ++ ss2str stls rss
+  =  ss2str 0 stls lss ++ ss2str 0 stls rss
 
 ss'2str stls (SSC lss rss seps sss)
  | sssize lss == 0  =  pppps stls rss seps sss
- | otherwise        =  ss2str stls lss ++ pppps stls rss seps sss
+ | otherwise        =  ss2str 0 stls lss ++ pppps stls rss seps sss
  where
 
   pppps :: [Style] -> SS -> SS -> [SS] -> String
-  pppps stls rss seps []        =  ss2str stls rss
-  pppps stls rss seps [ss]      =  ss2str stls ss ++ ss2str stls rss
+  pppps stls rss seps []        =  ss2str 0 stls rss
+  pppps stls rss seps [ss]      =  ss2str 0 stls ss ++ ss2str 0 stls rss
   pppps stls rss seps (ss:sss)
-    =  ss2str stls ss ++ ss2str stls seps ++ pppps stls rss seps sss
+    =  ss2str 0 stls ss ++ ss2str 0 stls seps ++ pppps stls rss seps sss
 \end{code}
 
 
@@ -222,7 +218,7 @@ side before calling \h{unlines}
 (otherwise formatting commands introduce spurious linebreaks).
 \begin{code}
 lstr NL         =  "\n"
-lstr (Ind i)    =  ind i
+lstr (Ind i)    =  ind i ""
 lstr (Txt str)  =  str
 
 fmtShow :: [SLayout] -> String
@@ -259,8 +255,8 @@ layout ss w i (SS _ (SSS s ss')) = layout (s:ss) w i ss'
 
 -- 1st three cases: cannot break, or can fit on line
 layout ss _ i (SS _ (SSA str))          =  [(Txt str,ss)]
-layout ss _ i ss'@(SS _ (SSC _ _ _ []))  =  [(Txt $ ss2str ss ss', ss)]
-layout ss w i ss'@(SS s _)  | s <= w     =  [(Txt $ ss2str ss ss', ss)]
+layout ss _ i ss'@(SS _ (SSC _ _ _ []))  =  [(Txt $ ss2str i ss ss', ss)]
+layout ss w i ss'@(SS s _)  | s <= w     =  [(Txt $ ss2str i ss ss', ss)]
 
 -- case when non-trivial comp and it is too wide
 layout ss w i (SS _ (SSC lss rss seps sss))
@@ -283,18 +279,18 @@ layout' ss w i w' i' lss rss seps [pp]
 
 -- general case
 layout' ss w i w' i' lss@(SS lw _) rss seps (pp:sss)
- = (Txt $ ss2str ss lss, ss) : (Ind (i'-(i+lw)),ss) -- header line
+ = (Txt $ ss2str i ss lss, ss) : (Ind (i'-(i+lw)),ss) -- header line
                         : (layout ss w' i' pp)
    ++
    (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
 
 layout'' ss w i w' i' rss@(SS rw _) seps@(SS sw _) [pp]
- = (Ind i,ss) : (Txt $ ss2str ss seps, ss)
+ = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
-   ++ [(Txt $ ss2str ss rss,ss)]
+   ++ [(Txt $ ss2str i ss rss,ss)]
 
 layout'' ss w i w' i' rss seps@(SS sw _) (pp:sss)
- = (Ind i,ss) : (Txt $ ss2str ss seps, ss)
+ = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
    ++
    (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null

@@ -6,7 +6,7 @@ module SizedStrings
  , showStyle
  , resetStyle, setUnderline, setColour
  , setStyle
- , SS(..), SS'(..)
+ , SS(..), SS'(..), sssize
  , ssa,pad,sss,ssc
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren

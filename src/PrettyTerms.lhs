@@ -269,31 +269,31 @@ if $s \leq W$ then we render as a one-liner,
 otherwise we explore how to split over multiple lines.
 \begin{code}
 mklayout :: Int -> SS -> String
-mklayout ww (SS s ss')
-  | s <= ww    =  ss'2str [] ss'
-  | otherwise  =  unlines' $ splitlayout' ww 0 ss'
+mklayout ww (SS size ss')
+  | size <= ww    =  ss'2str [] ss'
+  | otherwise  =  unlines' $ splitlayout' ww size 0 ss'
 \end{code}
 
 Given a (too-wide) sized-string,
 we can try to see how best to split it across lines.
 \begin{code}
-splitlayout :: Int -> Int -> SS  -> [String]
-splitlayout ww i (SS s ss') = splitlayout' ww i ss'
+splitlayout :: Int -> Int -> Int -> SS  -> [String]
+splitlayout ww size i (SS size' ss') = splitlayout' ww size' i ss'
 \end{code}
 
 \begin{code}
-splitlayout' :: Int -> Int -> SS' -> [String]
+splitlayout' :: Int -> Int -> Int -> SS' -> [String]
 \end{code}
 If the sized-string is atomic, we cannot split it:
 \begin{code}
-splitlayout' ww i (SSA str) = [ind i str]
+splitlayout' ww size i (SSA str) = [ind i str]
 \end{code}
 If we have a style, 
 we recurse with it applied,
 then prepend the showStyle and append the reset and setStyles stuff (TBD).
 \begin{code}
-splitlayout' ww i (SSS style ss)
-  = let strs = splitlayout ww i ss
+splitlayout' ww size i (SSS style ss)
+  = let strs = splitlayout ww size i ss
     in bracketStrings 
         (showStyle style) 
         strs 
@@ -307,11 +307,16 @@ render it (for now) as:
 ]
 \end{verbatim}
 \begin{code}
-splitlayout' ww i (SSC ldelim rdelim sep sss) 
+splitlayout' ww size i  ( SSC ldelim@(SS lw ldelim')
+                              rdelim@(SS rw rdelim') 
+                              sep@(SS spw sep')
+                              items ) 
   = (ss2str i [] ldelim)
-    : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) sss)
+    : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) items)
     ++ [ss2str i [] rdelim])
-  where sepstr = ss2str i [] sep
+  where 
+    sepstr = ss2str i [] sep
+    itmws = map sssize items
 \end{code}
 
 

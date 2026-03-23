@@ -274,23 +274,30 @@ mklayout ww (SS size ss')
   | otherwise  =  unlines' $ splitlayout' ww size 0 ss'
 \end{code}
 
+\subsection{Layout Splitting}
+
 Given a (too-wide) sized-string,
 we can try to see how best to split it across lines.
 \begin{code}
 splitlayout :: Int -> Int -> Int -> SS  -> [String]
 splitlayout ww size i (SS size' ss') = splitlayout' ww size' i ss'
-\end{code}
 
-\begin{code}
 splitlayout' :: Int -> Int -> Int -> SS' -> [String]
 \end{code}
+
+\subsection{Atomic Layout}
+
 If the sized-string is atomic, we cannot split it:
 \begin{code}
 splitlayout' ww size i (SSA str) = [ind i str]
 \end{code}
+
+\subsection{Style Layout}
 If we have a style, 
 we recurse with it applied,
-then prepend the showStyle and append the reset and setStyles stuff (TBD).
+then prepend the showStyle and append the reset and setStyles stuff.
+Note that all the style setting and resetting 
+involves zero-width control character sequences.
 \begin{code}
 splitlayout' ww size i (SSS style ss)
   = let strs = splitlayout ww size i ss
@@ -299,19 +306,31 @@ splitlayout' ww size i (SSS style ss)
         strs 
         (resetStyle ++ setStyle [])
 \end{code}
-If we have a list ($[1,2,3]$ say),
-render it (for now) as:
-\begin{verbatim}
-[
-1,2,3
-]
-\end{verbatim}
+
+\subsection{General List Layout}
+
+In general we have the form:
+$$
+ldelim~rdelim~sep~\seqof{itm_1,itm_2,\dots,itm_n}
+$$
+which should render as:
+$$
+ldelim~itm_1~sep~itm_2~sep \dots sep~itm_n~rdelim
+$$
+The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
+However they are usually simple strings, and can also be empty.
 \begin{code}
 splitlayout' ww size i  ( SSC ldelim@(SS lw ldelim')
                               rdelim@(SS rw rdelim') 
                               sep@(SS spw sep')
                               items ) 
-  = (ss2str i [] ldelim)
+\end{code}
+Some simple cases, where one or more of \h{lw}, \h{rw}, or \h{spw} are zero, 
+are handled seperately.
+
+\begin{code}
+  | otherwise = 
+    (ss2str i [] ldelim)
     : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) items)
     ++ [ss2str i [] rdelim])
   where 

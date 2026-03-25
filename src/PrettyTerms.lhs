@@ -318,27 +318,55 @@ $$
 ldelim~itm_1~sep~itm_2~sep \dots sep~itm_n~rdelim
 $$
 The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
-However they are usually simple strings, and can also be empty.
+However they are usually simple strings, and can also be empty, 
+or are often of length 1.
+
+There are quite a lot of moving parts here, 
+so we need some possible heuristics:
+\begin{description}
+  \item[Heuristic 1] We treat delimiters and separators as having length zero.
+  \item[Heuristic 2] 
+    Lump in seperators with the (usually preceding) items,
+    and also perhaps merge the delimiters with the first and last items.
+    So we end up with the notion of laying out a list of blocks
+    $b_0~b_1~\dots~b_n$, all separated by visible space
+\end{description}
 \begin{code}
-splitlayout' ww size i  ( SSC ldelim@(SS lw ldelim')
+splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
                               rdelim@(SS rw rdelim') 
                               sep@(SS spw sep')
                               items ) 
 \end{code}
 Some simple cases, where one or more of \h{lw}, \h{rw}, or \h{spw} are zero, 
-are handled seperately.
-
+might be handled seperately.
+Some formulae:
+\begin{eqnarray*}
+   \Sigma w_i &\defs& \Sigma_{i=1}^n ~ w_i
+\\ x &=& \Sigma w_i - w
+\\ r &=& \lceil\Sigma w_i / w\rceil
+\end{eqnarray*}
 \begin{code}
+  | indsize <= ww  =  [ind i $ ss'2str [] ssc]
   | otherwise = 
     (ss2str i [] ldelim)
     : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) items)
     ++ [ss2str i [] rdelim])
-  where 
+  where
+    indsize = i+size 
+    x = indsize - ww
+    r = indsize `ceildiv` ww 
     sepstr = ss2str i [] sep
     itmws = map sssize items
+
+ceildiv :: Int -> Int -> Int
+ceildiv x y 
+  = let d = x `div` y
+        r = x `mod` y
+    in if r > 0 then d+1 else d
 \end{code}
 
-
+This fuses prefix/postfix strings with first/last strings in a list.
+This makes sense when the pre/postfix strings contain zero-width characters.
 \begin{code}
 bracketStrings :: String -> [String] -> String -> [String]
 bracketStrings pres [] posts = [pres,posts]
@@ -346,6 +374,10 @@ bracketStrings pres [str] posts = [pres++str,posts]
 bracketStrings pres strs posts 
   = premrg pres $ reverse $ pstmrg posts $ reverse strs
   where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
+\end{code}
+
+\begin{code}
+buildBlocks ldelim rdelim sep items = 0
 \end{code}
 
 \begin{verbatim}

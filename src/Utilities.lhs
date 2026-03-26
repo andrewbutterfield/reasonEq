@@ -32,6 +32,7 @@ module Utilities (
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
 , args2str, args2int
+, ceildiv
 )
 where
 
@@ -571,6 +572,14 @@ space2p = spacep . spacep
 spaced s = ' ':pspace s ++ " "
 \end{code}
 
+
+\begin{code}
+ceildiv :: Int -> Int -> Int
+ceildiv x y 
+  = let d = x `div` y
+        r = x `mod` y
+    in if r > 0 then d+1 else d
+\end{code}
 
 
 \newpage

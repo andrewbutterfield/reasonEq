@@ -311,11 +311,11 @@ splitlayout' ww size i (SSS style ss)
 
 In general we have the form:
 $$
-ldelim~rdelim~sep~\seqof{itm_1,itm_2,\dots,itm_n}
+ldelim~rdelim~sep~\seqof{itm_1,itm_2,\dots,itm_k}
 $$
 which should render as:
 $$
-ldelim~itm_1~sep~itm_2~sep \dots sep~itm_n~rdelim
+ldelim~itm_1~sep~itm_2~sep \dots sep~itm_k~rdelim
 $$
 The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
 However they are usually simple strings, and can also be empty, 
@@ -329,7 +329,7 @@ so we need some possible heuristics:
     Lump in seperators with the (usually preceding) items,
     and also perhaps merge the delimiters with the first and last items.
     So we end up with the notion of laying out a list of blocks
-    $b_0~b_1~\dots~b_n$, all separated by visible space
+    $b_0~b_1~\dots~b_k$, all separated by visible space
 \end{description}
 \begin{code}
 splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
@@ -341,9 +341,9 @@ Some simple cases, where one or more of \h{lw}, \h{rw}, or \h{spw} are zero,
 might be handled seperately.
 Some formulae:
 \begin{eqnarray*}
-   \Sigma w_i &\defs& \Sigma_{i=1}^n ~ w_i
+   \Sigma w_i &\defs& \Sigma_{i=1}^k ~ w_i
 \\ x &=& \Sigma w_i - w
-\\ r &=& \lceil\Sigma w_i / w\rceil
+\\ n &=& \lceil w / \Sigma w_i \rceil
 \end{eqnarray*}
 \begin{code}
   | indsize <= ww  =  [ind i $ ss'2str [] ssc]
@@ -354,15 +354,9 @@ Some formulae:
   where
     indsize = i+size 
     x = indsize - ww
-    r = indsize `ceildiv` ww 
+    n = ww `ceildiv` indsize 
     sepstr = ss2str i [] sep
     itmws = map sssize items
-
-ceildiv :: Int -> Int -> Int
-ceildiv x y 
-  = let d = x `div` y
-        r = x `mod` y
-    in if r > 0 then d+1 else d
 \end{code}
 
 This fuses prefix/postfix strings with first/last strings in a list.

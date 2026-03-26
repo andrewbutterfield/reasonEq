@@ -57,7 +57,7 @@ import Debugger
 
 We define types, including zippers,for sequents.
 
-\newpage
+
 \section{Sequent Type}
 
 A sequent is a collection containing
@@ -133,7 +133,6 @@ reduceAll = "red-All"
 
 
 
-\newpage
 \subsection{Strategy \textit{redboth}}
 
 \begin{eqnarray*}
@@ -178,6 +177,7 @@ redR2L thys (nm,(t,sc)) = fail "redR2L not applicable"
 reduceToLeftmost = "red-R2L"
 \end{code}
 
+\newpage
 \subsection{Strategy \textit{redL2R}}
 
 \begin{eqnarray*}
@@ -198,7 +198,7 @@ redL2R thys (nm,(t,sc)) = fail "redL2R not applicable"
 reduceToRightmost = "red-L2R"
 \end{code}
 
-\newpage
+
 \subsection{Strategy \textit{deduce}}
 
 \begin{eqnarray*}
@@ -229,7 +229,7 @@ splitAnte (Cons tk si i ts)
 splitAnte t     =  [t]
 \end{code}
 
-\newpage
+
 \subsection{Strategy \textit{asmboth}}
 
 

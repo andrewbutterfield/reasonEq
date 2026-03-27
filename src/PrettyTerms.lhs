@@ -66,6 +66,16 @@ ss_lngl   =  ssa _langle ;  ss_rngl  =  ssa _rangle
 mkss :: (Identifier -> String) -> Int -> Term -> SS
 \end{code}
 Here we effectively re-implement the definition of \h{TestRendering.trterm}.
+In the sequel we use the following notation for terms:
+\begin{description}
+\item[Arbitrary] $t, t_i, \dots$
+\item[Generic Atomic] $a, a_i, \dots$
+\item[Non Atomic] $T, T_i, \dots$
+\item[Relation] $P, Q, R, \dots P_i, \dots$
+\item[State Predicate] $p, p', q, q', r, r',\dots, p_i, \dots$
+\item[Expression] $e, f, g, e', f', g',\dots, e_i, \dots$
+\item[Boolean] $b, b', c, c', \dots, b_i, \dots$
+\end{description}
 
 \subsection{Atomic Terms}
 
@@ -83,29 +93,37 @@ depending on the constructor name, and the number of sub-terms.
 By partial we mean that we match against specific names and numbers,
 but fall through if those matches fail, to try other cases.
 
+
+\textbf{
+May want lookup tables to match \h{Cons Identifier}s to a key string
+(e.g. \h{"not"} maps to $\lnot$).
+}
+
 \subsubsection{Single Sub-Term}
 
 A \h{Cons}-node with one subterm
 may need special handling.
 A marked focus term needs highlighting, 
 while logic and arithmetic negation require specific handling.
-$$ {\h{$t$}} \qquad \lnot t \quad \lnot (t) \qquad  (-t) \quad -t $$
+$$ {\h{$t$}} \qquad \lnot a \quad \lnot (T) \qquad  (-a) \quad -T $$
 \begin{code}
 mkss trid p (Cons _ _ i@(Identifier nm _) [t])
   | i == focusMark  =  sss styleMagenta $ mkss trid p t
-  | nm == "not"     =  mkss_not nm t
+  | nm == "not"     =  mkss_not nm t  -- lookup tables here ?
   | nm == "neg"     =  mkss_neg nm t
   where
-    ss_nm    =  ssa (trid i)
+    ss_nm    =  ssa (trid i)  
     ss_0_t   =  mkss trid 0  t
     ss_99_t  =  mkss trid 99 t
-    mkss_not nm t
+    mkss_not nm t  
       | isAtomic t  =  sslist [ss_nm,ss_99_t]
       | otherwise   =  sslist [ss_nm,ss_lpar,ss_0_t,ss_rpar]
     mkss_neg nm t
       | isAtomic t  =  sslist [ss_lpar,ss_nm,ss_0_t,ss_rpar]      
       | otherwise   =  sslist [ss_nm,ss_99_t]
 \end{code}
+
+
 
 \subsubsection{Infix-like Ternary Operators}
 
@@ -324,12 +342,7 @@ or are often of length 1.
 There are quite a lot of moving parts here, 
 so we need some possible heuristics:
 \begin{description}
-  \item[Heuristic 1] We treat delimiters and separators as having length zero.
-  \item[Heuristic 2] 
-    Lump in seperators with the (usually preceding) items,
-    and also perhaps merge the delimiters with the first and last items.
-    So we end up with the notion of laying out a list of blocks
-    $b_0~b_1~\dots~b_k$, all separated by visible space
+  \item[TBD] rethink
 \end{description}
 \begin{code}
 splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')

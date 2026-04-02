@@ -19,9 +19,8 @@ module Proofs
  , isSequentSwitch, justSwitched
  , CalcStep, isStraightStep
  , Calculation, isStraightCalc
- , Proof, displayProof
+ , Proof
  , showProofs
- , labelAsProven
  ) where
 
 import Utilities
@@ -32,6 +31,7 @@ import TermZipper
 import Binding
 import Laws
 import TestRendering
+import PrettyTerms
 
 import Debugger
 \end{code}
@@ -502,7 +502,7 @@ displayProof (thnm,pnm,asn,strat,(trm',steps))
 
 shStep :: CalcStep -> String
 shStep ( (UseLaw how lnm bind dpath), asn@(Assertion trm sc) )
-   = unlines' [ trTermZip (pathTZ dpath trm) ++ trSC sc
+   = unlines' [ ppTermZip 0 (pathTZ dpath trm) ++ trSC sc
               , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
               , "    " ++ trBinding bind
               ]

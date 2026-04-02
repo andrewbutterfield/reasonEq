@@ -12,14 +12,14 @@ module Utilities (
 , unlines'
 , issubset, isdisj
 , readBool, readNat
-, trim
+, trim, lpad, rpad
 , zip1, zip2, zip2'
 , nlookup, alookup
 , restrictAList
 , extract, findfirst, findlast
 , keyListDiff
 , numberList, numberList'
-, putPP, putShow, pp
+, putPP, putShow, pp, ind
 , hasdup
 , disjoint, overlaps
 , peel
@@ -27,11 +27,12 @@ module Utilities (
 , pulledFrom, getitem, choose
 , injMap, extdBij, bijExtend
 , pspace, spacep, space2p, spaced, intcalNN
-, pad
+, pads
 , splitBetween
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
 , args2str, args2int
+, ceildiv
 )
 where
 
@@ -306,12 +307,22 @@ peel n xs = ent [] n xs
     | otherwise  =  ent (x:bef) (n-1) xs
 \end{code}
 
-\subsection{Trimming Strings}
+\subsection{Trimming/Padding Strings}
 
 \begin{code}
 trim = ltrim . reverse . ltrim . reverse
 
 ltrim = dropWhile isSpace
+
+lpad size str 
+  | len < size  =  replicate (size-len) ' ' ++ str
+  | otherwise  =  str
+  where len = length str
+
+rpad size str 
+  | len < size  =  str ++ replicate (size-len) ' '
+  | otherwise  =  str
+  where len = length str
 \end{code}
 
 \section{Specialised Zips}
@@ -335,10 +346,10 @@ to make selecting them easier:
 numberList showItem list
   =  unlines' $ map (numberItem showItem) $  zip [1..] list
 numberItem showItem (i,item)
-  =  pad 4 istr ++ istr ++ ". " ++ showItem item
+  =  pads 4 istr ++ istr ++ ". " ++ showItem item
   where istr = show i
 
-pad w str
+pads w str
   | ext > 0    =  replicate ext ' '
   | otherwise  =  ""
   where ext = w - length str
@@ -353,7 +364,7 @@ numberList' showItem list
      maxw = maximum $ map snd lstrings
     in unlines' $ map (numberItem' (maxw+2)) $ zip [1..] lstrings
 numberItem' maxw (i,(str,strlen))
-  = str ++ replicate (maxw-strlen) ' ' ++ pad 2 istr ++ istr
+  = str ++ replicate (maxw-strlen) ' ' ++ pads 2 istr ++ istr
   where istr = show i
 \end{code}
 
@@ -562,6 +573,14 @@ spaced s = ' ':pspace s ++ " "
 \end{code}
 
 
+\begin{code}
+ceildiv :: Int -> Int -> Int
+ceildiv x y 
+  = let d = x `div` y
+        r = x `mod` y
+    in if r > 0 then d+1 else d
+\end{code}
+
 
 \newpage
 \subsection{Parsing Tokens}
@@ -680,15 +699,16 @@ display1 st = disp1 0 st
 
 disp1 _ (STtext s) = s
 disp1 i (STapp (st:sts)) -- length always >=2, see stapp above,
-  = disp1 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp1 i) sts)
+  = disp1 i st ++  '\n' : (unlines' $ map (ind i . disp1 i) sts)
 disp1 i (STlist []) = "[]"
 disp1 i (STlist (st:sts)) = "[ "++ disp1 (i+2) st ++ disp1c i sts ++ " ]"
 disp1 i (STpair (st:sts)) = "( "++ disp1 (i+2) st ++ disp1c i sts ++ " )"
 
 disp1c i [] = ""
-disp1c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp1 (i+2) st ++ disp1c i sts
+disp1c i (st:sts) = "\n" ++ ind i ", " ++  disp1 (i+2) st ++ disp1c i sts
 
-ind i = replicate i ' '
+ind :: Int -> String -> String
+ind i str = replicate i ' ' ++ str
 \end{code}
 
 \newpage
@@ -708,7 +728,7 @@ disp2 _ (STtext s) = s
 disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
  | st `elem` inlineSets  =  disp2set i sts
  | st `elem` inlineKeys  =  display0 app
- | otherwise = disp2 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp2 i) sts)
+ | otherwise = disp2 i st ++  '\n' : (unlines' $ map (ind i . disp2 i) sts)
 disp2 i (STlist []) = "[]"
 disp2 i (STlist (st:sts)) = "[ "++ disp2 (i+2) st ++ disp2c i sts ++ " ]"
 disp2 i (STpair []) = "()"
@@ -717,7 +737,7 @@ disp2 i tuple@(STpair (STapp (st:_):_))
 disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
 
 disp2c i [] = ""
-disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
+disp2c i (st:sts) = "\n" ++ ind i ", " ++  disp2 (i+2) st ++ disp2c i sts
 
 disp2set i [] = "{}"
 --disp2set i [STlist []] = "{}"

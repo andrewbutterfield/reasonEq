@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Classifier 
-  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws, showClassyLaws
+  ( Direction(..), ClassifiedLaws(..), nullClassifiedLaws
   , catClassyLaws
   , addClassyLaws
   , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
@@ -100,8 +100,8 @@ All laws are identified by the name associated with their assertion statement.
 
 \begin{code}
 data Direction 
-    = Leftwards 
-    | Rightwards 
+    = Left2Right 
+    | Right2Left 
     deriving (Eq,Show,Read)
 
 data ClassifiedLaws = ClassifiedLaws
@@ -111,32 +111,6 @@ data ClassifiedLaws = ClassifiedLaws
   deriving (Eq,Show,Read)
 
 nullClassifiedLaws  = ClassifiedLaws { simps = [], folds = [] }
-\end{code}
-
-\subsubsection{Classifier Display}
-
-\begin{code}
-showDir :: Direction -> String
-showDir Leftwards  = "Leftwards"
-showDir Rightwards = "Rightwards"
-
-simpStr :: (String, Direction) -> String
-simpStr sim = "(" ++ fst sim ++ "," ++ showDir (snd sim) ++ ")"
-
-showSimps :: [(String, Direction)] -> Int -> String
-showSimps [] _ = ""
-showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
-showSimps (x:xs) n = "\n\t" ++ show n ++ ". " 
-                     ++ simpStr x ++ showSimps xs (n + 1)
-
-showFolds :: [String] -> Int -> String
-showFolds [] _ = ""
-showFolds (x:[]) n = "\n\t" ++ show n ++ ". " ++ x
-showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
-
-showClassyLaws alaws = unlines'
-  [ "  simplifiers:"  ++ showSimps (simps alaws) 1
-  , "  folds/unfolds:"  ++ showFolds (folds alaws) 1 ]
 \end{code}
 
 
@@ -160,8 +134,8 @@ isSimp :: String -> Term -> Term -> (Bool,Direction)
 isSimp nme p q 
   = let sizeP = termSize p
         sizeQ = termSize q
-    in   if sizeP > sizeQ then (True, Leftwards) 
-    else if sizeP < sizeQ then (True, Rightwards)
+    in   if sizeP > sizeQ then (True, Left2Right) 
+    else if sizeP < sizeQ then (True, Right2Left)
     else (False,error "isSimp: direction undefined if not a simplifier")
 
 checkSimp :: String -> Term -> Term -> [(String,Direction)]
@@ -308,13 +282,13 @@ we need to have matched either $P$ or $Q$,
 in a way that is  consistent with the specified direction.
 \begin{code}
 checkIsSimp :: (AssnName, Direction) -> MatchClass -> Bool
-checkIsSimp (_, Rightwards) MatchEqvRHS = True
-checkIsSimp (_, Leftwards)  MatchEqvLHS = True
+checkIsSimp (_, Right2Left) MatchEqvRHS = True
+checkIsSimp (_, Left2Right)  MatchEqvLHS = True
 checkIsSimp _               _           = False
 
 checkIsComp :: (AssnName, Direction) -> MatchClass -> Bool
-checkIsComp (_, Rightwards) MatchEqvLHS  = True
-checkIsComp (_, Leftwards)  MatchEqvRHS  = True
+checkIsComp (_, Right2Left) MatchEqvLHS  = True
+checkIsComp (_, Left2Right)  MatchEqvRHS  = True
 checkIsComp (_, _)      (MatchEqvVar _)  = True
 checkIsComp _            _               = False
 \end{code}

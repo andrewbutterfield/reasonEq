@@ -5,7 +5,31 @@
 
 ## URGENT or NEXT
 
-Found that what should be be `mult_x_zero` is in fact `mult_x_unit`, clashing with the unit laws!!!!
+When we use `trterm` we get:  
+`(e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e))`
+
+When we use `mkss` we get:
+`(e+0)*(f*(1-0))+-((0+e*1)*(g+(e-e)))`
+
+Why is space missing?  Why has `x-y` become `x+-y` ?
+
+
+### Proof of `X_X_comp` in `UTCP`.
+
+This exposes the need for good pretty-printing.
+
+We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
+We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.
+
+In `Proofs` we have `showProofs` that displays completed proofs.
+This is activated in the top-level using the command `sh P <lawname>`.
+This should use `ppTermZip` as well.
+**this requires changes to `REPL` !!!**
+*Defer until prover PP is done*
+
+
+
+
 
 ### Law Classification
 
@@ -13,20 +37,13 @@ It should be automatic
 
  - whenever a theory is loaded, or a conjecture is proven.
 
- - `showClassyLaws` only shows name and direction, 
-    but really should also display the formula itself.
-    This requires having a `Theory` argument.
-    Rendering should be done in `Theories.lhs` rather than from `Classifier`.
-
-
-`SourceHandling` Working (reasonably) well:
- Logic: `EQV` .. `Closure`,
- Math: `Arith`,`Sets`,`Lists`
- UTP: `UBase`, `UWhile`, `Designs`, `DWhile`, `UTCP`.
-
 
 #### Bugs found 
 
+In `X_X_comp` proof:
+
+Applying substitution `ls[O$_1/O$']` should result in `ls`, 
+but in fact stays unchanged, despite that we have `O  ≜ ⟨s,ls⟩`.
 
 ### Matching Improvement
 
@@ -39,7 +56,7 @@ However only the first match is used by `applySimp`:
 
 *Instead it should try all the returned matches.*
 
-
+tr
 ## PLAN
 
 ###

@@ -24,7 +24,6 @@ module Sequents
  , zipperVarsMentioned
  , CalcStep
  , Calculation
- , Proof, displayProof
  , showLogic, showTheories, showNmdAssns, showLaws
  , numberList
  ) where
@@ -51,13 +50,14 @@ import Theories
 
 import Symbols
 import TestRendering
+import PrettyTerms
 
 import Debugger
 \end{code}
 
 We define types, including zippers,for sequents.
 
-\newpage
+
 \section{Sequent Type}
 
 A sequent is a collection containing
@@ -133,7 +133,6 @@ reduceAll = "red-All"
 
 
 
-\newpage
 \subsection{Strategy \textit{redboth}}
 
 \begin{eqnarray*}
@@ -178,6 +177,7 @@ redR2L thys (nm,(t,sc)) = fail "redR2L not applicable"
 reduceToLeftmost = "red-R2L"
 \end{code}
 
+\newpage
 \subsection{Strategy \textit{redL2R}}
 
 \begin{eqnarray*}
@@ -198,7 +198,7 @@ redL2R thys (nm,(t,sc)) = fail "redL2R not applicable"
 reduceToRightmost = "red-L2R"
 \end{code}
 
-\newpage
+
 \subsection{Strategy \textit{deduce}}
 
 \begin{eqnarray*}
@@ -229,7 +229,7 @@ splitAnte (Cons tk si i ts)
 splitAnte t     =  [t]
 \end{code}
 
-\newpage
+
 \subsection{Strategy \textit{asmboth}}
 
 
@@ -728,29 +728,30 @@ lawVarsMentioned = mentionedVars . assnT . snd . fst
 
 \begin{code}
 -- temporary
-dispSeqZip :: [Int] -> SideCond -> SeqZip -> String
-dispSeqZip fp sc (tz,Sequent' _ _ conj')
-                                     =  unlines' $ dispConjParts fp tz sc conj'
+dispSeqZip :: Int -> [Int] -> SideCond -> SeqZip -> String
+dispSeqZip ww fp sc (tz,Sequent' _ _ conj')
+  =  unlines' $ dispConjParts ww fp tz sc conj'
 
-dispConjParts fp tz sc (CLaws' hthry Lft rightC)
+dispConjParts ww fp tz sc (CLaws' hthry Lft rightC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
-     ++ dispGoal tz sc
+     ++ dispGoal ww tz sc
      ++ dispContext fp tz "Target (RHS): " (red $ trTerm 0 rightC)
 
 
-dispConjParts fp tz sc (CLaws' hthry Rght leftC)
+dispConjParts ww fp tz sc (CLaws' hthry Rght leftC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
-     ++ dispGoal tz sc
+     ++ dispGoal ww tz sc
      ++ dispContext fp tz "Target (LHS): " (red $ trTerm 0 leftC)
 
 
-dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
+dispConjParts ww fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
   =  (dispHypotheses $ getHypotheses' seq')
      : [ _vdash ]
-     ++ dispGoal tz sc
-     ++ dispContext fp tz "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
+     ++ dispGoal ww tz sc
+     ++ dispContext fp tz "Hypothesis: " 
+          (trTerm 0 horig++"  "++trSideCond sc)
   where
      hthry =  nullTheory { 
                 thName   =  hn
@@ -758,12 +759,14 @@ dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
               , known    =  hk
               }
 
-
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
-dispGoal tz sc
-  = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
+
+-- dispGoal will soon invoke functions in PrettyTerms to render this.
+dispGoal ww tz sc
+--   = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
+  = [ ppTermZip ww tz++"\n "++blue (trSideCond sc) ]
 
 dispType :: TermZip -> [ String ]
 dispType (trm,_) = [ " :: " ++ trType (termtype trm) ]

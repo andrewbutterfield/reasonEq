@@ -1008,23 +1008,26 @@ showLiveProof liveProof
 \begin{code}
 -- displays whole proof in proof REPL
 -- temporary
-dispLiveProof :: LiveProof -> String
-dispLiveProof liveProof
+dispLiveProof :: Int -> LiveProof -> String
+dispLiveProof ww liveProof
  = unlines $
        shProof liveProof
        ++
        ( displayMatches prfSet (mtchCtxts liveProof) mtchs
-         : [ "-----------("++dcount++"/"++mcount++")" -- underline "           "
-           , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
+         : [ wwstr++' ':dashes++"("++dcount++"/"++mcount++")" -- underline "           "
+           , dispSeqZip ww (fPath liveProof) 
+                           (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]
        )
   where 
     prfSet = liveSettings liveProof
     mtchs = matches liveProof
-    mcount = show $ length mtchs
+    wwstr = lpad 3 $ show ww
+    dashes = replicate (ww-13) '-'
+    mcount = rpad 3 $ show $ length mtchs 
     dmatches = take (maxMatchDisplay prfSet) mtchs
-    dcount = show $ length dmatches
+    dcount = lpad 3 $ show $ length dmatches
     (trm,sc) = unwrapASN $ conjecture liveProof
 
 

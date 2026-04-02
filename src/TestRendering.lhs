@@ -16,9 +16,12 @@ module TestRendering (
  , trType, typdbg
  , trCMap, cmapdbg
  , trValue
- , trTerm, trTermU, trmdbg, trmsdbg
+ , trTerm, trTermU, trterm
+ , trmdbg, trmsdbg
  , trSub, trSubU
- , trTermZip, trTermZipU
+ , trTermZip, trTermZipU, trtz
+ , Fixity(..), OpKind, opkind
+ , markfocus, focusMark
  , trSideCond, trSideCondU, scdbg, vscdbg
  , trDiffs, trDiffsU, fdifdbg
  , trFreeVars, trFreeVarsU, fvsdbg
@@ -59,6 +62,7 @@ import Binding
 import Matching
 import TermZipper
 
+
 import Debugger
 \end{code}
 
@@ -68,8 +72,8 @@ We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
 
 We support two ways of viewing identifiers,
-one (\texttt{trXXX}) that hides the ``unique number'' component,
-and another (\texttt{trXXXU}) that displays it.
+one (\h{trXXX}) that hides the ``unique number'' component,
+and another (\h{trXXXU}) that displays it.
 
 NEW: lets provide debug support here too!
 
@@ -353,7 +357,7 @@ trterm trid _ (Iter tk _ na _ ni lvs)
 
 \subsubsection{Rendering Constructions}
 
-A \texttt{Cons}-node with one subterm
+A \h{Cons}-node with one subterm
 may need special handling
 a marked focus term needs highlighting:
 \begin{code}
@@ -364,7 +368,7 @@ trterm trid ctxtp (Cons tk _ s [t])
  where  
   trnot s t
     | isAtomic t  =  trid s ++ trterm trid 99 t    
-    | otherwise   =  (trid s)++"("++trterm trid 0 t++")"
+    | otherwise   =  trid s++"("++trterm trid 0 t++")"
   trunary s t
     | isAtomic t  =  '(':(trid s)++trterm trid 0 t++")"
     | otherwise   =  trid s ++ trterm trid 99 t
@@ -384,20 +388,6 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
    lif = jId "lif" ; rif = jId "rif"
    prcs@(opp,fixity) = opkind nm
    isMix3 = fixity == MixFix
-\end{code}
-
-Rendering an infix operator with exactly two arguments.
-We ensure that sub-terms are rendered with the infix operator precedence
-as their context precedence.
-\begin{code}
-trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
- | isOp  =  trBracketIf (opp <= ctxtp)
-              ( trterm trid opp t1
-                ++ " " ++ trId opn ++ " "
-                ++ trterm trid opp t2 )
- where
-   prcs@(opp,fixity) = opkind nm
-   isOp = fixity /= NotInfix
 \end{code}
 
 Rendering a left-infix operator when the first sub-term uses the same operator
@@ -420,7 +410,7 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
        (Cons _ _ opn' ts') | opn == opn'  
           ->  trterm trid ctxtp $ Cons tk sub opn (tsI++ts')
        _  ->  trBracketIf (opp <= ctxtp)
-                  $ intercalate (trId opn) 
+                  $ intercalate (" " ++ trid opn ++ " ") 
                   $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity)  =  opkind nm
@@ -432,15 +422,33 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
         in (x:xs',y)
 \end{code}
 
+% Rendering an infix operator with exactly two arguments.
+% $$ p \circledast q $$
+% We ensure that sub-terms are rendered with the infix operator precedence
+% as their context precedence.
+% \begin{code}
+% trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
+%  | isOp  =  trBracketIf (opp <= ctxtp)
+%               ( trterm trid opp t1
+%                 ++ " " ++ trid opn ++ " "
+%                 ++ trterm trid opp t2 )
+%  where
+%    prcs@(opp,fixity) = opkind nm
+%    isOp = fixity /= NotInfix
+% \end{code}
 
 
 Rendering an infix operator with two or more arguments.
+$$ p \circledast q \circledast \dots \circledast r
+   \qquad\textit{v.s.} \qquad 
+   (p \circledast q \circledast \dots \circledast r)
+$$
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trId opn) 
+                        $ intercalate (" " ++ trid opn ++ " ") 
                         $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity) = opkind nm
@@ -563,8 +571,11 @@ trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 
 We mark the focus, exit the zipper, and render as normal.
 \begin{code}
+trTermZip,trTermZipU :: (Term, [Term']) -> String
 trTermZip = trtz trId
 trTermZipU = trtz trIdU
+
+trtz :: (Identifier -> String) -> (Term, [Term']) -> String
 trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 

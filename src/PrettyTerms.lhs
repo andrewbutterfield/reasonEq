@@ -339,6 +339,12 @@ The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
 However they are usually simple strings, and can also be empty, 
 or are often of length 1.
 
+A key aspect we take from Hughes' paper\cite{conf/afp/Hughes95},
+is that indentation spaces are emitted after a newline is output
+(rather than before the first character of a new line).
+
+
+
 There are quite a lot of moving parts here, 
 so we need some possible heuristics:
 \begin{description}

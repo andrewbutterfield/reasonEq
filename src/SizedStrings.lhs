@@ -11,6 +11,7 @@ module SizedStrings
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren
  , ss2str, ss'2str
+ , ss0, fuseSS
  , renderIn,render )
 where
 import Utilities
@@ -185,9 +186,33 @@ ss'2str stls (SSC lss rss seps sss)
     =  ss2str 0 stls ss ++ ss2str 0 stls seps ++ pppps stls rss seps sss
 \end{code}
 
+\section{Fusing}
+
+Sometimes it can be useful to take two \h{SS} and fuse them together
+for make a single \h{SS}.
+We fuse \h{SS w1 ss1'} and \h{SS w2 ss2'} 
+to get \h{SS w1+w2 ss'?}.
+\begin{code}
+fuseSS :: SS -> SS -> SS
+\end{code}
+If both are instances of \h{SSA}, this is straightforward:
+\begin{code}
+fuseSS (SS w1 (SSA s1)) (SS w2 (SSA s2)) = SS (w1+w2) $ SSA (s1++s2)
+\end{code}
+For now, anything else gets put inside a \h{SSC}:
+\begin{code}
+fuseSS ss1@(SS w1 _) ss2@(SS w2 _) 
+  = SS (w1+w2) (SSC ss0 ss0 ss0 [ss1,ss2])
+\end{code}
+We need a zero-width sized string:
+\begin{code}
+ss0 = SS 0 $ SSA ""
+\end{code}
 
 
 \section{Full Rendering}
+
+\textbf{This is really pretty-printing which is probably better done by the client}
 
 Now, rendering it as a `nice' string.
 We provide the desired column width at the top level,

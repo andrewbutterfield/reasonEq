@@ -30,5 +30,5 @@ Conjecture ante_and_distr . P /\ Q ==> R === (P ==> R) \/ (Q ==> R) . none
 Conjecture cnsq_and_distr . P ==> Q \/ R === (P ==> Q) \/ (P ==> R) . none
 Conjecture cnsq_and_distr . P ==> Q /\ R === (P ==> Q) /\ (P ==> R) . none
 Conjecture ante_as_imp . (P ==> Q) ==> R === (not (P) ==> R) /\ (Q ==> R) . none
-Conjecture imp_subst . SubL P ==> Q [. e / x .] === SubL P [. e / x .] ==> SubL Q [. e / x .] . none
+Conjecture imp_subst . SubL P ==> Q [. e // x .] === SubL P [. e // x .] ==> SubL Q [. e // x .] . none
 Conjecture conj_imp_conj . P /\ Q ==> R /\ S . none

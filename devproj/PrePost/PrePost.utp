@@ -1,0 +1,22 @@
+Theory PrePost .
+  Impl AOI And Or Not EQV .
+
+Conjecture P12_imp_Q12 
+  . ( P1 ==> Q1) /\ (P2 ==> Q2) 
+  . none
+
+Conjecture exh_P12_imp_Q12 
+  . (P1 \/ P2) /\ (( P1 ==> Q1) /\ (P2 ==> Q2)) 
+  . none
+
+Conjecture dsj_P12_imp_Q12 
+  . (not (P1 /\ P2)) /\ (( P1 ==> Q1) /\ (P2 ==> Q2)) 
+  . none
+
+Conjecture exh_and_disj
+  . (P1 \/ P2) /\ (not (P1 /\ P2)) 
+  . none
+
+Conjecture both_P12_imp_Q12 
+  . (P1 \/ P2) /\ (not (P1 /\ P2)) /\ (( P1 ==> Q1) /\ (P2 ==> Q2)) 
+  . none

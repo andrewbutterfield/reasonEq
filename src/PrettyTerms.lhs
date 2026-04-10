@@ -382,17 +382,23 @@ bracketStrings pres strs posts
 \end{code}
 
 Given a list that is too wide, we:
-group the delimiters with the item adjacent to them;
-group the seperators with the preceding item;
-and render with a line break after the seperators.
+fuse the left delimiter with the first item (if present);
+fuse the right delimiter with the last item (if different from the first);
+fuse the seperator with the preceding items (if present);
+and return the the list of the fuse results.
 \begin{code}
-listGroup ldelim rdelim sep items = 0
+listGroup :: SS -> SS -> SS -> [SS] -> [SS]
+listGroup ldelim rdelim sep [] = [ldelim,rdelim]
+listGroup ldelim rdelim sep [ss] = [fuseSS ldelim ss,rdelim]
+listGroup ldelim rdelim sep (ss:sss)
+  = addSeps rdelim sep (fuseSS ldelim ss:sss)
+
+-- sss has length at least two
+addSeps :: SS -> SS -> [SS] -> [SS]
+addSeps rdelim sep sss
+  = map ((flip fuseSS) sep) (init sss) ++ [fuseSS (last sss) rdelim]
 \end{code}
 
-We need a zero-width sized string:
-\begin{code}
-zss = SS 0 $ SSA ""
-\end{code}
 
 
 

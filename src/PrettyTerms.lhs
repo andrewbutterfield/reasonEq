@@ -294,13 +294,16 @@ mklayout ww (SS size ss')
 
 \subsection{Layout Splitting}
 
-Given a (too-wide) sized-string,
-we can try to see how best to split it across lines.
+First a top-level function that ``peels out'' the \h{SS'} component:
 \begin{code}
 splitlayout :: Int -> Int -> Int -> SS  -> [String]
 splitlayout ww size i (SS size' ss') = splitlayout' ww size' i ss'
+\end{code}
 
+Most of the work is done by \h{splitlayout'}:
+\begin{code}
 splitlayout' :: Int -> Int -> Int -> SS' -> [String]
+-- splitlayout' ww size i ss'  where size = sizeOf ss'
 \end{code}
 
 \subsection{Atomic Layout}
@@ -338,33 +341,22 @@ $$
 The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
 However they are usually simple strings, and can also be empty, 
 or are often of length 1.
+A key issue here is that each of the $itm_i$ may itself be a general list,
+so what we are really dealing with is a tree-like structure.
 
 A key aspect we take from Hughes' paper\cite{conf/afp/Hughes95},
 is that indentation spaces are emitted after a newline is output
 (rather than before the first character of a new line).
 
 
+\subsubsection{Plan 1}
 
-There are quite a lot of moving parts here, 
-so we need some possible heuristics:
-\begin{description}
-  \item[TBD] rethink
-\end{description}
+
 \begin{code}
 splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
                               rdelim@(SS rw rdelim') 
                               sep@(SS spw sep')
-                              items ) 
-\end{code}
-Some simple cases, where one or more of \h{lw}, \h{rw}, or \h{spw} are zero, 
-might be handled seperately.
-Some formulae:
-\begin{eqnarray*}
-   \Sigma w_i &\defs& \Sigma_{i=1}^k ~ w_i
-\\ x &=& \Sigma w_i - w
-\\ n &=& \lceil w / \Sigma w_i \rceil
-\end{eqnarray*}
-\begin{code}
+                              items )                           
   | indsize <= ww  =  [ind i $ ss'2str [] ssc]
   | otherwise = 
     (ss2str i [] ldelim)
@@ -389,15 +381,18 @@ bracketStrings pres strs posts
   where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
 \end{code}
 
+Given a list that is too wide, we:
+group the delimiters with the item adjacent to them;
+group the seperators with the preceding item;
+and render with a line break after the seperators.
 \begin{code}
-buildBlocks ldelim rdelim sep items = 0
+listGroup ldelim rdelim sep items = 0
 \end{code}
 
-\begin{verbatim}
-data SS' = SSA String          -- atom
-         | SSS Style SS       -- style
-         | SSC SS SS SS [SS]  -- rdelim ldelim sep sss
-\end{verbatim}
+We need a zero-width sized string:
+\begin{code}
+zss = SS 0 $ SSA ""
+\end{code}
 
 
 

@@ -1,0 +1,47 @@
+Theory LTL .
+  Equal Exists Forall Impl AOI And Or Not EQV .
+
+DclVar Obs always . var NA B -> B .
+DclVar Obs eventually . var NA B -> B .
+DclVar Obs next . var NA B -> B .
+DclVar Obs until . var NA B -> B -> B .
+DclVar Obs wait . var NA B -> B -> B .
+
+Law axiom next_self_dual . next (not (P)) === not (next (P)) . none
+Law axiom next_implies_distr . next (P ==> Q) === next (P) ==> next (Q) . none
+Law axiom next_U_distr . next (until (P, Q)) === until (next (P), next (Q)) . none
+Law axiom U_def . until (P, Q) === Q \/ P /\ next (until (P, Q)) . none
+Law axiom U_false_r_zero . until (P, False) === False . none
+Law axiom U_or_l_distr . until (P, Q \/ R) === until (P, Q) \/ until (P, R) . none
+Law axiom U_or_r_distr . until (P, R) \/ until (Q, R) ==> until (P \/ Q, R) . none
+Law axiom U_and_l_distr . until (P, Q /\ R) ==> until (P, Q) /\ until (P, R) . none
+Law axiom U_and_r_distr . until (P, R) /\ until (Q, R) === until (P /\ Q, R) . none
+Law axiom U_impl_ord . until (P, R) /\ until (not (Q), R) ==> until (P, R) . none
+Law axiom U_or_r_ord . until (P, until (Q, R)) ==> until (P \/ Q, R) . none
+Law axiom and_U_r_ord . until (P, Q /\ R) ==> until (until (P, Q), R) . none
+
+Conjecture linearity . next (P) === not (next (not (P))) . none
+Conjecture next_or_distr . next (P \/ Q) === next (P) \/ next (Q) . none
+Conjecture next_and_distr . next (P /\ Q) === next (P) /\ next (Q) . none
+Conjecture next_eqv_distr . next (P === Q) === (next (P) === next (Q)) . none
+Conjecture next_true . next (True) === True . none
+Conjecture next_false . next (False) === False . none
+Conjecture U_imp_r_distr . until (P ==> Q, R) ==> until (P, R) ==> until (Q, R) . none
+Conjecture U_true_r_zero . until (P, True) === True . none
+Conjecture U_l_unit . until (False, Q) === Q . none
+Conjecture U_idem . until (P, P) === P . none
+Conjecture U_exc_mdl . until (P, Q) \/ until (P, not (Q)) . none
+Conjecture WVS_24 . until (not (P), until (Q, R)) /\ until (P, Q) ==> until (Q, R) . none
+Conjecture WVS_25 . until (P, until (not (Q), R)) /\ until (Q, R) ==> until (P, R) . none
+Conjecture WVS_26 . until (P, Q) /\ until (not (Q), P) ==> P . none
+Conjecture WVS_27 . P /\ until (not (P), Q) ==> Q . none
+Conjecture WVS_28 . until (P, Q) ==> P \/ Q . none
+Conjecture U_insert . Q ==> until (P, Q) . none
+Conjecture WVS_30 . P /\ Q ==> until (P, Q) . none
+Conjecture absorb_WVS_31 . P \/ until (P, Q) === P \/ Q . none
+Conjecture absorb_WVS_32 . until (P, Q) \/ Q === until (P, Q) . none
+Conjecture absorb_WVS_33 . until (P, Q) /\ Q === Q . none
+Conjecture absorb_WVS_34 . until (P, Q) \/ P /\ Q === until (P, Q) . none
+Conjecture absorb_WVS_35 . until (P, Q) /\ (P \/ Q) === until (P, Q) . none
+Conjecture U_l_abs . until (P, until (P, Q)) === until (P, Q) . none
+Conjecture U_r_abs . until (until (P, Q), Q) === until (P, Q) . none

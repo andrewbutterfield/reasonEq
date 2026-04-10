@@ -13,4 +13,4 @@ Conjecture or_zero . P \/ True === True . none
 Conjecture or_unit . P \/ False === P . none
 Conjecture or_or_distr . P \/ (Q \/ R) === P \/ Q \/ (P \/ R) . none
 Conjecture or_eqv_split . P \/ Q === P \/ not (Q) === P . none
-Conjecture or_subst . SubL P \/ Q [. e / x .] === SubL P [. e / x .] \/ SubL Q [. e / x .] . none
+Conjecture or_subst . SubL P \/ Q [. e // x .] === SubL P [. e // x .] \/ SubL Q [. e // x .] . none

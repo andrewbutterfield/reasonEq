@@ -3,16 +3,17 @@
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
+**gen fails with runtime error for theory `UWhile`**
 
+```
+req: NYI: dlvr2item ((Id "O" 0,VO),DAS)
+CallStack (from HasCallStack):
+  error, called at src/SourceHandling.lhs:505:21 in reasonEq-0.9.2.
+```
 
 
 ## URGENT or NEXT
 
-**Currently most .upt files use `[. e / x .]` syntax for substitution. This causes a syntax error.
-Generated files use `[. e // x .]' which doesn't.**
-
-Fix: for Thr do `gen Thr` and then in `devproj/Thr`
-replace `Thr.utp` by `Thr-gen.utp`.
 
 When we use `trterm` we get:  
 `(e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e))`

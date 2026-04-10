@@ -12,4 +12,4 @@ Conjecture and_unit . P /\ True === P . none
 Conjecture and_zero . P /\ False === False . none
 Conjecture and_and_distr . P /\ (Q /\ R) === P /\ Q /\ (P /\ R) . none
 Conjecture contradiction . P /\ not (P) === False . none
-Conjecture and_subst . SubL P /\ Q [. e / x .] === SubL P [. e / x .] /\ SubL Q [. e / x .] . none
+Conjecture and_subst . SubL P /\ Q [. e // x .] === SubL P [. e // x .] /\ SubL Q [. e // x .] . none

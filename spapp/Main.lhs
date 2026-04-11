@@ -73,6 +73,7 @@ In each case we remove the prefix and output on a line by itself.
 We then pretty-print the rest of the line.
 
 \begin{code}
+ppFails :: [String] -> [String]
 ppFails []  =  []
 ppFails (ln:lns)
 -- | isGHCiPrompt ln            =  ln : ppNext lns
@@ -121,6 +122,6 @@ processArgs _
        [ "Usage: "
        , "    showpp < rawfile > ppfile"
        , "    rawprog | showp > ppfile"
-       , " showp reads stdin, writes stdout"
+       , " showpp reads stdin, writes stdout"
        ]
 \end{code}

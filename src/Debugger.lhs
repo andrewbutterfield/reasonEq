@@ -16,6 +16,9 @@ import YesBut
 \end{code}
 
 We extend \texttt{Debug.trace} in a number of ways.
+\begin{verbatim}
+trace :: String -> a -> a
+\end{verbatim}
 
 First, 
 showing the 2nd argument of a trace 

@@ -1,40 +1,370 @@
-@MKSS:
-SS 53
-( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " - ")) 
-  [ SS 23 
-    ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " * ")) 
-      [ SS 7 
-        ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) 
-          [ SS 1 (SSA "(")
-          , SS 5 
-            ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " + ")) 
-              [ SS 1 (SSA "e")
-              , SS 1 (SSA "0") ]
-            )
-          , SS 1 (SSA ")")
-          ]
-        )
-      , SS 13 
-        ( SSS (Colour '5') 
-          ( SS 13 
-            ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) 
-              [ SS 1 (SSA "(")
-              , SS 11 
-                ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " * ")) 
-                  [ SS 1 (SSA "f")
-                  , SS 7 
-                    ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) 
-                      [ SS 1 (SSA "(")
-                      , SS 5 
-                        ( SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " - ")) 
-                          [ SS 1 (SSA "1")
-                          , SS 1 (SSA "0")
-                          ]
-                        )
-                      , SS 1 (SSA ")")
-                      ]
-                    )
-                  ]
-                )
-              , SS 1 (SSA ")")])))]),SS 27 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " * ")) [SS 11 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) [SS 1 (SSA "("),SS 9 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " + ")) [SS 1 (SSA "0"),SS 5 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " * ")) [SS 1 (SSA "e"),SS 1 (SSA "1")])]),SS 1 (SSA ")")]),SS 13 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) [SS 1 (SSA "("),SS 11 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " + ")) [SS 1 (SSA "g"),SS 7 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 0 (SSA "")) [SS 1 (SSA "("),SS 5 (SSC (SS 0 (SSA "")) (SS 0 (SSA "")) (SS 3 (SSA " - ")) [SS 1 (SSA "e"),SS 1 (SSA "e")]),SS 1 (SSA ")")])]),SS 1 (SSA ")")])])]
-)
+@MKSS: 
+SS
+53
+( SSC
+  ( SS
+    0
+    ( SSA
+      "" ) )
+  ( SS
+    0
+    ( SSA
+      "" ) )
+  ( SS
+    3
+    ( SSA
+      "
+      -
+      " ) )
+  [ SS
+    23
+    ( SSC
+      ( SS
+        0
+        ( SSA
+          "" ) )
+      ( SS
+        0
+        ( SSA
+          "" ) )
+      ( SS
+        3
+        ( SSA
+          "
+          *
+          " ) )
+      [ SS
+        7
+        ( SSC
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          [ SS
+            1
+            ( SSA
+              "
+              ( " )
+            , SS
+              5
+              ( SSC
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  3
+                  ( SSA
+                    "
+                    +
+                    " ) )
+                [ SS
+                  1
+                  ( SSA
+                    "e" )
+                , SS
+                  1
+                  ( SSA
+                    "0" ) ] )
+            , SS
+              1
+              ( SSA
+                " )
+              " ) ] )
+      , SS
+        13
+        ( SSS
+          ( Colour
+            '5' )
+          ( SS
+            13
+            ( SSC
+              ( SS
+                0
+                ( SSA
+                  "" ) )
+              ( SS
+                0
+                ( SSA
+                  "" ) )
+              ( SS
+                0
+                ( SSA
+                  "" ) )
+              [ SS
+                1
+                ( SSA
+                  "
+                  ( " )
+                , SS
+                  11
+                  ( SSC
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      3
+                      ( SSA
+                        "
+                        *
+                        " ) )
+                    [ SS
+                      1
+                      ( SSA
+                        "f" )
+                    , SS
+                      7
+                      ( SSC
+                        ( SS
+                          0
+                          ( SSA
+                            "" ) )
+                        ( SS
+                          0
+                          ( SSA
+                            "" ) )
+                        ( SS
+                          0
+                          ( SSA
+                            "" ) )
+                        [ SS
+                          1
+                          ( SSA
+                            "
+                            ( " )
+                          , SS
+                            5
+                            ( SSC
+                              ( SS
+                                0
+                                ( SSA
+                                  "" ) )
+                              ( SS
+                                0
+                                ( SSA
+                                  "" ) )
+                              ( SS
+                                3
+                                ( SSA
+                                  "
+                                  -
+                                  " ) )
+                              [ SS
+                                1
+                                ( SSA
+                                  "1" )
+                              , SS
+                                1
+                                ( SSA
+                                  "0" ) ] )
+                          , SS
+                            1
+                            ( SSA
+                              " )
+                            " ) ] ) ] )
+                , SS
+                  1
+                  ( SSA
+                    " )
+                  " ) ] ) ) ) ] )
+  , SS
+    27
+    ( SSC
+      ( SS
+        0
+        ( SSA
+          "" ) )
+      ( SS
+        0
+        ( SSA
+          "" ) )
+      ( SS
+        3
+        ( SSA
+          "
+          *
+          " ) )
+      [ SS
+        11
+        ( SSC
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          [ SS
+            1
+            ( SSA
+              "
+              ( " )
+            , SS
+              9
+              ( SSC
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  3
+                  ( SSA
+                    "
+                    +
+                    " ) )
+                [ SS
+                  1
+                  ( SSA
+                    "0" )
+                , SS
+                  5
+                  ( SSC
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      3
+                      ( SSA
+                        "
+                        *
+                        " ) )
+                    [ SS
+                      1
+                      ( SSA
+                        "e" )
+                    , SS
+                      1
+                      ( SSA
+                        "1" ) ] ) ] )
+            , SS
+              1
+              ( SSA
+                " )
+              " ) ] )
+      , SS
+        13
+        ( SSC
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          ( SS
+            0
+            ( SSA
+              "" ) )
+          [ SS
+            1
+            ( SSA
+              "
+              ( " )
+            , SS
+              11
+              ( SSC
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  0
+                  ( SSA
+                    "" ) )
+                ( SS
+                  3
+                  ( SSA
+                    "
+                    +
+                    " ) )
+                [ SS
+                  1
+                  ( SSA
+                    "g" )
+                , SS
+                  7
+                  ( SSC
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    ( SS
+                      0
+                      ( SSA
+                        "" ) )
+                    [ SS
+                      1
+                      ( SSA
+                        "
+                        ( " )
+                      , SS
+                        5
+                        ( SSC
+                          ( SS
+                            0
+                            ( SSA
+                              "" ) )
+                          ( SS
+                            0
+                            ( SSA
+                              "" ) )
+                          ( SS
+                            3
+                            ( SSA
+                              "
+                              -
+                              " ) )
+                          [ SS
+                            1
+                            ( SSA
+                              "e" )
+                          , SS
+                            1
+                            ( SSA
+                              "e" ) ] )
+                      , SS
+                        1
+                        ( SSA
+                          " )
+                        " ) ] ) ] )
+            , SS
+              1
+              ( SSA
+                " )
+              " ) ] ) ] ) ] )

@@ -289,7 +289,7 @@ otherwise we explore how to split over multiple lines.
 mklayout :: Int -> SS -> String
 mklayout ww ss@(SS size ss')
   | size <= ww  =  ss'2str [] ss'
-  | otherwise   =  unlines' $ splitlayout ww 0 ss
+  | otherwise   =  unlines' $ splitlayout ww 0 $ pdbg "SS" ss
 \end{code}
 
 \subsection{Layout Splitting}

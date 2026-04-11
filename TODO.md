@@ -14,6 +14,9 @@ CallStack (from HasCallStack):
 
 ## URGENT or NEXT
 
+`Plan 1` for pretty printing (`PrettyTerms`) is not working well for arithmetic expressions or lists of words.
+There doesn't seem to be any effective recursion going on.
+
 
 When we use `trterm` we get:  
 `(e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e))`

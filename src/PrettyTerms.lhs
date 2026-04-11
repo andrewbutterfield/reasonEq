@@ -287,17 +287,17 @@ if $s \leq W$ then we render as a one-liner,
 otherwise we explore how to split over multiple lines.
 \begin{code}
 mklayout :: Int -> SS -> String
-mklayout ww (SS size ss')
-  | size <= ww    =  ss'2str [] ss'
-  | otherwise  =  unlines' $ splitlayout' ww size 0 ss'
+mklayout ww ss@(SS size ss')
+  | size <= ww  =  ss'2str [] ss'
+  | otherwise   =  unlines' $ splitlayout ww 0 ss
 \end{code}
 
 \subsection{Layout Splitting}
 
 First a top-level function that ``peels out'' the \h{SS'} component:
 \begin{code}
-splitlayout :: Int -> Int -> Int -> SS  -> [String]
-splitlayout ww size i (SS size' ss') = splitlayout' ww size' i ss'
+splitlayout :: Int -> Int -> SS  -> [String]
+splitlayout ww i (SS size' ss') = splitlayout' ww size' i ss'
 \end{code}
 
 Most of the work is done by \h{splitlayout'}:
@@ -321,7 +321,7 @@ Note that all the style setting and resetting
 involves zero-width control character sequences.
 \begin{code}
 splitlayout' ww size i (SSS style ss)
-  = let strs = splitlayout ww size i ss
+  = let strs = splitlayout ww i ss
     in bracketStrings 
         (showStyle style) 
         strs 
@@ -343,35 +343,37 @@ However they are usually simple strings, and can also be empty,
 or are often of length 1.
 A key issue here is that each of the $itm_i$ may itself be a general list,
 so what we are really dealing with is a tree-like structure.
-
-A key aspect we take from Hughes' paper\cite{conf/afp/Hughes95},
-is that indentation spaces are emitted after a newline is output
-(rather than before the first character of a new line).
-
-
-\subsubsection{Plan 1}
-
-
 \begin{code}
 splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
                               rdelim@(SS rw rdelim') 
                               sep@(SS spw sep')
                               items )                           
-  | indsize <= ww  =  [ind i $ ss'2str [] ssc]
-  | otherwise = 
-    (ss2str i [] ldelim)
-    : ((intercalate [sepstr] $ map (singleton . (ss2str (i+1) [])) items)
-    ++ [ss2str i [] rdelim])
-  where
-    indsize = i+size 
-    x = indsize - ww
-    n = ww `ceildiv` indsize 
-    sepstr = ss2str i [] sep
-    itmws = map sssize items
+  | i+size  <= ww  =  [ind i $ ss'2str [] ssc]
 \end{code}
 
+
+\subsubsection{Plan 1}
+
+We fuse delimiters with first and last items, 
+and separators with the preceding items.
+Each fuse result after the first is rendered on a new line with an indent.
+
+\begin{code}
+  | otherwise = 
+      case groups of
+        [_,_]  ->  map (ss2str i []) groups
+        (fstgrp:restgrps)  ->
+          ss2str i [] fstgrp
+          : concat (map (splitlayout ww (i+2)) $ init restgrps)
+          ++ [ss2str i [] (last restgrps)]
+  where
+    groups = listGroup ldelim rdelim sep items
+\end{code}
+
+\subsection{Support Code}
+
 This fuses prefix/postfix strings with first/last strings in a list.
-This makes sense when the pre/postfix strings contain zero-width characters.
+This makes sense when the pre/postfix strings only contain zero-width characters.
 \begin{code}
 bracketStrings :: String -> [String] -> String -> [String]
 bracketStrings pres [] posts = [pres,posts]
@@ -384,8 +386,9 @@ bracketStrings pres strs posts
 Given a list that is too wide, we:
 fuse the left delimiter with the first item (if present);
 fuse the right delimiter with the last item (if different from the first);
-fuse the seperator with the preceding items (if present);
+fuse the seperator plus space with the following items (if present);
 and return the the list of the fuse results.
+Note that \h{listGroup} always returns a list of at least two items.
 \begin{code}
 listGroup :: SS -> SS -> SS -> [SS] -> [SS]
 listGroup ldelim rdelim sep [] = [ldelim,rdelim]
@@ -395,8 +398,11 @@ listGroup ldelim rdelim sep (ss:sss)
 
 -- sss has length at least two
 addSeps :: SS -> SS -> [SS] -> [SS]
-addSeps rdelim sep sss
-  = map ((flip fuseSS) sep) (init sss) ++ [fuseSS (last sss) rdelim]
+addSeps rdelim sep (ss:sss)
+  = ss : map addSep (init sss) ++ [addSep $ fuseSS (last sss) rdelim]
+  where
+    sep' = fuseSS sep (ssa " ") 
+    addSep item = fuseSS sep' item
 \end{code}
 
 

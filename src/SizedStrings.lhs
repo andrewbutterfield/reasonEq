@@ -23,7 +23,8 @@ and composite parts, defined as a list of parts, along with descriptions
 of the left and right delimiters and a separator part.
 Composites will be rendered with line breaks and indentation
 in a manner that is hopefully maximally pleasing.
-We also provide a (simple) means for applying ``styles''.
+We also provide a (simple) means for applying character ``styles''
+(colour,weight,underlining,\dots).
 
 \section{Styles}
 
@@ -319,4 +320,14 @@ layout'' ss w i w' i' rss seps@(SS sw _) (pp:sss)
                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
    ++
    (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
+\end{code}
+
+\subsection{Sized String Tests}
+
+The following tests are intended to be run from within GHCi.
+
+\begin{code}
+addss = ssa "+"
+addmrg n = ssa $ show n
+addnums n = ssc ss0 ss0 addss $ take n $ map addmrg [1..] 
 \end{code}

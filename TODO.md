@@ -15,16 +15,11 @@ CallStack (from HasCallStack):
 ## URGENT or NEXT
 
 `Plan 1` for pretty printing (`PrettyTerms`) is not working well for arithmetic expressions or lists of words.
-There doesn't seem to be any effective recursion going on.
 
-
-When we use `trterm` we get:  
-`(e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e))`
-
-When we use `mkss` we get:
-`(e+0)*(f*(1-0))+-((0+e*1)*(g+(e-e)))`
-
-Why is space missing?  Why has `x-y` become `x+-y` ?
+The problem is that too much judgement is left to `SizedStrings`,
+particularly where the `SSC` construct and fusing is concerned.
+The `SSC` construct should be a simple list of `SS`.
+Any fusing of delimiters and sepearators with items should be decided by code in `PrettyTerms` that knows what `Term` is being rendered.
 
 
 ### Proof of `X_X_comp` in `UTCP`.

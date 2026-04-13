@@ -289,7 +289,7 @@ otherwise we explore how to split over multiple lines.
 mklayout :: Int -> SS -> String
 mklayout ww ss@(SS size ss')
   | size <= ww  =  ss'2str [] ss'
-  | otherwise   =  unlines' $ splitlayout ww 0 $ pdbg "SS" ss
+  | otherwise   =  unlines' $ splitlayout ww 0 ss
 \end{code}
 
 \subsection{Layout Splitting}
@@ -406,6 +406,14 @@ addSeps rdelim sep (ss:sss)
 \end{code}
 
 
+\subsection{Pretty Term Tests}
+
+The following tests are intended to be run from within GHCi.
+
+\begin{code}
+disp thing w = putStrLn $ mklayout w thing
+mullist n = ssc ss0 ss0 (ssa "*") $ take n $ map (ssa . show) [1..]
+\end{code}
 
 
 

@@ -359,29 +359,24 @@ and separators with the preceding items.
 Each fuse result after the first is rendered on a new line with an indent.
 
 \begin{code}
-  | otherwise = 
-      case groups of
-        [_,_]  ->  map (ss2str i []) groups
+  | otherwise  -- i+size > ww
+--    = concat (map (map (splitlayout rw (i+2))) fittings)
+-- ABOVE WON"T TYPE CHECK!!!
+    = case groups of -- groups has length at least two
+        --[_,_]  ->  map (ss2str i []) groups
         (fstgrp:restgrps)  ->
           ss2str i [] fstgrp
-          : concat (map (splitlayout ww (i+2)) $ init restgrps)
-          ++ [ss2str i [] (last restgrps)]
+          : concat (map (splitlayout rw (i+2)) $ init restgrps)
+          ++ [ss2str (i+2) [] (last restgrps)]
   where
     groups = listGroup ldelim rdelim sep items
+    rw = ww-i  -- "ribbon" width
+    fittings = breakAt rw groups
 \end{code}
 
 \subsection{Support Code}
 
-This fuses prefix/postfix strings with first/last strings in a list.
-This makes sense when the pre/postfix strings only contain zero-width characters.
-\begin{code}
-bracketStrings :: String -> [String] -> String -> [String]
-bracketStrings pres [] posts = [pres,posts]
-bracketStrings pres [str] posts = [pres++str,posts]
-bracketStrings pres strs posts 
-  = premrg pres $ reverse $ pstmrg posts $ reverse strs
-  where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
-\end{code}
+\subsubsection{Grouping List Items}
 
 Given a list that is too wide, we:
 fuse the left delimiter with the first item (if present);
@@ -404,6 +399,35 @@ addSeps rdelim sep (ss:sss)
     sep' = fuseSS sep (ssa " ") 
     addSep item = fuseSS sep' item
 \end{code}
+
+\subsubsection{Breaking at Ribbon Width}
+
+\begin{code}
+breakAt :: Int -> [SS] -> [[SS]]
+breakAt rw groups = brkAt rw 0 [] groups
+
+brkAt :: Int -> Int -> [SS] -> [SS] -> [[SS]]
+brkAt rw sofar sg [] = [reverse sg]
+brkAt rw sofar sg gs@(g:gs')
+  | sofar + gsize <= rw  =  brkAt rw (sofar+gsize) (g:sg) gs'
+  | otherwise            =  reverse sg : brkAt rw 0 [] gs
+  where gsize = sssize g 
+\end{code}
+
+
+\subsubsection{Style Bracketing}
+
+This fuses prefix/postfix strings with first/last strings in a list.
+This makes sense when the pre/postfix strings only contain zero-width characters.
+\begin{code}
+bracketStrings :: String -> [String] -> String -> [String]
+bracketStrings pres [] posts = [pres,posts]
+bracketStrings pres [str] posts = [pres++str,posts]
+bracketStrings pres strs posts 
+  = premrg pres $ reverse $ pstmrg posts $ reverse strs
+  where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
+\end{code}
+
 
 
 \subsection{Pretty Term Tests}

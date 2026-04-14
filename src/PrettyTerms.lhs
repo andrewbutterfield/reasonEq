@@ -5,6 +5,7 @@ module PrettyTerms (
 ) 
 where
 import Utilities
+import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.List
 import Data.Char
@@ -255,11 +256,22 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
   where mkssts = map (mkss trid 0) ts
 \end{code}
 
+\subsubsection{Quantifiers}
+
+A quantifier has the general form:
+$$ \mathcal Q v_1,\dots,v_2 \bullet t$$
+The difference between set-oriented binds ($\forall$,$\exists$,\dots)
+and list-oriented binds ($\lambda$,\dots) is semantic,
+but that is not relevant for pretty-printing.
+\begin{code}
+mkss trid p (Bnd  typ n vs tm) = mkQuantifier trid p n (S.toList vs) tm
+mkss trid p (Lam  typ n vl tm) = mkQuantifier trid p n vl            tm
+\end{code}
+
+
 \subsection*{Not Yet Done}
 For now we let these fall through to the atomic term case below.
 \begin{code}
--- mkss trid p (Bnd  typ n vs tm)          = ssa "B typ n vs tm"
--- mkss trid p (Lam  typ n vl tm)          = ssa "L typ n vl tm"
 -- mkss trid p (Cls      n    tm)          = ssa "X n tm"
 -- mkss trid p (Sub  typ      tm s)        = ssa "S typ tm s"
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
@@ -276,6 +288,17 @@ mkss trid p t = ssa (trterm trid p t)
 \begin{code}
 ssBracketIf True  ss  =  sslist [ss_lpar,ss,ss_rpar]
 ssBracketIf False ss  =  ss
+\end{code}
+
+\begin{code}
+mkQuantifier trid p quant vl tm
+  = ssc ssq ssnul ssbullet [ssvl,sst]
+  where
+    ssq = ssa $ trid quant 
+    sst = mkss trid p tm 
+    ssvl = ssopen "," $ map (ssa . trgvar trid) vl
+
+ssbullet = ssa $ pad _bullet  
 \end{code}
 
 \newpage

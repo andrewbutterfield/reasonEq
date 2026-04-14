@@ -15,7 +15,7 @@ CallStack (from HasCallStack):
 
 ## URGENT or NEXT
 
-
+Actually installing a theory from a `.utp` file.
 
 
 ### Proof of `X_X_comp` in `UTCP`.
@@ -25,7 +25,12 @@ This exposes the need for good pretty-printing.
 PLan 2 is better, good for trees but fails badly on lists.
 Works well with Arith examples.
 
-Need to implement quantifier pretty-printing for UTCP `X_X_Comp`.
+NEXT: Substitution.
+
+Quantifier pretty-printing now works.
+
+Issues:
+The more it is "squeezed", the more blank lines it generates.
 
 We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
 We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.

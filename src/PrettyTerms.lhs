@@ -352,7 +352,7 @@ splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
 \end{code}
 
 
-\subsubsection{Plan 1}
+\subsubsection{Plan 2}
 
 We fuse delimiters with first and last items, 
 and separators with the preceding items.
@@ -360,45 +360,14 @@ Each fuse result after the first is rendered on a new line with an indent.
 
 \begin{code}
   | otherwise  -- i+size > ww
---    = concat (map (map (splitlayout rw (i+2))) fittings)
--- ABOVE WON"T TYPE CHECK!!!
-    = case groups of -- groups has length at least two
-        --[_,_]  ->  map (ss2str i []) groups
-        (fstgrp:restgrps)  ->
-          ss2str i [] fstgrp
-          : concat (map (splitlayout rw (i+2)) $ init restgrps)
-          ++ [ss2str (i+2) [] (last restgrps)]
+    = concat $ concat (map (map (splitlayout rw (i+1))) fittings)
   where
-    groups = listGroup ldelim rdelim sep items
+    sslist = ldelim : intercalate [sep] (map singleton items) ++ [rdelim]
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw groups
+    fittings = breakAt rw sslist
 \end{code}
 
 \subsection{Support Code}
-
-\subsubsection{Grouping List Items}
-
-Given a list that is too wide, we:
-fuse the left delimiter with the first item (if present);
-fuse the right delimiter with the last item (if different from the first);
-fuse the seperator plus space with the following items (if present);
-and return the the list of the fuse results.
-Note that \h{listGroup} always returns a list of at least two items.
-\begin{code}
-listGroup :: SS -> SS -> SS -> [SS] -> [SS]
-listGroup ldelim rdelim sep [] = [ldelim,rdelim]
-listGroup ldelim rdelim sep [ss] = [fuseSS ldelim ss,rdelim]
-listGroup ldelim rdelim sep (ss:sss)
-  = addSeps rdelim sep (fuseSS ldelim ss:sss)
-
--- sss has length at least two
-addSeps :: SS -> SS -> [SS] -> [SS]
-addSeps rdelim sep (ss:sss)
-  = ss : map addSep (init sss) ++ [addSep $ fuseSS (last sss) rdelim]
-  where
-    sep' = fuseSS sep (ssa " ") 
-    addSep item = fuseSS sep' item
-\end{code}
 
 \subsubsection{Breaking at Ribbon Width}
 
@@ -409,9 +378,14 @@ breakAt rw groups = brkAt rw 0 [] groups
 brkAt :: Int -> Int -> [SS] -> [SS] -> [[SS]]
 brkAt rw sofar sg [] = [reverse sg]
 brkAt rw sofar sg gs@(g:gs')
+  -- | gsize == 0  =  brkAt rw sofar sg gs'
+  | gsize > rw  = flush rw sg g gs'
   | sofar + gsize <= rw  =  brkAt rw (sofar+gsize) (g:sg) gs'
   | otherwise            =  reverse sg : brkAt rw 0 [] gs
-  where gsize = sssize g 
+  where 
+    gsize = sssize g 
+    flush rw [] g gs' = [g] : brkAt rw 0 [] gs'
+    flush rw sg g gs' = reverse sg : [g] : brkAt rw 0 [] gs'
 \end{code}
 
 

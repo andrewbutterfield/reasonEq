@@ -12,19 +12,20 @@ CallStack (from HasCallStack):
 ```
 
 
+
 ## URGENT or NEXT
 
-`Plan 1` for pretty printing (`PrettyTerms`) is not working well for arithmetic expressions or lists of words.
 
-The problem is that too much judgement is left to `SizedStrings`,
-particularly where the `SSC` construct and fusing is concerned.
-The `SSC` construct should be a simple list of `SS`.
-Any fusing of delimiters and sepearators with items should be decided by code in `PrettyTerms` that knows what `Term` is being rendered.
 
 
 ### Proof of `X_X_comp` in `UTCP`.
 
 This exposes the need for good pretty-printing.
+
+PLan 2 is better, good for trees but fails badly on lists.
+Works well with Arith examples.
+
+Need to implement quantifier pretty-printing for UTCP `X_X_Comp`.
 
 We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
 We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.

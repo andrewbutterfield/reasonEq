@@ -233,7 +233,7 @@ $$
 \vspace{-5pt}
 \begin{code}
 cjAllSwap = preddef ("forall" -.- "swap")
-                    (forAll [ys] (forAll [ys] p)  
+                    (forAll [xs] (forAll [ys] p)  
                      ===  
                      forAll [ys] (forAll [xs] p))
                     scTrue

@@ -9,6 +9,6 @@ Law axiom forall_inst . BndS forall [lst x, lst y] P ==> BndS forall [lst y] Sub
 Law axiom forall_alpha_rename . BndS forall [lst x] P === BndS forall [lst y] SubL P [. y // x .] . VSC std P disj lst y .
 
 Conjecture forall_true . BndS forall [lst x] True === True . none
-Conjecture forall_swap . BndS forall [lst y] BndS forall [lst y] P === BndS forall [lst y] BndS forall [lst x] P . none
+Conjecture forall_swap . BndS forall [lst x] BndS forall [lst y] P === BndS forall [lst y] BndS forall [lst x] P . none
 Conjecture forall_idem . BndS forall [lst x] BndS forall [lst y] P === BndS forall [lst y] P . VSC lst x covby lst y .
 Conjecture one_point . Iter and eq [x e ] /\ P === SubL P [. e // x .] . VSC lst e disj lst x .

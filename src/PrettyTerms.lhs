@@ -383,11 +383,12 @@ Each fuse result after the first is rendered on a new line with an indent.
 
 \begin{code}
   | otherwise  -- i+size > ww
+  -- !!!!! DONT USE splitlayout here, just render each fittings sub-list
     = concat $ concat (map (map (splitlayout rw (i+1))) fittings)
   where
     sslist = ldelim : intercalate [sep] (map singleton items) ++ [rdelim]
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw sslist
+    fittings = breakAt rw $ pdbg "SSLIST" sslist
 \end{code}
 
 \subsection{Support Code}
@@ -399,16 +400,18 @@ breakAt :: Int -> [SS] -> [[SS]]
 breakAt rw groups = brkAt rw 0 [] groups
 
 brkAt :: Int -> Int -> [SS] -> [SS] -> [[SS]]
-brkAt rw sofar sg [] = [reverse sg]
+brkAt rw sofar sg [] = [wraprev sg]
 brkAt rw sofar sg gs@(g:gs')
-  -- | gsize == 0  =  brkAt rw sofar sg gs'
+  | gsize == 0  =  brkAt rw sofar sg gs'
   | gsize > rw  = flush rw sg g gs'
   | sofar + gsize <= rw  =  brkAt rw (sofar+gsize) (g:sg) gs'
-  | otherwise            =  reverse sg : brkAt rw 0 [] gs
+  | otherwise            =  wraprev sg : brkAt rw 0 [] gs
   where 
     gsize = sssize g 
     flush rw [] g gs' = [g] : brkAt rw 0 [] gs'
-    flush rw sg g gs' = reverse sg : [g] : brkAt rw 0 [] gs'
+    flush rw sg g gs' = wraprev sg : [g] : brkAt rw 0 [] gs'
+
+wraprev sg = reverse sg-- [sslist $ reverse sg]
 \end{code}
 
 

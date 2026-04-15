@@ -1,0 +1,50 @@
+brkAt 6 0 []
+  [SS 0 (SSA ""),SS 1 (SSA "1"),SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*")
+  ,SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "4"),SS 0 (SSA "")]
+ = brkAt line 3 -- counting type-signature as line 0
+ brkAt 6 0 []
+  [SS 1 (SSA "1"),SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*")
+  ,SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 1 [SS 1 (SSA "1")]
+    [SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*")
+    ,SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 2 [SS 1 (SSA "*"),SS 1 (SSA "1")]
+    [SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "4")
+    ,SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 3 [SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "1")]
+    [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 4 [SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "1")]
+    [SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 5 [SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*")
+          ,SS 1 (SSA "1")]
+    [SS 1 (SSA "*"),SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+brkAt 6 6 [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2")
+          ,SS 1 (SSA "*"),SS 1 (SSA "1")]
+    [SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 6
+reverse [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2")
+        ,SS 1 (SSA "*"),SS 1 (SSA "1")] ++
+brkAt 6 0 [] [SS 1 (SSA "4"),SS 0 (SSA "")]
+= brkAt line 5
+reverse [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2")
+        ,SS 1 (SSA "*"),SS 1 (SSA "1")] ++
+brkAt 6 1 [SS 1 (SSA "4")] [SS 0 (SSA "")]
+= brkAt line 6
+reverse [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2")
+        ,SS 1 (SSA "*"),SS 1 (SSA "1")] ++
+brkAt 6 1 [SS 1 (SSA "4")] []
+= brkAt line 1
+reverse [SS 1 (SSA "*"),SS 1 (SSA "3"),SS 1 (SSA "*"),SS 1 (SSA "2")
+        ,SS 1 (SSA "*"),SS 1 (SSA "1")] ++ reverse [SS 1 (SSA "4")] 
+= reverse, twice
+[SS 1 (SSA "1"),SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "3")
+,SS 1 (SSA "*")] ++ [SS 1 (SSA "4")] 
+= defn of ++
+[SS 1 (SSA "1"),SS 1 (SSA "*"),SS 1 (SSA "2"),SS 1 (SSA "*"),SS 1 (SSA "3")
+,SS 1 (SSA "*"),SS 1 (SSA "4")] 

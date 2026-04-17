@@ -377,14 +377,9 @@ splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
 
 \subsubsection{Plan 2}
 
-We fuse delimiters with first and last items, 
-and separators with the preceding items.
-Each fuse result after the first is rendered on a new line with an indent.
 
 \begin{code}
-  | otherwise  -- i+size > ww
-  -- !!!!! DONT USE splitlayout here, just render each fittings sub-list
-    = concat $ concat (map (map (splitlayout rw (i+1))) fittings)
+  | otherwise  =  renderFittings fittings
   where
     sslist = ldelim : intercalate [sep] (map singleton items) ++ [rdelim]
     rw = ww-i  -- "ribbon" width
@@ -412,6 +407,11 @@ brkAt rw sofar sg gs@(g:gs')
     flush rw sg g gs' = wraprev sg : [g] : brkAt rw 0 [] gs'
 
 wraprev sg = reverse sg-- [sslist $ reverse sg]
+
+renderFittings :: [[SS]] -> [String]
+renderFittings ssss 
+  = let strss = map (map (splitlayout 1000 0)) ssss
+    in [unlines' $ map concat (map concat strss)]
 \end{code}
 
 

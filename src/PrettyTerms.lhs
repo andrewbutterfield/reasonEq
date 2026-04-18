@@ -259,7 +259,7 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
 \subsubsection{Quantifiers}
 
 A quantifier has the general form:
-$$ \mathcal Q v_1,\dots,v_2 \bullet t$$
+$$ \mathcal Q v_1,\dots,v_n \bullet t$$
 The difference between set-oriented binds ($\forall$,$\exists$,\dots)
 and list-oriented binds ($\lambda$,\dots) is semantic,
 but that is not relevant for pretty-printing.
@@ -268,12 +268,30 @@ mkss trid p (Bnd  typ n vs tm) = mkQuantifier trid p n (S.toList vs) tm
 mkss trid p (Lam  typ n vl tm) = mkQuantifier trid p n vl            tm
 \end{code}
 
+\subsubsection{Closure}
+
+Closures are quantifier terms that cover all free variables:
+$$[P] \qquad \langle Q \rangle$$
+\begin{code}
+mkss trid p (Cls (Identifier c _) tm)
+  | c ==  "universal"        
+    = ssc (ssa "[") (ssa "]") ssnul [mkss trid 99 tm]
+  | c ==  "existential"        
+    = ssc ss_lngl ss_rngl ssnul [mkss trid 99 tm]
+\end{code}
+
+\subsubsection{Substitution}
+
+$$ t[e_1,\dots,e_n/v_1,\dots,v_n]$$
+\begin{code}
+mkss trid p (Sub typ tm s)
+  = sslist [mkss trid p tm,mkSubst trid 0 s]
+\end{code}
+
 
 \subsection*{Not Yet Done}
 For now we let these fall through to the atomic term case below.
 \begin{code}
--- mkss trid p (Cls      n    tm)          = ssa "X n tm"
--- mkss trid p (Sub  typ      tm s)        = ssa "S typ tm s"
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
 \end{code}
 
@@ -298,7 +316,10 @@ mkQuantifier trid p quant vl tm
     sst = mkss trid p tm 
     ssvl = ssopen "," $ map (ssa . trgvar trid) vl
 
-ssbullet = ssa $ pad _bullet  
+ssbullet = ssa $ pad _bullet 
+
+mkSubst trid p sub@(Substn tvs lvlvs) 
+ = ssa $ trSub p sub -- for now
 \end{code}
 
 \newpage
@@ -383,7 +404,7 @@ splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
   where
     sslist = ldelim : intercalate [sep] (map singleton items) ++ [rdelim]
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw $ pdbg "SSLIST" sslist
+    fittings = breakAt rw sslist
 \end{code}
 
 \subsection{Support Code}
@@ -439,13 +460,13 @@ disp :: SS -> Int -> IO ()
 disp thing w = putStrLn $ mklayout w thing
 sssh = ssa . show
 mullist :: Int -> SS
-mullist n = ssc ss0 ss0 (ssa "*") $ take n $ map sssh [1..]
+mullist n = ssc ss0 ss0 (ssa ", ") $ take n $ map sssh [1..]
 
 addltree :: Int -> SS
 addltree n = mktree $ map sssh [1..n]
 
 mkbranch :: SS -> SS -> SS
-mkbranch ss1 ss2 = ssc ss0 ss0 (ssa "+") [ss1,ss2]
+mkbranch ss1 ss2 = ssc ss0 ss0 (ssa " + ") [ss1,ss2]
 
 mktree :: [SS] -> SS
 mktree [] = ss0 

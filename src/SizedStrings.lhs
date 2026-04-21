@@ -6,13 +6,15 @@ module SizedStrings
  , showStyle
  , resetStyle, setUnderline, setColour
  , setStyle
- , SS(..), SS'(..), sssize
- , ssa,pad,sss,ssc
- , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
+ , SS(..), sssize
+ , ssa,sss,ssw,ssl,sso
+ , ssc, pad
+ , ssnul,ssopen,sslist,ssclosed
  , paren
- , ss2str, ss'2str
+ , ss2str
  , fuseSS
- , renderIn,render )
+ -- , renderIn,render 
+ )
 where
 import Utilities
 import Data.List
@@ -66,48 +68,60 @@ reset = putStrLn resetStyle -- useful in GHCi to tidy up!
 
 \section{Sized String Types}
 
-\begin{eqnarray*}
-  ss &::=& ss_{atom} \mid  ss_{ldelim} ~ ss_{delim} ~ ss_{sep} ~ ss^*
-\end{eqnarray*}
-We implement these using two mutually recursive datatypes where
-the top level-one (\h{SS}) wraps the above structure with an integer that gives the
-rendered length of the structure, at each level.
-\begin{code}
-data SS = SS Int SS' deriving (Eq,Ord,Show)
 
-data SS' = SSA String          -- atom
-         | SSS Style SS        -- style
-         | SSC SS SS SS [SS]   -- ldelim rdelim sep sss
-         deriving (Eq,Ord,Show)
+
+We implement these using a recursive datatype with an integer that gives the
+rendered length of the structure, at each level.
+The length is set correctly by using builders provided below:
+\begin{code}
+data SS = SSA Int String    -- atom
+        | SSS Int Style SS  -- style             - zero width appearance 
+        | SSW Int SS SS SS  -- ldelim rdelim ss  - bracketing
+        | SSL Int SS [SS]   -- sep sss           -  lists
+        | SSO Int SS [SS]   -- inop sss          - infix ops
+        deriving (Eq,Ord,Show)
 
 -- useful query
 sssize :: SS -> Int
-sssize (SS s _) = s
+sssize (SSA s _)        =  s
+sssize (SSS s _ _)      =  s
+sssize (SSW s _ _ _)  =  s
+sssize (SSL s _ _)  =  s
+sssize (SSO s _ _)  =  s
 \end{code}
 
 
 \section{Smart Constructors}
 
-We build smart versions of the \h{SSA}, \h{SSS} and \h{SSC}
-constructors
+We build smart versions of the 
+\h{SSA}, \h{SSS}, \h{SSCL}, and \H{SSO} constructors
 that automatically accumulate the length information.
 \begin{code}
 ssa :: String -> SS
-ssa str = SS (length str) $ SSA str
+ssa str = SSA (length str) str
 
 sss :: Style -> SS -> SS
-sss style ss@(SS len _) = SS len $ SSS style ss
+sss style ss  = SSS (sssize ss) style ss
 
-ssc :: SS -> SS -> SS -> [SS] -> SS
-ssc lss rss seps sss
- = SS sslen $ SSC lss rss seps sss
+ssw :: SS -> SS -> SS -> SS
+ssw lss rss ss = SSW (sssize lss+sssize rss+sssize ss) lss rss ss
+
+ssl :: SS -> [SS] -> SS
+ssl sep sss = mkcomp SSL sep sss
+
+sso :: SS -> [SS] -> SS
+sso sep sss = mkcomp SSO sep sss
+
+mkcomp cons sep sss = cons sslen sep sss
  where
-  sslen = sssize lss + sssize rss + sepsize sss * sssize seps
-          + sum (map sssize sss)
+  sslen = sepsize sss * sssize sep + sum (map sssize sss)
   sepsize xs
    | len == 0  =  0
    | otherwise  =  len - 1
    where len = length xs
+
+-- backwards compatibiliy
+ssc ldelim rdelim sep sss = ssw ldelim rdelim $ ssl sep sss
 \end{code}
 
 \newpage
@@ -148,8 +162,10 @@ This assumes that lower precedence values mean a looser binding,
 so if the inner is looser than the outer we need to bracket it.
 \begin{code}
 paren :: Int -> Int -> SS -> SS
-paren outerp innerp (SS w (SSC _ _ seps sss))
- | innerp < outerp  =  ssc (ssa "(") (ssa ")") seps sss
+paren outerp innerp ss@(SSL _ _ _)
+ | innerp < outerp  =  ssw (ssa "(") (ssa ")") ss
+paren outerp innerp ss@(SSO _ _ _)
+ | innerp < outerp  =  ssw (ssa "(") (ssa ")") ss
 paren outerp innerp ss = ss
 \end{code}
 
@@ -160,32 +176,28 @@ paren outerp innerp ss = ss
 It is useful to get the string produced
 if a \h{SS} is all rendered on one line.
 \begin{code}
-ss2str :: Int -> [Style] -> SS -> String
-ss2str i stls (SS _ ss') = ind i $ ss'2str stls ss'
+ss2str :: [Style] -> SS -> String
+ss2str _ (SSA _ str) = str
 
-ss'2str :: [Style] -> SS' -> String
-ss'2str _ (SSA str) = str
 
-ss'2str stls (SSS style ss)
+ss2str stls (SSS _ style ss)
  = concat [ showStyle style -- set new style style
-          , ss2str 0 (style:stls) ss -- recurse with styles updated
+          , ss2str (style:stls) ss -- recurse with styles updated
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
 
-ss'2str stls (SSC lss rss seps [])
-  =  ss2str 0 stls lss ++ ss2str 0 stls rss
+ss2str stls (SSL _ _ [])   =  ""
+ss2str stls (SSL _ sep sss)  =  pppps stls sep sss
 
-ss'2str stls (SSC lss rss seps sss)
- | sssize lss == 0  =  pppps stls rss seps sss
- | otherwise        =  ss2str 0 stls lss ++ pppps stls rss seps sss
- where
+ss2str stls (SSO _ _ [])  =  ""
+ss2str stls (SSO _ op sss)  = pppps stls op sss
 
-  pppps :: [Style] -> SS -> SS -> [SS] -> String
-  pppps stls rss seps []        =  ss2str 0 stls rss
-  pppps stls rss seps [ss]      =  ss2str 0 stls ss ++ ss2str 0 stls rss
-  pppps stls rss seps (ss:sss)
-    =  ss2str 0 stls ss ++ ss2str 0 stls seps ++ pppps stls rss seps sss
+pppps :: [Style] -> SS -> [SS] -> String
+pppps stls  sep []        =  []
+pppps stls  sep [ss]      =  ss2str stls ss 
+pppps stls  sep (ss:sss)
+    =  ss2str stls ss ++ ss2str stls sep ++ pppps stls sep sss
 \end{code}
 
 \section{Fusing}
@@ -197,127 +209,127 @@ to get \h{SS w1+w2 ss'?}.
 \begin{code}
 fuseSS :: SS -> SS -> SS
 \end{code}
-If both are instances of \h{SSA}, this is straightforward:
+If both are instances of \h{SSA}, 
+or instances of \h{SSS},this is straightforward:
 \begin{code}
-fuseSS (SS w1 (SSA s1)) (SS w2 (SSA s2)) = SS (w1+w2) $ SSA (s1++s2)
+fuseSS (SSA w1 s1) (SSA w2 s2) = SSA (w1+w2) (s1++s2)
 \end{code}
-For now, anything else gets put inside a \h{SSC}:
+For now, anything else gets put inside a \h{SSL}:
 \begin{code}
-fuseSS ss1@(SS w1 _) ss2@(SS w2 _) 
-  = SS (w1+w2) (SSC ssnul ssnul ssnul [ss1,ss2])
-\end{code}
-
-
-\section{Full Rendering}
-
-\textbf{This is really pretty-printing which is probably better done by the client}
-
-Now, rendering it as a `nice' string.
-We provide the desired column width at the top level,
-along with an specified initial indentation
-or one set to zero.
-\begin{code}
-renderIn :: Int -> Int -> SS -> String
-renderIn w0 ind = fmtShow . layout [] (w0-ind) ind
-
-render :: Int -> SS -> String
-render w0 = renderIn w0 0
-\end{code}
-
-\subsection{Lines and Formatting}
-
-We have atomic strings present,
-and we also need to explicitly identify newlines and indents.
-All of these need to have an associated style.
-\begin{code}
-data Layout = NL | Ind Int | Txt String deriving Show
-
-type SLayout = (Layout,[Style])
-\end{code}
-
-\newpage
-We obtain the final string by merging \h{Fmt} with \h{Txt} on either
-side before calling \h{unlines}
-(otherwise formatting commands introduce spurious linebreaks).
-\begin{code}
-lstr NL         =  "\n"
-lstr (Ind i)    =  ind i ""
-lstr (Txt str)  =  str
-
-fmtShow :: [SLayout] -> String
-fmtShow = concat . fshow []
- where
-   fshow [] [] = []
-   fshow _  [] = [resetStyle]
-   fshow ss ((layout,ss'):slayouts)
-    | ss == ss'  =  lstr layout :  fshow ss' slayouts
-    | otherwise
-       = resetStyle : setStyle ss' : lstr layout : fshow ss' slayouts
-\end{code}
-
-\paragraph{List viewer}
-
-Show list elements one per line:
-\begin{code}
-ldisp :: Show a => [a] -> IO ()
-ldisp = putStrLn . unlines' . map show
+fuseSS ss1 ss2  = SSL (sssize ss1+sssize ss2) ssnul [ss1,ss2]
 \end{code}
 
 
-\subsection{Layout}
+% \section{Full Rendering}
 
-The main recursive layout algorithm has a width and indentation parameter
----
-the sum of these is always constant.
-\begin{code}
--- w+i is constant;  w+i=w0 above
-layout :: [Style] ->Int -> Int -> SS -> [SLayout]
+% \textbf{This is really pretty-printing which is probably better done by the client}
 
--- handle style changes
-layout ss w i (SS _ (SSS s ss')) = layout (s:ss) w i ss'
+% Now, rendering it as a `nice' string.
+% We provide the desired column width at the top level,
+% along with an specified initial indentation
+% or one set to zero.
+% \begin{code}
+% renderIn :: Int -> Int -> SS -> String
+% renderIn w0 ind = fmtShow . layout [] (w0-ind) ind
 
--- 1st three cases: cannot break, or can fit on line
-layout ss _ i (SS _ (SSA str))          =  [(Txt str,ss)]
-layout ss _ i ss'@(SS _ (SSC _ _ _ []))  =  [(Txt $ ss2str i ss ss', ss)]
-layout ss w i ss'@(SS s _)  | s <= w     =  [(Txt $ ss2str i ss ss', ss)]
+% render :: Int -> SS -> String
+% render w0 = renderIn w0 0
+% \end{code}
 
--- case when non-trivial comp and it is too wide
-layout ss w i (SS _ (SSC lss rss seps sss))
- = layout' ss w i (w-s) (i+s) lss rss seps sss -- sss not null
- where s = max (sssize lss) (sssize seps)
-\end{code}
+% \subsection{Lines and Formatting}
 
-\newpage
-The helpers, \h{layout'} and \h{layout''}
-need to track outer (\h{w i}) and inner (\h{w' i'}) values
-of width and indentation.
-\begin{code}
--- we need to split it up
+% We have atomic strings present,
+% and we also need to explicitly identify newlines and indents.
+% All of these need to have an associated style.
+% \begin{code}
+% data Layout = NL | Ind Int | Txt String deriving Show
 
--- singleton case:   lss \n pp \n rss
-layout' ss w i w' i' lss rss seps [pp]
- = layout ss w i lss
-   ++ (NL,ss) : (Ind i',ss) : layout ss w' i' pp
-   ++ (NL,ss) : (Ind i, ss) : layout ss w i rss
+% type SLayout = (Layout,[Style])
+% \end{code}
 
--- general case
-layout' ss w i w' i' lss@(SS lw _) rss seps (pp:sss)
- = (Txt $ ss2str i ss lss, ss) : (Ind (i'-(i+lw)),ss) -- header line
-                        : (layout ss w' i' pp)
-   ++
-   (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
+% \newpage
+% We obtain the final string by merging \h{Fmt} with \h{Txt} on either
+% side before calling \h{unlines}
+% (otherwise formatting commands introduce spurious linebreaks).
+% \begin{code}
+% lstr NL         =  "\n"
+% lstr (Ind i)    =  ind i ""
+% lstr (Txt str)  =  str
 
-layout'' ss w i w' i' rss@(SS rw _) seps@(SS sw _) [pp]
- = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
-                    : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
-   ++ [(Txt $ ss2str i ss rss,ss)]
+% fmtShow :: [SLayout] -> String
+% fmtShow = concat . fshow []
+%  where
+%    fshow [] [] = []
+%    fshow _  [] = [resetStyle]
+%    fshow ss ((layout,ss'):slayouts)
+%     | ss == ss'  =  lstr layout :  fshow ss' slayouts
+%     | otherwise
+%        = resetStyle : setStyle ss' : lstr layout : fshow ss' slayouts
+% \end{code}
 
-layout'' ss w i w' i' rss seps@(SS sw _) (pp:sss)
- = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
-                    : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
-   ++
-   (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
-\end{code}
+% \paragraph{List viewer}
+
+% Show list elements one per line:
+% \begin{code}
+% ldisp :: Show a => [a] -> IO ()
+% ldisp = putStrLn . unlines' . map show
+% \end{code}
+
+
+% \subsection{Layout}
+
+% The main recursive layout algorithm has a width and indentation parameter
+% ---
+% the sum of these is always constant.
+% \begin{code}
+% -- w+i is constant;  w+i=w0 above
+% layout :: [Style] ->Int -> Int -> SS -> [SLayout]
+
+% -- handle style changes
+% layout stls w i (SSS _ s ss') = layout (s:ss) w i 
+
+% -- 1st three cases: cannot break, or can fit on line
+% layout ss _ i (SSA _ str))         =  [(Txt str,ss)]
+% layout ss _ i ss'@(SSC _ _ _ _ [])  =  [(Txt $ ss2str i ss ss', ss)]
+% layout ss w i ss'@(SS s _)  | s <= w     =  [(Txt $ ss2str i ss ss', ss)]
+
+% -- case when non-trivial comp and it is too wide
+% layout ss w i (SS _ (SSC lss rss seps sss))
+%  = layout' ss w i (w-s) (i+s) lss rss seps sss -- sss not null
+%  where s = max (sssize lss) (sssize seps)
+% \end{code}
+
+% \newpage
+% The helpers, \h{layout'} and \h{layout''}
+% need to track outer (\h{w i}) and inner (\h{w' i'}) values
+% of width and indentation.
+% \begin{code}
+% -- we need to split it up
+
+% -- singleton case:   lss \n pp \n rss
+% layout' ss w i w' i' lss rss seps [pp]
+%  = layout ss w i lss
+%    ++ (NL,ss) : (Ind i',ss) : layout ss w' i' pp
+%    ++ (NL,ss) : (Ind i, ss) : layout ss w i rss
+
+% -- general case
+% layout' ss w i w' i' lss@(SS lw _) rss seps (pp:sss)
+%  = (Txt $ ss2str i ss lss, ss) : (Ind (i'-(i+lw)),ss) -- header line
+%                         : (layout ss w' i' pp)
+%    ++
+%    (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
+
+% layout'' ss w i w' i' rss@(SS rw _) seps@(SS sw _) [pp]
+%  = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
+%                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
+%    ++ [(Txt $ ss2str i ss rss,ss)]
+
+% layout'' ss w i w' i' rss seps@(SS sw _) (pp:sss)
+%  = (Ind i,ss) : (Txt $ ss2str 0 ss seps, ss)
+%                     : (Ind (i'-(i+sw)),ss) : layout ss w' i' pp
+%    ++
+%    (NL,ss) : layout'' ss w i w' i' rss seps sss -- sss not null
+% \end{code}
 
 \subsection{Sized String Tests}
 

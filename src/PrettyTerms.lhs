@@ -355,30 +355,25 @@ if $s \leq W$ then we render as a one-liner,
 otherwise we explore how to split over multiple lines.
 \begin{code}
 mklayout :: Int -> SS -> String
-mklayout ww ss@(SS size ss')
-  | size <= ww  =  ss'2str [] ss'
+mklayout ww ss
+  | size <= ww  =  ss2str [] ss
   | otherwise   =  unlines' $ splitlayout ww 0 ss
+  where size = sssize ss
 \end{code}
 
 \subsection{Layout Splitting}
 
-First a top-level function that ``peels out'' the \h{SS'} component:
-\begin{code}
-splitlayout :: Int -> Int -> SS  -> [String]
-splitlayout ww i (SS size' ss') = splitlayout' ww size' i ss'
-\end{code}
 
-Most of the work is done by \h{splitlayout'}:
+Most of the work is done by \h{splitlayout}:
 \begin{code}
-splitlayout' :: Int -> Int -> Int -> SS' -> [String]
--- splitlayout' ww size i ss'  where size = sizeOf ss'
+splitlayout :: Int -> Int -> SS -> [String]
 \end{code}
 
 \subsection{Atomic Layout}
 
 If the sized-string is atomic, we cannot split it:
 \begin{code}
-splitlayout' ww size i (SSA str) = [ind i str]
+splitlayout ww i (SSA size str) = [ind i str]
 \end{code}
 
 \subsection{Style Layout}
@@ -388,23 +383,23 @@ then prepend the showStyle and append the reset and setStyles stuff.
 Note that all the style setting and resetting 
 involves zero-width control character sequences.
 \begin{code}
-splitlayout' ww size i (SSS style ss)
+splitlayout ww i (SSS size style ss)
   = let strs = splitlayout ww i ss
-    in bracketStrings 
+    in wrapStyleControl 
         (showStyle style) 
         strs 
         (resetStyle ++ setStyle [])
 \end{code}
 
-\subsection{General List Layout}
+\subsection{Explicit Bracketing}
 
 In general we have the form:
 $$
-ldelim~rdelim~sep~\seqof{itm_1,itm_2,\dots,itm_k}
+ldelim~rdelim~itm
 $$
 which should render as:
 $$
-ldelim~itm_1~sep~itm_2~sep \dots sep~itm_k~rdelim
+ldelim~itm~rdelim
 $$
 The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
 However they are usually simple strings, and can also be empty, 
@@ -412,21 +407,59 @@ or are often of length 1.
 A key issue here is that each of the $itm_i$ may itself be a general list,
 so what we are really dealing with is a tree-like structure.
 \begin{code}
-splitlayout' ww size i  ssc@( SSC ldelim@(SS lw ldelim')
-                              rdelim@(SS rw rdelim') 
-                              sep@(SS spw sep')
-                              items )                           
-  | i+size  <= ww  =  [ind i $ ss'2str [] ssc]
-\end{code}
-
-
-\subsubsection{Plan 2}
-
-
-\begin{code}
+splitlayout ww i ssc@( SSW size ldelim rdelim itm )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
   | otherwise  =  renderFittings fittings
   where
-    sslist = ldelim : intercalate [sep] (map singleton items) ++ [rdelim]
+    sslist = [ldelim,itm,rdelim]
+    rw = ww-i  -- "ribbon" width
+    fittings = breakAt rw sslist
+\end{code}
+
+\subsection{General List Layout}
+
+In general we have the form:
+$$
+sep~\seqof{itm_1,itm_2,\dots,itm_k}
+$$
+which should render as:
+$$
+itm_1~sep~itm_2~sep \dots sep~itm_k
+$$
+In general $sep$ can itself be a general sized-string.
+However it is usually a simple strings, often of length 1.
+A key issue here is that each of the $itm_i$ may itself be a general list,
+so what we are really dealing with is a tree-like structure.
+\begin{code}
+splitlayout ww i ssc@( SSL size sep items )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
+  | otherwise  =  renderFittings fittings
+  where
+    sslist = intercalate [sep] (map singleton items)
+    rw = ww-i  -- "ribbon" width
+    fittings = breakAt rw sslist
+\end{code}
+
+\subsection{General Infix Operator Layout}
+
+In general we have the form:
+$$
+inop~\seqof{itm_1,itm_2,\dots,itm_k}
+$$
+which should render as:
+$$
+itm_1~inop~itm_2~inop \dots sep~itm_k
+$$
+In general $inop$ can itself be a general sized-string.
+However it is usually a simple strings, often of length 1.
+A key issue here is that each of the $itm_i$ may itself be a general list,
+so what we are really dealing with is a tree-like structure.
+\begin{code}
+splitlayout ww i ssc@( SSO size inop items )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
+  | otherwise  =  renderFittings fittings
+  where
+    sslist = intercalate [inop] (map singleton items)
     rw = ww-i  -- "ribbon" width
     fittings = breakAt rw sslist
 \end{code}
@@ -460,15 +493,15 @@ renderFittings ssss
 \end{code}
 
 
-\subsubsection{Style Bracketing}
+\subsubsection{Style Control}
 
 This fuses prefix/postfix strings with first/last strings in a list.
 This makes sense when the pre/postfix strings only contain zero-width characters.
 \begin{code}
-bracketStrings :: String -> [String] -> String -> [String]
-bracketStrings pres [] posts = [pres,posts]
-bracketStrings pres [str] posts = [pres++str,posts]
-bracketStrings pres strs posts 
+wrapStyleControl :: String -> [String] -> String -> [String]
+wrapStyleControl pres [] posts = [pres,posts]
+wrapStyleControl pres [str] posts = [pres++str,posts]
+wrapStyleControl pres strs posts 
   = premrg pres $ reverse $ pstmrg posts $ reverse strs
   where premrg p (s:ss)  = ((p++s):ss) ; pstmrg p (s:ss) = ((s++p):ss)
 \end{code}
@@ -481,7 +514,9 @@ The following tests are intended to be run from within GHCi.
 
 \begin{code}
 ssdisp :: SS -> Int -> IO ()
-ssdisp thing w = putStrLn $ mklayout w thing
+ssdisp thing w 
+  = putStrLn (replicate w '_' ++ "\n" ++ mklayout w thing)
+
 sssh = ssa . show
 mullist :: Int -> SS
 mullist n = ssc ssnul ssnul (ssa ", ") $ take n $ map sssh [1..]
@@ -519,7 +554,8 @@ mkVT v = jpVar $ StaticVar $ jId v
 
 mksubst tvc lvc = Sub ArbType  (mkVT "t") $ mksub tvc lvc
 
-tdisp t ww = putStrLn $ ppTerm ww 0 t
+tdisp t ww 
+ = putStrLn (replicate ww '_' ++ "\n" ++ ppTerm ww 0 t)
 \end{code}
 
 

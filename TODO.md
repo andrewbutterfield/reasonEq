@@ -1,5 +1,7 @@
 # To Do
 
+**Pretty printing only works at top-level. Needs full review.**
+
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
@@ -15,6 +17,9 @@ CallStack (from HasCallStack):
 
 ## URGENT or NEXT
 
+
+
+
 Actually installing a theory from a `.utp` file.
 
 
@@ -25,9 +30,11 @@ This exposes the need for good pretty-printing.
 PLan 2 is better, good for trees but fails badly on lists.
 Works well with Arith examples.
 
-NEXT: Substitution.
+NEXT: Iter (NOT URGENT).
 
-Quantifier pretty-printing now works.
+Quantifier pretty-printing now works at top-level
+
+Substitution pretty proimting now worksd
 
 Issues:
 The more it is "squeezed", the more blank lines it generates.

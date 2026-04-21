@@ -12,6 +12,8 @@ import Data.Char
 import Data.Maybe
 import Symbols
 import LexBase
+import Variables
+import Types
 import AST
 import TermZipper
 import SizedStrings
@@ -452,8 +454,8 @@ bracketStrings pres strs posts
 The following tests are intended to be run from within GHCi.
 
 \begin{code}
-disp :: SS -> Int -> IO ()
-disp thing w = putStrLn $ mklayout w thing
+ssdisp :: SS -> Int -> IO ()
+ssdisp thing w = putStrLn $ mklayout w thing
 sssh = ssa . show
 mullist :: Int -> SS
 mullist n = ssc ssnul ssnul (ssa ", ") $ take n $ map sssh [1..]
@@ -475,6 +477,23 @@ walk [] = []
 walk [ss] = [ss]
 walk [ss1,ss2] = [mkbranch ss1 ss2]
 walk (ss1:ss2:sss) = mkbranch ss1 ss2 : walk sss
+
+mksub tvcount lvlvcount
+  = jSubstn tvl lvlvl
+  where
+    tvl = map mktv [1..tvcount]
+    lvlvl = map mkvlvl [1..lvlvcount]
+    mktv n = (StaticVar $ mkvid n,Val ArbType $ Integer n)
+    mkvlvl n = (StaticVars $ mklvid "t" n,StaticVars $ mklvid "r" n)
+
+mkvid n = jId ("x"++show n)
+mklvid s n = jId (s++show n)
+
+mkVT v = jpVar $ StaticVar $ jId v
+
+mksubst tvc lvc = Sub ArbType  (mkVT "t") $ mksub tvc lvc
+
+tdisp t ww = putStrLn $ ppTerm ww 0 t
 \end{code}
 
 

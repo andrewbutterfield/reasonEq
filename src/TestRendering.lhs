@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module TestRendering (
    trId, trIdU, iddbg
- , trVar, trVarU, trvar, trLVar, trLVarU, trGVar, trGVarU, trgvar
+ , trVar, trVarU, trvar, trLVar, trLVarU, trlvar, trGVar, trGVarU, trgvar
  , trVSet, trVSetU, trvset
  , trOVSet, trOVSetU, vsdbg
  , trVList, trVListU, trVariableSet, trVariableSetU

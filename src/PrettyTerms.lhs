@@ -93,12 +93,8 @@ We have a lot of partial special cases,
 depending on the constructor name, and the number of sub-terms.
 By partial we mean that we match against specific names and numbers,
 but fall through if those matches fail, to try other cases.
+We use \h{TestRendering} for symbol generation.
 
-
-\textbf{
-May want lookup tables to match \h{Cons Identifier}s to a key string
-(e.g. \h{"not"} maps to $\lnot$).
-}
 
 \subsubsection{Single Sub-Term}
 

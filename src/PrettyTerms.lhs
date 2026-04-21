@@ -83,9 +83,9 @@ In the sequel we use the following notation for terms:
 \subsection{Atomic Terms}
 
 \begin{code}
-mkss trid p (Val tk k)  =  ssa $ trValue k
-mkss trid p (Var tk v)  =  ssa $ trVar v
-mkss trid p (VTyp t v)  =  ssa ( "("++trVar v++":"++trType t++")" )
+mkss _    _ (Val tk k)  =  ssa $ trValue k
+mkss trid _ (Var tk v)  =  ssVar trid v
+mkss trid _ (VTyp t v)  =  ssa ( "("++trvar trid v++":"++trType t++")" )
 \end{code}
 
 
@@ -188,7 +188,7 @@ mkss trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
           ->  mkss trid ctxtp $ Cons tk sub opn (tsI++ts')
        _  ->  ssBracketIf (opp <= ctxtp)
                   $ ssopen (pad $ trid opn)
-                  $ map (mkss trid opp) ts
+                  $ mksss trid opp ts
  where
    prcs@(opp,fixity)  =  opkind nm
    isRFix             =  fixity == RAssoc
@@ -211,7 +211,7 @@ as their context precedence.
 mkss trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  ssBracketIf (opp <= ctxtp)
                         $ ssopen (pad $ trid opn) 
-                        $ map (mkss trid opp) ts
+                        $ mksss trid opp ts
  where
    prcs@(opp,fixity) = opkind nm
    isOp = fixity /= NotInfix
@@ -226,7 +226,7 @@ mkss trid _ (Cons tk _ n ts)
   | n == jId "seq"  =  ssc ss_lngl ss_rngl ss_comma mkssts
   | n == jId "r"    =  ssc ssnul ssnul ssnul (ssa "r":(map trRoot ts))
   where
-    mkssts =  map (mkss trid 0) ts
+    mkssts =  mksss trid 0 ts
     trRoot (Val _ (Integer i))  =  ssa $ show i
     trRoot (Val _ (Boolean b))  =  if b then ssa "!" else ssnul
     trRoot _                    =  ssnul
@@ -240,7 +240,7 @@ i.e., $X$ and $A$ in the UTCP theory.
 mkss trid _ (Cons tk _ n ts)
   | n `elem` [jId "A", jId "X"]
   =  sslist [ ssa (trid n), ssc ss_lpar ss_rpar ss_bar mkssts]
-  where mkssts = map (mkss trid 99) ts
+  where mkssts = mksss trid 99 ts
 \end{code}
 
 \subsubsection{Function Application}
@@ -251,7 +251,7 @@ $$ f(t_1,\dots,t_n)$$
 \begin{code}
 mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
   =  sslist [ ssa (trid fn), ssc ss_lpar ss_rpar ss_comma mkssts ]
-  where mkssts = map (mkss trid 0) ts
+  where mkssts = mksss trid 0 ts
 \end{code}
 
 \subsubsection{Quantifiers}
@@ -288,13 +288,12 @@ mkss trid p (Sub typ tm s)
 
 
 \subsection*{Not Yet Done}
-For now we let these fall through to the atomic term case below.
+For now we let these fall through to the catch-all case below.
 \begin{code}
 -- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
 \end{code}
 
-\subsection{Atomic Terms}
-Remaining term cases are atomic, so become \h{SSA}:
+\subsubsection{Catch-All}
 \begin{code}
 mkss trid p t = ssa (trterm trid p t) 
 \end{code}
@@ -302,22 +301,49 @@ mkss trid p t = ssa (trterm trid p t)
 \subsection{Support Functions}
 
 \begin{code}
+ssVar trid v = ssa $ trvar trid v
+\end{code}
+
+\begin{code}
 ssBracketIf True  ss  =  sslist [ss_lpar,ss,ss_rpar]
 ssBracketIf False ss  =  ss
 \end{code}
 
+$$t_1,\dots,t_n$$
+\begin{code}
+mksss :: (Identifier -> String) -> Int -> [Term] -> [SS]
+mksss trid p ts = map (mkss trid p) ts
+\end{code}
+
+$$ \mathcal Q v_1,\dots,v_n \bullet t$$
 \begin{code}
 mkQuantifier trid p quant vl tm
   = ssc ssq ssnul ssbullet [ssvl,sst]
   where
     ssq = ssa $ trid quant 
     sst = mkss trid p tm 
-    ssvl = ssopen "," $ map (ssa . trgvar trid) vl
+    ssvl = mkVarList trid vl
+    
+mkVarList trid vl = ssopen "," $ map (ssa . trgvar trid) vl
 
 ssbullet = ssa $ pad _bullet 
+\end{code}
 
-mkSubst trid p sub@(Substn tvs lvlvs) 
- = ssa $ trSub p sub -- for now
+$$[e_1,\dots,e_n/v_1,\dots,v_n]$$
+\begin{code}
+mkSubst trid p sub@(Substn vts lvlvs) 
+  = ssclosed "[" "]" "/" [repls,targets]
+  where
+    (vs,ts) = unzip $ S.toList vts
+    ss_vs = map (ssVar trid) vs
+    ss_ts = mksss trid p ts
+    (tlvs,rlvs) = unzip $ S.toList lvlvs
+    ss_tlvs = map (ssLVar trid) tlvs
+    ss_rlvs = map (ssLVar trid) rlvs
+    targets = ssopen "," (ss_vs ++ ss_tlvs)
+    repls   = ssopen "," (ss_ts ++ ss_rlvs)
+
+ssLVar trid lv = ssa $ trlvar trid lv
 \end{code}
 
 \newpage

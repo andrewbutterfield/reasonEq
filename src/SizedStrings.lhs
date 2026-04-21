@@ -11,7 +11,7 @@ module SizedStrings
  , ssnul,ssopen',ssopen,sssopen,sslist,ssbracket,ssclosed
  , paren
  , ss2str, ss'2str
- , ss0, fuseSS
+ , fuseSS
  , renderIn,render )
 where
 import Utilities
@@ -124,7 +124,8 @@ ssnul :: SS -- the empty string
 ssnul = ssa ""
 
 ssopen' :: SS -> [SS] -> SS
-ssopen' = ssc ssnul ssnul
+ssopen' sep [] = ssnul
+ssopen' sep ss = ssc ssnul ssnul sep ss
 
 ssopen :: String -> [SS] -> SS
 ssopen sepstr sss = ssopen' (ssa sepstr) sss
@@ -203,11 +204,7 @@ fuseSS (SS w1 (SSA s1)) (SS w2 (SSA s2)) = SS (w1+w2) $ SSA (s1++s2)
 For now, anything else gets put inside a \h{SSC}:
 \begin{code}
 fuseSS ss1@(SS w1 _) ss2@(SS w2 _) 
-  = SS (w1+w2) (SSC ss0 ss0 ss0 [ss1,ss2])
-\end{code}
-We need a zero-width sized string:
-\begin{code}
-ss0 = SS 0 $ SSA ""
+  = SS (w1+w2) (SSC ssnul ssnul ssnul [ss1,ss2])
 \end{code}
 
 
@@ -329,5 +326,5 @@ The following tests are intended to be run from within GHCi.
 \begin{code}
 addss = ssa "+"
 addmrg n = ssa $ show n
-addnums n = ssc ss0 ss0 addss $ take n $ map addmrg [1..] 
+addnums n = ssc ssnul ssnul addss $ take n $ map addmrg [1..] 
 \end{code}

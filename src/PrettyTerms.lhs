@@ -460,16 +460,16 @@ disp :: SS -> Int -> IO ()
 disp thing w = putStrLn $ mklayout w thing
 sssh = ssa . show
 mullist :: Int -> SS
-mullist n = ssc ss0 ss0 (ssa ", ") $ take n $ map sssh [1..]
+mullist n = ssc ssnul ssnul (ssa ", ") $ take n $ map sssh [1..]
 
 addltree :: Int -> SS
 addltree n = mktree $ map sssh [1..n]
 
 mkbranch :: SS -> SS -> SS
-mkbranch ss1 ss2 = ssc ss0 ss0 (ssa " + ") [ss1,ss2]
+mkbranch ss1 ss2 = ssc ssnul ssnul (ssa " + ") [ss1,ss2]
 
 mktree :: [SS] -> SS
-mktree [] = ss0 
+mktree [] = ssnul 
 mktree [ss] = ss
 mktree [ss1,ss2] = mkbranch ss1 ss2 
 mktree sss = mktree $ walk sss

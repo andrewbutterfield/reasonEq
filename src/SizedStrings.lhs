@@ -77,24 +77,27 @@ The length is set correctly by using builders provided below:
 data SS = SSA Int String    -- atom
         | SSS Int Style SS  -- style             - zero width appearance 
         | SSW Int SS SS SS  -- ldelim rdelim ss  - bracketing
-        | SSL Int SS [SS]   -- sep sss           -  lists
+        | SSL Int SS [SS]   -- sep sss           - list with separator
         | SSO Int SS [SS]   -- inop sss          - infix ops
         deriving (Eq,Ord,Show)
 
 -- useful query
 sssize :: SS -> Int
-sssize (SSA s _)        =  s
-sssize (SSS s _ _)      =  s
+sssize (SSA s _)      =  s
+sssize (SSS s _ _)    =  s
 sssize (SSW s _ _ _)  =  s
-sssize (SSL s _ _)  =  s
-sssize (SSO s _ _)  =  s
+sssize (SSL s _ _)    =  s
+sssize (SSO s _ _)    =  s
+
+-- the "unit of compostion"
+ssnul = (SSA 0 "")
 \end{code}
 
-
+\newpage
 \section{Smart Constructors}
 
 We build smart versions of the 
-\h{SSA}, \h{SSS}, \h{SSCL}, and \H{SSO} constructors
+\h{SSA}, \h{SSS}, \h{SSW},\h{SSCL}, and \h{SSO} constructors
 that automatically accumulate the length information.
 \begin{code}
 ssa :: String -> SS
@@ -107,11 +110,16 @@ ssw :: SS -> SS -> SS -> SS
 ssw lss rss ss = SSW (sssize lss+sssize rss+sssize ss) lss rss ss
 
 ssl :: SS -> [SS] -> SS
-ssl sep sss = mkcomp SSL sep sss
+ssl sep []    =  ssnul
+ssl sep [ss]  =  ss
+ssl sep sss   =  mkcomp SSL sep sss
 
 sso :: SS -> [SS] -> SS
-sso sep sss = mkcomp SSO sep sss
+sso sep []    =  ssnul
+sso sep [ss]  =  ss
+sso sep sss   =  mkcomp SSO sep sss
 
+mkcomp :: (Int -> SS -> [SS] -> SS) -> SS -> [SS] -> SS
 mkcomp cons sep sss = cons sslen sep sss
  where
   sslen = sepsize sss * sssize sep + sum (map sssize sss)
@@ -134,24 +142,14 @@ pad s = ' ':s++" "
 We then provide some useful builders for common idioms,
 mostly where delimiters and separators are atomic.
 \begin{code}
-ssnul :: SS -- the empty string
-ssnul = ssa ""
-
-ssopen' :: SS -> [SS] -> SS
-ssopen' sep [] = ssnul
-ssopen' sep ss = ssc ssnul ssnul sep ss
-
 ssopen :: String -> [SS] -> SS
-ssopen sepstr sss = ssopen' (ssa sepstr) sss
-
-sssopen :: Style -> String -> [SS] -> SS
-sssopen style sepstr ppp = ssopen' (sss style $ ssa sepstr) ppp
+ssopen sepstr sss = ssl (ssa sepstr) sss
 
 sslist :: [SS] -> SS
 sslist = ssopen ""
 
 ssbracket :: String -> SS -> String -> SS
-ssbracket lbr ss rbr = ssclosed lbr rbr "" [ss]
+ssbracket lbr ss rbr = ssw (ssa lbr) (ssa rbr) ss
 
 ssclosed :: String -> String -> String -> [SS] -> SS
 ssclosed lstr rstr sepstr sss
@@ -186,6 +184,9 @@ ss2str stls (SSS _ style ss)
           , resetStyle -- clear all styles
           , setStyle stls -- restore current style
           ]
+
+ss2str stls (SSW _ ldelim rdelim ss)
+  =  ss2str stls ldelim ++ ss2str stls ss ++ ss2str stls rdelim
 
 ss2str stls (SSL _ _ [])   =  ""
 ss2str stls (SSL _ sep sss)  =  pppps stls sep sss

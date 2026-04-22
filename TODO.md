@@ -2,6 +2,10 @@
 
 **Pretty printing only works at top-level. Needs full review.**
 
+Key function that invokes prerry-printer: `Sequents.dispGoal`.
+
+Task: fix  layout for X_X_comp proof
+
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 

@@ -51,7 +51,7 @@ ppTermU = ppterm trIdU
 
 ppterm :: (Identifier -> String) -- renders identifiers as strings
        -> Int -> Int -> Term -> String
-ppterm trid ww p t = mklayout ww $ mkss trid p t 
+ppterm trid ww p t = mklayout ww $ pdbg "ppterm.MKSS" $ mkss trid p t 
 \end{code}
 We start with some pre-defined \h{SS} values:
 \begin{code}
@@ -224,7 +224,7 @@ We have some containers such as sets, lists and UTCP roots:
 mkss trid _ (Cons tk _ n ts)
   | n == jId "set"  =  ssc ss_lbrc ss_rbrc ss_comma mkssts 
   | n == jId "seq"  =  ssc ss_lngl ss_rngl ss_comma mkssts
-  | n == jId "r"    =  ssc ssnul ssnul ssnul (ssa "r":(map trRoot ts))
+  | n == jId "r"    =  ssl ssnul (ssa "r":(map trRoot ts))
   where
     mkssts =  mksss trid 0 ts
     trRoot (Val _ (Integer i))  =  ssa $ show i
@@ -236,6 +236,7 @@ mkss trid _ (Cons tk _ n ts)
 
 We sometimes tailor standard functional application a little bit,
 i.e., $X$ and $A$ in the UTCP theory.
+$$ X(E|a|N|R) \qquad. A(in|a|out)$$
 \begin{code}
 mkss trid _ (Cons tk _ n ts)
   | n `elem` [jId "A", jId "X"]
@@ -244,7 +245,6 @@ mkss trid _ (Cons tk _ n ts)
 \end{code}
 
 \subsubsection{Function Application}
-
 
 Any other constructor is rendered as a standard function call:
 $$ f(t_1,\dots,t_n)$$
@@ -273,9 +273,9 @@ $$[P] \qquad \langle Q \rangle$$
 \begin{code}
 mkss trid p (Cls (Identifier c _) tm)
   | c ==  "universal"        
-    = ssc (ssa "[") (ssa "]") ssnul [mkss trid 99 tm]
+    = ssw (ssa "[") (ssa "]") (mkss trid 99 tm)
   | c ==  "existential"        
-    = ssc ss_lngl ss_rngl ssnul [mkss trid 99 tm]
+    = ssw ss_lngl ss_rngl (mkss trid 99 tm)
 \end{code}
 
 \subsubsection{Substitution}
@@ -407,8 +407,8 @@ or are often of length 1.
 A key issue here is that each of the $itm_i$ may itself be a general list,
 so what we are really dealing with is a tree-like structure.
 \begin{code}
-splitlayout ww i ssc@( SSW size ldelim rdelim itm )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
+splitlayout ww i ssW@( SSW size ldelim rdelim itm )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssW]
   | otherwise  =  renderFittings fittings
   where
     sslist = [ldelim,itm,rdelim]
@@ -431,8 +431,8 @@ However it is usually a simple strings, often of length 1.
 A key issue here is that each of the $itm_i$ may itself be a general list,
 so what we are really dealing with is a tree-like structure.
 \begin{code}
-splitlayout ww i ssc@( SSL size sep items )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
+splitlayout ww i ssL@( SSL size sep items )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssL]
   | otherwise  =  renderFittings fittings
   where
     sslist = intercalate [sep] (map singleton items)
@@ -455,8 +455,8 @@ However it is usually a simple strings, often of length 1.
 A key issue here is that each of the $itm_i$ may itself be a general list,
 so what we are really dealing with is a tree-like structure.
 \begin{code}
-splitlayout ww i ssc@( SSO size inop items )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssc]
+splitlayout ww i ssO@( SSO size inop items )
+  | i+size  <= ww  =  [ind i $ ss2str [] ssO]
   | otherwise  =  renderFittings fittings
   where
     sslist = intercalate [inop] (map singleton items)
@@ -519,13 +519,13 @@ ssdisp thing w
 
 sssh = ssa . show
 mullist :: Int -> SS
-mullist n = ssc ssnul ssnul (ssa ", ") $ take n $ map sssh [1..]
+mullist n = ssl (ssa ", ") $ take n $ map sssh [1..]
 
 addltree :: Int -> SS
 addltree n = mktree $ map sssh [1..n]
 
 mkbranch :: SS -> SS -> SS
-mkbranch ss1 ss2 = ssc ssnul ssnul (ssa " + ") [ss1,ss2]
+mkbranch ss1 ss2 = sso (ssa " + ") [ss1,ss2]
 
 mktree :: [SS] -> SS
 mktree [] = ssnul 

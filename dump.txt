@@ -1,0 +1,21 @@
+How we should render this line from X_X_comp proof !
+
+1 line (183):
+∃O$_1 • E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[s_1/s'] ∧ ls_1 = ls[O$_1/O$'] ∖ R1[O$_1/O$'] ∪ N1[O$_1/O$'] ∧ (E2[O$_1/O$] ⊆ ls_1 ∧ b[s_1/s] ∧ ls'[O$_1/O$] = ls_1 ∖ R2[O$_1/O$] ∪ N2[O$_1/O$])
+
+2 lines (8,177):
+∃O$_1 • 
+  E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[s_1/s'] ∧ ls_1 = ls[O$_1/O$'] ∖ R1[O$_1/O$'] ∪ N1[O$_1/O$'] ∧ (E2[O$_1/O$] ⊆ ls_1 ∧ b[s_1/s] ∧ ls'[O$_1/O$] = ls_1 ∖ R2[O$_1/O$] ∪ N2[O$_1/O$])
+
+3 lines (8,96,83):
+∃O$_1 • 
+  E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[s_1/s'] ∧ ls_1 = ls[O$_1/O$'] ∖ R1[O$_1/O$'] ∪ N1[O$_1/O$'] ∧ 
+  (E2[O$_1/O$] ⊆ ls_1 ∧ b[s_1/s] ∧ ls'[O$_1/O$] = ls_1 ∖ R2[O$_1/O$] ∪ N2[O$_1/O$])
+
+5 lines (8,44,54,33,52):
+∃O$_1 • 
+  E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[s_1/s'] ∧ 
+  ls_1 = ls[O$_1/O$'] ∖ R1[O$_1/O$'] ∪ N1[O$_1/O$'] ∧ 
+  (E2[O$_1/O$] ⊆ ls_1 ∧ b[s_1/s] 
+  ∧ ls'[O$_1/O$] = ls_1 ∖ R2[O$_1/O$] ∪ N2[O$_1/O$])
+

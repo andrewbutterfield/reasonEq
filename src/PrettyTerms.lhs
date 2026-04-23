@@ -432,21 +432,19 @@ splitlayout ww i ssW@( SSW size ldelim rdelim itm )
            ++ rdelimstrs )
   | lsize <= rsize -- two-liner, with rdelim on its own
       = map (ind i)
-         ( strsmerge ldelimstrs itmstrs ++ rdelimstrs )           
+         ( wmerge ldelimstrs itmstrs ++ rdelimstrs )           
   | otherwise  -- two-liner, ldelim on its own
       = map (ind i)
           ( ldelimstrs 
-            ++ map (ind wind) (strsmerge itmstrs rdelimstrs ) )
+            ++ map (ind wind) (wmerge itmstrs rdelimstrs ) )
   where
     rw = ww-i  -- "ribbon" width
     wind = 1
     [lsize,rsize,isize] = map sssize [ldelim,rdelim,itm]
-    -- [lind,rind,iind] = map (+1) [lsize,rsize,isize]
     ldelimstrs = mklayout rw ldelim
     rdelimstrs = mklayout rw rdelim
     itmstrs    = mklayout rw itm
-    -- sslist = [ldelim,itm,rdelim]
-    -- fittings = breakAt rw sslist
+    wmerge = strsmerge ""
 \end{code}
 
 \subsubsection{General List Layout}
@@ -455,14 +453,22 @@ $$
 itm_1~sep~itm_2~sep \dots sep~itm_k
 $$
 Here we treat this as a list and layout accordingly.
+\begin{verbatim}
+x,x,..,x
+,x,x,x,
+x,x,x
+\end{verbatim}
 \begin{code}
 -- precondition: size+i > ww
 splitlayout ww i ssL@( SSL size sep items )
-  | otherwise  =  renderFittings fittings
+  = map (ind  i) $ listpartition rw sepsize sepstr sizeditems
   where
-    sslist = intercalate [sep] (map singleton items)
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw sslist
+    sepsize = sssize sep
+    sepstr = mklayout rw sep
+    itemsizes  = map sssize items
+    itemstrs   = map (mklayout rw) items
+    sizeditems = zip itemsizes itemstrs
 \end{code}
 
 \subsubsection{General Infix Operator Layout}
@@ -488,19 +494,67 @@ splitlayout ww i ssO@( SSO size inop items )
 Prefix fuses the last string of the 1st argument 
 with the first string of the 2nd, with a separating space
 \begin{code}
-strsmerge :: [String] -> [String] -> [String]
-strsmerge [] strs2 = strs2
-strsmerge strs1@[str1] [] = strs1
-strsmerge [str1] (str2:strs2) = (str1++' ':str2):strs2
-strsmerge (str1:strs1) strs2 = str1 : strsmerge strs1 strs2
+strsmerge :: String -> [String] -> [String] -> [String]
+strsmerge _ [] strs2 = strs2
+strsmerge _ strs1@[str1] [] = strs1
+strsmerge glue [str1] (str2:strs2) = (str1++glue++str2):strs2
+strsmerge glue (str1:strs1) strs2 = str1 : strsmerge glue strs1 strs2
 \end{code}
 
-Postfix fuses the first string of the 1st argument 
-with the last string of the 2nd, with a separating space
+\subsubsection{Separated List Partitioning}
+
 \begin{code}
-postmerge :: [String] -> [String] -> [String]
-postmerge strs1 strs2 = strsmerge strs2 strs1
+listpartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
+listpartition ww sepsize sepstrs sizedstrs
+  =  lstpart 0 [] sizedstrs
+  where
+    -- lstpart: expecting an item
+    lstpart :: Int -> [String] -> [(Int,[String])] -> [String]
+    lstpart size sacc []    =  sacc
+    lstpart size sacc ((w,strs):ssstrs)
+      | size+w <= ww        =  lstpart' (size+w) (lmerge sacc strs) ssstrs
+      | otherwise           =  sacc ++ lstpart' 0 strs ssstrs
+    -- lstpart': add in a separator, if more to come
+    lstpart' size sacc []   = sacc
+    lstpart' size sacc ssstrs@(_:_)
+      | size+sepsize <= ww  
+          =  lstpart (size+sepsize) (lmerge sacc sepstrs) ssstrs
+      | otherwise           
+          =  sacc ++ lstpart sepsize sepstrs ssstrs 
+    lmerge = strsmerge ""  
 \end{code}
+
+\subsubsection{Tree Partitioning}
+
+\begin{code}
+treepartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
+treepartition _ _ _ []          =  []
+treepartition _ _ _ [(_,strs)]  =  strs
+treepartition ww opsize opstrs sizedstrs
+  =  ["treepartition NYI"]
+
+-- split into two roughly equal size parts
+halve :: (Int,[(Int,[String])]) 
+      -> ( (Int,[(Int,[String])])
+         , (Int,[(Int,[String])]) )
+halve (size,sizedstrs) 
+  = ( (gotsize,got) , (leftoversize,leftover) )
+  where 
+    (got,leftover) = takeUpto (size `div` 2) 0 [] sizedstrs
+    gotsize = sum $ map fst got
+    leftoversize = sum $ map fst leftover
+
+takeUpto :: Int -> Int -> [(Int,[String])] -> [(Int,[String])] 
+         -> ([(Int,[String])],[(Int,[String])])
+takeUpto wanted len tog [] = (reverse tog,[]) -- shouldn't come here
+takeUpto wanted len tog szs@(sstr@(size,_):sizedstrs)
+  | wanted >= newsize  =  takeUpto wanted newsize (sstr:tog) sizedstrs
+  | otherwise         =  (reverse tog,szs)
+  where
+    newsize = len+size
+\end{code}
+
+
 
 \subsubsection{Breaking at Ribbon Width}
 
@@ -555,7 +609,7 @@ ssdisp thing w
 
 sssh = ssa . show
 mullist :: Int -> SS
-mullist n = ssl (ssa ", ") $ take n $ map sssh [1..]
+mullist n = ssl (ssa ",") $ take n $ map sssh [1..]
 
 addltree :: Int -> SS
 addltree n = mktree $ map sssh [1..n]

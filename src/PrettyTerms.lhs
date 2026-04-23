@@ -539,6 +539,8 @@ listpartition ww sepsize sepstrs sizedstrs
 
 \subsubsection{Tree Partitioning}
 
+We repeatedly halve the lists until each fits the available space,
+and then render them directly.
 \begin{code}
 treepartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
 treepartition _ _ _ []          =  []
@@ -546,25 +548,28 @@ treepartition _ _ _ [(_,strs)]  =  strs
 treepartition ww opsize opstrs sizedstrs
   =  ["treepartition NYI"]
 
--- split into two roughly equal size parts
-halve :: (Int,[(Int,[String])]) 
-      -> ( (Int,[(Int,[String])])
-         , (Int,[(Int,[String])]) )
-halve (size,sizedstrs) 
-  = ( (gotsize,got) , (leftoversize,leftover) )
-  where 
-    (got,leftover) = takeUpto (size `div` 2) 0 [] sizedstrs
-    gotsize = sum $ map fst got
-    leftoversize = sum $ map fst leftover
+treesize :: Int -> [(Int,[String])] -> Int
+treesize _ [] = 0
+treesize _ [(size,_)] = size
+treesize opsize sizedstrs 
+  = (length sizedstrs - 1) * opsize + sum (map fst sizedstrs)
 
-takeUpto :: Int -> Int -> [(Int,[String])] -> [(Int,[String])] 
+-- split into two roughly equal size parts
+halve :: Int -> [(Int,[String])] -> ( [(Int,[String])], [(Int,[String])] )
+halve opsize sizedstrs
+  = ( got , leftover )
+  where 
+    size = treesize opsize sizedstrs
+    (got,leftover) = takeUpto opsize (size `div` 2) 0 [] sizedstrs
+
+takeUpto :: Int -> Int -> Int -> [(Int,[String])] -> [(Int,[String])] 
          -> ([(Int,[String])],[(Int,[String])])
-takeUpto wanted len tog [] = (reverse tog,[]) -- shouldn't come here
-takeUpto wanted len tog szs@(sstr@(size,_):sizedstrs)
-  | wanted >= newsize  =  takeUpto wanted newsize (sstr:tog) sizedstrs
+takeUpto opsize wanted len tog [] = (reverse tog,[]) -- shouldn't come here
+takeUpto opsize wanted len tog szs@(sstr@(size,_):sizedstrs)
+  | wanted >= newsize  =  takeUpto opsize wanted newsize (sstr:tog) sizedstrs
   | otherwise         =  (reverse tog,szs)
   where
-    newsize = len+size
+    newsize = len+opsize+size
 \end{code}
 
 
@@ -648,6 +653,8 @@ mkstree strs = (total,nstrs)
     lw s = (length s,[s])
     nstrs = map lw strs
     total = sum $ map fst nstrs
+
+gmu = ["Good","morning","Universe","!","How","are","you","today","?"]
 
 mksub tvcount lvlvcount
   = jSubstn tvl lvlvl

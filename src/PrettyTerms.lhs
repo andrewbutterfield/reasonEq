@@ -316,13 +316,17 @@ mksss trid p ts = map (mkss trid p) ts
 \end{code}
 
 $$ \mathcal Q v_1,\dots,v_n \bullet t$$
+The key thing here at top level is that we break the quantifier into the
+following two components: 
+$\mathcal Q v_1,\dots,v_n \bullet$ and $t$
+(remember that $t$ can be very large, which is when prettyprinting matters).
 \begin{code}
-mkQuantifier trid p quant vl tm
-  = ssc ssq ssnul ssbullet [ssvl,sst]
+mkQuantifier trid p quant vl tm  =  sslist [sshdr,sst] 
   where
     ssq = ssa $ trid quant 
-    sst = mkss trid p tm 
     ssvl = mkVarList trid vl
+    sshdr = sslist [ssq,ssvl,ssbullet]
+    sst = mkss trid p tm 
     
 mkVarList trid vl = ssopen "," $ map (ssa . trgvar trid) vl
 

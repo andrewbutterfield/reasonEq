@@ -476,15 +476,28 @@ splitlayout ww i ssL@( SSL size sep items )
 $$
 itm_1~inop~itm_2~inop \dots sep~itm_k
 $$
-Here we treat this as a list and layout accordingly.
+Here we treat this as a tree and layout accordingly.
+\begin{verbatim}
+x+x+x+x+x+x+x+x  x+x+x+x    x+x+x+x     x+x
+                 +x+x+x+x  +           +
+                            x+x+x+x     x+x
+                                      +
+                                        x+x
+                                       +
+                                        x+x
+                            
+\end{verbatim}
 \begin{code}
 -- precondition: size+i > ww
-splitlayout ww i ssO@( SSO size inop items )
-  | otherwise  =  renderFittings fittings
+splitlayout ww i ssO@( SSO size op items )
+  = map (ind i) $ treepartition rw opsize opstr sizeditems
   where
-    sslist = intercalate [inop] (map singleton items)
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw sslist
+    opsize = sssize op
+    opstr = mklayout rw op
+    itemsizes  = map sssize items
+    itemstrs   = map (mklayout rw) items
+    sizeditems = zip itemsizes itemstrs
 \end{code}
 
 \subsection{Support Code}
@@ -628,6 +641,13 @@ walk [] = []
 walk [ss] = [ss]
 walk [ss1,ss2] = [mkbranch ss1 ss2]
 walk (ss1:ss2:sss) = mkbranch ss1 ss2 : walk sss
+
+mkstree :: [String] -> (Int,[(Int,[String])])
+mkstree strs = (total,nstrs)
+  where
+    lw s = (length s,[s])
+    nstrs = map lw strs
+    total = sum $ map fst nstrs
 
 mksub tvcount lvlvcount
   = jSubstn tvl lvlvl

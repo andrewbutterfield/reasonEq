@@ -97,7 +97,7 @@ ssnul = (SSA 0 "")
 \section{Smart Constructors}
 
 We build smart versions of the 
-\h{SSA}, \h{SSS}, \h{SSW},\h{SSCL}, and \h{SSO} constructors
+\h{SSA}, \h{SSS}, \h{SSW},\h{SSL}, and \h{SSO} constructors
 that automatically accumulate the length information.
 \begin{code}
 ssa :: String -> SS
@@ -339,5 +339,5 @@ The following tests are intended to be run from within GHCi.
 \begin{code}
 addss = ssa "+"
 addmrg n = ssa $ show n
-addnums n = ssc ssnul ssnul addss $ take n $ map addmrg [1..] 
+addnums n = sso addss $ take n $ map addmrg [1..] 
 \end{code}

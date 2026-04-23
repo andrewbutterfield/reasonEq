@@ -51,7 +51,7 @@ ppTermU = ppterm trIdU
 
 ppterm :: (Identifier -> String) -- renders identifiers as strings
        -> Int -> Int -> Term -> String
-ppterm trid ww p t = mklayout ww $ pdbg "ppterm.MKSS" $ mkss trid p t 
+ppterm trid ww p t = unlines' $ mklayout ww $ mkss trid p t 
 \end{code}
 We start with some pre-defined \h{SS} values:
 \begin{code}
@@ -354,89 +354,110 @@ ssLVar trid lv = ssa $ trlvar trid lv
 
 \section{Perform Width-based Layout}
 
+
 Given (terminal) width $W$ and and a sized string of size $s$,
 if $s \leq W$ then we render as a one-liner,
 otherwise we explore how to split over multiple lines.
 \begin{code}
-mklayout :: Int -> SS -> String
+mklayout :: Int -> SS -> [String]
 mklayout ww ss
-  | size <= ww  =  ss2str [] ss
-  | otherwise   =  unlines' $ splitlayout ww 0 ss
+  | size <= ww  =  [ss2str [] ss]
+  | otherwise   =  splitlayout ww 0 ss
   where size = sssize ss
 \end{code}
-
-\subsection{Layout Splitting}
-
-
-Most of the work is done by \h{splitlayout}:
+We call \h{splitlayout} when \h{size > ww}.
+It looks for a way to break down the rendering into multiple lines.
+Those will themselves be further treated using a (mutually) recursive call
+back to \h{mklayout}.
 \begin{code}
 splitlayout :: Int -> Int -> SS -> [String]
+-- splitlayout ww i ss 
+-- precondition: sssize ss + i > ww
 \end{code}
 
-\subsection{Atomic Layout}
+\subsection{Simple Layout}
+
+The \h{SSA} and \h{SSS} variants don't involve any layout determination.
+
+\subsubsection{Atomic Layout}
 
 If the sized-string is atomic, we cannot split it:
 \begin{code}
-splitlayout ww i (SSA size str) = [ind i str]
+-- precondition: size+i > ww
+splitlayout _ i (SSA size str) = [ind i str]
 \end{code}
 
-\subsection{Style Layout}
+\subsubsection{Style Layout}
+
 If we have a style, 
-we recurse with it applied,
-then prepend the showStyle and append the reset and setStyles stuff.
+we recursively layout the \h{SS} component,
+and then prepend the showStyle and append the reset and setStyles stuff.
 Note that all the style setting and resetting 
-involves zero-width control character sequences.
+will (should!) involve zero-width control-character sequences.
 \begin{code}
+-- precondition: size+i > ww
 splitlayout ww i (SSS size style ss)
-  = let strs = splitlayout ww i ss
-    in wrapStyleControl 
-        (showStyle style) 
-        strs 
-        (resetStyle ++ setStyle [])
+  = wrapStyleControl 
+      (showStyle style) 
+      (splitlayout ww i ss) -- precondition still holds: size == sssize ss
+      (resetStyle ++ setStyle [])
 \end{code}
 
-\subsection{Explicit Bracketing}
+\subsection{Complex Layout}
 
-In general we have the form:
-$$
-ldelim~rdelim~itm
-$$
-which should render as:
+Variants \h{SSW}, \h{SSL}, and \h{SSO} require splitting the output into lines.
+This code is designed for the cases that the \h{sep}, \h{ldelim}, and \h{rdelim} components are themselves atomic and short.
+
+\newpage
+\subsubsection{Explicit Bracketing}
+
 $$
 ldelim~itm~rdelim
 $$
-The $ldelim$, $rdelim$, and $sep$ can themselves be general sized-strings.
-However they are usually simple strings, and can also be empty, 
-or are often of length 1.
-A key issue here is that each of the $itm_i$ may itself be a general list,
-so what we are really dealing with is a tree-like structure.
+We have the following ways to break this down:
+\begin{verbatim}
+(    (x   (
+ x   )     x)
+)  
+\end{verbatim}
+The first is forced if \h{sssize itm + i > ww},
+otherwise we prefer the one with the largest delimiter by itself.
 \begin{code}
+-- precondition: size+i > ww
 splitlayout ww i ssW@( SSW size ldelim rdelim itm )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssW]
-  | otherwise  =  renderFittings fittings
+  | isize+i > ww -- three-liner
+      = map (ind i)
+         ( ldelimstrs 
+           ++ map (ind wind) itmstrs 
+           ++ rdelimstrs )
+  | lsize <= rsize -- two-liner, with rdelim on its own
+      = map (ind i)
+         ( strsmerge ldelimstrs itmstrs ++ rdelimstrs )           
+  | otherwise  -- two-liner, ldelim on its own
+      = map (ind i)
+          ( ldelimstrs 
+            ++ map (ind wind) (strsmerge itmstrs rdelimstrs ) )
   where
-    sslist = [ldelim,itm,rdelim]
     rw = ww-i  -- "ribbon" width
-    fittings = breakAt rw sslist
+    wind = 1
+    [lsize,rsize,isize] = map sssize [ldelim,rdelim,itm]
+    -- [lind,rind,iind] = map (+1) [lsize,rsize,isize]
+    ldelimstrs = mklayout rw ldelim
+    rdelimstrs = mklayout rw rdelim
+    itmstrs    = mklayout rw itm
+    -- sslist = [ldelim,itm,rdelim]
+    -- fittings = breakAt rw sslist
 \end{code}
 
-\subsection{General List Layout}
+\subsubsection{General List Layout}
 
-In general we have the form:
-$$
-sep~\seqof{itm_1,itm_2,\dots,itm_k}
-$$
-which should render as:
 $$
 itm_1~sep~itm_2~sep \dots sep~itm_k
 $$
-In general $sep$ can itself be a general sized-string.
-However it is usually a simple strings, often of length 1.
-A key issue here is that each of the $itm_i$ may itself be a general list,
-so what we are really dealing with is a tree-like structure.
+Here we treat this as a list and layout accordingly.
 \begin{code}
+-- precondition: size+i > ww
 splitlayout ww i ssL@( SSL size sep items )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssL]
   | otherwise  =  renderFittings fittings
   where
     sslist = intercalate [sep] (map singleton items)
@@ -444,23 +465,15 @@ splitlayout ww i ssL@( SSL size sep items )
     fittings = breakAt rw sslist
 \end{code}
 
-\subsection{General Infix Operator Layout}
+\subsubsection{General Infix Operator Layout}
 
-In general we have the form:
-$$
-inop~\seqof{itm_1,itm_2,\dots,itm_k}
-$$
-which should render as:
 $$
 itm_1~inop~itm_2~inop \dots sep~itm_k
 $$
-In general $inop$ can itself be a general sized-string.
-However it is usually a simple strings, often of length 1.
-A key issue here is that each of the $itm_i$ may itself be a general list,
-so what we are really dealing with is a tree-like structure.
+Here we treat this as a list and layout accordingly.
 \begin{code}
+-- precondition: size+i > ww
 splitlayout ww i ssO@( SSO size inop items )
-  | i+size  <= ww  =  [ind i $ ss2str [] ssO]
   | otherwise  =  renderFittings fittings
   where
     sslist = intercalate [inop] (map singleton items)
@@ -469,6 +482,25 @@ splitlayout ww i ssO@( SSO size inop items )
 \end{code}
 
 \subsection{Support Code}
+
+\subsubsection{Prefix and Postfix}
+
+Prefix fuses the last string of the 1st argument 
+with the first string of the 2nd, with a separating space
+\begin{code}
+strsmerge :: [String] -> [String] -> [String]
+strsmerge [] strs2 = strs2
+strsmerge strs1@[str1] [] = strs1
+strsmerge [str1] (str2:strs2) = (str1++' ':str2):strs2
+strsmerge (str1:strs1) strs2 = str1 : strsmerge strs1 strs2
+\end{code}
+
+Postfix fuses the first string of the 1st argument 
+with the last string of the 2nd, with a separating space
+\begin{code}
+postmerge :: [String] -> [String] -> [String]
+postmerge strs1 strs2 = strsmerge strs2 strs1
+\end{code}
 
 \subsubsection{Breaking at Ribbon Width}
 
@@ -519,7 +551,7 @@ The following tests are intended to be run from within GHCi.
 \begin{code}
 ssdisp :: SS -> Int -> IO ()
 ssdisp thing w 
-  = putStrLn (replicate w '_' ++ "\n" ++ mklayout w thing)
+  = putStrLn (replicate w '_' ++ "\n" ++ (unlines' $ mklayout w thing))
 
 sssh = ssa . show
 mullist :: Int -> SS

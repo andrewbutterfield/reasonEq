@@ -545,7 +545,7 @@ and then render them directly.
 treepartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
 treepartition _ _ _ []          =  []
 treepartition _ _ _ [(_,strs)]  =  strs
--- precondition: treesize opsize sizedstrs  > ww
+-- precondition: treesize opsize sizedstrs  > ww  && length sizedstrs >= 2
 treepartition ww opsize opstrs sizedstrs
   = if emptyfirst
     then if emptysecond
@@ -557,12 +557,12 @@ treepartition ww opsize opstrs sizedstrs
               ++ opstrs 
               ++  (map (ind indent) second)
   where
-    (got,leftover) = pdbg "HALVE" $ halve opsize $ pdbg "TOHALVE" sizedstrs
+    (got,leftover) = halve opsize sizedstrs
     indent = 1
     first   =  treerender (ww-indent) opsize opstrs got
     second  =  treerender (ww-indent) opsize opstrs leftover
-    emptyfirst   =  emptystrs $ pdbg "FIRST"  first
-    emptysecond  =  emptystrs $ pdbg "SECOND" second
+    emptyfirst   =  emptystrs first
+    emptysecond  =  emptystrs second
 
 emptystrs :: [String] -> Bool
 emptystrs  =  all (all isSpace) 
@@ -571,21 +571,27 @@ emptystrs  =  all (all isSpace)
 \begin{code}
 treerender :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
 treerender ww opsize opstrs sizedstrs
-  | pdbg "SIZE" size <= pdbg "WW" ww  =  [ss2str [] (sso (ssa (concat opstrs)) $ map (ssa . concat . snd) $ pdbg "SMALL" sizedstrs)]
-  | otherwise   =  treepartition ww opsize opstrs $ pdbg "LARGE" sizedstrs
+  | size <= ww  
+               =  [ ss2str [] (sso (ssa (concat opstrs)) 
+                    $ map (ssa . concat . snd) sizedstrs) ]
+  | otherwise  =  treepartition ww opsize opstrs sizedstrs
   where
-    size = treesize opsize $ pdbg "SIZEDSTRS" sizedstrs
+    size = treesize opsize sizedstrs
 \end{code}
 
 Halving:
 \begin{code}
+-- precondition: length sizedstrs >= 2
 -- split into two roughly equal size parts
+-- postcondition: not null got && not null leftover
 halve :: Int -> [(Int,[String])] -> ( [(Int,[String])], [(Int,[String])] )
-halve opsize sizedstrs
+halve opsize [first,last] = ( [first], [last] )
+halve opsize sizedstrs@(first@(fsize,_):others)
   = ( got , leftover )
   where 
     size = treesize opsize sizedstrs
-    (got,leftover) = takeUpto opsize (size `div` 2) 0 [] sizedstrs
+    (got,leftover) 
+      = takeUpto opsize (size `div` 2) (opsize+fsize) [first] others
 
 treesize :: Int -> [(Int,[String])] -> Int
 treesize _ [] = 0
@@ -596,6 +602,7 @@ treesize opsize sizedstrs
 takeUpto :: Int -> Int -> Int -> [(Int,[String])] -> [(Int,[String])] 
          -> ([(Int,[String])],[(Int,[String])])
 takeUpto opsize wanted len tog [] = (reverse tog,[]) -- shouldn't come here
+takeUpto opsize wanted len tog end@[_] = (reverse tog,end)
 takeUpto opsize wanted len tog szs@(sstr@(size,_):sizedstrs)
   | wanted >= newsize  =  takeUpto opsize wanted newsize (sstr:tog) sizedstrs
   | otherwise         =  (reverse tog,szs)

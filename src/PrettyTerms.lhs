@@ -545,15 +545,40 @@ and then render them directly.
 treepartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
 treepartition _ _ _ []          =  []
 treepartition _ _ _ [(_,strs)]  =  strs
+-- precondition: treesize opsize sizedstrs  > ww
 treepartition ww opsize opstrs sizedstrs
-  =  ["treepartition NYI"]
+  = if emptyfirst
+    then if emptysecond
+         then []
+         else second
+    else if emptysecond
+         then first
+         else     (map (ind indent) first) 
+              ++ opstrs 
+              ++  (map (ind indent) second)
+  where
+    (got,leftover) = pdbg "HALVE" $ halve opsize $ pdbg "TOHALVE" sizedstrs
+    indent = 1
+    first   =  treerender (ww-indent) opsize opstrs got
+    second  =  treerender (ww-indent) opsize opstrs leftover
+    emptyfirst   =  emptystrs $ pdbg "FIRST"  first
+    emptysecond  =  emptystrs $ pdbg "SECOND" second
 
-treesize :: Int -> [(Int,[String])] -> Int
-treesize _ [] = 0
-treesize _ [(size,_)] = size
-treesize opsize sizedstrs 
-  = (length sizedstrs - 1) * opsize + sum (map fst sizedstrs)
+emptystrs :: [String] -> Bool
+emptystrs  =  all (all isSpace) 
+\end{code}
 
+\begin{code}
+treerender :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
+treerender ww opsize opstrs sizedstrs
+  | pdbg "SIZE" size <= pdbg "WW" ww  =  [ss2str [] (sso (ssa (concat opstrs)) $ map (ssa . concat . snd) $ pdbg "SMALL" sizedstrs)]
+  | otherwise   =  treepartition ww opsize opstrs $ pdbg "LARGE" sizedstrs
+  where
+    size = treesize opsize $ pdbg "SIZEDSTRS" sizedstrs
+\end{code}
+
+Halving:
+\begin{code}
 -- split into two roughly equal size parts
 halve :: Int -> [(Int,[String])] -> ( [(Int,[String])], [(Int,[String])] )
 halve opsize sizedstrs
@@ -561,6 +586,12 @@ halve opsize sizedstrs
   where 
     size = treesize opsize sizedstrs
     (got,leftover) = takeUpto opsize (size `div` 2) 0 [] sizedstrs
+
+treesize :: Int -> [(Int,[String])] -> Int
+treesize _ [] = 0
+treesize _ [(size,_)] = size
+treesize opsize sizedstrs 
+  = (length sizedstrs - 1) * opsize + sum (map fst sizedstrs)
 
 takeUpto :: Int -> Int -> Int -> [(Int,[String])] -> [(Int,[String])] 
          -> ([(Int,[String])],[(Int,[String])])
@@ -655,6 +686,7 @@ mkstree strs = (total,nstrs)
     total = sum $ map fst nstrs
 
 gmu = ["Good","morning","Universe","!","How","are","you","today","?"]
+ssgmu = (sso (ssa ".")) $ map ssa gmu
 
 mksub tvcount lvlvcount
   = jSubstn tvl lvlvl

@@ -2,12 +2,25 @@
 
 **Pretty printing only works at top-level. Needs full review.**
 
+Function `PrettyTerms.halve` should never return an empty list.
+
+Bad:
+
+```
+@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
+@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
+```
+
+Should get `([(8,["Universe"])],[(1,["!"]),(3,["How"])])`.
+
 Key function that invokes prerry-printer: `Sequents.dispGoal`.
 
 Task: fix  layout for X_X_comp proof
 
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
+
+
 
 **gen fails with runtime error for theory `UWhile`**
 

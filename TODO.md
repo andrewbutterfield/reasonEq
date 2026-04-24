@@ -1,26 +1,8 @@
 # To Do
 
-**Pretty printing only works at top-level. Needs full review.**
-
-Function `PrettyTerms.halve` should never return an empty list.
-
-Bad:
-
-```
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-```
-
-Should get `([(8,["Universe"])],[(1,["!"]),(3,["How"])])`.
-
-Key function that invokes prerry-printer: `Sequents.dispGoal`.
-
-Task: fix  layout for X_X_comp proof
 
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
-
-
 
 **gen fails with runtime error for theory `UWhile`**
 
@@ -30,43 +12,11 @@ CallStack (from HasCallStack):
   error, called at src/SourceHandling.lhs:505:21 in reasonEq-0.9.2.
 ```
 
-
-
 ## URGENT or NEXT
 
-
-
+Pretty-printing `Iter`.
 
 Actually installing a theory from a `.utp` file.
-
-
-### Proof of `X_X_comp` in `UTCP`.
-
-This exposes the need for good pretty-printing.
-
-PLan 2 is better, good for trees but fails badly on lists.
-Works well with Arith examples.
-
-NEXT: Iter (NOT URGENT).
-
-Quantifier pretty-printing now works at top-level
-
-Substitution pretty proimting now worksd
-
-Issues:
-The more it is "squeezed", the more blank lines it generates.
-
-We now have `ppTermZip` in `PrettyTerms`, called from `Sequents`.
-We want to move `trTermZip` and friends from `TestRendering` to `PrettyTerms`.
-
-In `Proofs` we have `showProofs` that displays completed proofs.
-This is activated in the top-level using the command `sh P <lawname>`.
-This should use `ppTermZip` as well.
-**this requires changes to `REPL` !!!**
-*Defer until prover PP is done*
-
-
-
 
 
 ### Law Classification
@@ -74,7 +24,6 @@ This should use `ppTermZip` as well.
 It should be automatic
 
  - whenever a theory is loaded, or a conjecture is proven.
-
 
 #### Bugs found 
 

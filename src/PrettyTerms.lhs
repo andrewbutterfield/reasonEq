@@ -509,23 +509,25 @@ a,..,i
 \end{verbatim}
 \begin{code}
 listpartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
-listpartition ww sepsize sepstrs sizedstrs
-  =  lstpart 0 [] sizedstrs
+listpartition _  _       _       []  =  []
+listpartition ww sepsize sepstrs ((w,strs):ssstrs)
+  =  lstpart w strs ssstrs
   where
     -- lstpart: expecting an item
     lstpart :: Int -> [String] -> [(Int,[String])] -> [String]
-    lstpart size sacc []    =  sacc
-    lstpart size sacc ((w,strs):ssstrs)
-      | size+w <= ww  =  lstpart' (size+w) (lmerge sacc strs) ssstrs
-      | otherwise     =  sacc ++ lstpart' 0 strs ssstrs
-    -- lstpart': add in a separator, if more to come
-    lstpart' size sacc []   = sacc
-    lstpart' size sacc ssstrs@(_:_)
-      | size+sepsize <= ww  
-          =  lstpart (size+sepsize) (lmerge sacc sepstrs) ssstrs
-      | otherwise           
-          =  sacc ++ lstpart sepsize sepstrs ssstrs 
-    lmerge = strsmerge ""  
+    lstpart currsize lines []    =  lines
+    lstpart currsize lines ((w,strs):ssstrs)
+      | currsize+nextsize <= ww  
+         =  lstpart (currsize+nextsize) 
+                    (lmerge lines $ lmerge sepstrs strs) 
+                    ssstrs
+      | otherwise  
+         =  lstpart nextsize
+                    (lines ++ lmerge sepstrs strs) 
+                    ssstrs
+      where
+        nextsize = sepsize+w
+        lmerge = strsmerge ""  
 \end{code}
 
 \subsubsection{Tree Partitioning}
@@ -551,7 +553,7 @@ treepartition ww opsize opstrs sizedstrs
     else if emptysecond
          then first
          else    map (ind indent) first 
-              ++ map (ind indent) (strsmerge "" opstrs second)
+              ++ map (ind indent) (tmerge opstrs second)
   where
     (got,leftover) = halve opsize sizedstrs
     indent = 1
@@ -559,6 +561,7 @@ treepartition ww opsize opstrs sizedstrs
     second  =  treerender (ww-indent) opsize opstrs leftover
     emptyfirst   =  emptystrs first
     emptysecond  =  emptystrs second
+    tmerge = strsmerge ""
 
 emptystrs :: [String] -> Bool
 emptystrs  =  all (all isSpace) 

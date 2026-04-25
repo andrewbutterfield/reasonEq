@@ -414,36 +414,25 @@ This code is designed for the cases that the \h{sep}, \h{ldelim}, and \h{rdelim}
 $$
 ldelim~itm~rdelim
 $$
-We have the following ways to break this down:
+In general $itm$ will be composite and multiline, 
+best rendered with the delimeters fused at beginning and end.
 \begin{verbatim}
-(    (x   (
- x   )     x)
-)  
+(abc..
+ ...lmn...
+ ...zyz)  
 \end{verbatim}
 The first is forced if \h{sssize itm + i > ww},
 otherwise we prefer the one with the largest delimiter by itself.
 \begin{code}
 -- precondition: size+i > ww
 splitlayout ww i ssW@( SSW size ldelim rdelim itm )
-  | isize+i > ww -- three-liner
-      = map (ind i)
-         ( ldelimstrs 
-           ++ map (ind wind) itmstrs 
-           ++ rdelimstrs )
-  | lsize <= rsize -- two-liner, with rdelim on its own
-      = map (ind i)
-         ( wmerge ldelimstrs itmstrs ++ rdelimstrs )           
-  | otherwise  -- two-liner, ldelim on its own
-      = map (ind i)
-          ( ldelimstrs 
-            ++ map (ind wind) (wmerge itmstrs rdelimstrs ) )
+  = map (ind i) $ wmerge ldelimstrs (wmerge itmstrs rdelimstrs)
   where
     rw = ww-i  -- "ribbon" width
-    wind = 1
     [lsize,rsize,isize] = map sssize [ldelim,rdelim,itm]
     ldelimstrs = mklayout rw ldelim
     rdelimstrs = mklayout rw rdelim
-    itmstrs    = mklayout rw itm
+    itmstrs    = mklayout (rw-(lsize+rsize)) itm
     wmerge = strsmerge ""
 \end{code}
 
@@ -454,9 +443,9 @@ itm_1~sep~itm_2~sep \dots sep~itm_k
 $$
 Here we treat this as a list and layout accordingly.
 \begin{verbatim}
-x,x,..,x
-,x,x,x,
-x,x,x
+a,..,i
+,j,..,r
+,s,..,z
 \end{verbatim}
 \begin{code}
 -- precondition: size+i > ww
@@ -471,6 +460,7 @@ splitlayout ww i ssL@( SSL size sep items )
     sizeditems = zip itemsizes itemstrs
 \end{code}
 
+\newpage
 \subsubsection{General Infix Operator Layout}
 
 $$
@@ -478,14 +468,10 @@ itm_1~inop~itm_2~inop \dots sep~itm_k
 $$
 Here we treat this as a tree and layout accordingly.
 \begin{verbatim}
-x+x+x+x+x+x+x+x  x+x+x+x    x+x+x+x     x+x
-                 +x+x+x+x  +           +
-                            x+x+x+x     x+x
-                                      +
-                                        x+x
-                                       +
-                                        x+x
-                            
+x+x+x+x+x+x+x+x  x+x+x+x    x+x
+                 +x+x+x+x   +x+x
+                            +x+x
+                            +x+x                           
 \end{verbatim}
 \begin{code}
 -- precondition: size+i > ww
@@ -516,6 +502,11 @@ strsmerge glue (str1:strs1) strs2 = str1 : strsmerge glue strs1 strs2
 
 \subsubsection{Separated List Partitioning}
 
+\begin{verbatim}
+a,..,i
+,j,..,r
+,s,..,z
+\end{verbatim}
 \begin{code}
 listpartition :: Int -> Int -> [String] -> [(Int,[String])] -> [String]
 listpartition ww sepsize sepstrs sizedstrs
@@ -525,8 +516,8 @@ listpartition ww sepsize sepstrs sizedstrs
     lstpart :: Int -> [String] -> [(Int,[String])] -> [String]
     lstpart size sacc []    =  sacc
     lstpart size sacc ((w,strs):ssstrs)
-      | size+w <= ww        =  lstpart' (size+w) (lmerge sacc strs) ssstrs
-      | otherwise           =  sacc ++ lstpart' 0 strs ssstrs
+      | size+w <= ww  =  lstpart' (size+w) (lmerge sacc strs) ssstrs
+      | otherwise     =  sacc ++ lstpart' 0 strs ssstrs
     -- lstpart': add in a separator, if more to come
     lstpart' size sacc []   = sacc
     lstpart' size sacc ssstrs@(_:_)
@@ -539,6 +530,12 @@ listpartition ww sepsize sepstrs sizedstrs
 
 \subsubsection{Tree Partitioning}
 
+\begin{verbatim}
+x+x+x+x+x+x+x+x  x+x+x+x    x+x
+                 +x+x+x+x   +x+x
+                            +x+x
+                            +x+x                           
+\end{verbatim}
 We repeatedly halve the lists until each fits the available space,
 and then render them directly.
 \begin{code}
@@ -553,9 +550,8 @@ treepartition ww opsize opstrs sizedstrs
          else second
     else if emptysecond
          then first
-         else     (map (ind indent) first) 
-              ++ opstrs 
-              ++  (map (ind indent) second)
+         else    map (ind indent) first 
+              ++ map (ind indent) (strsmerge "" opstrs second)
   where
     (got,leftover) = halve opsize sizedstrs
     indent = 1
@@ -693,7 +689,9 @@ mkstree strs = (total,nstrs)
     total = sum $ map fst nstrs
 
 gmu = ["Good","morning","Universe","!","How","are","you","today","?"]
-ssgmu = (sso (ssa ".")) $ map ssa gmu
+ssgmu = map ssa gmu
+ssogmu = (sso (ssa ".")) ssgmu
+sswgmu = ssw (ssa "(") (ssa ")") (ssl (ssa ",") ssgmu)
 
 mksub tvcount lvlvcount
   = jSubstn tvl lvlvl

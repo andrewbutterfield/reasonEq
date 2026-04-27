@@ -282,6 +282,20 @@ mkss trid p (Cls (Identifier c _) tm)
 
 $$ t[e_1,\dots,e_n/v_1,\dots,v_n]$$
 \begin{code}
+mkss trid p (Sub tk (Var _ (Vbl (Identifier "asg" _) _ _)) 
+                    (Substn tsub lvsub) )
+  = ssa ( "(" ++ trvl trid (map StdVar tvs ++ map LstVar tlvs) 
+              ++ " := " ++
+              ( trtl trid 0 "," rts  `mrg` trvl trid (map LstVar rlvs)) 
+              ++ ")" )
+  where
+   (tvs,rts) = unzip $ S.toList tsub
+   (tlvs,rlvs)  =  unzip $ S.toList lvsub
+   mrg ""  ""   =  ""
+   mrg cs  ""   =  cs
+   mrg ""  cs   =  cs
+   mrg cs1 cs2  =  cs1 ++ ',':cs2
+
 mkss trid p (Sub typ tm s)
   = sslist [mkss trid p tm,mkSubst trid 0 s]
 \end{code}
@@ -293,11 +307,14 @@ Here $n$ is the arity of constructor $C$.
 
 For now we let these fall through to the catch-all case below.
 \begin{code}
-mkss trid p (Iter typ sa na si ni lvs)
-  =  sslist [ ssa (trid na)
-            , ssa " * "
-            , ssa (trid ni)
-            , ssc ss_lpar ss_rpar ss_comma (map (mklv trid) lvs) ]
+mkss trid p (Iter _ _ na@(Identifier astr _) _ ni@(Identifier istr _) lvs)
+  =  sslist [ ssa (mkssiter na ni)
+            , ssc ss_lpar ss_rpar ss_semi (map (mklv trid) lvs) ]
+  where
+    mkssiter na@(Identifier astr _) ni@(Identifier istr _)
+      | astr == "and" && istr == "eq"
+          =  "("++nicesym "and"++nicesym "eq"++")"
+      | otherwise  =  trid na++"\x21bb"++trid ni
 \end{code}
 
 \subsubsection{Catch-All}

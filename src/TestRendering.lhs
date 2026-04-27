@@ -11,7 +11,7 @@ module TestRendering (
  , trVar, trVarU, trvar, trLVar, trLVarU, trlvar, trGVar, trGVarU, trgvar
  , trVSet, trVSetU, trvset
  , trOVSet, trOVSetU, vsdbg
- , trVList, trVListU, trVariableSet, trVariableSetU
+ , trVList, trVListU, trvl, trtl, trVariableSet, trVariableSetU
  , trMap
  , trType, typdbg
  , trCMap, cmapdbg

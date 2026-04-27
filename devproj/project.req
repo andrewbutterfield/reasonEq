@@ -3,7 +3,7 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Closure","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Proto","Sets","UBase","UTCP","UWhile"]
 SDAG = [[("UTCP",["Designs","UWhile","Sets","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("Closure",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("Proto",[]),("EQV",[])]]
 END THEORIES
-CURRTHEORY = Closure
+CURRTHEORY = DWhile
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 ("Closure","and_uclose_distr")
@@ -33,6 +33,33 @@ FPATH: [2,1]
 BEGIN LIST STEPS
 (UseLaw (ByMatch MIA) "weaken_cnsq" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BT (K (TG (Id "B" 0)) (VB False)))],fromList [],fromList [])) [2,1,1],ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))],X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],K (TG (Id "B" 0)) (VB True)]])],([],fromList [])))
 (UseLaw (ByMatch MIA) "weaken_cnsq" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BT (K (TG (Id "B" 0)) (VB True)))],fromList [],fromList [])) [2,1],ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))],X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
+("DWhile","asg_simple")
+BEGIN LIVE-PROOF
+TH-NAME: DWhile
+CJ-NAME: asg_simple
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "asg" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V T (VR (Id "e" 0,VE,WB)))]) (fromList [])),C (TG (Id "B" 0)) False (Id "design" 0) [K (TG (Id "B" 0)) (VB True),C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "e" 0,VE,WB))],I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "O" 0,VO,WA),[Id "ok" 0,Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "ok" 0,Id "x" 0],[])]]]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TL = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "asg" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V T (VR (Id "e" 0,VE,WB)))]) (fromList [])),C (TG (Id "B" 0)) False (Id "design" 0) [K (TG (Id "B" 0)) (VB True),C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "e" 0,VE,WB))],I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "O" 0,VO,WA),[Id "ok" 0,Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "ok" 0,Id "x" 0],[])]]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.asg_simple", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF
 ("UTCP","X_X_comp")

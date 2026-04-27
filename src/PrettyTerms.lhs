@@ -286,11 +286,18 @@ mkss trid p (Sub typ tm s)
   = sslist [mkss trid p tm,mkSubst trid 0 s]
 \end{code}
 
+\subsubsection{Iteration}
 
-\subsection*{Not Yet Done}
+$$\ii \bigoplus C {lv_1,\dots,lv_n}$$
+Here $n$ is the arity of constructor $C$.
+
 For now we let these fall through to the catch-all case below.
 \begin{code}
--- mkss trid p (Iter typ sa na si ni lvs)  = ssa "I typ sa na si ni lvs"
+mkss trid p (Iter typ sa na si ni lvs)
+  =  sslist [ ssa (trid na)
+            , ssa " * "
+            , ssa (trid ni)
+            , ssc ss_lpar ss_rpar ss_comma (map (mklv trid) lvs) ]
 \end{code}
 
 \subsubsection{Catch-All}
@@ -302,6 +309,8 @@ mkss trid p t = ssa (trterm trid p t)
 
 \begin{code}
 ssVar trid v = ssa $ trvar trid v
+
+mklv trid lv = ssa $ trlvar trid lv
 \end{code}
 
 \begin{code}

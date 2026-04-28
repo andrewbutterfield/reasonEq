@@ -4,17 +4,8 @@
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
-**gen fails with runtime error for theory `UWhile`**
-
-```
-req: NYI: dlvr2item ((Id "O" 0,VO),DAS)
-CallStack (from HasCallStack):
-  error, called at src/SourceHandling.lhs:505:21 in reasonEq-0.9.2.
-```
 
 ## URGENT or NEXT
-
-Pretty-printing `Iter`.
 
 Actually installing a theory from a `.utp` file.
 

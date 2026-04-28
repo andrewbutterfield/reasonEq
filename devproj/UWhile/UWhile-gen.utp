@@ -1,0 +1,37 @@
+Theory UWhile .
+  UBase Closure Exists Forall Equal Impl AOI And Or Not EQV .
+
+DclVar Obs cond . var SB B -> B -> B -> B .
+DclVar Obs sqcmp . var NS B -> B -> B .
+DclASet Obs _O .
+
+Law axiom cond_def . cond (P, _b, Q) === _b /\ P \/ not (_b) /\ Q . none
+Law axiom sqcmp_def . sqcmp (P, Q) === BndS exists [lst O_0] SubL P [. O_0 // O_ .] /\ SubL Q [. O_0 // _O .] . SC std _P disj lst _O, lst O_;
+std _Q disj lst _O, lst O_ . lst O_0 .
+
+Conjecture cond_idem . cond (P, _b, P) === P . none
+Conjecture cond_symm . cond (P, _b, Q) === cond (Q, not (_b), P) . none
+Conjecture cond_assoc . cond (cond (P, _b, Q), _c, R) === cond (P, _b /\ _c, cond (Q, _c, R)) . none
+Conjecture cond_distr . cond (P, _b, cond (Q, _c, R)) === cond (cond (P, _b, Q), _c, cond (P, _b, R)) . none
+Conjecture cond_runit . cond (P, True, Q) === P . none
+Conjecture cond_lunit . cond (Q, False, P) === P . none
+Conjecture cond_absorb . cond (P, _b, cond (Q, _b, R)) === cond (P, _b, R) . none
+Conjecture cond_merge . cond (P, _b, cond (P, _c, Q)) === cond (P, _b \/ _c, Q) . none
+Conjecture cond_mdistr . cond (star (P, Q), _b, star (R, S)) === star (cond (P, _b, R), cond (Q, _b, S)) . none
+Conjecture cond_alt_def . cond (P, _b, Q) === (_b ==> P) /\ (not (_b) ==> Q) . none
+Conjecture cond_alt_def2 . cond (P, _b, Q) === (not (_b) \/ P === _b \/ Q) . none
+Conjecture sqcmp_assoc . sqcmp (P, sqcmp (Q, R)) === sqcmp (sqcmp (P, Q), R) . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std R disj lst _O, lst O_ .
+Conjecture sqcmp_cond_l_distr . sqcmp (cond (P, _b, Q), R) === cond (sqcmp (P, R), _b, sqcmp (Q, R)) . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std R disj lst _O, lst O_;
+std _b disj lst _O .
+Conjecture cond_sqcap_distr . cond (P, _b, sqcap (Q, R)) === sqcap (cond (P, _b, Q), cond (P, _b, R)) . none
+Conjecture sqcmp_sqcap_ldistr . sqcmp (sqcap (P, Q), R) === sqcap (sqcmp (P, R), sqcmp (Q, R)) . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std R disj lst _O, lst O_ .
+Conjecture sqcmp_sqcap_rdistr . sqcmp (P, sqcap (Q, R)) === sqcap (sqcmp (P, Q), sqcmp (P, R)) . VSC std P disj lst _O, lst O_;
+std Q disj lst _O, lst O_;
+std R disj lst _O, lst O_ .
+Conjecture sqcap_cond_distr . sqcap (P, cond (Q, _b, R)) === cond (sqcap (P, Q), _b, sqcap (P, R)) . none

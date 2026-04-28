@@ -494,14 +494,15 @@ lvmr2item (v,AbstractSet)
 lvmr2item vlvmr = error ("NYI: lvmr2item "++show vlvmr)
 
 dlvr2item :: (IdAndClass,DynamicLstVarRole) -> Item
-dlvr2item (iac,DynamicList vis _ _ _)
+dlvr2item (iac,DynamicList vis _ _ _) -- last 3 are derivable from first!
   = let (vcls,dynvar) = v2cdyn $ iac2var iac
     in DeclDLVar vcls dynvar $ map mkBeforeDynvar vis
+dlvr2item (iac,DynamicAbsSet)
+  = let (vcls,dynvar) = v2cdyn $ iac2var iac
+    in DeclASet vcls dynvar 
 -- NYI:
--- DynamicList vis lvis expand len -- represented
 -- DynamicSet vis lvis expand len
 -- DynamicAbsList
--- DynamicAbsSet
 dlvr2item iacdlvr = error ("NYI: dlvr2item "++show iacdlvr)
 
 mkBeforeDynvar :: Identifier -> DynVar

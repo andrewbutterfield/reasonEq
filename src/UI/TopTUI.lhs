@@ -213,24 +213,32 @@ showWorkspaces args reqs
 \newpage
 \section{State Save and Restore}
 
-We process theories by default,
-but can also handle smaller objects such as axioms, conjectures, and proofs.
-\begin{code}
-prfObj = "prf"
-cnjObj = "cnj"
-\end{code}
+Theory files are stored in the workspace directory,
+in a subfolder with the same name as the theory.
+We use two file formats:
+\begin{description}
+\item[Theory Dump]
+  is a rendering of the theory using \h{Show}/\h{Read}, 
+  with file extension \h{.thr}.
+  We use commands \h{save} and \h{restore} to write and read these files,
+  and they are the standard way that theories are handled.
+\item[Theory Source]
+ is a text file that contains a readable notation for theories,
+ with file extension \h{.utp}, 
+ read and written by the \h{load} and \h{gen} commands.
+ These are intended to replace the theories defined in Haskell,
+ in the \h{builtin} directory.
+\end{description}
 
-\textbf{We are introducing a simple text syntax for theories and related
-artefacts, and we will ``generate'' to  and ``load'' from those.
-These files will also be how we DEFINE theories, 
-and will replace all/most(?) of the Haskell modules currently used
-(the contents of \h{builtin/}).}
+
+\subsection{Generate Theory Text}
+
 \begin{code}
 genCmd  = "gen"  ; genSpc  = map (const ' ') genCmd
-loadCmd = "load" ; loadSpc = map (const ' ') loadCmd
 genLoadFormat
   = [ ( genSpc ++ " -- Theory source file: <thryname>-gen.utp" )
     , ( genSpc ++ " -- File format: plain text" ) ]
+loadCmd = "load" ; loadSpc = map (const ' ') loadCmd
 \end{code}
 
 \begin{code}
@@ -254,15 +262,15 @@ generateState2 theory reqs = do
   -- want to avoid overwriting existing .utp files
   let fname = projectDir reqs </> thnm </> (thnm++"-gen") <.> "utp"
   putStrLn("generating to "++fname)
-  putStrLn ("saving "++fname)
   let theory_text = genTheory theory
-  putStrLn ("Contents of "++fname++":\n"++theory_text)
   writeFile fname theory_text
+  putStrLn ("***NOTE: rename to remove '-gen' to enable loading of this version.")
   return reqs
 \end{code}
 
 
 \subsection{Load Theory Text}
+
 
 \begin{code}
 cmdLoad :: REqCmdDescr
@@ -312,6 +320,15 @@ loadTheoryFile [thNm] reqs = do
 loadTheoryFile args reqs = do
   putStrLn ("load: expected single theory name"); return reqs
 \end{code}
+
+We save/restore theories by default,
+but can also handle smaller objects such as axioms, conjectures, and proofs.
+\begin{code}
+prfObj = "prf"
+cnjObj = "cnj"
+\end{code}
+
+\subsection{Save Proof Artifact}
 
 \begin{code}
 saveCmd = "save"
@@ -368,6 +385,8 @@ saveState _ reqs  =  doshow reqs "unknown 'save' option."
 \end{code}
 
 \newpage
+
+\subsection{Restore Proof Artifact}
 
 \begin{code}
 cmdRestore :: REqCmdDescr

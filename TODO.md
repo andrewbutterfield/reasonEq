@@ -7,7 +7,34 @@
 
 ## URGENT or NEXT
 
-Actually installing a theory from a `.utp` file.
+### Systematic Proof of all Conjectures
+
+```
+UTCP
+DWhile
+Designs
+UWhile
+UBase
+Lists
+LTL
+Closure
+Sets
+Exists
+Arith
+Forall
+Equal
+Impl
+AOI
+And
+Or
+Not
+EQV
+-- ok below here
+```
+
+Fixing bugs as we go.
+
+
 
 
 ### Law Classification
@@ -34,12 +61,7 @@ However only the first match is used by `applySimp`:
 
 *Instead it should try all the returned matches.*
 
-tr
 ## PLAN
-
-###
-
-
 
 ### Proof Automation
 
@@ -283,16 +305,11 @@ Should be the same in main and proof REPLs
 A similar syntax to show settings as well (e.g. `sh [setting]`).
 
 
-### Idea
-
-
-We should treat `=` like `≡` in pattern matching.
 
 ## Issues
 
 
 Type-check need confirmed with X_X_comp, as per following excerpt:
-
 
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 

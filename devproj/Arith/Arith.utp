@@ -37,3 +37,4 @@ Law axiom mul_mod_same . imod (e * f, f) == 0 . none
 Conjecture mul_sub_distr . e * (f - g) == e * f - e * g . none
 Conjecture neg_zero . neg (0) == 0 . none
 Conjecture arith_simp_test . (e + 0) * (f * (1 - 0)) - (0 + e * 1) * (g + (e - e)) . none
+Conjecture one_plus_one . 1 + 1 == 2 . none

@@ -271,7 +271,6 @@ generateState2 theory reqs = do
 
 \subsection{Load Theory Text}
 
-
 \begin{code}
 cmdLoad :: REqCmdDescr
 cmdLoad
@@ -284,11 +283,13 @@ cmdLoad
         : (loadSpc ++ "        -- creates a new theory if none exists" )
         : genLoadFormat )
     , loadTheoryFile )
+\end{code}
 
+\begin{code}
 loadTheoryFile [thNm] reqs = do
   let (haveproofs,msg) = checkLiveProofs thNm reqs
   if haveproofs then 
-    putStrLn ("Cannot load theory: "++msg)
+    doshow reqs ("Cannot load theory: "++msg)
   else do
     let fname = projectDir reqs </> thNm </> thNm <.> "utp" 
     putStrLn("loading from "++fname)
@@ -306,20 +307,29 @@ loadTheoryFile [thNm] reqs = do
             hFlush stdout
             response <- fmap trim getLine
             if take 1 response == "y"
-            then do
-                putStrLn ("** INSTALL '"++thNm++"' NYI **")
-            else putStrLn ("Theory '"++thNm++"' not installed")
-          else putStrLn $ unlines' -- pNm /= thNm
+            then loadTheTheoryFile reqs thNm pthry
+            else doshow reqs  ("Theory '"++thNm++"' not installed")
+          else doshow reqs $ unlines' -- pNm /= thNm
             [ "Theory name must match '.utp' filename!"
             , "  File Name: "++(thNm <.> "utp")
             , "  Theory name inside file: "++pNm ]            
-        But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
-    else putStrLn ("loadTheoryFile: cannot find "++fname)
-  return reqs
+        But msgs -> doshow reqs $ unlines' ("theory parse failed":msgs)
+    else doshow reqs ("loadTheoryFile: cannot find "++fname)
 
-loadTheoryFile args reqs = do
-  putStrLn ("load: expected single theory name"); return reqs
+loadTheoryFile args reqs = doshow reqs ("load: expected single theory name")
 \end{code}
+
+\begin{code}
+loadTheTheoryFile :: REqState -> String -> Theory -> IO REqState
+loadTheTheoryFile reqs thNm pthry 
+  = case replaceTheory thNm pthry $ theories reqs of
+      Yes theories' -> do putStrLn ("Theory '"++thNm++"' now loaded.")
+                          return $ theories_ theories' reqs
+      But msgs -> doshow reqs (unlines' msgs) 
+\end{code}
+
+
+\subsection{Save Proof Artifact}
 
 We save/restore theories by default,
 but can also handle smaller objects such as axioms, conjectures, and proofs.
@@ -327,8 +337,6 @@ but can also handle smaller objects such as axioms, conjectures, and proofs.
 prfObj = "prf"
 cnjObj = "cnj"
 \end{code}
-
-\subsection{Save Proof Artifact}
 
 \begin{code}
 saveCmd = "save"

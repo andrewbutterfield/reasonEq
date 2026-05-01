@@ -254,6 +254,8 @@ mkss trid _ (Cons _ _ fn@(Identifier f _) ts)
   where mkssts = mksss trid 0 ts
 \end{code}
 
+\subsection{Binders}
+
 \subsubsection{Quantifiers}
 
 A quantifier has the general form:
@@ -278,9 +280,15 @@ mkss trid p (Cls (Identifier c _) tm)
     = ssw ss_lngl ss_rngl (mkss trid 99 tm)
 \end{code}
 
-\subsubsection{Substitution}
+\newpage
+\subsection{Substitution}
 
-$$ t[e_1,\dots,e_n/v_1,\dots,v_n]$$
+\subsubsection{Assignment}
+
+We encode simultaneous assignment as a substition
+(which is its semantics, modulo unassigned variables):
+
+$$\lst v ::= \lst e \quad \equiv \quad  (::=)[\lst e/\lst v]$$
 \begin{code}
 mkss trid p (Sub tk (Var _ (Vbl (Identifier "asg" _) _ _)) 
                     (Substn tsub lvsub) )

@@ -7,6 +7,7 @@
 
 ## URGENT or NEXT
 
+
 ### Systematic Proof of all Conjectures
 
 ```
@@ -28,12 +29,17 @@ AOI
 And
 Or
 Not
-EQV
 -- ok below here
+EQV
 ```
 
 Fixing bugs as we go.
 
+#### Bugs Found
+
+#### Bugs Fixed
+
+ - In `eqv_subst`, in L2R proof, `(P ≡ Q)[e$/x$]` renders as `P ≡ Q[e$/x$]`.It renders correctly in the conjectures list.
 
 
 

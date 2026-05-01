@@ -295,12 +295,19 @@ mkss trid p (Sub tk (Var _ (Vbl (Identifier "asg" _) _ _))
    mrg cs  ""   =  cs
    mrg ""  cs   =  cs
    mrg cs1 cs2  =  cs1 ++ ',':cs2
-
-mkss trid p (Sub typ tm s)
-  = sslist [mkss trid p tm,mkSubst trid 0 s]
 \end{code}
 
-\subsubsection{Iteration}
+\subsubsection{Substitution}
+
+$$ t[e_1,\dots,e_n/v_1,\dots,v_n]$$
+\begin{code}
+mkss trid p (Sub typ tm s)
+  | isAtomic tm  = sslist [        mkss trid p tm        ,mkSubst trid 0 s]
+  | otherwise    = sslist [ss_lpar,mkss trid p tm,ss_rpar,mkSubst trid 0 s]
+
+\end{code}
+
+\subsection{Iteration}
 
 $$\ii \bigoplus C {lv_1,\dots,lv_n}$$
 Here $n$ is the arity of constructor $C$.

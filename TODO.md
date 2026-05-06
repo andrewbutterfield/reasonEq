@@ -28,8 +28,8 @@ Impl
 AOI
 And
 Or
-Not
 -- ok below here
+Not
 EQV
 ```
 

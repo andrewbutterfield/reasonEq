@@ -1,156 +1,49 @@
-ghci> ssdisp ssgmu 15 
-_______________
-@TOHALVE:  [(4,["Good"]),(7,["morning"]),(8,["Universe"]),(1,["!"]),(3,["How"]),(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])]
-@HALVE:  ([(4,["Good"]),(7,["morning"])],[(8,["Universe"]),(1,["!"]),(3,["How"]),(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])])
-@SIZEDSTRS:  [(4,["Good"]),(7,["morning"])]
-@SIZE:  12
-@WW:  14
-@SMALL:  [(4,["Good"]),(7,["morning"])]
-@FIRST:  ["Good.morning"]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"]),(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])]
-@SIZE:  30
-@WW:  14
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"]),(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"]),(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])]
-@HALVE:  ([(8,["Universe"]),(1,["!"]),(3,["How"])],[(3,["are"]),(3,["you"]),(5,["today"]),(1,["?"])])
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  13
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  12
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  12
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  11
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  11
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  10
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  10
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  9
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  9
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  8
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  8
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  7
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  7
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  6
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  6
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  5
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  5
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  4
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  4
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  3
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  3
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  2
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  2
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  1
-@SMALL:  []
-@FIRST:  [""]
-@SIZEDSTRS:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@SIZE:  14
-@WW:  1
-@LARGE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@TOHALVE:  [(8,["Universe"]),(1,["!"]),(3,["How"])]
-@HALVE:  ([],[(8,["Universe"]),(1,["!"]),(3,["How"])])
-@SIZEDSTRS:  []
-@SIZE:  0
-@WW:  0
+P ∨ (P ≡ P) :: P ∨ (Q ≡ R)
+
+lnm[parts]=or_eqv_distr[1]
+tP=P ∨ (Q ≡ R) ≡ P ∨ Q ≡ P ∨ R
+partsP=P ∨ (Q ≡ R)
+replP=P ∨ Q ≡ P ∨ R
+tC=P ∨ (P ≡ P)
+scC=⊤
+---
+termMatch': structural mismatch.
+
+
+tC = 
+C (TV (Id "B" 0)) True (Id "eqv" 0) 
+  [V (TV (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+  ,V (TV (Id "B" 0)) (VR (Id "P" 0,VP,WS))]
+
+tP = 
+C (TG (Id "B" 0)) True (Id "eqv" 0) 
+  [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
+  ,V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]
+
+The Axiom treats "B" as a given type. The conjecture treats it as a type-variable.
+
+Things given SourceHandling.Context that might *use* it:
+
+ - trm2term ctxt@(dflts,vt)) ?
+   - (TMVar) determineClass ctxt ?
+   - (TMVar) determineType (dflts,vt) ?
+     - VarData.seekType vt ?
+     - lookup dflts ?
+   - (TCons) lkpSubable vt  - returns Cons ArbType
+   - (TBndSet,TBNDLst) - ArbType
+   - (TSubV/LV/st) - mkSubst ctxt ?
+   - (TIter) - liv ctxt ?  - returns Iter ArbType
+ - (PEqv..EMod) binop2term - just passes it through both terms
+ 
+From Or.thr:
+
+The axiom:
+(("or_eqv_distr"
+ ,ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],([],fromList []))
+ )
+,Axiom)
+
+The conjecture:
+("or_zero",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),K (TG (Id "B" 0)) (VB True)],K (TG (Id "B" 0)) (VB True)],([],fromList [])))
+
+*** TG is used throughput for "B" !!!

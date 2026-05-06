@@ -37,6 +37,14 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - structural mismatch in L2R proof of `or_zero` with `P ∨ (P ≡ P) :: P ∨ (Q ≡ R)`. 
+ 
+ The types of the `P` in the candidate are `TV (Id "B" 0)` while those of  `P`, `Q`, and `R` in the pattern are `TG (Id "B" 0)`. 
+ 
+ In `Or.thr`, `TG` is used throughout. 
+ 
+ In the candidate this gets changed to `TV` somewhere in the prover.
+
 #### Bugs Fixed
 
  - In `eqv_subst`, in L2R proof, `(P ≡ Q)[e$/x$]` renders as `P ≡ Q[e$/x$]`.It renders correctly in the conjectures list.

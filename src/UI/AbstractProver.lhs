@@ -277,9 +277,9 @@ tryFocusAgainst lawnm parts liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
-    in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType tvmap
-          tryLawByName asn' lawnm parts ctxts fits
+    in do let (asn',tvmap) = mkTypedAsn vts (pdbg "TFA.GOALT" goalt) scC
+          let fits  =  cSubType $ pdbg "TFA.TVMAP" tvmap
+          tryLawByName (pdbg "TFA.ASN-dash" asn') lawnm parts ctxts fits
 \end{code}
 
 \newpage

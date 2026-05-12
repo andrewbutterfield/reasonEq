@@ -37,6 +37,25 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - strange match with a mysterious integer type !!
+
+ ```
+ proof> tm 1 false_def
+lnm[parts]=false_def[1]
+tP=false ≡ ¬true
+partsP=false
+replP=¬true
+tC=false
+scC=⊤
+---
+typeMatch: distinct types
+typC = TG (Id "Z" 0)   --  WTF?
+typP = TG (Id "B" 0)
+```
+
+Deciding that `GivenType`s are not a subset of `TypeVars` makes no difference.
+Id `Typing.canoniseTypes` messing things up?
+No, its `Assertions.mkTypedAsn` that converts false:bool to false:int.
 
 #### Bugs Fixed
 

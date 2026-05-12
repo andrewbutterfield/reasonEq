@@ -642,6 +642,7 @@ but rather a series of calls, with all but the last
 returning various items that need to be used by the concrete UI
 to collect arguments for the next call.
 
+\subsubsection{Check Focus is True}
 We start by checking that the focus is \true,
 and that we can find some laws.
 \begin{code}
@@ -652,10 +653,11 @@ lawInstantiate1 liveProof
         rslaws = concat $ map snd3 $ mtchCtxts liveProof
     in if currt /= true then [] else rslaws
 \end{code}
+The user is asked to pick a law by number.
 
-We should now get back those laws as well as the selected number.
-We now get the law, and return it along with,
-all the unknown free variables in the law,
+\subsubsection{Collect Relevant Sub-Terms}
+We now use the number get the law, 
+and return it along with all the unknown free variables in the law,
 and all the sub-terms of the complete proof goal.
 \begin{code}
 lawInstantiate2 :: MonadFail m
@@ -672,6 +674,10 @@ lawInstantiate2 rslaws i liveProof
        let goalTerms = reverse $ subTerms (exitTZ tz)
        return (law,S.toList lFreeV,goalTerms)
 \end{code}
+The user is then asked to choose a sub-term.
+
+\newpage
+\subsubsection{Instantiate Chosen SubTerm}
 
 We now get back a pairing of each law unknown free-variable
 with one of the goal sub-terms, as well as the chosen law.

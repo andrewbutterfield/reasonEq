@@ -139,8 +139,8 @@ $$
 $$
 \begin{code}
 match :: (MonadPlus mp, MonadFail mp) 
-      => [VarTable]-> TypCmp
-      -> Candidate -> Pattern -> mp Binding
+      => [VarTable] -> TypCmp
+      -> Candidate  -> Pattern -> mp Binding
 match vts fits cand patn  
   =  termMatch vts fits emptyBinding noBVS noBVS cand patn
 \end{code}
@@ -154,6 +154,7 @@ type TVCmp = Identifier -> Identifier -> Bool
 typeMatch :: MonadFail m 
           => (TypCmp,TVCmp) -> Binding -> Type -> Type
           -> m Binding
+
 typeMatch _ bind typC ArbType       =  return bind 
 
 typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)

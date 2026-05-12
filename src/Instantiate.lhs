@@ -99,13 +99,17 @@ mkInsCtxt :: [VarTable] -> SideCond -> InsContext
 mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \end{code}
 
-
+\newpage
 \section{Instantiating Types}
+
 
 \begin{code}
 instType :: MonadFail m => Binding -> Type -> m Type
+
 instType _ ArbType = return ArbType
+
 instType bind (TypeVar i) = lookupTypeVarBind bind i
+
 instType bind (TypeCons i ts) = do 
   i' <- case lookupTypeVarBind bind i of
           Just (TypeVar i') -> return i'
@@ -113,12 +117,16 @@ instType bind (TypeCons i ts) = do
           -- _ -> fail ("instType (TypeVar "++show i++"): expected TypeVar")
   ts' <- instTypes bind ts
   return $ TypeCons i' ts'
+
 instType bind (FunType td tr) = do
   td' <- instType bind td
   tr' <- instType bind tr
   return $ FunType td' tr'
-instType bind (GivenType i) = lookupTypeVarBind bind i
+
+instType bind gt@(GivenType _) = return gt
+
 instType _ BottomType = return BottomType
+
 instType _ typ = fail ("Cannot instantiate type "++show typ)
 
 instTypes bind [] = return []

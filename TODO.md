@@ -37,6 +37,11 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+
+#### Bugs Fixed
+
+Most recent first...
+
  - structural mismatch in L2R proof of `or_zero` with `P ∨ (P ≡ P) :: P ∨ (Q ≡ R)`. 
  
  The types of the `P` in the candidate are `TV (Id "B" 0)` while those of  `P`, `Q`, and `R` in the pattern are `TG (Id "B" 0)`. 
@@ -45,7 +50,8 @@ Fixing bugs as we go.
  
  In the candidate this gets changed to `TV` somewhere in the prover.
 
-#### Bugs Fixed
+ *Fix: `Instantiate.instType` now leaves `GivenType`s unchanged.
+
 
  - In `eqv_subst`, in L2R proof, `(P ≡ Q)[e$/x$]` renders as `P ≡ Q[e$/x$]`.It renders correctly in the conjectures list.
 

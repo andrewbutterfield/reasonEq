@@ -128,7 +128,7 @@ We can immediately identify the following laws:
    ~~\where~~ \tau_{a_2} \subseteq_T \tau_{a_1} 
             \land
             \tau_{r_1} \subseteq_T \tau_{r_2}
-\\ \gg{g}   &\subseteq_T& t
+\\ \gg{g}   &\not\subseteq_T& t
 \\ \gg{g}_1 &\subseteq_T& \gg{g}_2 ~~\where~~ \gg{g}_1=\gg{g}_2
 \\ \bot &\subseteq_T& \tau
 \end{eqnarray*}
@@ -165,7 +165,7 @@ isSubTypeOf t1 t2
     TB           `isSTOf` _        =  True
     _            `isSTOf` TB       =  False
     (TV i1)      `isSTOf` (TV i2)  =  i1 == i2
-    (TG _)       `isSTOf` (TV _)   =  True
+    -- (TG _)       `isSTOf` (TV _)   =  True
     (TG i1)      `isSTOf` (TG i2)  =  i1 == i2
     (TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
     (TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2

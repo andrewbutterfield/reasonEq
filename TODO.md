@@ -27,8 +27,8 @@ Equal
 Impl
 AOI
 And
-Or
 -- ok below here
+Or
 Not
 EQV
 ```
@@ -61,6 +61,21 @@ In fact it was  `StdTypeSignature.valueType` which mixed up its
 #### Bugs Fixed
 
 Most recent first...
+
+ - strange match with a mysterious integer type !!
+
+```
+proof> tm 1 false_def
+@TI.TRM:  K (TG (Id "B" 0)) (VB False)
+@TI.TYP:  TG (Id "Z" 0)
+Match against 'false_def'[1] failed!
+---
+typeMatch: distinct types
+typC = TG (Id "Z" 0)
+typP = TG (Id "B" 0)
+hit <enter> to continue
+```
+
 
  - structural mismatch in L2R proof of `or_zero` with `P ∨ (P ≡ P) :: P ∨ (Q ≡ R)`. 
  

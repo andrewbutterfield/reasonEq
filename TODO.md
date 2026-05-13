@@ -39,23 +39,24 @@ Fixing bugs as we go.
 
  - strange match with a mysterious integer type !!
 
- ```
- proof> tm 1 false_def
-lnm[parts]=false_def[1]
-tP=false ≡ ¬true
-partsP=false
-replP=¬true
-tC=false
-scC=⊤
+```
+proof> tm 1 false_def
+@TI.TRM:  K (TG (Id "B" 0)) (VB False)
+@TI.TYP:  TG (Id "Z" 0)
+Match against 'false_def'[1] failed!
 ---
 typeMatch: distinct types
-typC = TG (Id "Z" 0)   --  WTF?
+typC = TG (Id "Z" 0)
 typP = TG (Id "B" 0)
+hit <enter> to continue
 ```
 
 Deciding that `GivenType`s are not a subset of `TypeVars` makes no difference.
 Id `Typing.canoniseTypes` messing things up?
-No, its `Assertions.mkTypedAsn` that converts false:bool to false:int.
+No, it's `Assertions.mkTypedAsn` that converts `false:bool` to `false:int`.
+And it's `Typing.typeInference` to blame!
+In fact it was  `StdTypeSignature.valueType` which mixed up its 
+`int`s and `bool`s!
 
 #### Bugs Fixed
 

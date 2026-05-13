@@ -67,8 +67,8 @@ int    = GivenType $ jId "Z"
 
 \begin{code}
 valueType :: Value -> Type
-valueType (Integer _) = bool
-valueType (Boolean _) = int
+valueType (Integer _) = int
+valueType (Boolean _) = bool
 \end{code}
 
 \subsection{Sets}

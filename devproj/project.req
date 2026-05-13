@@ -6,33 +6,6 @@ END THEORIES
 CURRTHEORY = Or
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Or","or_unit")
-BEGIN LIVE-PROOF
-TH-NAME: Or
-CJ-NAME: or_unit
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),K (TG (Id "B" 0)) (VB False)],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = False
-TL = False
-TS = False
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (K (TG (Id "B" 0)) (VB False),[Cons' (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))] [],Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.or_unit", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1,2]
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -7,6 +7,16 @@
 
 ## URGENT or NEXT
 
+Inspired by:
+```
+P ≡ Q ∧ R ≡ P ∨ (Q ≡ R ≡ Q ∨ R)
+
+Target (LHS): 
+P ∧ Q ≡ R ≡ (P ≡ Q ≡ P ∨ Q) ∨ R
+```
+ - Change proof command `l` (leave hypothesis) to `g` (to goal)
+ - use `l` abd `r` to move left and right in expressions.
+
 
 ### Systematic Proof of all Conjectures
 

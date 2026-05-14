@@ -142,7 +142,7 @@ proofREPLConfig
             , applyACLDescr
             , switchConsequentDescr
             , switchHypothesisDescr
-            , leaveHypothesisDescr
+            , gotoGoalDescr
             , cloneHypothesisDescr
             , equivaleStepsDescr
             , tryMatchDescr
@@ -304,8 +304,8 @@ switchConsequent _ = tryDelta switchConsequentFocus
 Switching focus to a hypothesis:
 \begin{code}
 switchHypothesisDescr
-  = ( "h", "to hypothesis"
-    , "h i  -- focus on hypothesis i, use 'l' to exit."
+  = ( "h", "goto hypothesis"
+    , "h i  -- focus on hypothesis i, use 'g' to exit."
     , switchHypothesis )
 
 switchHypothesis :: REPLCmd (REqState, LiveProof)
@@ -314,13 +314,13 @@ switchHypothesis args = tryDelta (moveFocusToHypothesis $ args2int args)
 
 Returning focus from a hypothesis:
 \begin{code}
-leaveHypothesisDescr
-  = ( "l", "leave hypothesis"
-    , "l  --  leave hypothesis, go to C_left."
-    , leaveHypothesis )
+gotoGoalDescr
+  = ( "g", "goto goal"
+    , "g  --  from hypothesis, go to C_left."
+    , gotoGoal )
 
-leaveHypothesis :: REPLCmd (REqState, LiveProof)
-leaveHypothesis _ = tryDelta moveFocusFromHypothesis
+gotoGoal :: REPLCmd (REqState, LiveProof)
+gotoGoal _ = tryDelta moveFocusFromHypothesis
 \end{code}
 
 Undoing the previous step (if any)

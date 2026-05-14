@@ -124,7 +124,9 @@ completeProof reqs liveProof
 
 \section{Modifying Proof-State (\texttt{LiveProofs})}
 
-\subsection{Moving Focus Down}
+\subsection{Changing Goal Focus}
+
+\subsubsection{Moving Focus Down}
 
 \begin{code}
 moveFocusDown :: MonadFail m => Int -> LiveProof -> m LiveProof
@@ -140,22 +142,21 @@ moveFocusDown i liveProof
 
 \end{code}
 
-\subsection{Moving Focus Up}
+\subsubsection{Moving Focus Up}
 
 \begin{code}
 moveFocusUp :: MonadFail m => LiveProof -> m LiveProof
 moveFocusUp liveProof
   = let (tz,seq') = focus liveProof
         (ok,tz') = upTZ tz
-    in if ok
-        then return ( focus_ (tz',seq')
-                    $ fPath__ init
-                    $ matches_ [] liveProof  )
-        else fail "At top"
+    in if ok then return ( focus_ (tz',seq')
+                         $ fPath__ init
+                         $ matches_ [] liveProof  )
+             else fail "At top"
 
 \end{code}
 
-\subsection{Switching Consequent Focus}
+\subsubsection{Switching Consequent Focus}
 
 \begin{code}
 switchConsequentFocus :: MonadFail m => LiveProof -> m LiveProof
@@ -174,7 +175,7 @@ switchConsequentFocus liveProof
 \end{code}
 
 
-\subsection{Focus into Hypotheses}
+\subsubsection{Focus into Hypotheses}
 
 \begin{code}
 moveFocusToHypothesis :: MonadFail m => Int -> LiveProof -> m LiveProof
@@ -195,8 +196,8 @@ moveFocusToHypothesis i liveProof
         else fail ("No hypothesis "++show i)
 \end{code}
 
-\newpage
-\subsection{Return Focus from Hypotheses}
+
+\subsubsection{Return Focus from Hypotheses}
 
 \begin{code}
 moveFocusFromHypothesis :: MonadFail m => LiveProof -> m LiveProof
@@ -217,7 +218,9 @@ moveFocusFromHypothesis liveProof
         else fail "Not in hypotheses"
 \end{code}
 
-\subsection{Match Laws against Focus}
+\subsection{Matching Laws}
+
+\subsubsection{Canonical Types}
 
 In all matching cases we use a type-comparison operator that is 
 the canonisisation of the sub-type relation:
@@ -226,8 +229,9 @@ cSubType :: CanonicalMap -> TypCmp
 cSubType = canoniseTypes isSubTypeOf
 \end{code}
 
+\newpage
+\subsubsection{Matching All Laws}
 
-Matching all laws:
 \begin{code}
 matchFocus :: MonadFail m => Ranking -> LiveProof -> m LiveProof 
 matchFocus ranking liveProof
@@ -250,7 +254,8 @@ matchFocus ranking liveProof
       ++ trTerm 0 (mRepl m)
 \end{code}
 
-Matching a specific law:
+\subsubsection{Matching Specific Law} 
+
 \begin{code}
 matchFocusAgainst :: MonadFail m => String -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm liveProof
@@ -266,6 +271,8 @@ matchFocusAgainst lawnm liveProof
             Yes mtchs -> return $ matches_ mtchs liveProof
             But msgs  -> fail $ unlines msgs
 \end{code}
+
+\subsubsection{Diagnostic Test Match}
 
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \begin{code}
@@ -455,7 +462,7 @@ applySAT liveproof
 
 \subsection{Automate Classifier Law Usage}
 
-
+\Huge{TO APPEAR}
 
 \newpage
 \subsection{Normalise Quantifiers}
@@ -533,7 +540,9 @@ substituteFocus thrys liveProof
 \end{code}
 
 
-\subsection{Observing Laws in Scope}
+\subsection{Observing Live Proof State}
+
+\subsubsection{Show: Laws in Scope}
 
 \begin{code}
 observeLawsInScope :: [String] -> LiveProof -> String
@@ -561,7 +570,7 @@ Perhaps this is all over-engineered?
 }
 
 
-\subsection{Observing Knowns Names in Scope}
+\subsubsection{Show: Theories in Scope}
 
 
 \begin{code}
@@ -573,7 +582,7 @@ observeTheoriesInScope liveProof
 
 \end{code}
 
-\subsection{Observing Knowns Names in Scope}
+\subsubsection{Show: Known Names in Scope}
 
 
 \begin{code}

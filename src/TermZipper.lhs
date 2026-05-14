@@ -38,13 +38,14 @@ import Debugger
 \newpage
 \section{Introduction}
 
-We define types for the key concepts behind a proof,
-such as the notion of assertions, proof strategies,
-and proof calculations.
 
+We implement a ``zipper''\cite{DBLP:journals/jfp/Huet97} 
+over the term datatype.
 
-We implement a zipper on the publicly available patterns.
-Algebraically:
+\subsection{Theory}
+
+Our term datatype (\h{AST.term})
+is an algebraic datatype over type-variables $t$:
 \begin{eqnarray*}
    t &::=& Val_k~n
       ~|~  Iter_k~i~i~lv
@@ -56,43 +57,64 @@ Algebraically:
       ~|~  Cls~i~t
       ~|~  Sub_k~t~s
 \\ s &::=& Substn~(v,t)^*~(v,v)^*
-\\ t' &::=& Cons'_k~b~i~t^*~t^*
+\end{eqnarray*}
+
+We derive the zipper type algebraically, by ``differentiating'' 
+the term algebraic type w.r.t. those $t$\cite{DBLP:journals/fuin/AbbottAMG05}:
+\begin{eqnarray*}
+   t' &::=& Cons'_k~b~i~t^*~t^*
        ~|~  Bnd'_k~i~vs
        ~|~  Lam'_k~i~vl
        ~|~  Cls'~i
        ~|~  Sub'_k~s
        ~|~  Substn'_k~t~(v,v)^*~(v,t)^*~v~(v,t)^*
+\\ zip(t) &=& (t,(t')^*)
 \end{eqnarray*}
+This results in product-types that match the composites in the original type.
+
 \begin{code}
 type TermSubL = [(Variable, Term)]
 
 data Term'
   = Cons'   Type Subable Identifier [Term] -- terms before focus, reversed
-                                        [Term] -- terms after focus
+                                    [Term] -- terms after focus
   | Bnd'    Type Identifier VarSet
   | Lam'    Type Identifier VarList
   | Cls'             Identifier
   | Sub'    Type Substn
   | Substn' Type Term LVarSubs TermSubL  -- subst-pairs before, reversed
-                                  Variable -- focus target variable
-                                  TermSubL  -- subst-pairs after focus
+                               Variable  -- focus target variable
+                               TermSubL  -- subst-pairs after focus
   deriving (Eq,Show,Read)
-
 
 type TermZip = (Term,[Term'])
 \end{code}
 
-\newpage
-We now define the basic zip maneuvers.
+\section{Basic Zipper Operations}
 
-\section{Zip Creation}~
+We now define the basic zipper manoeuvers.
+
+We start with creation, the basic up and down moves,
+and then define exit to keep going ``up''.
+We also define getters and setters for the focus of the zipper
+
+\subsection{Zip Creation}~
 
 \begin{code}
 mkTZ :: Term -> TermZip
 mkTZ trm = (trm,[])
 \end{code}
 
-\section{Zip Descent}~
+
+\subsection{Zip Exit}
+
+\begin{code}
+exitTZ :: TermZip -> Term
+exitTZ (t,[])  =  t
+exitTZ tz = exitTZ $ snd $ upTZ tz
+\end{code}
+
+\subsection{Zip Descent}~
 
 \begin{code}
 downTZ :: Int -> TermZip -> ( Bool -- true if descent occurred, false otherwise
@@ -120,28 +142,7 @@ sdescend tk t n (Substn tsub lvsub)
         -> Just (t',Substn' tk t lvsub before v after)
 \end{code}
 
-\subsection{Zip Descent by Path}
-
-Follow a list of numbers down.
-No change if any number fails to produce a descent step.
-\begin{code}
-followTZ :: [Int] -> TermZip -> ( Bool -- true if descent occurred.
-                                , TermZip )
-followTZ path tz0
-  = follow tz0 False path -- boolean set true once a down step is done
-  where
-    follow tz stepped [] = if stepped then (True,tz) else (False,tz0)
-    follow tz stepped (n:ns)
-      = let (ok,tz') = downTZ n tz in
-        if ok then follow tz' True ns else (False,tz0)
-
-pathTZ :: [Int] -> Term -> TermZip
-pathTZ path = snd . followTZ path . mkTZ
-\end{code}
-
-
-\newpage
-\section{Zip Ascent}~
+\subsection{Zip Ascent}~
 
 \begin{code}
 upTZ :: TermZip -> ( Bool -- true if ascent occurred, false otherwise
@@ -162,20 +163,18 @@ ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub
 wrap before x after = reverse (x:before) ++ after
 \end{code}
 
-\section{Zip Exit}
+\newpage
+\subsection{Zip Get}
 
-\begin{code}
-exitTZ :: TermZip -> Term
-exitTZ (t,[])  =  t
-exitTZ tz = exitTZ $ snd $ upTZ tz
-\end{code}
-
-\section{Zip Get and Set}
-We also provide get and set functions for the zipper focus:
 \begin{code}
 getTZ :: TermZip -> Term
 getTZ (t,_) = t
+\end{code}
 
+\subsection{Zip Set}
+
+We provide value and function-based setters:
+\begin{code}
 setTZ :: Term -> TermZip -> TermZip
 setTZ t (_,wayup) = (t,wayup)
 
@@ -183,7 +182,37 @@ setfTZ :: (Term -> Term) -> TermZip -> TermZip
 setfTZ f (t,wayup) = (f t, wayup)
 \end{code}
 
-\newpage
+\section{Complex Zipper Operations}
+
+\subsection{Zip Descent by Path}
+
+Follow a list of numbers down.
+No change if any number fails to produce a descent step.
+\begin{code}
+followTZ :: [Int] -> TermZip -> ( Bool -- true if descent occurred.
+                                , TermZip )
+followTZ path tz0
+  = follow tz0 False path -- boolean set true once a down step is done
+  where
+    follow tz stepped [] = if stepped then (True,tz) else (False,tz0)
+    follow tz stepped (n:ns)
+      = let (ok,tz') = downTZ n tz in
+        if ok then follow tz' True ns else (False,tz0)
+
+pathTZ :: [Int] -> Term -> TermZip
+pathTZ path = snd . followTZ path . mkTZ
+\end{code}
+
+\subsection{Moving Left and Right}
+
+Wanted: easy l-r movement that does the required up/down movement 
+under the hood.
+
+\textbf{Coming soon}
+
+
+
+
 \section{Zipper Tests}
 
 These tests involve a descent of zero or more levels,
@@ -296,7 +325,7 @@ tstZipper
    ]
 \end{code}
 
-\newpage
+
 
 \section{Exported Test Group}
 \begin{code}

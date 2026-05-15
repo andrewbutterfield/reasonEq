@@ -64,6 +64,7 @@ import ProofSettings
 
 import Symbols
 import TestRendering
+import PrettyTerms
 
 import StdTypeSignature
 import StdSignature
@@ -1011,11 +1012,11 @@ showLiveProof liveProof
 dispLiveProof :: Int -> LiveProof -> String
 dispLiveProof ww liveProof
  = unlines $
-       [wwstr++' ':dashes++"("++dcount++"/"++mcount++")"] 
+       [ replicate ww '_' ]
        ++ 
-       shProof liveProof
+       shProof ww liveProof
        ++
-       ( displayMatches prfSet (mtchCtxts liveProof) mtchs
+       ( displayMatches ww prfSet (mtchCtxts liveProof) mtchs
          : [ "           "
            , dispSeqZip ww (fPath liveProof) 
                            (conjSC liveProof) (focus liveProof)
@@ -1025,9 +1026,6 @@ dispLiveProof ww liveProof
   where 
     prfSet = liveSettings liveProof
     mtchs = matches liveProof
-    wwstr = lpad 3 $ show ww
-    dashes = replicate (ww-13) '-'
-    mcount = rpad 3 $ show $ length mtchs 
     dmatches = take (maxMatchDisplay prfSet) mtchs
     dcount = lpad 3 $ show $ length dmatches
     (trm,sc) = unwrapASN $ conjecture liveProof
@@ -1035,14 +1033,14 @@ dispLiveProof ww liveProof
 
 -- dispLiveProof but when proof is complete
 -- temporary
-dispEndProof :: LiveProof -> String
-dispEndProof liveProof = unlines $ shProof liveProof
+dispEndProof :: Int -> LiveProof -> String
+dispEndProof ww liveProof = unlines $ shProof ww liveProof
 
 
-shProof :: LiveProof -> [String]
-shProof liveProof
- =   ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
-       : ("\t" ++ green(trTerm 0 trm ++ "\n\t"++ trSideCond sc))
+shProof :: Int -> LiveProof -> [String]
+shProof ww liveProof
+ =   ( ("Proof for "++red (widthHack 2 $ conjName liveProof))
+       : ("\t" ++ green(ppTerm ww 0 trm ++ "\n\t"++ trSideCond sc))
        : ("by "++strategy liveProof)
        : showsteps
        ) 
@@ -1050,36 +1048,37 @@ shProof liveProof
    prfSet = liveSettings liveProof
    maxstep = maxStepDisplay prfSet
    allsteps = stepsSoFar liveProof
-   showsteps = shProofSteps maxstep allsteps
+   showsteps = shProofSteps ww maxstep allsteps
    (trm,sc) = unwrapASN $ conjecture liveProof
 
-shProofSteps maxstep steps
- | maxstep >= length steps  =  map shLiveStep $ reverse steps
- | otherwise  =  "..." : ( map shLiveStep $ reverse $ take maxstep steps )
+shProofSteps :: Int -> Int -> [CalcStep] -> [String]
+shProofSteps ww maxstep steps
+ | maxstep >= length steps  =  map (shLiveStep ww) $ reverse steps
+ | otherwise  =  "..." : ( map (shLiveStep ww) $ reverse $ take maxstep steps )
 
-shLiveStep :: CalcStep -> String
-shLiveStep ( just, asn@(Assertion tm sc) )
-  = unlines' [ trTerm 0 tm
+shLiveStep :: Int -> CalcStep -> String
+shLiveStep ww ( just, asn@(Assertion tm sc) )
+  = unlines' [ ppTerm ww 0 tm
              , showJustification just]
 
-displayMatches :: ProofSettings -> [MatchContext] -> Matches -> String
-displayMatches _ _ []  =  ""
-displayMatches prfSet mctxts mtchs
+displayMatches :: Int -> ProofSettings -> [MatchContext] -> Matches -> String
+displayMatches _ _ _ []  =  ""
+displayMatches ww prfSet mctxts mtchs
   =  unlines' ( ("Matches:")
-                : map (shMatch showbind vts) (reverse $ zip [1..] mtchs) )
+                : map (shMatch ww showbind vts) (reverse $ zip [1..] mtchs) )
   where 
     vts = getVarTables mctxts
     showbind = showBindings prfSet
     
 
-shMatch showbind vts (i, mtch)
+shMatch ww showbind vts (i, mtch)
  = show i ++ " : "++ ldq ++ red (truelawname $ mName mtch) ++ rdq
    ++ " " ++ shMClass (mClass mtch)
    ++ showBinding showbind
-   ++ lnindent ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
+   ++ lnindent ++ (bold $ blue $ ppTerm ww 0 $ mRepl mtch)
    ++ lnindent ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
-    lnindent = "\n    "
+    lnindent = "\n"
     showBinding False = ""
     showBinding True = lnindent ++ trBinding (mBind mtch) 
     showRepl (But msgs) = unlines ("auto-instTerm failed!!":msgs)

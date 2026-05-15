@@ -733,25 +733,25 @@ dispSeqZip ww fp sc (tz,Sequent' _ _ conj')
   =  unlines' $ dispConjParts ww fp tz sc conj'
 
 dispConjParts ww fp tz sc (CLaws' hthry Lft rightC)
-  =  (dispHypotheses hthry)
+  =  (dispHypotheses ww hthry)
      : [ _vdash ]
      ++ dispGoal ww tz sc
-     ++ dispContext fp tz "Target (RHS): " (red $ trTerm 0 rightC)
+     ++ dispContext fp tz "Target (RHS): " (red $ ppTerm ww 0 rightC)
 
 
 dispConjParts ww fp tz sc (CLaws' hthry Rght leftC)
-  =  (dispHypotheses hthry)
+  =  (dispHypotheses ww hthry)
      : [ _vdash ]
      ++ dispGoal ww tz sc
      ++ dispContext fp tz "Target (LHS): " (red $ ppTerm ww 0 leftC)
 
 
 dispConjParts ww fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
-  =  (dispHypotheses $ getHypotheses' seq')
+  =  (dispHypotheses ww $ getHypotheses' seq')
      : [ _vdash ]
      ++ dispGoal ww tz sc
      ++ dispContext fp tz "Hypothesis: " 
-          (trTerm 0 horig++"  "++trSideCond sc)
+          (ppTerm ww 0 horig++"  "++trSideCond sc)
   where
      hthry =  nullTheory { 
                 thName   =  hn
@@ -759,8 +759,12 @@ dispConjParts ww fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
               , known    =  hk
               }
 
-dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
-showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
+dispHypotheses ww hthry  
+  | null hyps = "true"
+  | otherwise  = numberList' (showHyp ww) hyps
+  where hyps =  laws $ hthry
+
+showHyp ww ((_,(Assertion trm _)),_) = ppTerm ww 0 trm
 
 
 dispGoal ww tz sc

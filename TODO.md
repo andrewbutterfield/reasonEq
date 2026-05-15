@@ -17,11 +17,6 @@ P ∧ Q ≡ R ≡ (P ≡ Q ≡ P ∨ Q) ∨ R
  - Change proof command `l` (leave hypothesis) to `g` (to goal)
  - use `l` abd `r` to move left and right in expressions.
 
-**Issue:**
-
-*When we descend, going up subsequently is easy---we just pop the stack. However, we don't record which branch we took from the parent. Here we need to know this to do the subsequent down action! We need to add this information to our zipper*
-
-
 
 ### Systematic Proof of all Conjectures
 

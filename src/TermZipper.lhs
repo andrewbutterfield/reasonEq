@@ -234,6 +234,13 @@ This involves the following steps: $up;down (i\pm1)$.
 What gets interesting is when we try to move past either end.
 The simplest approach is that the operation fails (silently).
 
+\textbf{Issue:}
+\textit{
+When we descend, going up subsequently is easy---we just pop the stack.
+However, we don't record which branch we took from the parent.
+Here we need to know this to do the subsequent down action!
+}
+
 \begin{code}
 leftTZ :: TermZip -> ( Bool -- true if left move occurred, false otherwise
                      , TermZip )

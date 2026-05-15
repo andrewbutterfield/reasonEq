@@ -234,23 +234,26 @@ This involves the following steps: $up;down (i\pm1)$.
 What gets interesting is when we try to move past either end.
 The simplest approach is that the operation fails (silently).
 
-\textbf{Issue:}
-\textit{
-When we descend, going up subsequently is easy---we just pop the stack.
-However, we don't record which branch we took from the parent.
-Here we need to know this to do the subsequent down action!
-}
-
 \begin{code}
 leftTZ :: TermZip -> ( Bool -- true if left move occurred, false otherwise
                      , TermZip )
 leftTZ tz@(_,[]) = (False, tz) -- null op, if already at top
-leftTZ (t,((i,parent):wayup)) =  (True, (ascend t parent, wayup)) -- TBD
+leftTZ tz@(t,((i,parent):wayup)) 
+  = let i' = i-1
+        parent' = ascend t parent
+    in case descend i' parent' of
+      Nothing       ->  (False,tz) -- already leftmost, no change
+      Just (td,t')  ->  (True,(td,(i',t'):wayup))
 
 rightTZ :: TermZip -> ( Bool -- true if right move occurred, false otherwise
                       , TermZip )
 rightTZ tz@(_,[]) = (False, tz) -- null op, if already at top
-rightTZ (t,((i,parent):wayup)) =  (True, (ascend t parent, wayup)) -- TBD
+rightTZ tz@(t,((i,parent):wayup))  
+  = let i' = i+1
+        parent' = ascend t parent
+    in case descend i' parent' of
+      Nothing       ->  (False,tz) -- already rightmost, no change
+      Just (td,t')  ->  (True,(td,(i',t'):wayup))
 \end{code}
 
 

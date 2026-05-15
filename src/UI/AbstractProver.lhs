@@ -162,10 +162,11 @@ moveFocusUp liveProof
 \begin{code}
 moveFocusLeft :: MonadFail m => LiveProof -> m LiveProof
 moveFocusLeft liveProof
-  = let (tz,seq') = focus liveProof
-        (ok,tz')  = leftTZ tz
+  = let (tz,seq')  =  focus liveProof
+        (ok,tz')   =  leftTZ tz
+        i'         =  fst $ head $ snd tz' -- defined if ok is true
     in if ok then return ( focus_ (tz',seq')
-                         $ fPath__ init
+                         $ fPath__ ((++[i']) . init)
                          $ matches_ [] liveProof  )
              else fail "At top"
 \end{code}
@@ -175,10 +176,11 @@ moveFocusLeft liveProof
 \begin{code}
 moveFocusRight :: MonadFail m => LiveProof -> m LiveProof
 moveFocusRight liveProof
-  = let (tz,seq') = focus liveProof
-        (ok,tz') = rightTZ tz
+  = let (tz,seq')  =  focus liveProof
+        (ok,tz')   =  rightTZ tz
+        i'         =  fst $ head $ snd tz' -- defined if ok is true
     in if ok then return ( focus_ (tz',seq')
-                         $ fPath__ init
+                         $ fPath__ ((++[i']) . init)
                          $ matches_ [] liveProof  )
              else fail "At top"
 \end{code}

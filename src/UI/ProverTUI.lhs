@@ -100,7 +100,7 @@ proofREPLEndCondition (reqs,liveProof)
   =  proofIsComplete liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
-  = do putStrLn $ dispEndProof liveProof
+  = do putStrLn $ dispEndProof 100 liveProof
        putStrLn "Proof Complete"
        return ( completeProof reqs liveProof, liveProof)
 \end{code}

@@ -2,6 +2,7 @@
 \begin{code}
 module PrettyTerms (
   ppTermZip
+, ppTerm
 ) 
 where
 import Utilities

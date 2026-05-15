@@ -743,7 +743,7 @@ dispConjParts ww fp tz sc (CLaws' hthry Rght leftC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
      ++ dispGoal ww tz sc
-     ++ dispContext fp tz "Target (LHS): " (red $ trTerm 0 leftC)
+     ++ dispContext fp tz "Target (LHS): " (red $ ppTerm ww 0 leftC)
 
 
 dispConjParts ww fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
@@ -763,9 +763,7 @@ dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
 
--- dispGoal will soon invoke functions in PrettyTerms to render this.
 dispGoal ww tz sc
---   = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
   = [ ppTermZip ww tz++"\n "++blue (trSideCond sc) ]
 
 dispType :: TermZip -> [ String ]

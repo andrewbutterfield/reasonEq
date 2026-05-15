@@ -1011,10 +1011,12 @@ showLiveProof liveProof
 dispLiveProof :: Int -> LiveProof -> String
 dispLiveProof ww liveProof
  = unlines $
+       [wwstr++' ':dashes++"("++dcount++"/"++mcount++")"] 
+       ++ 
        shProof liveProof
        ++
        ( displayMatches prfSet (mtchCtxts liveProof) mtchs
-         : [ wwstr++' ':dashes++"("++dcount++"/"++mcount++")" -- underline "           "
+         : [ "           "
            , dispSeqZip ww (fPath liveProof) 
                            (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)

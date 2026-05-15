@@ -35,8 +35,8 @@ Arith
 Forall
 Equal
 Impl
-AOI
 -- working here:
+AOI
 -- ok below here:
 And
 Or

@@ -37,8 +37,8 @@ Equal
 Impl
 AOI
 -- working here:
-And
 -- ok below here:
+And
 Or
 Not
 EQV

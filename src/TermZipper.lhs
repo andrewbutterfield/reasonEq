@@ -87,7 +87,7 @@ data Term'
                                TermSubL  -- subst-pairs after focus
   deriving (Eq,Show,Read)
 
-type TermZip = (Term,[Term'])
+type TermZip = (Term,[(Int,Term')]) -- need to track from whence we came...
 \end{code}
 
 \section{Basic Zipper Operations}
@@ -124,7 +124,7 @@ downTZ :: Int -> TermZip -> ( Bool -- true if descent occurred, false otherwise
 downTZ n tz@(t,wayup)
   =  case descend n t of
       Nothing  ->  (False,tz) -- null op, if not possible to descend as requested
-      Just (td,t')  ->  (True,(td,t':wayup))
+      Just (td,t')  ->  (True,(td,(n,t'):wayup))
 \end{code}
 
 Here \emph{descend} performs the ``differentiation''.
@@ -153,7 +153,7 @@ sdescend tk t n (Substn tsub lvsub)
 upTZ :: TermZip -> ( Bool -- true if ascent occurred, false otherwise
                    , TermZip )
 upTZ tz@(_,[]) = (False, tz) -- null op, if already at top
-upTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup))
+upTZ (t,((_,parent):wayup)) =  (True, (ascend t parent, wayup))
 
 ascend :: Term -> Term' -> Term -- should always succeed
 ascend t (Cons' tk sb i before after)  =  Cons tk sb i $ wrap before t after
@@ -245,12 +245,12 @@ Here we need to know this to do the subsequent down action!
 leftTZ :: TermZip -> ( Bool -- true if left move occurred, false otherwise
                      , TermZip )
 leftTZ tz@(_,[]) = (False, tz) -- null op, if already at top
-leftTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup)) -- TBD
+leftTZ (t,((i,parent):wayup)) =  (True, (ascend t parent, wayup)) -- TBD
 
 rightTZ :: TermZip -> ( Bool -- true if right move occurred, false otherwise
                       , TermZip )
 rightTZ tz@(_,[]) = (False, tz) -- null op, if already at top
-rightTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup)) -- TBD
+rightTZ (t,((i,parent):wayup)) =  (True, (ascend t parent, wayup)) -- TBD
 \end{code}
 
 

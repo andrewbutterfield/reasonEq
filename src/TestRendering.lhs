@@ -571,11 +571,11 @@ trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 
 We mark the focus, exit the zipper, and render as normal.
 \begin{code}
-trTermZip,trTermZipU :: (Term, [Term']) -> String
+trTermZip,trTermZipU :: TermZip -> String
 trTermZip = trtz trId
 trTermZipU = trtz trIdU
 
-trtz :: (Identifier -> String) -> (Term, [Term']) -> String
+trtz :: (Identifier -> String) -> TermZip -> String
 trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 

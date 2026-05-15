@@ -124,6 +124,8 @@ proofREPLConfig
             , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
+            , goLeftDescr
+            , goRightDescr
             , goBackDescr
             , matchLawDescr
             , applyMatchDescr
@@ -287,6 +289,18 @@ goUpDescr = ( "u", "up", "u  -- up", goUp )
 
 goUp :: REPLCmd (REqState, LiveProof)
 goUp _ = tryDelta moveFocusUp
+\end{code}
+
+\begin{code}
+goLeftDescr = ( "l", "left", "l  -- left", goLeft )
+
+goLeft :: REPLCmd (REqState, LiveProof)
+goLeft args = tryDelta moveFocusLeft
+
+goRightDescr = ( "r", "right", "r  -- right", goRight )
+
+goRight :: REPLCmd (REqState, LiveProof)
+goRight args = tryDelta moveFocusRight
 \end{code}
 
 Switching consequent focus:

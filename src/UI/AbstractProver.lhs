@@ -1,6 +1,6 @@
 \chapter{Abstract Prover User-Interface}
 \begin{verbatim}
-Copyright (c) Andrew Butterfield 2017--2025
+Copyright (c) Andrew Butterfield 2017--2026
               Saqib Zardari     2023
               Aaron Bruce       2023
 
@@ -14,6 +14,8 @@ module UI.AbstractProver
 , completeProof -- prover
 , moveFocusDown -- prover
 , moveFocusUp -- prover
+, moveFocusLeft -- prover
+, moveFocusRight -- prover
 , switchConsequentFocus -- prover
 , moveFocusToHypothesis -- prover
 , moveFocusFromHypothesis -- prover
@@ -153,7 +155,32 @@ moveFocusUp liveProof
                          $ fPath__ init
                          $ matches_ [] liveProof  )
              else fail "At top"
+\end{code}
 
+\subsubsection{Moving Focus Left}
+
+\begin{code}
+moveFocusLeft :: MonadFail m => LiveProof -> m LiveProof
+moveFocusLeft liveProof
+  = let (tz,seq') = focus liveProof
+        (ok,tz')  = leftTZ tz
+    in if ok then return ( focus_ (tz',seq')
+                         $ fPath__ init
+                         $ matches_ [] liveProof  )
+             else fail "At top"
+\end{code}
+
+\subsubsection{Moving Focus Right}
+
+\begin{code}
+moveFocusRight :: MonadFail m => LiveProof -> m LiveProof
+moveFocusRight liveProof
+  = let (tz,seq') = focus liveProof
+        (ok,tz') = rightTZ tz
+    in if ok then return ( focus_ (tz',seq')
+                         $ fPath__ init
+                         $ matches_ [] liveProof  )
+             else fail "At top"
 \end{code}
 
 \subsubsection{Switching Consequent Focus}
@@ -462,7 +489,7 @@ applySAT liveproof
 
 \subsection{Automate Classifier Law Usage}
 
-\Huge{TO APPEAR}
+TO APPEAR
 
 \newpage
 \subsection{Normalise Quantifiers}

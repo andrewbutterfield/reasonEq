@@ -11,7 +11,7 @@ module TermZipper
  , Term'(..), TermSubL -- internals needed for focus-hilite pretty-printing (?)
  -- perhaps the relevant p.p. bits can be imported here so we do it locally?
  -- reccommended abstraction:
- , mkTZ, downTZ, upTZ, exitTZ
+ , mkTZ, downTZ, upTZ, leftTZ, rightTZ, exitTZ
  , followTZ, pathTZ
  , getTZ, setTZ, setfTZ
  , int_tst_TermZip
@@ -39,13 +39,13 @@ import Debugger
 \section{Introduction}
 
 
-We implement a ``zipper''\cite{DBLP:journals/jfp/Huet97} 
+We implement a ``zipper'' \cite{DBLP:journals/jfp/Huet97} 
 over the term datatype.
 
 \subsection{Theory}
 
 Our term datatype (\h{AST.term})
-is an algebraic datatype over type-variables $t$:
+is an algebraic datatype over type-variables $t$ :
 \begin{eqnarray*}
    t &::=& Val_k~n
       ~|~  Iter_k~i~i~lv
@@ -60,7 +60,7 @@ is an algebraic datatype over type-variables $t$:
 \end{eqnarray*}
 
 We derive the zipper type algebraically, by ``differentiating'' 
-the term algebraic type w.r.t. those $t$\cite{DBLP:journals/fuin/AbbottAMG05}:
+the term algebraic type w.r.t. those $t$ \cite{DBLP:journals/fuin/AbbottAMG05} :
 \begin{eqnarray*}
    t' &::=& Cons'_k~b~i~t^*~t^*
        ~|~  Bnd'_k~i~vs
@@ -94,28 +94,30 @@ type TermZip = (Term,[Term'])
 
 We now define the basic zipper manoeuvers.
 
-We start with creation, the basic up and down moves,
-and then define exit to keep going ``up''.
-We also define getters and setters for the focus of the zipper
+We start with \emph{creation}, the basic \emph{up} and \emph{down} moves,
+and then define \emph{exit},  which recursively does \emph{up}.
+We also define \emph{get} and \emph{set} for the focus of the zipper.
 
-\subsection{Zip Creation}~
+The nature of its use in the prover is that a succesful zipper change
+is immediately visible to the user.
+This means that a failure is also obvious---nothing changes.
+Having an error message about such failures is just noise,
+and disrupts the workflow.
+The boolean flag is useful when some degree of automation is being implemented
+(e.g. path following).
 
+
+\subsection{Zipper Creation}~
+
+$$ t \mapsto (t,\nil)$$
 \begin{code}
 mkTZ :: Term -> TermZip
 mkTZ trm = (trm,[])
 \end{code}
 
+\subsection{Zipper Descent}~
 
-\subsection{Zip Exit}
-
-\begin{code}
-exitTZ :: TermZip -> Term
-exitTZ (t,[])  =  t
-exitTZ tz = exitTZ $ snd $ upTZ tz
-\end{code}
-
-\subsection{Zip Descent}~
-
+We always return a zipper, but with a boolean flag indicating if it changed.
 \begin{code}
 downTZ :: Int -> TermZip -> ( Bool -- true if descent occurred, false otherwise
                             , TermZip )
@@ -123,7 +125,10 @@ downTZ n tz@(t,wayup)
   =  case descend n t of
       Nothing  ->  (False,tz) -- null op, if not possible to descend as requested
       Just (td,t')  ->  (True,(td,t':wayup))
+\end{code}
 
+Here \emph{descend} performs the ``differentiation''.
+\begin{code}
 descend n (Cons tk sb i ts)
   = case peel n ts of
       Nothing  ->  Nothing
@@ -142,7 +147,7 @@ sdescend tk t n (Substn tsub lvsub)
         -> Just (t',Substn' tk t lvsub before v after)
 \end{code}
 
-\subsection{Zip Ascent}~
+\subsection{Zipper Ascent}~
 
 \begin{code}
 upTZ :: TermZip -> ( Bool -- true if ascent occurred, false otherwise
@@ -162,6 +167,17 @@ ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub
 
 wrap before x after = reverse (x:before) ++ after
 \end{code}
+
+\subsection{Zipper Exit}
+
+This recursively calls \emph{up}, 
+and then discards the now empty derivatives list.
+\begin{code}
+exitTZ :: TermZip -> Term
+exitTZ (t,[])  =  t
+exitTZ tz = exitTZ $ snd $ upTZ tz
+\end{code}
+
 
 \newpage
 \subsection{Zip Get}
@@ -184,7 +200,7 @@ setfTZ f (t,wayup) = (f t, wayup)
 
 \section{Complex Zipper Operations}
 
-\subsection{Zip Descent by Path}
+\subsection{Zipper Descent following Path}
 
 Follow a list of numbers down.
 No change if any number fails to produce a descent step.
@@ -198,19 +214,37 @@ followTZ path tz0
     follow tz stepped (n:ns)
       = let (ok,tz') = downTZ n tz in
         if ok then follow tz' True ns else (False,tz0)
+\end{code}
 
+Sometimes we just want to attempt a follow, 
+but are happy for it to fail silently, leaving the zipper unchanged.
+\begin{code}
 pathTZ :: [Int] -> Term -> TermZip
 pathTZ path = snd . followTZ path . mkTZ
 \end{code}
 
 \subsection{Moving Left and Right}
 
-Wanted: easy l-r movement that does the required up/down movement 
+Wanted: easy left-right movement that does the required up/down movement 
 under the hood.
+The general case is that we are a subterm $t_i$ of a composite term $t$,
+and want to move sideways ($i\pm1$). 
+This involves the following steps: $up;down (i\pm1)$.
 
-\textbf{Coming soon}
+What gets interesting is when we try to move past either end.
+The simplest approach is that the operation fails (silently).
 
+\begin{code}
+leftTZ :: TermZip -> ( Bool -- true if left move occurred, false otherwise
+                     , TermZip )
+leftTZ tz@(_,[]) = (False, tz) -- null op, if already at top
+leftTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup)) -- TBD
 
+rightTZ :: TermZip -> ( Bool -- true if right move occurred, false otherwise
+                      , TermZip )
+rightTZ tz@(_,[]) = (False, tz) -- null op, if already at top
+rightTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup)) -- TBD
+\end{code}
 
 
 \section{Zipper Tests}

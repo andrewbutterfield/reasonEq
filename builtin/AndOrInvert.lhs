@@ -117,7 +117,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrAndNAbs
- = ( "and" -.- "not" -.- "or" -.- "absorb"
+ = ( "or" -.- "not" -.- "and" -.- "absorb"
    , ( p \/ ( mkNot p /\ q) === p \/ q
      , scTrue ) )
 \end{code}

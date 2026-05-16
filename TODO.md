@@ -48,6 +48,18 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+
+#### Bugs Fixed
+
+Most recent first...
+
+ - Theory `AOI` uses the same name `and_not_or_absorb` 
+   for two different conjectures. Second should be `or_not_and_absorb`.
+
+   Orignal error was in builtin version of the theory. 
+   Now fixed in both .utp and .thr files.
+
+
  - strange match with a mysterious integer type !!
 
 ```
@@ -69,23 +81,6 @@ And it's `Typing.typeInference` to blame!
 In fact it was  `StdTypeSignature.valueType` which mixed up its 
 `int`s and `bool`s!
 
-#### Bugs Fixed
-
-Most recent first...
-
- - strange match with a mysterious integer type !!
-
-```
-proof> tm 1 false_def
-@TI.TRM:  K (TG (Id "B" 0)) (VB False)
-@TI.TYP:  TG (Id "Z" 0)
-Match against 'false_def'[1] failed!
----
-typeMatch: distinct types
-typC = TG (Id "Z" 0)
-typP = TG (Id "B" 0)
-hit <enter> to continue
-```
 
 
  - structural mismatch in L2R proof of `or_zero` with `P ∨ (P ≡ P) :: P ∨ (Q ≡ R)`. 

@@ -3,7 +3,7 @@ Theory AOI .
 
 Conjecture or_and_absorb . P \/ P /\ Q === P . none
 Conjecture and_not_or_absorb . P /\ (not (P) \/ Q) === P /\ Q . none
-Conjecture and_not_or_absorb . P \/ not (P) /\ Q === P \/ Q . none
+Conjecture or_not_and_absorb . P \/ not (P) /\ Q === P \/ Q . none
 Conjecture or_and_distr . P \/ Q /\ R === (P \/ Q) /\ (P \/ R) . none
 Conjecture and_or_distr . P /\ (Q \/ R) === P /\ Q \/ P /\ R . none
 Conjecture deMorgan_and . not (P /\ Q) === not (P) \/ not (Q) . none

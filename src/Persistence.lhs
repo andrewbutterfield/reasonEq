@@ -16,6 +16,7 @@ module Persistence
   )
 where
 
+import Data.List
 import System.Directory
 import System.FilePath
 import qualified Data.Map as M
@@ -284,7 +285,9 @@ saveAllState reqs
             let sp = settingsPath pjdir
             writeFile sp $ unlines setsTxt
             sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
-            putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
+            putStrLn ("State saved in '"++projectDir reqs++"'.")
+            putStrLn ( "Contents: Prover State, and  Theory and Proofs for "
+                       ++ intercalate " " (map fst nTsTxts) ++ " .")
             return reqs{ modified = False }
 \end{code}
        
@@ -366,9 +369,9 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
             createDirectoryIfMissing True thryDir
             let fp = theoryPath pjdir thnm
             writeFile fp $ unlines thTxt
-            putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
+            --putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
             sequence_ $ map (writeProof pjdir thnm) pTxts
-            putStrLn ("Proofs in '"++thnm++"' written to '"++pjdir++"'.")
+            --putStrLn ("Proofs in '"++thnm++"' written to '"++pjdir++"'.")
 \end{code}
 
 \begin{code}

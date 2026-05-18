@@ -30,7 +30,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , subVarLookup, subLVarLookup, isNullSubstn, subTargets
            , subTerms, termIdSubability
            , mentionedVars, mentionedVarLists, mentionedVarSets
-           , mentionedIds
+           , getTypedIds, mentionedIds
            , onlyTrivialQuantifiers, anyTrivialSubstitution
            , termSize
            -- test only below here
@@ -781,29 +781,40 @@ mentionedVarSets (I _ _ _ _ _ lvs)        =  [S.fromList $ map LstVar lvs]
 mentionedVarSets _                        =  []
 \end{code}
 
-Sometimes we need to include cons-identifiers (as static variables ?):
+Sometimes we need to include cons-identifiers (as static variables ?),
+and sometimes we need to know which identifiers have given types.
 \begin{code}
-mentionedIds :: Term -> VarSet
-mentionedIds (V _ v)            =  S.singleton $ StdVar v
-mentionedIds (C _ _ n ts)       
-  =  S.singleton (StdVar $ StaticVar n) `S.union` (S.unions $ map mentionedIds ts)
-mentionedIds (B _ _ vs t)       =  mentionedIds t `S.union` vs
-mentionedIds (L _ _ vl t)       =  mentionedIds t `S.union` (S.fromList vl)
-mentionedIds (X _ t)            =  mentionedIds t
-mentionedIds (S _ t (SN tsub lvsub))
-  = (mentionedIds t `S.union` tvs) `S.union` rvs
+getTypedIds :: Term -> Set (Type,GenVar)
+getTypedIds (V typ v)            =  S.singleton $ (typ,StdVar v)
+getTypedIds (C _ _ n ts)       
+  =  S.singleton (ArbType,StdVar $ StaticVar n) 
+    `S.union` (S.unions $ map getTypedIds ts)
+getTypedIds (B _ _ vs t)
+  =  getTypedIds t `S.union` (S.map wrapArbType vs)
+getTypedIds (L _ _ vl t)       
+  =  getTypedIds t `S.union` (S.fromList $ map wrapArbType vl)
+getTypedIds (X _ t)            =  getTypedIds t
+getTypedIds (S _ t (SN tsub lvsub))
+  = (getTypedIds t `S.union` tvs) `S.union` rvs
   where
      (tsvl,rtl) = unzip $ S.toList tsub
      (tlvl,rlvl) = unzip $ S.toList lvsub
-     tvs = S.fromList (map StdVar tsvl ++ map LstVar tlvl)
-     rvs = S.unions (map mentionedIds rtl)
+     tvs = S.fromList $ map wrapArbType (map StdVar tsvl ++ map LstVar tlvl)
+     rvs = S.unions (map getTypedIds rtl)
            `S.union`
-           (S.map LstVar $ S.fromList rlvl)
-mentionedIds (I _ _ _ _ _ lvs)  =  S.fromList $ map LstVar lvs
-mentionedIds (VT _ v)           =  S.singleton $ StdVar v
-mentionedIds _                  =  S.empty
+           (S.map (wrapArbType . LstVar) (S.fromList rlvl))
+getTypedIds (I _ _ _ _ _ lvs)  =  S.fromList $ map (wrapArbType . LstVar) lvs
+getTypedIds (VT typ v)         =  S.singleton $ (typ,StdVar v)
+getTypedIds _                  =  S.empty
+
+wrapArbType :: GenVar -> (Type,GenVar)
+wrapArbType gv = (ArbType,gv)
+
+mentionedIds :: Term -> VarSet
+mentionedIds = S.map snd . getTypedIds
 \end{code}
 
+For type inference, we need to know which identifiers have given types.
 
 
 Term Sizes

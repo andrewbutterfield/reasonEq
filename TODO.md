@@ -48,6 +48,29 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - While proving `deMorgan_abd`.
+
+ ```
+ Proof for deMorgan_and
+	¬(P ∧ Q) ≡ ¬P ∨ ¬Q
+Q ≡ (¬P ≡ P ∨ Q) ≡ ¬P ∨ ¬Q
+ ⊤
+Focus = [1,2,2,1] :: 𝔹  proof> tm 2 not_invol
+Match against 'not_invol'[2] failed!
+try match failed
+
+P :: P
+lnm[parts]=not_invol[2]
+tP=¬(¬P) ≡ P
+partsP=P
+replP=¬(¬P)
+tC=P
+scC=⊤
+---
+termMatch': structural mismatch.
+tC = V (TV (Id "A1" 0)) (VR (Id "P" 0,VP,WS))
+tP = V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+```
 
 #### Bugs Fixed
 

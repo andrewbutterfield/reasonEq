@@ -362,24 +362,31 @@ typeInference :: MonadFail mf
               -> Term 
               -> mf (Type,Term,TypeSubst)
 typeInference vts trm
-  = do  let (fis,env) = foldl (addVarType vts)  ([1..],M.empty) (getVars trm)
+  = do  let (fis,env) = foldl (addVarType vts)  ([1..],M.empty) (getTypedVars trm)
         -- ! fis is infinite !
         (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
         let typ' = apply sub typ
         return (typ',settype typ' trm,sub)
 
-getVars :: Term -> [Variable]
-getVars = stdVarsOf . S.toList . mentionedIds
+getTypedVars :: Term -> [(Type,Variable)]
+getTypedVars = mapsnd theStdVar . filter isStdTypedVar . S.toList . getTypedIds
+
+isStdTypedVar :: (a, GenVar) -> Bool
+isStdTypedVar (_,StdVar _)  =  True
+isStdTypedVar _             =  False
 \end{code}
 
 \newpage
 Here we add types into the type environment, 
 generating fresh type-variables when needed.
 \begin{code}
-addVarType :: [VarTable] -> (FreshInts,Env) -> Variable -> (FreshInts,Env)
-addVarType vts (fis,env) v@(Vbl n _ _)
+addVarType :: [VarTable] 
+           -> (FreshInts,Env) -> (Type,Variable)  -> (FreshInts,Env)
+addVarType vts (fis,env) (typ@(GivenType _),v@(Vbl n _ _))
+  = (fis, M.insert n (Scheme [] typ) env)
+addVarType vts (fis,env) (_,v@(Vbl n _ _))
   = case lookupVarTables vts v of
-      KnownTerm trm ->  foldl (addVarType vts) (fis,env) (getVars trm)           
+      KnownTerm trm ->  foldl (addVarType vts) (fis,env) (getTypedVars trm)           
       KnownVar typ _ -> (fis, M.insert n (Scheme [] typ) env)
       -- generic or unknown
       _ -> let (fis',tv) = newTyVar fis 

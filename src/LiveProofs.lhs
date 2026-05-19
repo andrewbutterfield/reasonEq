@@ -13,8 +13,9 @@ module LiveProofs
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_
  , liveSettings__, liveSettings_
  , focus__, focus_
- , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
+ , matches__, matches_, stepsSoFar__, stepsSoFar_
  , xpndSC__, xpndSC_
+ , focusPath
  , LiveProofs
  , renderLiveProofs, parseLiveProofs
  , dispLiveProof
@@ -86,7 +87,6 @@ data LiveProof
     , mtchCtxts :: [MatchContext] -- current matching contexts
     , liveSettings :: ProofSettings
     , focus :: SeqZip  -- current sub-term of interest
-    , fPath :: [Int] -- current term zipper descent arguments
     , matches :: Matches -- current matches
     , stepsSoFar :: [CalcStep]  -- calc steps so far, most recent first
     -- derived fron conjSC, using mtchCtxts
@@ -110,14 +110,15 @@ liveSettings__ f lp = lp{ liveSettings = f $ liveSettings lp}
 liveSettings_ = liveSettings__ . const
 focus__ f lp = lp{ focus = f $ focus lp}
 focus_ = focus__ . const
-fPath__ f lp = lp{ fPath = f $ fPath lp}
-fPath_ = fPath__ . const
 matches__ f lp = lp{ matches = f $ matches lp}
 matches_ = matches__ . const
 stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 xpndSC__ f lp = lp{ xpndSC = f $ xpndSC lp}
 xpndSC_ = xpndSC__ . const
+
+focusPath :: LiveProof -> [Int]
+focusPath lp = reverse $ map fst $ snd $ fst $ focus lp
 \end{code}
 
 \section{Live Proof Collection}
@@ -148,7 +149,6 @@ conjKEY = "CONJ = "
 cjscKEY = "SIDE = "
 strtKey st = "STRAT " ++ st
 focusKEY = "FOCUS = "
-fpathKEY = "FPATH: "
 stepsKEY = "STEPS"
 
 renderLiveProof :: LiveProof -> [String]
@@ -162,7 +162,6 @@ renderLiveProof lp
     -- match contexts not saved
     renderProofSettings (liveSettings lp) ++
     writeSeqZip (focus lp) ++
-    [ fpathKEY ++ show (fPath lp) ] ++
     -- matches not saved
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
@@ -180,9 +179,8 @@ parseLiveProof thrys txts
        let mctxts = buildMatchContext thylist
        (pset,rest7) <- parseProofSettings          rest6
        (fcs,  rest8)  <- readSeqZip thylist        rest7
-       (fpth, rest9)  <- readKey fpathKEY read     rest8
-       (steps, rest10) <- readPerLine stepsKEY read rest9
-       rest11         <- readThis lprfTRL          rest10
+       (steps, rest9) <- readPerLine stepsKEY read rest8
+       rest10         <- readThis lprfTRL          rest9
        return ( LP { conjThName = thnm
                    , conjName = cjnm
                    , conjecture = conj
@@ -191,11 +189,10 @@ parseLiveProof thrys txts
                    , mtchCtxts = mctxts
                    , liveSettings = pset
                    , focus = fcs
-                   , fPath = fpth
                    , matches = []
                    , stepsSoFar = steps 
                    , xpndSC = expandSideCondKnownVars mctxts sc }
-              , rest11 )
+              , rest10 )
 \end{code}
 
 
@@ -243,7 +240,6 @@ launchProof thys prfset thnm cjnm asn@(Assertion t sc) (strat,sequent)
        , mtchCtxts =  mcs
        , liveSettings = prfset
        , focus =  sz
-       , fPath = []
        , matches = []
        , stepsSoFar = []
        , xpndSC = expandSideCondKnownVars mcs sc
@@ -924,13 +920,12 @@ basicMatch mc vts fits
  such as UseLaw.
 }
 \begin{code}
-undoCalcStep :: LiveProof -> LiveProof
-undoCalcStep liveProof
+undoCalcStep :: Int -> LiveProof -> LiveProof
+undoCalcStep i liveProof
   = case stepsSoFar liveProof of
       []                       ->  liveProof
       ((just,(Assertion term sc)):prevSteps)
         ->  matches_ []
-            $ fPath_ []
             $ conjSC_ sc
             $ stepsSoFar_ prevSteps
             $ focus__ (setTerm term)
@@ -1018,7 +1013,7 @@ dispLiveProof ww liveProof
        ++
        ( displayMatches ww prfSet (mtchCtxts liveProof) mtchs
          : [ "           "
-           , dispSeqZip ww (fPath liveProof) 
+           , dispSeqZip ww (focusPath liveProof) 
                            (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]

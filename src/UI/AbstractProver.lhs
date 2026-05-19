@@ -138,7 +138,6 @@ moveFocusDown i liveProof
         (ok,tz') = downTZ i' tz
     in if ok
         then return ( focus_ (tz',seq')
-                    $ fPath__ (++[i'])
                     $ matches_ [] liveProof )
         else fail ("No sub-term "++show i')
 
@@ -152,7 +151,6 @@ moveFocusUp liveProof
   = let (tz,seq') = focus liveProof
         (ok,tz') = upTZ tz
     in if ok then return ( focus_ (tz',seq')
-                         $ fPath__ init
                          $ matches_ [] liveProof  )
              else fail "At top"
 \end{code}
@@ -166,7 +164,6 @@ moveFocusLeft liveProof
         (ok,tz')   =  leftTZ tz
         i'         =  fst $ head $ snd tz' -- defined if ok is true
     in if ok then return ( focus_ (tz',seq')
-                         $ fPath__ ((++[i']) . init)
                          $ matches_ [] liveProof  )
              else fail "At top"
 \end{code}
@@ -180,7 +177,6 @@ moveFocusRight liveProof
         (ok,tz')   =  rightTZ tz
         i'         =  fst $ head $ snd tz' -- defined if ok is true
     in if ok then return ( focus_ (tz',seq')
-                         $ fPath__ ((++[i']) . init)
                          $ matches_ [] liveProof  )
              else fail "At top"
 \end{code}
@@ -197,7 +193,6 @@ switchConsequentFocus liveProof
         then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
                 return ( focus_ sz'
                        $ matches_ []
-                       $ fPath_ []
                        $ stepsSoFar__ ((sw', asn'):)
                          liveProof )
         else fail "Not in consequent"
@@ -393,7 +388,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         obsv = getDynamicObservables vtbls
         ictxt = ICtxt obsv scC
         (tz,seq') = focus liveProof
-        dpath = fPath liveProof
+        dpath = focusPath liveProof
         conjpart = exitTZ tz
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
@@ -484,7 +479,7 @@ applySAT liveproof
         let goalt = getTZ tz
         (tsat,nottsat) <- satsolve goalt
         let asn = mkAsn (exitTZ tz) (conjSC liveproof)
-        let stepcons = ((SAT tsat nottsat (fPath liveproof), asn) :)
+        let stepcons = ((SAT tsat nottsat (focusPath liveproof), asn) :)
         return (focus_ (setTZ (Val pred1 (Boolean tsat)) tz, seq)
                        $ stepsSoFar__ stepcons liveproof)
 \end{code}
@@ -503,7 +498,7 @@ normQuantFocus :: MonadFail m => TheoryDAG -> LiveProof -> m LiveProof
 normQuantFocus thrys liveProof
  | conjSC liveProof == scTrue
    =  let (tz,seq') = focus liveProof
-          dpath = fPath liveProof
+          dpath = focusPath liveProof
           t = getTZ tz
           t' = fst $ normaliseQuantifiers t scTrue
       in do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
@@ -524,7 +519,7 @@ normQuantFocus thrys liveProof
 nestSimpFocus :: MonadFail m => TheoryDAG -> LiveProof -> m LiveProof
 nestSimpFocus thrys liveProof
   = let (tz,seq') = focus liveProof
-        dpath = fPath liveProof
+        dpath = focusPath liveProof
         t = getTZ tz
     in case nestSimplify t of
         Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
@@ -549,7 +544,7 @@ substituteFocus :: (MonadFail m, Alternative m)
                 => TheoryDAG -> LiveProof -> m LiveProof
 substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
-        dpath = fPath liveProof
+        dpath = focusPath liveProof
         t = getTZ tz
         -- vts = getVarTables $ mtchCtxts liveProof
         scC = xpndSC liveProof
@@ -705,7 +700,7 @@ lawInstantiate2 rslaws i liveProof
        let (lawt,lsc) = unwrapASN asn
        let (tz,seq') = focus liveProof
        let psc = conjSC liveProof
-       let dpath = fPath liveProof
+       let dpath = focusPath liveProof
        let vts = getVarTables $ mtchCtxts liveProof
        let lFreeV = stdVarSetOf $ S.filter (isUnknownGVar vts)
                                 $ theFreeVars $ freeVars lsc lawt
@@ -734,7 +729,7 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        nsc <- mrgSideCond scC ilsc
        ilawt <- instTerm ictxt lbind lawt
        let (tz,seq') = focus liveProof
-       let dpath = fPath liveProof
+       let dpath = focusPath liveProof
        let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
        return ( focus_ (setTZ ilawt tz,seq')
                 $ stepsSoFar__

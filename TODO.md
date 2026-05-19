@@ -53,6 +53,9 @@ Fixing bugs as we go.
 
    Should restore focus properly, and take number of backups to do as well
 
+   First key step is to get rid of the `fPath` component of `LiveProof`,
+   as that information is now encoded in `TermZip`.
+
 #### Bugs Fixed
 
 Most recent first...

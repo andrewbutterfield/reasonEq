@@ -651,12 +651,12 @@ groupAssociative opI gs liveProof
                             $ liveProof )
 \end{code}
 
-\subsection{Stepping back a proof step.}
+\subsection{Stepping back several proof steps.}
 
 \begin{code}
 stepBack  :: MonadFail m => Int -> LiveProof -> m LiveProof
 stepBack i liveProof
-  = return $ undoCalcStep liveProof
+  = return $ undoCalcStep i liveProof
 \end{code}
 
 \newpage

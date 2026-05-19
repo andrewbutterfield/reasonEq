@@ -341,6 +341,7 @@ Undoing the previous step (if any)
 \begin{code}
 goBackDescr = ( "b", "go back (undo)"
               , unlines' [ "b   --- undo last proof step"
+                         , "b i --- undo last i proof steps"
                          , "    --- cannot undo clone changes yet"]
               , goBack )
 
@@ -694,6 +695,8 @@ cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
   = tryDelta (cloneHypothesis (args2int args) theAnd) liveState
 \end{code}
+
+\subsection{Equivale Proof Steps}
 
 At any point in a proof, once at least one step has been taken,
 we can create a new theorem simply by equivaling the first and last predicates

@@ -342,6 +342,7 @@ Undoing the previous step (if any)
 goBackDescr = ( "b", "go back (undo)"
               , unlines' [ "b   --- undo last proof step"
                          , "b i --- undo last i proof steps"
+                         , "Warning: undo is irreversible"
                          , "    --- cannot undo clone changes yet"]
               , goBack )
 

@@ -49,6 +49,11 @@ Fixing bugs as we go.
 #### Bugs Found
 
 
+
+#### Bugs Fixed
+
+Most recent first...
+
  - Fix `b` command
 
    Should restore focus properly, and take number of backups to do as well
@@ -56,9 +61,13 @@ Fixing bugs as we go.
    First key step is to get rid of the `fPath` component of `LiveProof`,
    as that information is now encoded in `TermZip`.
 
-#### Bugs Fixed
+   If the justification has a zip descent list 
+   (`UseLaw`,`Substitute`,`NormQuant`,`NestSimp`,`SAT`),
+   then setup the `TermZip` using it, otherwise set the focus to the top level.
+   **Note** *the actual focus when the `b` command is given, is irrelevant.*
 
-Most recent first...
+  
+
 
  - While proving `deMorgan_and`.
 

@@ -17,7 +17,7 @@ module Sequents
  , sequentFocus
  , dispSeqZip, dispSeqTermZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
- , upSZ, downSZ
+ , upSZ, downSZ, pathSZ
  , switchLeftRight
  , seqGoHyp, seqLeaveHyp
  , getHypotheses
@@ -629,6 +629,9 @@ upSZ (tz,seq')  =  let (moved,tz') = upTZ tz in (moved,(tz',seq'))
 
 downSZ :: Int -> SeqZip -> (Bool,SeqZip)
 downSZ i (tz,seq')  =  let (moved,tz') = downTZ i tz in (moved,(tz',seq'))
+
+pathSZ :: [Int] -> SeqZip -> SeqZip
+pathSZ path (tz,seq') =  (snd (followTZ path tz),seq')
 \end{code}
 
 However we also have switch actions that jump between the three top-level

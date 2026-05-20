@@ -915,35 +915,43 @@ basicMatch mc vts fits
 \newpage
 \subsection{Undoing a Proof Step}
 
-\textbf{
- We would like to restore focus when backing up a simple step,
- such as UseLaw.
-}
 \begin{code}
 undoCalcStep :: Int -> LiveProof -> LiveProof
-undoCalcStep i liveProof
-  = case stepsSoFar liveProof of
-      []                       ->  liveProof
-      ((just,(Assertion term sc)):prevSteps)
-        ->  matches_ []
-            $ conjSC_ sc
-            $ stepsSoFar_ prevSteps
-            $ focus__ (setTerm term)
-            $ undoCalcStep' just
+undoCalcStep i liveProof -- undoes last i proof steps
+  | i <= 0  =  liveProof
+  | otherwise
+    = case stepsSoFar liveProof of
+        []                       ->  liveProof
+        ((just,(Assertion term sc)):prevSteps)
+          ->  let liveProof' 
+                    = matches_ []
+                      $ conjSC_ sc
+                      $ undoCalcStep' prevSteps term just
+              in undoCalcStep (i-1) liveProof'
   where
 
-    undoCalcStep' (Switch CLeft _)
+    undoCalcStep' prev t (UseLaw _ _ _ path)
+      = stepsSoFar_ prev $ focus__ (setSequent path t) $ liveProof
+    undoCalcStep' prev t (Substitute path)
+      = stepsSoFar_ prev $ focus__ (setSequent path t) $ liveProof
+    undoCalcStep' prev t (NormQuant path)
+      = stepsSoFar_ prev $ focus__ (setSequent path t) $ liveProof
+    undoCalcStep' prev t (NestSimp path)
+      = stepsSoFar_ prev $ focus__ (setSequent path t) $ liveProof
+    undoCalcStep' prev t (SAT _ _ path)
+      = stepsSoFar_ prev $ focus__ (setSequent path t) $ liveProof
+    undoCalcStep' _ _ (Switch CLeft _)
        =  focus__ ( leftConjFocus  . exitSeqZipper ) liveProof
-    undoCalcStep' (Switch CRight _)
+    undoCalcStep' _ _ (Switch CRight _)
        =  focus__ ( rightConjFocus . exitSeqZipper ) liveProof
-    undoCalcStep' (Switch (Hyp i) _)
+    undoCalcStep' _ _(Switch (Hyp i) _)
        =  focus__ ( fromJust . -- this should always succeed !
                     hypConjFocus i . exitSeqZipper) liveProof
 
-    -- THIS IS WRONG as we set stepsSoFar to prevSteps after doing this!
-    undoCalcStep' _  = liveProof
+    undoCalcStep' _ _ _ = liveProof
 
-    setTerm t (tz,sequent') = (mkTZ t,sequent')
+    setSequent :: [Int] -> Term -> SeqZip -> SeqZip
+    setSequent p t (_,seq') = pathSZ p (mkTZ t,seq')
 \end{code}
 
 

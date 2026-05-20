@@ -66,6 +66,9 @@ Most recent first...
    then setup the `TermZip` using it, otherwise set the focus to the top level.
    **Note** *the actual focus when the `b` command is given, is irrelevant.*
 
+   Note that undoing `CloneH`, `Flatten`, and `Associate` is not yet implemented.
+   These don't zip-descent lists.
+
   
 
 
@@ -697,11 +700,6 @@ Need a way to check a theory (in context, with all its dependencies)
 * all Cons have a substitutability indication in scope.
 
 ## Ongoing Issues
-
-### Backing out of a proof step
-
-If we use "b" after a proof step that is not reversible (just Clone?), we leave the goal unchanged,
-but shorten the list of steps anyway. See `LiveProofs.undoCalcStep` (line 810 approx)
 
 ### Unique quantified variables
 

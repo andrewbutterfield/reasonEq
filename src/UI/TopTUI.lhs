@@ -573,10 +573,8 @@ cmdSet
     , "set parts of the prover state"
     , unlines
         ( [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
-          , "set "++setSettings++" 'setting' 'value' -- set setting=value"
+          , "set "++setSettings++" -- setting change dialogue"
           ]
-          ++ map (("      "++) .showPrfSettingStrings) prfSettingStrings
-          ++ ["  e.g. set X mmd 42"]
         )
     , setState )
 

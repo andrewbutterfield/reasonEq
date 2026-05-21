@@ -904,17 +904,24 @@ applyFold isApplicable vts fold (reqs, liveProof)
 \subsection{Change Proof Settings}
 
 
+
 \begin{code}
 updateProverSettings 
   :: [String] -> ProofSettings -> IO ProofSettings
-updateProverSettings [name,value] prfset
-  = case changePrfSettings name value prfset of
-      But msgs     ->  do putStrLn $ unlines' msgs
-                          return prfset
-      Yes prfset'  ->  return prfset'
-updateProverSettings args prfset = do
-  putStrLn "Expected setting short name and value"
-  return prfset
+updateProverSettings _ prfset = do
+  --putStrLn $ show prfset
+  putStrLn $ showPrfSettings prfset
+  str <- userPrompt "Select setting by number: "
+  let choice = readNat str
+  if choice `elem` [1..proofSettingsCount]
+  then do
+    str2 <- userPrompt "Enter new value: " 
+    putStrLn ("updateProverSettings "++show choice++" = "++str2++" NYI")
+    -- modify ProofSettings.changePrfSettings to do this
+    return prfset
+  else do
+    putStrLn ("Invalid choice "++str)
+    return prfset
 \end{code}
 
 

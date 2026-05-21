@@ -58,6 +58,9 @@ Fixing bugs as we go.
    Refactored so `TopTUI` invokes  `Prover.updateProverSettings`, 
    which still has old clunky behaviour (e.g `sh tm Y`).
 
+   We have an improved command-line dialogue set up. 
+   Just need to implement the desired change.
+
 #### Bugs Fixed
 
 Most recent first...

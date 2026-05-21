@@ -5,16 +5,22 @@ Copyright  Andrew Butterfield (c) 2025
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module ProofSettings ( ProofSettings(..)
-                , maxMatchDisplay__, maxMatchDisplay_
-                , showBindings__, showBindings_
-                , initProofSettings
-                , renderProofSettings, parseProofSettings
-                , prfSettingStrings, showPrfSettingStrings
-                , showPrfSettings
-                , changePrfSettings
-                , andIfWanted
-                )
+module ProofSettings ( 
+  ProofSettings(..) -- used elsewhere
+, proofSettingsCount
+-- , maxMatchDisplay__     -- local
+-- , maxMatchDisplay_      -- local
+-- , showBindings__        -- local
+-- , showBindings_         -- local
+, initProofSettings     -- used elsewhere
+, renderProofSettings   -- used elsewhere
+, parseProofSettings    -- used elsewhere
+-- , prfSettingStrings  -- was used elsewhere, now local, soon redundant
+-- , showPrfSettingStrings -- used elsewhere, now local, soon redundant
+, showPrfSettings       -- used elsewhere
+, changePrfSettings     -- used elsewhere
+-- , andIfWanted           -- local
+)
 where
 
 import Data.Map (Map)
@@ -48,14 +54,27 @@ data ProofSettings
      , matchFilter :: FilterFunction
      }
 
+proofSettingsCount = (7::Int) -- should be total entries in Sections 1&2 above !
+
+settablePS prfset = 
+  [ "maxMatchDisplay       - " ++ show (maxMatchDisplay prfset)
+  , "maxStepDisplay        - " ++ show (maxStepDisplay prfset)
+  , "showBindings          - " ++ show (showBindings prfset)
+  , "showTrivialMatches    - " ++ show (showTrivialMatches prfset)
+  , "showTrivialListVars   - " ++ show (showTrivialListVars prfset)
+  , "showTrivialSubst      - " ++ show (showTrivialSubst prfset)
+  , "showFloatingVariables - " ++ show (showFloatingVariables prfset)
+  ]
+derivedPS prfset =
+  [ "matchFilter           - function"
+  ]
+
+menuPS = zip [1..] . settablePS 
+
 instance Show ProofSettings where
-  show prfset
-    = unlines 
-        [ "PROOFSETTINGS:"
-        , " MMD: " ++ show (maxMatchDisplay prfset)
-        , " MSD: " ++ show (maxStepDisplay prfset)
-        , " SBD: " ++ show (showBindings prfset)
-        ] 
+  show prfset  
+    = unlines ( "PROOFSETTINGS:" 
+                : settablePS prfset ++ derivedPS prfset ) 
 \end{code}
 
 \subsection{Section 1 Updaters}
@@ -165,102 +184,14 @@ Here we keep verbosity and complexity to a minimum.
 initProofSettings
   = matchFilterUpdate $ PrfSet {
       maxMatchDisplay        = 30
-    , maxStepDisplay         = 6
+    , maxStepDisplay         = 10
     , showBindings           = False
     , showTrivialMatches     = False
     , showTrivialListVars    = False 
     , showTrivialSubst       = False
-    , showFloatingVariables  = True 
+    , showFloatingVariables  = False 
     , matchFilter = acceptAll
     }
-\end{code}
-
-
-\subsection{Settings Help}
-
-For every setting we provide both a short and long string,
-the first for use in commands, the second for display
-\begin{code}
-type PrfSettingStrings = (String,String,String) -- short,type,long
-prfSettingStrings = [ ("mm","Number","Max. Match Display")
-                    , ("ms","Number","Max. Step Display")
-                    , ("bd","Bool","Show Bindings")
-                    , ("tm","Bool","Show Trivial Matches")
-                    , ("tl","Bool","Show Trivial List-Variables")
-                    , ("ts","Bool","Show Trivial Substitutions")
-                    , ("fv","Bool","Show Floating Variables")
-                    ]
-showPrfSettingStrings (short,typ,long)
-  = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
-\end{code}
-
-\begin{code}
-showPrfSettings :: ProofSettings -> String
-showPrfSettings rsettings
-  = unlines' $ displayPrfSettings rsettings prfSettingStrings
-  where
-    displayPrfSettings r =  map (disp r)
-
-    disp r (code@"mm",_,text) = disp2 code text $ show (maxMatchDisplay r)
-    disp r (code@"ms",_,text) = disp2 code text $ show (maxStepDisplay r)
-    disp r (code@"bd",_,text) = disp2 code text $ show (showBindings r)
-    disp r (code@"tm",_,text) = disp2 code text $ show (showTrivialMatches r)
-    disp r (code@"tl",_,text) = disp2 code text $ show (showTrivialListVars r)
-    disp r (code@"ts",_,text) = disp2 code text $ show (showTrivialSubst r)
-    disp r (code@"fv",_,text) = disp2 code text $ show (showFloatingVariables r)
-
-    disp2 code text shown = text ++ " ("++code++") "++shown
-\end{code}
-
-\newpage
-\section{Change Proof Settings}
-
-\begin{code}
-changePrfSettings :: MonadFail m 
-                  => String -> String -> ProofSettings 
-                  -> m ProofSettings
-changePrfSettings name valstr rqset
-  = case lookupPrfSettingShort name prfSettingStrings of
-      Nothing -> fail ("No such setting: "++name)
-      Just sss -> changePrfSetting sss valstr rqset
-
-lookupPrfSettingShort n []  =  Nothing
-lookupPrfSettingShort n (sss@(s,_,_):ssss)
-  | n == s               =  Just sss
-  | otherwise            =  lookupPrfSettingShort n ssss
-\end{code}
-
-\begin{code}
-changePrfSetting :: MonadFail m 
-                 => PrfSettingStrings  -> String -> ProofSettings
-                 -> m ProofSettings
-changePrfSetting (short,typ,_) valstr reqs
- | typ == "Bool"    =  changeBoolPrfSetting short (readBool valstr) reqs
- | typ == "Number"  =  changeNumberPrfSetting short (readNat valstr) reqs
- | otherwise        =  fail ("changePrfSetting - unknown type: "++typ)
-\end{code}
-
-\begin{code}
-changeBoolPrfSetting :: MonadFail m 
-                     => String  -> Bool -> ProofSettings 
-                     -> m ProofSettings
-changeBoolPrfSetting name value reqs
- | name == "bd"  =  return $ showBindings_ value reqs
- | name == "tm"  =  return $ showTrivialMatch_ value reqs
- | name == "tl"  =  return $ showTrivialQuantifiers_ value reqs
- | name == "ts"  =  return $ showTrivialSubst_ value reqs
- | name == "fv"  =  return $ showFloatingVariables_ value reqs
- | otherwise     =  fail ("changeBoolPrfSetting - unknown field: "++name)
-\end{code}
-
-\begin{code}
-changeNumberPrfSetting :: MonadFail m 
-                       => String  -> Int -> ProofSettings 
-                       -> m ProofSettings
-changeNumberPrfSetting name value reqs
- | name == "mm"  =  return $ maxMatchDisplay_ value reqs
- | name == "ms"  =  return $ maxStepDisplay_ value reqs
- | otherwise        =  fail ("changeNumberPrfSetting - unknown field: "++name)
 \end{code}
 
 \newpage
@@ -311,5 +242,105 @@ parseProofSettings txts
                           theMHF
                           acceptAll )
               , rest9 )
+\end{code}
+
+
+
+\subsection{Settings Help}
+
+\begin{code}
+showPrfSettings :: ProofSettings -> String
+showPrfSettings prfset = unlines' $ map show $ menuPS prfset
+\end{code}
+
+
+\textbf{EVERYTHING BELOW IN THIS SECTION IS DEPRECATED}
+
+
+For every setting we provide both a short and long string,
+the first for use in commands, the second for display
+\begin{code}
+type PrfSettingStrings = (String,String,String) -- short,type,long
+prfSettingStrings = [ ("mm","Number","Max. Match Display")
+                    , ("ms","Number","Max. Step Display")
+                    , ("bd","Bool","Show Bindings")
+                    , ("tm","Bool","Show Trivial Matches")
+                    , ("tl","Bool","Show Trivial List-Variables")
+                    , ("ts","Bool","Show Trivial Substitutions")
+                    , ("fv","Bool","Show Floating Variables")
+                    ]
+showPrfSettingStrings (short,typ,long)
+  = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
+\end{code}
+
+
+\begin{verbatim}
+  = unlines' $ displayPrfSettings rsettings prfSettingStrings
+  where
+    displayPrfSettings r =  map (disp r)
+
+    disp r (code@"mm",_,text) = disp2 code text $ show (maxMatchDisplay r)
+    disp r (code@"ms",_,text) = disp2 code text $ show (maxStepDisplay r)
+    disp r (code@"bd",_,text) = disp2 code text $ show (showBindings r)
+    disp r (code@"tm",_,text) = disp2 code text $ show (showTrivialMatches r)
+    disp r (code@"tl",_,text) = disp2 code text $ show (showTrivialListVars r)
+    disp r (code@"ts",_,text) = disp2 code text $ show (showTrivialSubst r)
+    disp r (code@"fv",_,text) = disp2 code text $ show (showFloatingVariables r)
+
+    disp2 code text shown = text ++ " ("++code++") "++shown
+\end{verbatim}
+
+\newpage
+\section{Change Proof Settings}
+
+
+\textbf{EVERYTHING BELOW IN THIS SECTION IS DEPRECATED}
+
+\begin{code}
+changePrfSettings :: MonadFail m 
+                  => String -> String -> ProofSettings 
+                  -> m ProofSettings
+changePrfSettings name valstr rqset
+  = case lookupPrfSettingShort name prfSettingStrings of
+      Nothing -> fail ("No such setting: "++name)
+      Just sss -> changePrfSetting sss valstr rqset
+
+lookupPrfSettingShort n []  =  Nothing
+lookupPrfSettingShort n (sss@(s,_,_):ssss)
+  | n == s               =  Just sss
+  | otherwise            =  lookupPrfSettingShort n ssss
+\end{code}
+
+\begin{code}
+changePrfSetting :: MonadFail m 
+                 => PrfSettingStrings  -> String -> ProofSettings
+                 -> m ProofSettings
+changePrfSetting (short,typ,_) valstr reqs
+ | typ == "Bool"    =  changeBoolPrfSetting short (readBool valstr) reqs
+ | typ == "Number"  =  changeNumberPrfSetting short (readNat valstr) reqs
+ | otherwise        =  fail ("changePrfSetting - unknown type: "++typ)
+\end{code}
+
+\begin{code}
+changeBoolPrfSetting :: MonadFail m 
+                     => String  -> Bool -> ProofSettings 
+                     -> m ProofSettings
+changeBoolPrfSetting name value reqs
+ | name == "bd"  =  return $ showBindings_ value reqs
+ | name == "tm"  =  return $ showTrivialMatch_ value reqs
+ | name == "tl"  =  return $ showTrivialQuantifiers_ value reqs
+ | name == "ts"  =  return $ showTrivialSubst_ value reqs
+ | name == "fv"  =  return $ showFloatingVariables_ value reqs
+ | otherwise     =  fail ("changeBoolPrfSetting - unknown field: "++name)
+\end{code}
+
+\begin{code}
+changeNumberPrfSetting :: MonadFail m 
+                       => String  -> Int -> ProofSettings 
+                       -> m ProofSettings
+changeNumberPrfSetting name value reqs
+ | name == "mm"  =  return $ maxMatchDisplay_ value reqs
+ | name == "ms"  =  return $ maxStepDisplay_ value reqs
+ | otherwise        =  fail ("changeNumberPrfSetting - unknown field: "++name)
 \end{code}
 

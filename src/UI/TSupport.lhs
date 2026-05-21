@@ -85,8 +85,8 @@ in a monadic context.
 Accept if it succeeds, otherwise no change
 \begin{code}
 tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
-tryDelta delta pstate@(reqs, liveProof)
-  = case delta liveProof of
+tryDelta delta pstate@(mainstate, sidestate)
+  = case delta sidestate of
        Nothing          ->  return pstate
-       Just liveProof'  ->  return (reqs, liveProof')
+       Just sidestate'  ->  return (mainstate, sidestate')
 \end{code}

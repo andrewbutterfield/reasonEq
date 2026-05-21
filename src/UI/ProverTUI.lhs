@@ -171,7 +171,7 @@ proofREPL reqs liveProof = do
 
 Showing proof settings:
 \begin{code}
-showProofSettingsDescr = ( "sps"
+showProofSettingsDescr = ( "show"
                          , "show proof settings"
                          , "show proof settings"
                          , showPrfSettingsCommand )
@@ -185,14 +185,11 @@ showPrfSettingsCommand _ pstate@(reqs, liveProof)
 Modifying proof settings:
 \begin{code}
 modPrfSettingsDescr
-  = ( "mps"
+  = ( "set"
     , "modify proof-settings"
     , unlines
-        ( [ "mps 'setting' 'value' -- set setting=value" ]
-          ++ map (("      "++) .showPrfSettingStrings) prfSettingStrings
-          ++ [ "Aliases for True: true t on yes y (any case), num > 0"
-             , "Aliases for False: anything else"
-             , "  e.g. mps tq on" ]
+        ( [ "modify proof-settings"
+          , "  uses mini-TUI" ]
         )
     , modProofSettings )
 

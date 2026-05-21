@@ -190,7 +190,7 @@ showState (cmd:args) reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
- | cmd == shSettings  =  doshow reqs $ observeSettings (prfSettings reqs)
+ | cmd == shSettings  =  doshow reqs $ observeProofSettings (prfSettings reqs)
 showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
 
 doshow :: REqState -> String -> IO REqState

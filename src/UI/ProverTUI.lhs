@@ -41,7 +41,7 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.AbstractTop(observeSettings,modifyProofSettings)
+import UI.AbstractTop(observeProofSettings,modifyProofSettings)
 import Instantiate
 import TestRendering
 import SourceHandling
@@ -160,7 +160,7 @@ This repl runs a proof.
 proofREPL reqs liveProof = do 
   (reqs',liveProof) 
     <- runREPL ( clear ++ "Prover starting...\n"
-                 ++ observeSettings (liveSettings liveProof) )
+                 ++ observeProofSettings (liveSettings liveProof) )
                proofREPLConfig
                (reqs,liveProof)
   return reqs'
@@ -177,7 +177,7 @@ showProofSettingsDescr = ( "show"
                          , showPrfSettingsCommand )
 showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
 showPrfSettingsCommand _ pstate@(reqs, liveProof)
-  =  do putStrLn $ observeSettings $ liveSettings liveProof
+  =  do putStrLn $ observeProofSettings $ liveSettings liveProof
         waitForReturn
         return pstate
 \end{code}
@@ -201,7 +201,7 @@ modProofSettings args@[name,val] state@(reqs, liveProof)
                           waitForReturn
                           return (reqs, liveProof)
          Yes prfset' -> do
-           putStrLn $ observeSettings prfset'
+           putStrLn $ observeProofSettings prfset'
            waitForReturn
            return (reqs, liveSettings_ prfset' liveProof)
 modProofSettings _ state = return state

@@ -30,7 +30,7 @@ module UI.AbstractTop
 , classifyLaw -- top
 , newProof1 -- top
 , newProof2 -- top
-, observeSettings -- both       ----v ?
+, observeProofSettings -- both       ----v ?
 , modifyProofSettings -- both    ----^ ?
 )
 where
@@ -468,8 +468,8 @@ shadowFreeSub sc bvs (Substn es _)
 These are accessed by both the top-level and prover UIs.
 
 \begin{code}
-observeSettings :: ProofSettings -> String
-observeSettings pset = showPrfSettings pset
+observeProofSettings :: ProofSettings -> String
+observeProofSettings pset = showPrfSettings pset
 \end{code}
 
 \begin{code}

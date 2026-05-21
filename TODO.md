@@ -48,7 +48,9 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - fix proof settings UI
 
+   Use `show` to show settings, `set` to invoke mini-UI to change them.
 
 #### Bugs Fixed
 

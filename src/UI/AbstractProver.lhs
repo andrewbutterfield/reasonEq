@@ -39,6 +39,8 @@ module UI.AbstractProver
 , lawInstantiate3 -- prover
 , cloneHypothesis -- prover
 , stepEquivalenceTheorem -- prover
+-- , getProverSettings
+-- , updateProverSettings 
 )
 where
 
@@ -802,3 +804,4 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
                         , liveProof ) )
  where strat = strategy liveProof
 \end{code}
+

@@ -52,6 +52,12 @@ Fixing bugs as we go.
 
    Use `show` to show settings, `set` to invoke mini-UI to change them.
 
+   Need to add top-level proof-settings to toplevel show (`sh`).
+   *Was there: `sh X`.
+
+   Refactored so `TopTUI` invokes  `Prover.updateProverSettings`, 
+   which still has old clunky behaviour (e.g `sh tm Y`).
+
 #### Bugs Fixed
 
 Most recent first...

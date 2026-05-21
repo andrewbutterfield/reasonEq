@@ -30,8 +30,6 @@ module UI.AbstractTop
 , classifyLaw -- top
 , newProof1 -- top
 , newProof2 -- top
-, observeProofSettings -- both       ----v ?
-, modifyProofSettings -- both    ----^ ?
 )
 where
 
@@ -461,23 +459,3 @@ shadowFree'' sc bvs vs tm
 shadowFreeSub sc bvs (Substn es _)
                              =  all (shadowFree' sc bvs) $ map snd $ S.toList es
 \end{code}
-
-
-\subsection{Proof Settings}
-
-These are accessed by both the top-level and prover UIs.
-
-\begin{code}
-observeProofSettings :: ProofSettings -> String
-observeProofSettings pset = showPrfSettings pset
-\end{code}
-
-\begin{code}
-modifyProofSettings :: MonadFail m => [String] -> ProofSettings -> m ProofSettings
-modifyProofSettings [name,value] prfset
-  = case changePrfSettings name value prfset of
-      But msgs  ->  fail $ unlines' msgs
-      Yes set'  ->  return set'
-modifyProofSettings args reqs = fail "Expected setting short name and value"
-\end{code}
-

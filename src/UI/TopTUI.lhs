@@ -152,7 +152,7 @@ cmdShow
     , "show parts of the prover state"
     , unlines
         [ shName++" "++shWork++" -- show workspace info"
-        , shName++" "++shSettings++" -- show settings"
+        , shName++" "++shPrfSetup++" -- show top-level prover settings"
         , shName++" "++shSig++" -- show logic signature"
         , shName++" "++shTheories++" -- show theories"
         , shName++" "++shLaws++" -- show laws in scope"
@@ -169,7 +169,7 @@ cmdShow
 
 shName = "sh"
 shWork = "w"
-shSettings = "X"
+shPrfSetup = "X"
 shSig = "s"
 shTheories = "t"
 shLaws = "L"
@@ -190,7 +190,7 @@ showState (cmd:args) reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
- | cmd == shSettings  =  doshow reqs $ observeProofSettings (prfSettings reqs)
+ | cmd == shPrfSetup  =  doshow reqs $ showPrfSettings (prfSettings reqs)
 showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
 
 doshow :: REqState -> String -> IO REqState
@@ -581,19 +581,18 @@ cmdSet
     , setState )
 
 setCurrThry = shCurrThry
-setSettings = shSettings
+setSettings = shPrfSetup
 
+setState :: [String] -> REqState -> IO REqState
 setState (cmd:rest) reqs
  | cmd == setCurrThry
     =  case setCurrentTheory nm reqs of
          But msgs   ->  doshow reqs $ unlines' msgs
          Yes reqs'  ->  doCTshow reqs' nm 
                                  ("Current Theory now '" ++ nm ++ "'")
- | cmd == setSettings
-    =  case modifyProofSettings rest (prfSettings reqs) of
-         But msgs     ->  doshow reqs $ unlines' msgs
-         Yes prfset'  ->  doshow (prfSettings_ prfset' reqs) 
-                                ("Settings updated")
+ | cmd == setSettings  = do
+    prfset' <- updateProverSettings rest (prfSettings reqs)
+    doshow (prfSettings_ prfset' reqs) ("Settings updated")
  where nm = args2str rest
 setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 \end{code}

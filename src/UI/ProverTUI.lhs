@@ -7,7 +7,11 @@ Copyright (c) Andrew Butterfield 2017--25
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module UI.ProverTUI where
+module UI.ProverTUI (
+  proofREPL
+, updateProverSettings 
+) 
+where
 
 import System.Environment
 import System.IO
@@ -41,7 +45,6 @@ import Ranking
 import ProofSettings
 import REqState
 import MatchContext
-import UI.AbstractTop(observeProofSettings,modifyProofSettings)
 import Instantiate
 import TestRendering
 import SourceHandling
@@ -160,7 +163,7 @@ This repl runs a proof.
 proofREPL reqs liveProof = do 
   (reqs',liveProof) 
     <- runREPL ( clear ++ "Prover starting...\n"
-                 ++ observeProofSettings (liveSettings liveProof) )
+                 ++ showPrfSettings (liveSettings liveProof) )
                proofREPLConfig
                (reqs,liveProof)
   return reqs'
@@ -177,7 +180,7 @@ showProofSettingsDescr = ( "show"
                          , showPrfSettingsCommand )
 showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
 showPrfSettingsCommand _ pstate@(reqs, liveProof)
-  =  do putStrLn $ observeProofSettings $ liveSettings liveProof
+  =  do putStrLn $ showPrfSettings $ liveSettings liveProof
         waitForReturn
         return pstate
 \end{code}
@@ -194,16 +197,11 @@ modPrfSettingsDescr
     , modProofSettings )
 
 modProofSettings :: REPLCmd (REqState, LiveProof)
-modProofSettings args@[name,val] state@(reqs, liveProof)
--- | cmd == setSettings
-    =  case modifyProofSettings args (liveSettings liveProof) of
-         But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
-                          waitForReturn
-                          return (reqs, liveProof)
-         Yes prfset' -> do
-           putStrLn $ observeProofSettings prfset'
-           waitForReturn
-           return (reqs, liveSettings_ prfset' liveProof)
+modProofSettings args@[name,val] state@(reqs, liveProof) = do
+  prfset' <- updateProverSettings args (liveSettings liveProof) 
+  putStrLn $ showPrfSettings prfset'
+  waitForReturn
+  return (reqs, liveSettings_ prfset' liveProof)
 modProofSettings _ state = return state
 \end{code}
 
@@ -902,6 +900,24 @@ applyFold isApplicable vts fold (reqs, liveProof)
           then applyMatchToFocus2 vts mtch [] [] liveproof
          else tryFoldMatches liveproof (i+1)
 \end{code}
+
+\subsection{Change Proof Settings}
+
+
+\begin{code}
+updateProverSettings 
+  :: [String] -> ProofSettings -> IO ProofSettings
+updateProverSettings [name,value] prfset
+  = case changePrfSettings name value prfset of
+      But msgs     ->  do putStrLn $ unlines' msgs
+                          return prfset
+      Yes prfset'  ->  return prfset'
+updateProverSettings args prfset = do
+  putStrLn "Expected setting short name and value"
+  return prfset
+\end{code}
+
+
 
 
 

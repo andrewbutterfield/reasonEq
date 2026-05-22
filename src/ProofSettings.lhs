@@ -8,18 +8,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module ProofSettings ( 
   ProofSettings(..) -- used elsewhere
 , proofSettingsCount
--- , maxMatchDisplay__     -- local
--- , maxMatchDisplay_      -- local
--- , showBindings__        -- local
--- , showBindings_         -- local
 , initProofSettings     -- used elsewhere
 , renderProofSettings   -- used elsewhere
 , parseProofSettings    -- used elsewhere
--- , prfSettingStrings  -- was used elsewhere, now local, soon redundant
--- , showPrfSettingStrings -- used elsewhere, now local, soon redundant
 , showPrfSettings       -- used elsewhere
 , changePrfSettings     -- used elsewhere
--- , andIfWanted           -- local
 )
 where
 
@@ -35,7 +28,7 @@ import ProofMatch
 import Debugger
 \end{code}
 
-
+\newpage
 \section{Proof Settings Datatype}
 
 \begin{code}
@@ -54,8 +47,13 @@ data ProofSettings
      , matchFilter :: FilterFunction
      }
 
-proofSettingsCount = (7::Int) -- should be total entries in Sections 1&2 above !
+-- metadata about the above
+proofSettingsCount = (7::Int)
+prfSettingTypes = replicate 2 "Number" ++ replicate 5 "Bool"
+\end{code}
 
+Display functions
+\begin{code}
 settablePS prfset = 
   [ "maxMatchDisplay       - " ++ show (maxMatchDisplay prfset)
   , "maxStepDisplay        - " ++ show (maxStepDisplay prfset)
@@ -88,16 +86,17 @@ showBindings__ f r     =  r{showBindings = f $ showBindings r}
 showBindings_          =  showBindings__ . const
 \end{code}
 
+\newpage
 \subsection{Section 2 Updaters}
 
 \begin{code}
-showTrivialMatch__ f r
+showTrivialMatches__ f r
   =  matchFilterUpdate r{showTrivialMatches = f $ showTrivialMatches r}
-showTrivialMatch_   =  showTrivialMatch__ . const
+showTrivialMatches_   =  showTrivialMatches__ . const
 
-showTrivialQuantifiers__ f r
+showTrivialListVars__ f r
   =  matchFilterUpdate r{showTrivialListVars = f $ showTrivialListVars r}
-showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
+showTrivialListVars_   =  showTrivialListVars__ . const
 
 showTrivialSubst__ f r
   =  matchFilterUpdate r{showTrivialSubst = f $ showTrivialSubst r}
@@ -108,11 +107,10 @@ showFloatingVariables__ f r
 showFloatingVariables_   =  showFloatingVariables__ . const
 \end{code}
 
-\newpage
+
 \section{Section 3 Updater}
 
 Section 3 updater --- not exported, internal use only.
-STLL WORKS INCORRECTLY !!!! 
 
 We identify the following cases where we may want to filter out matches:
 \begin{description}
@@ -158,41 +156,6 @@ matchFilterUpdate r
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
-
-The following code, 
-given list \m{\seqof{(e_1,p_1),\dots,(e_n,p_n)}}
-where boolean \m{e_i} enables check denoted by predicate \m{p_i},
-results in the following outcome: 
-\m{(e_1 \implies p_1)\land\dots\land(e_n \implies p_n)}.
-Any false \m{e_j} render the corresponding check as \true.
-\begin{code}
-andIfWanted :: Bool -- True means we want to apply newf
-            -> (ctx -> mtc -> Bool)  -- newf
-            -> (ctx -> mtc -> Bool)  -- currf
-            -> (ctx -> mtc -> Bool)  -- resulting filter
-andIfWanted wanted newf currf ctxt mtch
- | wanted     =  currf ctxt mtch && newf ctxt mtch
- | otherwise  =  currf ctxt mtch
-\end{code}
-
-\newpage
-\section{Startup/Default Settings}
-
-Here we keep verbosity and complexity to a minimum.
-
-\begin{code}
-initProofSettings
-  = matchFilterUpdate $ PrfSet {
-      maxMatchDisplay        = 30
-    , maxStepDisplay         = 10
-    , showBindings           = False
-    , showTrivialMatches     = False
-    , showTrivialListVars    = False 
-    , showTrivialSubst       = False
-    , showFloatingVariables  = False 
-    , matchFilter = acceptAll
-    }
-\end{code}
 
 \newpage
 \section{Write and Read Proof Settings}
@@ -244,103 +207,47 @@ parseProofSettings txts
               , rest9 )
 \end{code}
 
+\newpage
+\section{Settings Management}
+
+\begin{code}
+initProofSettings
+  = matchFilterUpdate $ PrfSet {
+      maxMatchDisplay        = 30
+    , maxStepDisplay         = 10
+    , showBindings           = False
+    , showTrivialMatches     = False
+    , showTrivialListVars    = False 
+    , showTrivialSubst       = False
+    , showFloatingVariables  = False 
+    , matchFilter = acceptAll
+    }
+\end{code}
 
 
 \subsection{Settings Help}
 
 \begin{code}
 showPrfSettings :: ProofSettings -> String
-showPrfSettings prfset = unlines' $ map show $ menuPS prfset
+showPrfSettings prfset = numberList id $ settablePS prfset
 \end{code}
 
 
-\textbf{EVERYTHING BELOW IN THIS SECTION IS DEPRECATED}
 
-
-For every setting we provide both a short and long string,
-the first for use in commands, the second for display
-\begin{code}
-type PrfSettingStrings = (String,String,String) -- short,type,long
-prfSettingStrings = [ ("mm","Number","Max. Match Display")
-                    , ("ms","Number","Max. Step Display")
-                    , ("bd","Bool","Show Bindings")
-                    , ("tm","Bool","Show Trivial Matches")
-                    , ("tl","Bool","Show Trivial List-Variables")
-                    , ("ts","Bool","Show Trivial Substitutions")
-                    , ("fv","Bool","Show Floating Variables")
-                    ]
-showPrfSettingStrings (short,typ,long)
-  = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
-\end{code}
-
-
-\begin{verbatim}
-  = unlines' $ displayPrfSettings rsettings prfSettingStrings
-  where
-    displayPrfSettings r =  map (disp r)
-
-    disp r (code@"mm",_,text) = disp2 code text $ show (maxMatchDisplay r)
-    disp r (code@"ms",_,text) = disp2 code text $ show (maxStepDisplay r)
-    disp r (code@"bd",_,text) = disp2 code text $ show (showBindings r)
-    disp r (code@"tm",_,text) = disp2 code text $ show (showTrivialMatches r)
-    disp r (code@"tl",_,text) = disp2 code text $ show (showTrivialListVars r)
-    disp r (code@"ts",_,text) = disp2 code text $ show (showTrivialSubst r)
-    disp r (code@"fv",_,text) = disp2 code text $ show (showFloatingVariables r)
-
-    disp2 code text shown = text ++ " ("++code++") "++shown
-\end{verbatim}
-
-\newpage
-\section{Change Proof Settings}
-
-
-\textbf{EVERYTHING BELOW IN THIS SECTION IS DEPRECATED}
+\subsection{Change Proof Settings}
 
 \begin{code}
 changePrfSettings :: MonadFail m 
-                  => String -> String -> ProofSettings 
+                  => Int -> String -> ProofSettings 
                   -> m ProofSettings
-changePrfSettings name valstr rqset
-  = case lookupPrfSettingShort name prfSettingStrings of
-      Nothing -> fail ("No such setting: "++name)
-      Just sss -> changePrfSetting sss valstr rqset
-
-lookupPrfSettingShort n []  =  Nothing
-lookupPrfSettingShort n (sss@(s,_,_):ssss)
-  | n == s               =  Just sss
-  | otherwise            =  lookupPrfSettingShort n ssss
+changePrfSettings setno valstr rqset
+  = case setno of
+      1 -> return $ maxMatchDisplay_       (readNat  valstr) rqset 
+      2 -> return $ maxStepDisplay_        (readNat  valstr) rqset 
+      3 -> return $ showBindings_          (readBool valstr) rqset 
+      4 -> return $ showTrivialMatches_    (readBool valstr) rqset 
+      5 -> return $ showTrivialListVars_   (readBool valstr) rqset 
+      6 -> return $ showTrivialSubst_      (readBool valstr) rqset 
+      7 -> return $ showFloatingVariables_ (readBool valstr) rqset 
+      _ -> return rqset -- fail silently with no change
 \end{code}
-
-\begin{code}
-changePrfSetting :: MonadFail m 
-                 => PrfSettingStrings  -> String -> ProofSettings
-                 -> m ProofSettings
-changePrfSetting (short,typ,_) valstr reqs
- | typ == "Bool"    =  changeBoolPrfSetting short (readBool valstr) reqs
- | typ == "Number"  =  changeNumberPrfSetting short (readNat valstr) reqs
- | otherwise        =  fail ("changePrfSetting - unknown type: "++typ)
-\end{code}
-
-\begin{code}
-changeBoolPrfSetting :: MonadFail m 
-                     => String  -> Bool -> ProofSettings 
-                     -> m ProofSettings
-changeBoolPrfSetting name value reqs
- | name == "bd"  =  return $ showBindings_ value reqs
- | name == "tm"  =  return $ showTrivialMatch_ value reqs
- | name == "tl"  =  return $ showTrivialQuantifiers_ value reqs
- | name == "ts"  =  return $ showTrivialSubst_ value reqs
- | name == "fv"  =  return $ showFloatingVariables_ value reqs
- | otherwise     =  fail ("changeBoolPrfSetting - unknown field: "++name)
-\end{code}
-
-\begin{code}
-changeNumberPrfSetting :: MonadFail m 
-                       => String  -> Int -> ProofSettings 
-                       -> m ProofSettings
-changeNumberPrfSetting name value reqs
- | name == "mm"  =  return $ maxMatchDisplay_ value reqs
- | name == "ms"  =  return $ maxStepDisplay_ value reqs
- | otherwise        =  fail ("changeNumberPrfSetting - unknown field: "++name)
-\end{code}
-

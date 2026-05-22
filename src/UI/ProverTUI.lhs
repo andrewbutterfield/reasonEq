@@ -197,12 +197,12 @@ modPrfSettingsDescr
     , modProofSettings )
 
 modProofSettings :: REPLCmd (REqState, LiveProof)
-modProofSettings args@[name,val] state@(reqs, liveProof) = do
-  prfset' <- updateProverSettings args (liveSettings liveProof) 
+modProofSettings args state@(reqs, liveProof) = do
+  let prfset = liveSettings liveProof
+  prfset' <- updateProverSettings args prfset 
   putStrLn $ showPrfSettings prfset'
   waitForReturn
   return (reqs, liveSettings_ prfset' liveProof)
-modProofSettings _ state = return state
 \end{code}
 
 \section{Saving}
@@ -915,10 +915,8 @@ updateProverSettings _ prfset = do
   let choice = readNat str
   if choice `elem` [1..proofSettingsCount]
   then do
-    str2 <- userPrompt "Enter new value: " 
-    putStrLn ("updateProverSettings "++show choice++" = "++str2++" NYI")
-    -- modify ProofSettings.changePrfSettings to do this
-    return prfset
+    newval <- userPrompt "Enter new value: " 
+    changePrfSettings choice newval prfset
   else do
     putStrLn ("Invalid choice "++str)
     return prfset

@@ -48,6 +48,11 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+
+#### Bugs Fixed
+
+Most recent first...
+
  - fix proof settings UI
 
    Use `show` to show settings, `set` to invoke mini-UI to change them.
@@ -59,11 +64,8 @@ Fixing bugs as we go.
    which still has old clunky behaviour (e.g `sh tm Y`).
 
    We have an improved command-line dialogue set up. 
-   Just need to implement the desired change.
+   Just need to implement the desired change. **DONE**
 
-#### Bugs Fixed
-
-Most recent first...
 
  - Fix `b` command
 

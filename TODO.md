@@ -48,12 +48,13 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - justification should have emphasised law-name first, 
-   then finer match details.
 
 #### Bugs Fixed
 
 Most recent first...
+
+ - justification should have emphasised law-name first, 
+   then finer match details. **DONE**
 
  - fix proof settings UI
 

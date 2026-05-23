@@ -30,6 +30,7 @@ import Assertions
 import TermZipper
 import Binding
 import Laws
+import Symbols
 import TestRendering
 import PrettyTerms
 
@@ -454,7 +455,7 @@ labelAsProven nasn (_,prfnm,_,_,_) =  (nasn, Proven prfnm)
 \begin{code}
 showJustification :: Justification -> String
 showJustification (UseLaw how lnm bind dpath)
-  =  "   = '"++showHow how++" "++nicelawname lnm++"@" ++ show dpath ++ "'"
+  =  "   = '"++bold(red(nicelawname lnm))++" "++showHow how++"@" ++ show dpath ++ "'"
 showJustification (NormQuant dpath)
   =  "   = 'norm-quant @" ++ show dpath ++ "'"
 showJustification (NestSimp dpath)

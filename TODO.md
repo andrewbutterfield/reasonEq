@@ -48,6 +48,9 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - back command has stopped working !
+
+   Problem: 'b' is interpreted as 'b 0' and not 'b 1'.
 
 #### Bugs Fixed
 

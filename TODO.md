@@ -48,13 +48,14 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - back command has stopped working !
-
-   Problem: 'b' is interpreted as 'b 0' and not 'b 1'.
-
 #### Bugs Fixed
 
 Most recent first...
+
+ - back command has stopped working !
+
+   Problem: 'b' is interpreted as 'b 0' and not 'b 1'. **FIXED**
+
 
  - justification should have emphasised law-name first, 
    then finer match details. **DONE**

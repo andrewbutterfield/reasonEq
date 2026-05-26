@@ -96,6 +96,10 @@ In particular, we expect the following laws to hold:
 \end{eqnarray*}
 In particular, we want to ``associatively flatten'' nested
 equivalences, conjunctions and conjunctive hypotheses.
+\textbf{
+We need to record what was flattened, 
+so that we can reverse the flattening if required
+}
 \begin{code}
 assocFlatten :: Identifier -> Term -> [Term]
 assocFlatten i (Cons tk _ j ts)
@@ -114,6 +118,9 @@ flattenAnd t
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
+\textbf{
+Again, we need to be able to undo this as well
+}
 \begin{code}
 flattenImp :: Term -> Term
 flattenImp t

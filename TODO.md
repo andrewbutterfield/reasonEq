@@ -48,6 +48,13 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - need to enable `b` for the `ge` proof step
+
+   Issues: `Laws.assocFlatten` loses information 
+   about pre-flatten shape, so we cannot reverse that. 
+   We should fix this, somehow. 
+   Similarly for `Laws.flattenImp`.
+
 #### Bugs Fixed
 
 Most recent first...

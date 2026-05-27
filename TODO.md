@@ -32,8 +32,8 @@ Closure
 Sets
 Exists
 Arith
-Forall
 -- working here:
+Forall
 -- ok below here:
 Equal
 Impl
@@ -48,9 +48,10 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - law `equiv_refl`/outcome `true` should always rank 
-   
-   higher than a `XXXX_def` law.
+ - fix match ranking
+ 
+   law `equiv_refl`/outcome `true` should always 
+   rank higher than a `XXXX_def` law.
 
  - need to enable `b` for the `ge` proof step (*not urgent*)
 

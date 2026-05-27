@@ -33,10 +33,10 @@ Sets
 Exists
 Arith
 Forall
-Equal
 -- working here:
-Impl
 -- ok below here:
+Equal
+Impl
 AOI
 And
 Or
@@ -49,6 +49,7 @@ Fixing bugs as we go.
 #### Bugs Found
 
  - law `equiv_refl`/outcome `true` should always rank 
+   
    higher than a `XXXX_def` law.
 
  - need to enable `b` for the `ge` proof step (*not urgent*)

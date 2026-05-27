@@ -48,6 +48,9 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - law `equiv_refl`/outcome `true` should always rank 
+   higher than a `XXXX_def` law.
+
  - need to enable `b` for the `ge` proof step (*not urgent*)
 
    Issues: `Laws.assocFlatten` loses information 

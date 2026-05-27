@@ -34,10 +34,10 @@ Exists
 Arith
 Forall
 Equal
-Impl
 -- working here:
-AOI
+Impl
 -- ok below here:
+AOI
 And
 Or
 Not
@@ -48,7 +48,7 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - need to enable `b` for the `ge` proof step
+ - need to enable `b` for the `ge` proof step (*not urgent*)
 
    Issues: `Laws.assocFlatten` loses information 
    about pre-flatten shape, so we cannot reverse that. 

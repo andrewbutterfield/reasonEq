@@ -6,33 +6,6 @@ END THEORIES
 CURRTHEORY = AOI
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("AOI","eqv_def")
-BEGIN LIVE-PROOF
-TH-NAME: AOI
-CJ-NAME: eqv_def
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = False
-TL = False
-TS = False
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.eqv_def", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-BEGIN LIST STEPS
-(Associate (Id "eqv" 0) (Gather Lft 2),ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]],([],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

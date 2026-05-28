@@ -860,7 +860,11 @@ data VSetPred
   |  VSSup   VSetExpr VSetExpr  -- relation on sets
   |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
   deriving (Eq,Ord,Show)
-
+\end{code}
+\textbf{
+  Open Q: can arbitrary VSetPred be reduced to a conjunction of same where all VSetExpr are VSEnum?
+}
+\begin{code}
 trVSExpr = trvsexpr trId
 trVSExprU = trvsexpr trIdU
 trvsexpr trid (VSEnum vse) 
@@ -962,6 +966,8 @@ vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
 vsp2vsc (VSSupD  (VSEnum gvs) (VSEnum vs))
   = sequence $ map (mkCovDVSC vs) (S.toList gvs)
 
+-- how do we handle this ?
+--      VSDisj (VSEnum P) ( VSMinus (VSEnum x$) (VSEnum y$) ) )
 vsp2vsc vsp 
   = fail $ unlines'
       [ "vsp2vsc: " ++ trVSPred vsp

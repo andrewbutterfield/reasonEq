@@ -76,6 +76,11 @@ X-vsp2vsc: VSDisj (VSEnum (fromList [GV (VR (Id "P" 0,VP,WS))])) (VSMinus (VSEnu
 not disjoint or superset with enumerations
 ```
 
+Problem is that here `vsp2vsc` has no context to realise that y$ dominates x$,
+so it throws its hand up.
+
+**Note: `Instantiate.lhs` suggests that `VSetExpr` and `VSetPred` should replace the current SideCond datastructure. Is the above case what forces our hand here?**
+
  - fix match ranking
  
    law `equiv_refl`/outcome `true` should always 

@@ -48,6 +48,34 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
+
+     L2R  
+     Conjecture `∀x$ • ∀y$ • P ≡ ∀y$ • P  ,  y$⊇x$`
+
+     LHS: `∀x$ • ∀y$ • P , y$⊇x$`
+
+```
+proof> tm 1 forall_remove
+Match against 'forall_remove'[1] failed!
+try s.c. instantiation failed
+
+{ B  ⟼ 𝔹  , P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
+&& x$⋔P
+
+lnm[parts]=forall_remove[1]
+tC=(∀ x$  • (∀ y$  • P))
+scC=y$⊇x$
+tP'=(∀ y$  • P)
+partsP=(∀ x$  • P)
+replP=P
+scP=x$⋔P
+
+vsp2vsc: (P⋔(x$∖y$))
+X-vsp2vsc: VSDisj (VSEnum (fromList [GV (VR (Id "P" 0,VP,WS))])) (VSMinus (VSEnum (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) (VSEnum (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])))
+not disjoint or superset with enumerations
+```
+
  - fix match ranking
  
    law `equiv_refl`/outcome `true` should always 

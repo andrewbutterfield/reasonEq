@@ -7,16 +7,7 @@
 
 ## URGENT or NEXT
 
-Inspired by:
-```
-P ≡ Q ∧ R ≡ P ∨ (Q ≡ R ≡ Q ∨ R)
-
-Target (LHS): 
-P ∧ Q ≡ R ≡ (P ≡ Q ≡ P ∨ Q) ∨ R
-```
- - Change proof command `l` (leave hypothesis) to `g` (to goal)
- - use `l` and `r` to move left and right in expressions.
-
+We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`. In practise, this means a separate module, **THIS IS A MAJOR REWRITE**
 
 ### Systematic Proof of all Conjectures
 
@@ -50,6 +41,14 @@ Fixing bugs as we go.
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 
+   Diagnosis: 
+     we get the following outcome from the instantiated law s.c.: `P ⋔ (x$\y$)`.
+     This cannot be captured using the VSC datatype. In this particular case,
+     the conjecture  s.c. `y$ ⊇ x$` means that `x$\y$ = Ø`, 
+     but in general this may not be the case.
+
+   **Concern:** *This proof step used to work before. Why not now?* Perhaps things are going wrong *above* the `vsp2vsc` level? YES
+
      L2R  
      Conjecture `∀x$ • ∀y$ • P ≡ ∀y$ • P  ,  y$⊇x$`
 
@@ -77,7 +76,7 @@ not disjoint or superset with enumerations
 ```
 
 Problem is that here `vsp2vsc` has no context to realise that y$ dominates x$,
-so it throws its hand up.
+so it throws its hand up. *The discharge step occurs later - we are not supposed to rely on such context here* 
 
 **Note: `Instantiate.lhs` suggests that `VSetExpr` and `VSetPred` should replace the current SideCond datastructure. Is the above case what forces our hand here?**
 

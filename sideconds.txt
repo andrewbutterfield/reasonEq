@@ -40,3 +40,5 @@ Instead of relating a global variable `gv` to a `VarSet`,
 we should support the form `VS1 \ VS2`.
 
 Given implicit unions can we reduce (A\B) `union` (C\D)  to some (E\F) ?
+
+No  (A\B) U C =  (A U C)\B U (C intsct B)

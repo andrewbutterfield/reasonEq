@@ -9,6 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarSetExpr (
   VSetExpr(..)
 , VSetPred(..)
+, trVSPred
+, vsEmpty, vsSngl, vsUnion, vsMinus
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)

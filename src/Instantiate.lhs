@@ -30,6 +30,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetExpr
 import SideCond
 import Binding
 import Matching
@@ -839,94 +840,6 @@ This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
 
 \newpage
 \subsection{The Calculus}
-
-
-We need an intermediate set-expression language over general variables,
-with enumerations \m{\setof{\dots}}, operators \m\cup, \m\setminus, and relations \m\disj, \m\supseteq.
-In effect this is based on variable-sets.
-\textbf{Should this become THE representation for side conditions?}.
-
-\subsubsection{Variable Set-Expression Syntax}
-
-\begin{code}
-data VSetExpr 
-  =  VSEnum  VarSet             
-  |  VSUnion VSetExpr VSetExpr  
-  |  VSMinus VSetExpr VSetExpr 
-  deriving (Eq,Ord,Show)
-data VSetPred
-  =  VSTrueP
-  |  VSDisj  VSetExpr VSetExpr  -- relation on sets
-  |  VSSup   VSetExpr VSetExpr  -- relation on sets
-  |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
-  deriving (Eq,Ord,Show)
-\end{code}
-\textbf{
-  Open Q: can arbitrary VSetPred be reduced to a conjunction of same where all VSetExpr are VSEnum?
-}
-\begin{code}
-trVSExpr = trvsexpr trId
-trVSExprU = trvsexpr trIdU
-trvsexpr trid (VSEnum vse) 
-  | sz == 0    =  _emptyset
-  | sz == 1    =  trgvar trid $ head $ S.toList vse
-  | otherwise  =  trvset trid vse 
-  where sz = S.size vse
-trvsexpr trid (VSUnion vse1 vse2) 
-  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
-trvsexpr trid (VSMinus vse1 vse2) 
-  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
-
-trvsets trid = seplist "," $ trvset trid
-
-vsedbg = rdbg trVSExpr
-vsesdbg = rdbg (seplist ";" $ trVSExpr)
-
-trVSPred = trvspred trId
-trVSPredU = trvspred trIdU
-trvspred trid VSTrueP = "true"
-trvspred trid (VSDisj vse1 vse2) 
-  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
-trvspred trid (VSSup vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
-trvspred trid (VSSupD vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
-
-trvspreds trid = seplist "," $ trvspred trid
-
-vspdbg = rdbg trVSPred
-vspsdbg = rdbg (seplist "_land" $ trVSPred)
-\end{code}
-
-\newpage
-\subsubsection{Smart Set-Expression Constructors}
-
-Empty and singleton sets:
-\begin{code}
-vsEmpty :: VSetExpr
-vsEmpty = VSEnum S.empty
-
-vsSngl :: GenVar -> VSetExpr
-vsSngl = VSEnum . S.singleton
-\end{code}
-
-We do the obvious simplifications for enumeration, union and removal.
-\begin{code}
-vsUnion :: VSetExpr -> VSetExpr -> VSetExpr
-vsUnion (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.union` vs2)
-vsUnion vse1 vse2
-  | vse1 == vsEmpty  =  vse2
-  | vse2 == vsEmpty  =  vse1
-  | otherwise = VSUnion vse1 vse1
-
-vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
-vsMinus vsplus vsminus
-  | vsplus  == vsminus  =  vsEmpty
-  | vsplus  == vsEmpty  =  vsplus
-  | vsminus == vsEmpty  =  vsplus
-  | otherwise           =  VSMinus vsplus vsminus
-\end{code}
-
 
 \subsubsection{From Side Condition to Set-Predicates}
 

@@ -33,6 +33,7 @@ library
       LiveProofs
       MatchContext
       Matching
+      NewSideCond
       NotApplicable
       Persistence
       PrettyTerms
@@ -72,6 +73,7 @@ library
       Utilities
       VarData
       Variables
+      VarSetExpr
       WriteRead
       YesBut
       AndOrInvert

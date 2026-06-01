@@ -1,0 +1,146 @@
+\chapter{Variable-Set Expressions}
+\begin{verbatim}
+Copyright  Andrew Butterfield (c) 2026
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+\end{verbatim}
+\begin{code}
+{-# LANGUAGE PatternSynonyms #-}
+module VarSetExpr (
+  VSetExpr(..)
+, VSetPred(..)
+) where
+import Data.Maybe
+-- import Data.Either (lefts,rights)
+import Data.Set(Set)
+import qualified Data.Set as S
+import Data.Map(Map)
+import qualified Data.Map as M
+import Data.List
+
+import NotApplicable
+import Utilities
+import Control
+import Symbols
+import UnivSets
+import LexBase
+import Variables
+import Types
+import AST
+import SideCond
+import Binding
+import Matching
+import FreeVars
+import VarData
+import TestRendering
+
+import Debugger
+\end{code}
+
+\section{Introduction}
+
+We provide set-expressions and predicates tailored for writing  and analysing side-conditions involving general variables.
+
+
+\newpage
+\section{Variable-Set Syntax}
+
+We assume our basic building block to be enumerations of general variables:
+$$\setof{gv_1,\dots,gv_n}, \qquad n \geq 0 .$$
+These can the be combined with set-theoretic operators 
+($\cup$,$\cap$,$\setminus$) 
+to produce set expressions.
+We then add set-theoretic relations 
+($=$,$\subseteq$,$\not\cap$) 
+over such expressions, to produce set predicates.
+
+
+
+\begin{code}
+data VSetExpr 
+  =  VSEnum  VarSet             
+  |  VSUnion VSetExpr VSetExpr  
+  |  VSMinus VSetExpr VSetExpr 
+  deriving (Eq,Ord,Show)
+data VSetPred
+  =  VSTrueP
+  |  VSDisj  VSetExpr VSetExpr  -- relation on sets
+  |  VSSup   VSetExpr VSetExpr  -- relation on sets
+  |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
+  deriving (Eq,Ord,Show)
+
+trVSExpr = trvsexpr trId
+trVSExprU = trvsexpr trIdU
+trvsexpr trid (VSEnum vse) 
+  | sz == 0    =  _emptyset
+  | sz == 1    =  trgvar trid $ head $ S.toList vse
+  | otherwise  =  trvset trid vse 
+  where sz = S.size vse
+trvsexpr trid (VSUnion vse1 vse2) 
+  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
+trvsexpr trid (VSMinus vse1 vse2) 
+  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
+
+trvsets trid = seplist "," $ trvset trid
+
+vsedbg = rdbg trVSExpr
+vsesdbg = rdbg (seplist ";" $ trVSExpr)
+
+trVSPred = trvspred trId
+trVSPredU = trvspred trIdU
+trvspred trid VSTrueP = "true"
+trvspred trid (VSDisj vse1 vse2) 
+  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
+trvspred trid (VSSup vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
+trvspred trid (VSSupD vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
+
+trvspreds trid = seplist "," $ trvspred trid
+
+vspdbg = rdbg trVSPred
+vspsdbg = rdbg (seplist "_land" $ trVSPred)
+\end{code}
+
+\newpage
+\subsubsection{Smart Set-Expression Constructors}
+
+Empty and singleton sets:
+\begin{code}
+vsEmpty :: VSetExpr
+vsEmpty = VSEnum S.empty
+
+vsSngl :: GenVar -> VSetExpr
+vsSngl = VSEnum . S.singleton
+\end{code}
+
+We do the obvious simplifications for enumeration, union and removal.
+\begin{code}
+vsUnion :: VSetExpr -> VSetExpr -> VSetExpr
+vsUnion (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.union` vs2)
+vsUnion vse1 vse2
+  | vse1 == vsEmpty  =  vse2
+  | vse2 == vsEmpty  =  vse1
+  | otherwise = VSUnion vse1 vse1
+
+vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
+vsMinus vsplus vsminus
+  | vsplus  == vsminus  =  vsEmpty
+  | vsplus  == vsEmpty  =  vsplus
+  | vsminus == vsEmpty  =  vsplus
+  | otherwise           =  VSMinus vsplus vsminus
+\end{code}
+
+
+
+Here we convert free-variables into set-expressions:
+\begin{code}
+fvs2vses :: FreeVars -> VSetExpr
+fvs2vses (fvs,diffs) 
+  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
+
+diff2vses :: (GenVar,VarSet) -> VSetExpr
+diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
+\end{code}
+
+

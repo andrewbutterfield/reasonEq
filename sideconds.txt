@@ -1,0 +1,42 @@
+
+x$⋔P  EQV Forall Exists
+y$⋔P  Forall Exists
+y$⊇x$ Forall Exists
+x$⋔e$ Forall Exists
+x$⊇P  Closure
+Ø⊇P   Closure
+O$,O$'⊇ₐP  UWhile Designs DWhile
+O$,O$'⊇ₐQ  UWhile Designs DWhile
+O$,O$'⊇ₐR  UWhile
+O$⊇ₐb      UWhile DWhile
+fresh:O$_0 UWhile
+O$⊇ₐok     Designs
+O$'⊇ₐok'   Designs
+O$⊇ₐp      Designs
+O$,O$'⋔E   UTCP
+O$,O$'⋔E1  UTCP
+O$,O$'⋔E2  UTCP
+O$,O$'⋔N   UTCP
+O$,O$'⋔N1  UTCP
+O$,O$'⋔N2  UTCP
+O$,O$'⋔R   UTCP
+O$,O$'⋔R1  UTCP
+O$,O$'⋔R2  UTCP
+s,s'⊇ₐa    UTCP
+s,s'⊇ₐb    UTCP
+O$⊇ₐe      DWhile
+O$⊇ₐf      DWhile
+O$⊇ₐx      DWhile
+
+The problem (in Forall):
+ * we have law `forall_remove` with side condition `P ⋔ x$`
+ * `P` from law is matched to `∀ y$ • P` which induces `(P \ y$) ⋔ x$`
+ * It simplifies to `P ⋔ ( x$ \ y$ )`.
+
+We need to be able to have explicit set-difference in the syntax.
+We already have implicity set-union.
+
+Instead of relating a global variable `gv` to a `VarSet`,
+we should support the form `VS1 \ VS2`.
+
+Given implicit unions can we reduce (A\B) `union` (C\D)  to some (E\F) ?

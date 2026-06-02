@@ -7,28 +7,25 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module NewSideCond (
-  NVarSet, nset
-, isThere, nsngl, nmbr, ndiff, nunion, nintsct, nsubset, ndisj
+  NVarSet 
+, nmbr
 , VarSideConds(..)
-, termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
-, vscTrue, disjNA, covByNA, isTrueVSC
-, vscVSet
-, disjfrom, coveredby, dyncovered, udisjfrom, ucoveredby, udyncovered
-, SideCond, scTrue, isTrivialSC
-, onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
--- , scGVars
+, vscTrue, disjNA, covByNA
+, disjfrom, coveredby, dyncovered
+, SideCond, scTrue
+, isTrivialSC , onlyFreshSC -- both only in TestRendering !!!!
 , scVarSet
-, mrgVarConds, mergeVarConds, joinVarConds, concatVarConds
-, mrgSideCond, mrgSideConds, mkSideCond
+, mrgVarConds, mergeVarConds
+, mrgSideCond
+, mkSideCond
 , scDischarge
 , isFloatingVSC
 , addFreshVars
 , notin, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar
-, findDisjointGenVar, findCoveredGenVar, findDynCvrdGenVar
+, findCoveredGenVar
 , mentionedBy
--- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
 ) where

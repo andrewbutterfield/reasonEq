@@ -130,7 +130,13 @@ vsUnion (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.union` vs2)
 vsUnion vse1 vse2
   | vse1 == vsEmpty  =  vse2
   | vse2 == vsEmpty  =  vse1
-  | otherwise = VSUnion vse1 vse1
+  | otherwise = VSUnion vse1 vse2
+
+vsIntsct (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.intersect` vs2)
+vsIntsct vse1 vse2
+  | vse1 == vsEmpty  =  vsEmpty
+  | vse2 == vsEmpty  =  vsEmpty
+  | otherwise = VSIntsct vse1 vse2
 
 vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
 vsMinus vsplus vsminus

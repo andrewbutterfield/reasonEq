@@ -96,6 +96,13 @@ so it throws its hand up. *The discharge step occurs later - we are not supposed
 
 Most recent first...
 
+ - `vsUnion | otherwise = VSUnion vse1 vse1` 
+ 
+   (was `Instantiate`, now `VarSetExpr`)
+
+   Now `vsUnion | otherwise = VSUnion vse1 vse2`  **FIXED**
+
+
  - back command has stopped working !
 
    Problem: 'b' is interpreted as 'b 0' and not 'b 1'. **FIXED**

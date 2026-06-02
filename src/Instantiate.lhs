@@ -974,64 +974,6 @@ which we just write as \m T.
 \end{eqnarray*}
 The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset predicates.
 
-\newpage
-\subsubsection{Simplifying Set-Predicates}
-
-\begin{eqnarray*}
-   \setof{O,O'} \supseteq \setof{ls,ls',a} 
-   \land \setof{O,O'} \supseteq \setof{a}
-   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
-\\ (P\setminus \lst y) \disj \lst x 
-   &=&
-   \setof{P} \disj (\lst x \setminus \lst y) 
-\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
-\end{eqnarray*}
-
-Here we are interested in single relations ($\disj$,$\supseteq$)
-with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
-We want to pull $P$ out to be the sole 1st argument of the relation.
-These should \emph{not} reduce the relations to \true\ or \false.
-In general we may need extra terms not involving $P$ in the output.
-We want to distinguish there so we keep them separate.
-\begin{code}
-simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
-\end{code}  
-$$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
-\begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
-             =  (p `VSDisj` (y `vsMinus` x), [])
-\end{code} 
-$$ 
-   (P \cup X) \disj Y 
-   ~=~ 
-   (P \disj Y) \land (X \disj Y)
-$$
-\begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
-               = (p `VSDisj` y , [x `VSDisj` y ] )
-\end{code} 
-$$  
-   (P \setminus X) \supseteq Y 
-   ~=~ 
-   P \supseteq (Y \setminus X) \land (X \disj Y)
-$$
-\begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSSup` y) 
-  = ( p `VSSup` (y `vsMinus` x) , [x `VSDisj` y  ] )
-\end{code} 
-$$ (P \cup X) \supseteq Y 
-   ~=~ 
-   P \supseteq (Y \setminus X)
-$$
-\begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSSup` y)  
-             =  (p `VSSup` (y `vsMinus` x), [])
-\end{code} 
-All other cases: no change 
-\begin{code}
-simplifyVSetPred vse = (vse,[]) 
-\end{code}  
-
 
 
 

@@ -47,7 +47,7 @@ We provide set-expressions and predicates tailored for writing  and analysing si
 
 
 \newpage
-\section{Variable-Set Syntax}
+\section{Variable-Set Term Syntax}
 
 We assume our basic building block to be enumerations of general variables:
 $$\setof{gv_1,\dots,gv_n}, \qquad n \geq 0 .$$
@@ -58,7 +58,7 @@ We then add set-theoretic relations
 ($=$,$\subseteq$,$\not\cap$) 
 over such expressions, to produce set predicates.
 
-
+\subsection{Variable-Set Datatypes}
 
 \begin{code}
 data VSetExpr 
@@ -66,13 +66,19 @@ data VSetExpr
   |  VSUnion VSetExpr VSetExpr  
   |  VSMinus VSetExpr VSetExpr 
   deriving (Eq,Ord,Show)
+
 data VSetPred
   =  VSTrueP
   |  VSDisj  VSetExpr VSetExpr  -- relation on sets
   |  VSSup   VSetExpr VSetExpr  -- relation on sets
   |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
   deriving (Eq,Ord,Show)
+\end{code}
 
+\subsection{Rendering Variable-Sets}
+
+Empty and singleton sets:
+\begin{code}
 trVSExpr = trvsexpr trId
 trVSExprU = trvsexpr trIdU
 trvsexpr trid (VSEnum vse) 
@@ -106,8 +112,7 @@ vspdbg = rdbg trVSPred
 vspsdbg = rdbg (seplist "_land" $ trVSPred)
 \end{code}
 
-\newpage
-\subsubsection{Smart Set-Expression Constructors}
+\section{Smart Variable-Set Constructors}
 
 Empty and singleton sets:
 \begin{code}

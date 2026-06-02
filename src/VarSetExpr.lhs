@@ -150,7 +150,9 @@ vsMinus vsplus vsminus
   | otherwise           =  VSMinus vsplus vsminus
 \end{code}
 
+\textbf{Smart VSetPred constructors?}
 
+\newpage
 \section{Simplifying Set-Predicates}
 
 \begin{eqnarray*}
@@ -163,20 +165,24 @@ vsMinus vsplus vsminus
 \\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
 \end{eqnarray*}
 
-Here we are interested in single relations ($\disj$,$\supseteq$)
+Here we are generally interested in single relations ($\disj$,$\supseteq$)
 with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
 We want to pull $P$ out to be the sole 1st argument of the relation.
 These should \emph{not} reduce the relations to \true\ or \false.
 In general we may need extra terms not involving $P$ in the output.
-We want to distinguish there so we keep them separate.
+We want to distinguish therse so we keep them separate.
 \begin{code}
 simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
 \end{code}  
+
+\subsection{Union and Diff vs. Disjoint and Superset}
+
 $$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
 \begin{code}
 simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
              =  (p `VSDisj` (y `vsMinus` x), [])
 \end{code} 
+
 $$ 
    (P \cup X) \disj Y 
    ~=~ 
@@ -186,6 +192,7 @@ $$
 simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
                = (p `VSDisj` y , [x `VSDisj` y ] )
 \end{code} 
+
 $$  
    (P \setminus X) \supseteq Y 
    ~=~ 
@@ -195,6 +202,7 @@ $$
 simplifyVSetPred ((p `VSMinus` x) `VSSup` y) 
   = ( p `VSSup` (y `vsMinus` x) , [x `VSDisj` y  ] )
 \end{code} 
+
 $$ (P \cup X) \supseteq Y 
    ~=~ 
    P \supseteq (Y \setminus X)
@@ -203,7 +211,50 @@ $$
 simplifyVSetPred ((p `VSUnion` x) `VSSup` y)  
              =  (p `VSSup` (y `vsMinus` x), [])
 \end{code} 
-All other cases: no change 
+
+
+\subsection{Union and Diff vs. Dynamic Superset}
+
+Dynamic superset ($\supseteq_d$) is defined as:
+$$
+  P \supseteq_d X \quad \defs \quad P|d \supseteq X|d
+$$
+where $S|d$ is $S$ restricted to the dynamic variables in $d$.
+The key question is: does this affect the laws?
+The answer is no, because being dynamic is a pointwise property
+and restriction w.r.t a set element (or sets of elements) is idempotent.
+\begin{eqnarray*}
+   \emptyset|d &\defs& \emptyset
+\\ \setof{x}|d &\defs& \setof{x} \cond{x \in d} \emptyset
+\\ (S\cup T)|d &\defs& S|d \cup T|d
+\\ (S\cap T)|d &\defs& S|d \cap T|d
+\\ (S\setminus T)|d &\defs& S|d \setminus T|d
+\end{eqnarray*}
+
+$$  
+   (P \setminus X) \supseteq_d Y 
+   ~=~ 
+   P \supseteq_d (Y \setminus X) \land (X \disj Y)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSMinus` x) `VSSupD` y) 
+  = ( p `VSSupD` (y `vsMinus` x) , [x `VSDisj` y  ] )
+\end{code} 
+
+$$ (P \cup X) \supseteq_d Y 
+   ~=~ 
+   P \supseteq_d (Y \setminus X)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSSupD` y)  
+             =  (p `VSSupD` (y `vsMinus` x), [])
+\end{code} 
+
+\subsection{All other cases: no change}
+
+For now we notice that that none of the laws above
+introduce intersections or disjunctions.
+We'll only add laws about those if they arise elsewhere.
 \begin{code}
 simplifyVSetPred vse = (vse,[]) 
 \end{code}  

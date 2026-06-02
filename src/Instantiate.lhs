@@ -933,17 +933,6 @@ instVSP _ _ vsp
   = fail ("instVSP: cannot instantiate "++trVSPred vsp)
 \end{code}
 
-Here we convert free-variables into set-expressions:
-\begin{code}
-fvs2vses :: FreeVars -> VSetExpr
-fvs2vses (fvs,diffs) 
-  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
-
-diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
-\end{code}
-
-
 \subsection{Required Simplifications}
 
 The variables used below fall into the following classes:

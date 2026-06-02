@@ -12,6 +12,7 @@ module VarSetExpr (
 , trVSPred
 , vsEmpty, vsSngl, vsUnion, vsMinus
 , simplifyVSetPred
+, fvs2vses, diff2vses
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)
@@ -135,19 +136,7 @@ vsMinus vsplus vsminus
 \end{code}
 
 
-
-Here we convert free-variables into set-expressions:
-\begin{code}
-fvs2vses :: FreeVars -> VSetExpr
-fvs2vses (fvs,diffs) 
-  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
-
-diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
-\end{code}
-
-\newpage
-\subsubsection{Simplifying Set-Predicates}
+\section{Simplifying Set-Predicates}
 
 \begin{eqnarray*}
    \setof{O,O'} \supseteq \setof{ls,ls',a} 
@@ -203,5 +192,17 @@ All other cases: no change
 \begin{code}
 simplifyVSetPred vse = (vse,[]) 
 \end{code}  
+
+\section{Converting Free-Variables to Variable-Sets}
+
+Here we convert free-variables into set-expressions:
+\begin{code}
+fvs2vses :: FreeVars -> VSetExpr
+fvs2vses (fvs,diffs) 
+  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
+
+diff2vses :: (GenVar,VarSet) -> VSetExpr
+diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
+\end{code}
 
 

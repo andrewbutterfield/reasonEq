@@ -41,6 +41,13 @@ Fixing bugs as we go.
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 
+   Plan:
+     `VSet(Expr|Pred)` has now got its own module, out of `Instantiate`.
+     We now replace `VarSideConds` in `SideCond` with sorted `[VSetPred]`, 
+     and follow the consequences through. 
+     Initially we modify `NewSideCond` so the prover stays "operational".
+
+    
    Diagnosis: 
      we get the following outcome from the instantiated law s.c.: `P ⋔ (x$\y$)`.
      This cannot be captured using the VSC datatype. In this particular case,

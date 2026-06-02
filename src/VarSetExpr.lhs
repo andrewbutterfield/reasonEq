@@ -51,20 +51,21 @@ We provide set-expressions and predicates tailored for writing  and analysing si
 
 We assume our basic building block to be enumerations of general variables:
 $$\setof{gv_1,\dots,gv_n}, \qquad n \geq 0 .$$
-These can the be combined with set-theoretic operators 
+These can then be combined with set-theoretic operators 
 ($\cup$,$\cap$,$\setminus$) 
 to produce set expressions.
 We then add set-theoretic relations 
-($=$,$\subseteq$,$\not\cap$) 
+($=$,$\supseteq$,$\disj$) 
 over such expressions, to produce set predicates.
 
 \subsection{Variable-Set Datatypes}
 
 \begin{code}
 data VSetExpr 
-  =  VSEnum  VarSet             
-  |  VSUnion VSetExpr VSetExpr  
-  |  VSMinus VSetExpr VSetExpr 
+  =  VSEnum   VarSet             
+  |  VSUnion  VSetExpr VSetExpr  
+  |  VSIntsct VSetExpr VSetExpr
+  |  VSMinus  VSetExpr VSetExpr 
   deriving (Eq,Ord,Show)
 
 data VSetPred
@@ -88,6 +89,8 @@ trvsexpr trid (VSEnum vse)
   where sz = S.size vse
 trvsexpr trid (VSUnion vse1 vse2) 
   = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
+trvsexpr trid (VSIntsct vse1 vse2) 
+  = "("++trvsexpr trid vse1++_intsct++trvsexpr trid vse2++")"
 trvsexpr trid (VSMinus vse1 vse2) 
   = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
 
@@ -130,13 +133,14 @@ vsUnion (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.union` vs2)
 vsUnion vse1 vse2
   | vse1 == vsEmpty  =  vse2
   | vse2 == vsEmpty  =  vse1
-  | otherwise = VSUnion vse1 vse2
+  | otherwise        =  VSUnion vse1 vse2
 
-vsIntsct (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.intersect` vs2)
+vsIntsct :: VSetExpr -> VSetExpr -> VSetExpr
+vsIntsct (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.intersection` vs2)
 vsIntsct vse1 vse2
   | vse1 == vsEmpty  =  vsEmpty
   | vse2 == vsEmpty  =  vsEmpty
-  | otherwise = VSIntsct vse1 vse2
+  | otherwise        =  VSIntsct vse1 vse2
 
 vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
 vsMinus vsplus vsminus

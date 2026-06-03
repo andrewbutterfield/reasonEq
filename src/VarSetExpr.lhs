@@ -69,8 +69,8 @@ data VSetExpr
 data VSetPred
   =  VSTrueP
   |  VSDisj  VSetExpr VSetExpr  -- relation on sets
-  |  VSSup   VSetExpr VSetExpr  -- relation on sets
-  |  VSSupD   VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
+  |  VSSub   VSetExpr VSetExpr  -- relation on sets
+  |  VSSubD  VSetExpr VSetExpr  -- relation on sets limited to dynamic vars
   deriving (Eq,Ord,Show)
 \end{code}
 
@@ -115,6 +115,12 @@ vsMinus vsplus vsminus
 \newpage
 \section{Simplifying Set-Predicates}
 
+\textbf{Changed from using superset to using subset}
+\emph{
+  What we see eveywhere are $s,s'\supseteq_a P$,
+   and it is easier to have $P \subseteq s,s'$.
+}
+
 \begin{eqnarray*}
    \setof{O,O'} \supseteq \setof{ls,ls',a} 
    \land \setof{O,O'} \supseteq \setof{a}
@@ -154,22 +160,22 @@ simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)
 \end{code} 
 
 $$  
-   (P \setminus X) \supseteq Y 
+   P \subseteq (X \setminus Y) 
    ~=~ 
-   P \supseteq (Y \setminus X) \land (X \disj Y)
+   ?
 $$
 \begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSSup` y) 
-  = ( p `VSSup` (y `vsMinus` x) , [x `VSDisj` y  ] )
+simplifyVSetPred (y `VSSub` (p `VSMinus` x)) 
+  = ( p `VSSub` (y `vsMinus` x) , [x `VSDisj` y  ] )
 \end{code} 
 
-$$ (P \cup X) \supseteq Y 
+$$ P \subseteq (X \cup Y)
    ~=~ 
-   P \supseteq (Y \setminus X)
+   ?
 $$
 \begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSSup` y)  
-             =  (p `VSSup` (y `vsMinus` x), [])
+simplifyVSetPred ((p `VSUnion` x) `VSSub` y)  
+             =  (p `VSSub` (y `vsMinus` x), [])
 \end{code} 
 
 
@@ -197,8 +203,8 @@ $$
    P \supseteq_d (Y \setminus X) \land (X \disj Y)
 $$
 \begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSSupD` y) 
-  = ( p `VSSupD` (y `vsMinus` x) , [x `VSDisj` y  ] )
+simplifyVSetPred ((p `VSMinus` x) `VSSubD` y) 
+  = ( p `VSSubD` (y `vsMinus` x) , [x `VSDisj` y  ] )
 \end{code} 
 
 $$ (P \cup X) \supseteq_d Y 
@@ -206,8 +212,8 @@ $$ (P \cup X) \supseteq_d Y
    P \supseteq_d (Y \setminus X)
 $$
 \begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSSupD` y)  
-             =  (p `VSSupD` (y `vsMinus` x), [])
+simplifyVSetPred ((p `VSUnion` x) `VSSubD` y)  
+             =  (p `VSSubD` (y `vsMinus` x), [])
 \end{code} 
 
 \subsection{All other cases: no change}

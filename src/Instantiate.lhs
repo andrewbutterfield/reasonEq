@@ -849,7 +849,7 @@ This list is interpreted as a logical conjunction of its elements
 \begin{code}
 vsc2vsp :: VarSideConds -> [VSetPred]
 vsc2vsp (VSC gv nvsD nvsC nvsCd)
-  = mkVSP VSDisj gv nvsD ++ mkVSP VSSup gv nvsC ++ mkVSP VSSupD gv nvsCd
+  = mkVSP VSDisj gv nvsD ++ mkVSP VSSub gv nvsC ++ mkVSP VSSubD gv nvsCd
 
 mkVSP :: (VSetExpr -> VSetExpr -> VSetPred) -> GenVar -> NVarSet 
       -> [VSetPred]
@@ -873,10 +873,10 @@ vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
   | S.null vs  =  return []
   | otherwise  =  sequence $ map (mkDisjVSC vs) (S.toList gvs)
 
-vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
+vsp2vsc (VSSub  (VSEnum gvs) (VSEnum vs))
   = sequence $ map (mkCovVSC vs) (S.toList gvs)
 
-vsp2vsc (VSSupD  (VSEnum gvs) (VSEnum vs))
+vsp2vsc (VSSubD  (VSEnum gvs) (VSEnum vs))
   = sequence $ map (mkCovDVSC vs) (S.toList gvs)
 
 -- how do we handle this ?
@@ -916,19 +916,19 @@ Here we assume that the VSE have been produced by \h{vsc2vsp} above.
 \begin{code}
 instVSP :: MonadFail mf
         => InsContext -> Binding -> VSetPred -> mf VSetPred
--- instVSP ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
+-- instVSP ictx bind (VSSub (VSEnum sgv) (VSEnum vs))
 instVSP ictx bind (VSDisj (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
   return $ VSDisj (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSP ictx bind (VSSup (VSEnum gvs) (VSEnum vs)) = do
+instVSP ictx bind (VSSub (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
-  return $ VSSup (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSP ictx bind (VSSupD (VSEnum gvs) (VSEnum vs)) = do
+  return $ VSSub (fvs2vses sgvfvs) (fvs2vses vsfvs)
+instVSP ictx bind (VSSubD (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
-  return $ VSSupD (fvs2vses sgvfvs) (fvs2vses vsfvs)
+  return $ VSSubD (fvs2vses sgvfvs) (fvs2vses vsfvs)
 instVSP _ _ vsp
   = fail ("instVSP: cannot instantiate "++trVSPred vsp)
 \end{code}

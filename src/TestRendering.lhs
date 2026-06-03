@@ -609,10 +609,10 @@ trVSPredU = trvspred trIdU
 trvspred trid VSTrueP = "true"
 trvspred trid (VSDisj vse1 vse2) 
   = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
-trvspred trid (VSSup vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
-trvspred trid (VSSupD vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
+trvspred trid (VSSub vse1 vse2) 
+  = "("++trvsexpr trid vse1++_subseteq++trvsexpr trid vse2++")"
+trvspred trid (VSSubD vse1 vse2) 
+  = "("++trvsexpr trid vse1++_subseteq++_subStr "a"++trvsexpr trid vse2++")"
 
 trvspreds trid = seplist "," $ trvspred trid
 

@@ -7,15 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module NewSideCond (
---  VSetExpr 
---, nmbr
-  VSetPred
-, mkVSC
-, vscTrue, disjNA, covByNA
-, disjfrom, coveredby, dyncovered
+  disjfrom, coveredby, dyncovered
 , SideCond, scTrue
 , isTrivialSC , onlyFreshSC -- both only in TestRendering !!!!
-, scVarSet
 , mrgVarConds, mergeVarConds
 , mrgSideCond
 , mkSideCond
@@ -202,49 +196,6 @@ and instead will use $\lst O \supseteq T$.
 
 First we need to be able to say when a specific side-condition is inapplicable:
 
-% \begin{code}
-% type VSetExpr = NA VarSet
-
-% isThere :: VSetExpr -> Bool
-% isThere (The _)  =  True
-% isThere _        =  False
-
-% nsngl :: GenVar -> VSetExpr
-% nsngl x = The $ S.singleton x
-
-
-% -- WE WILL NEED TO REVISIT THESE
-% -- USE CASE 1  - both sets have same status 
-% -- USE CASE 2  - set 1 is the relevant one, unchanged if set 2 is NA
-% nmbr :: GenVar -> VSetExpr -> Bool
-% nmbr _ NA       =  False
-% nmbr x (The s)  =  x `S.member` s
-
-% ndiff :: VSetExpr -> VSetExpr -> VSetExpr
-% ndiff _        NA   =  The S.empty
-% ndiff NA  _         =  NA -- approximation
-% ndiff (The s) (The t)  =  The (s `S.difference` t)
-
-% nunion :: VSetExpr -> VSetExpr -> VSetExpr
-% nunion _        NA   =  NA
-% nunion NA  _         =  NA
-% nunion (The s) (The t)  =  The (s `S.union` t)
-
-% nintsct :: VSetExpr -> VSetExpr -> VSetExpr
-% nintsct uset1    NA   =  uset1
-% nintsct NA  uset2     =  uset2
-% nintsct (The s) (The t)  =  The (s `S.intersection` t)
-
-% nsubset :: VSetExpr -> VSetExpr -> Bool
-% nsubset _        NA   =  False
-% nsubset NA  _         =  False
-% nsubset (The s) (The t)  =  s `S.isSubsetOf` t
-
-% ndisj :: VSetExpr -> VSetExpr -> Bool
-% NA `ndisj` _  =  False
-% _ `ndisj` NA  =  False
-% (The s) `ndisj` (The t)  =  s `S.disjoint` t
-% \end{code}
 
 
 Now we define side-conditions for a given general variable:
@@ -261,47 +212,21 @@ coveredDynamic     :: VSetPred -> VSetExpr
 coveredDynamic vsp = error ("NYI: coveredDynamic "++show vsp)
 \end{code}
 
-We need a smart builder here:
-we first compare \h{gv} with the three sets to see
-if we can deduce truth/falsity here and now;
-then we check to see if everything has reduced to true.
-In general we can only draw hard conclusions here if \h{gv}
-occurs in any such set, 
-or \h{gv} is a standard observation variable,
-as are all the variables mentioned in the corresponding set.
-\begin{code}
-mkVSC :: MonadFail m
-      => GenVar -> VSetExpr -> VSetExpr -> VSetExpr 
-      -> m (Maybe VSetPred)
-mkVSC gv vsD vsC vsCd  
-  = return $ Just  [ VSC $ VSDisj gvs vsD
-                   , VSC $ VSSup  gvs vsC
-                   , VSC $ VSSupD gvs vsCd ]
-  where
-    gvs = VSEnum $ singleton gv
-\end{code}
-
-
-Collecting all sets explicitly mentioned:
-\begin{code}
-vscVSet :: VSetPred -> VarSet
-vscVSet vsc  
-  =  (asSet $ disjointFrom vsc)
-     `S.union` 
-     (asSet $ coveredBy vsc) 
-     `S.union` 
-     (asSet $ coveredDynamic vsc)
-  where 
-   asSet NA    =  S.empty
-   asSet (The vs)  =  vs
-\end{code}
+Our variable side-conditions are built up from three basic forms,
+each of which relates a global variable to a variable set:
+$$
+   v_G \disj S \qquad  v_G 
+$$
 
 We provide some builders when only one of the three conditions is involved:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
-gv `disjfrom`   vsD   =  VSDisj gvs vsD
-gv `coveredby`  vsC   =  VSSup  gvs vsC
-gv `dyncovered` vsCd  =  VSSupD gvs vsC
+gv `disjfrom`   vsD   =  VSDisj (onegv gv) vsD
+gv `coveredby`  vsC   =  VSSub  (onegv gv) vsC
+gv `dyncovered` vsCd  =  VSSubD (onegv gv) vsCd
+
+onegv :: GenVar -> VSetExpr
+onegv gv = VSEnum $ singleton gv
 \end{code}
 
 
@@ -498,13 +423,6 @@ have are to do with freshness:
 onlyFreshSC :: SideCond -> Bool
 onlyFreshSC (vscs,_) = null vscs
 \end{code}
-Finally,
-sometimes we want all the variable-sets
-from a side-condition:
-\begin{code}
-scVarSet :: SideCond -> VarSet
-scVarSet (vscs,fvs) = (S.unions $ map vscVSet vscs) `S.union` fvs
-\end{code}
 
 
 \newpage
@@ -540,8 +458,7 @@ We start by checking the new VCS:
 Now we search to see if there is a VSCs with the
 same general-variable, respecting the ordering:
 \begin{code}
-mrgVSC :: MonadFail m 
-       => VSetPred -> [VSetPred] -> m [VSetPred]
+mrgVSC :: MonadFail m => [VSetPred] -> m [VSetPred]
 
 mrgVSC vsc' []  = return [vsc']
 

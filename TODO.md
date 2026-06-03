@@ -46,6 +46,8 @@ Fixing bugs as we go.
      We now replace `VarSideConds` in `SideCond` with sorted `[VSetPred]`, 
      and follow the consequences through. 
      Initially we modify `NewSideCond` so the prover stays "operational".
+     *Changed from superset to subset*
+     **Need to check `simplifyVSetPred` simplifications**
 
     
    Diagnosis: 

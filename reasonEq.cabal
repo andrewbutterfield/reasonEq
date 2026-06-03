@@ -33,7 +33,7 @@ library
       LiveProofs
       MatchContext
       Matching
-      NewSideCond
+      -- NewSideCond
       NotApplicable
       Persistence
       PrettyTerms

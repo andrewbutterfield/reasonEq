@@ -1534,41 +1534,6 @@ packUG (gss) = packVarSet gss
 \end{code}
 
 \newpage
-\subsection{Dealing with Dynamics}
-
-\textbf{NOT USED ANYWHERE!}
-A check that a non-uniform \texttt{GenVar} list
-mentions before-, after- and all subscripts in scope.
-\begin{code}
-hasAllDynamics :: [Subscript] -> [GenVar] -> Bool
--- [GenVar] is ordered  Before,During 1,..,During n,After
-hasAllDynamics ss gvs  =  map gvarWhen gvs == genTheDynamics ss
-
-genTheDynamics :: [Subscript] -> [VarWhen]
-genTheDynamics ss = Before : map During ss ++ [After]
-
-genTheGenVars :: GenVar -> [Subscript] -> [GenVar]
-genTheGenVars (StdVar (Vbl i vc _)) ss
-  = map (StdVar . Vbl i vc) (Before : map During ss ++ [After])
-genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
-  = map (LstVar . mklv i vc is js) (Before : map During ss ++ [After])
-  where
-    mklv i vc is js vw = LVbl (Vbl i vc vw) is js
-\end{code}
-
-
-% First, given a variable-set,
-% return all VSCs that mention any variable in that set:
-% \begin{code}
-% -- NOT USED ANYWHERE!
-% citingASCs :: VarSet -> SideCond -> [VarSideConds]
-% citingASCs vs (sc,_) = filter (cited vs) sc
-%
-% cited :: VarSet -> VarSideConds -> Bool
-% vs `cited` vsc  =  vs == vscVSet vsc
-% \end{code}
-
-\newpage
 
 \section{SideCond Tests}
 

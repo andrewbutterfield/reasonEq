@@ -1,34 +1,31 @@
 \chapter{Side Conditions}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2017-2024
+Copyright  Andrew Butterfield (c) 2026
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  NVarSet, nset
-, isThere, nsngl, nmbr, ndiff, nunion, nintsct, nsubset, ndisj
+  NVarSet 
+, nmbr
 , VarSideConds(..)
-, termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
-, vscTrue, disjNA, covByNA, isTrueVSC
-, vscVSet
-, disjfrom, coveredby, dyncovered, udisjfrom, ucoveredby, udyncovered
-, SideCond, scTrue, isTrivialSC
-, onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
--- , scGVars
+, vscTrue, disjNA, covByNA
+, disjfrom, coveredby, dyncovered
+, SideCond, scTrue
+, isTrivialSC , onlyFreshSC -- both only in TestRendering !!!!
 , scVarSet
-, mrgVarConds, mergeVarConds, joinVarConds, concatVarConds
-, mrgSideCond, mrgSideConds, mkSideCond
+, mrgVarConds, mergeVarConds
+, mrgSideCond
+, mkSideCond
 , scDischarge
 , isFloatingVSC
 , addFreshVars
 , notin, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar
-, findDisjointGenVar, findCoveredGenVar, findDynCvrdGenVar
+, findCoveredGenVar
 , mentionedBy
--- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
 ) where
@@ -47,6 +44,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetExpr
 
 
 import Test.HUnit hiding (Assertion)

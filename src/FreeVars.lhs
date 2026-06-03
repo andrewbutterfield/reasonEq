@@ -16,6 +16,7 @@ module FreeVars
 , zeroTermIdNumbers
 , setVarIdNumber
 , nestSimplify
+, fvs2vses, diff2vses
 -- exports for test only
 , int_tst_FreeVar
 ) where
@@ -32,6 +33,7 @@ import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
 import AST
+import VarSetExpr
 import SideCond
 
 
@@ -642,6 +644,19 @@ setVarIdNumber u (Vbl (Identifier nm _) cls whn)
 \end{code}
 
 \newpage
+
+\section{Converting Free-Variables to Variable-Sets}
+
+Here we convert free-variables into set-expressions:
+\begin{code}
+fvs2vses :: FreeVars -> VSetExpr
+fvs2vses (fvs,diffs) 
+  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
+
+diff2vses :: (GenVar,VarSet) -> VSetExpr
+diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
+\end{code}
+
 
 
 \newpage

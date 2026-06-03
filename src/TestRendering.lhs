@@ -22,6 +22,7 @@ module TestRendering (
  , trTermZip, trTermZipU, trtz
  , Fixity(..), OpKind, opkind
  , markfocus, focusMark
+ , trVSExpr, trVSPred
  , trSideCond, trSideCondU, scdbg, vscdbg
  , trDiffs, trDiffsU, fdifdbg
  , trFreeVars, trFreeVarsU, fvsdbg
@@ -54,6 +55,7 @@ import Variables
 import Types
 import Typing
 import AST
+import VarSetExpr
 import SideCond
 import FreeVars 
 import Assertions
@@ -578,6 +580,46 @@ trTermZipU = trtz trIdU
 trtz :: (Identifier -> String) -> TermZip -> String
 trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
+
+\section{Variable-Sets}
+
+Empty and singleton sets:
+\begin{code}
+trVSExpr = trvsexpr trId
+trVSExprU = trvsexpr trIdU
+trvsexpr trid (VSEnum vse) 
+  | sz == 0    =  _emptyset
+  | sz == 1    =  trgvar trid $ head $ S.toList vse
+  | otherwise  =  trvset trid vse 
+  where sz = S.size vse
+trvsexpr trid (VSUnion vse1 vse2) 
+  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
+trvsexpr trid (VSIntsct vse1 vse2) 
+  = "("++trvsexpr trid vse1++_intsct++trvsexpr trid vse2++")"
+trvsexpr trid (VSMinus vse1 vse2) 
+  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
+
+trvsets trid = seplist "," $ trvset trid
+
+vsedbg = rdbg trVSExpr
+vsesdbg = rdbg (seplist ";" $ trVSExpr)
+
+trVSPred = trvspred trId
+trVSPredU = trvspred trIdU
+trvspred trid VSTrueP = "true"
+trvspred trid (VSDisj vse1 vse2) 
+  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
+trvspred trid (VSSup vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
+trvspred trid (VSSupD vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
+
+trvspreds trid = seplist "," $ trvspred trid
+
+vspdbg = rdbg trVSPred
+vspsdbg = rdbg (seplist "_land" $ trVSPred)
+\end{code}
+
 
 \section{Side Conditions}
 

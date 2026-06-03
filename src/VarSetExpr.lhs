@@ -9,10 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarSetExpr (
   VSetExpr(..)
 , VSetPred(..)
-, trVSPred
 , vsEmpty, vsSngl, vsUnion, vsMinus
 , simplifyVSetPred
-, fvs2vses, diff2vses
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)
@@ -31,12 +29,12 @@ import LexBase
 import Variables
 import Types
 import AST
-import SideCond
-import Binding
-import Matching
-import FreeVars
-import VarData
-import TestRendering
+--import SideCond
+--import Binding
+--import Matching
+--import FreeVars
+--import VarData
+--import TestRendering
 
 import Debugger
 \end{code}
@@ -76,44 +74,6 @@ data VSetPred
   deriving (Eq,Ord,Show)
 \end{code}
 
-\subsection{Rendering Variable-Sets}
-
-Empty and singleton sets:
-\begin{code}
-trVSExpr = trvsexpr trId
-trVSExprU = trvsexpr trIdU
-trvsexpr trid (VSEnum vse) 
-  | sz == 0    =  _emptyset
-  | sz == 1    =  trgvar trid $ head $ S.toList vse
-  | otherwise  =  trvset trid vse 
-  where sz = S.size vse
-trvsexpr trid (VSUnion vse1 vse2) 
-  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
-trvsexpr trid (VSIntsct vse1 vse2) 
-  = "("++trvsexpr trid vse1++_intsct++trvsexpr trid vse2++")"
-trvsexpr trid (VSMinus vse1 vse2) 
-  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
-
-trvsets trid = seplist "," $ trvset trid
-
-vsedbg = rdbg trVSExpr
-vsesdbg = rdbg (seplist ";" $ trVSExpr)
-
-trVSPred = trvspred trId
-trVSPredU = trvspred trIdU
-trvspred trid VSTrueP = "true"
-trvspred trid (VSDisj vse1 vse2) 
-  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
-trvspred trid (VSSup vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
-trvspred trid (VSSupD vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++_subStr "a"++trvsexpr trid vse2++")"
-
-trvspreds trid = seplist "," $ trvspred trid
-
-vspdbg = rdbg trVSPred
-vspsdbg = rdbg (seplist "_land" $ trVSPred)
-\end{code}
 
 \section{Smart Variable-Set Constructors}
 
@@ -258,17 +218,4 @@ We'll only add laws about those if they arise elsewhere.
 \begin{code}
 simplifyVSetPred vse = (vse,[]) 
 \end{code}  
-
-\section{Converting Free-Variables to Variable-Sets}
-
-Here we convert free-variables into set-expressions:
-\begin{code}
-fvs2vses :: FreeVars -> VSetExpr
-fvs2vses (fvs,diffs) 
-  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
-
-diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
-\end{code}
-
 

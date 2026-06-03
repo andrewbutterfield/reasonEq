@@ -7,9 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module NewSideCond (
-  NVarSet 
-, nmbr
-, VarSideConds(..)
+--  NVarSet 
+--, nmbr
+  VarSideConds
 , mkVSC
 , vscTrue, disjNA, covByNA
 , disjfrom, coveredby, dyncovered
@@ -202,68 +202,69 @@ and instead will use $\lst O \supseteq T$.
 
 First we need to be able to say when a specific side-condition is inapplicable:
 
-\begin{code}
-type NVarSet = NA VarSet
+% \begin{code}
+% type NVarSet = NA VarSet
 
-isThere :: NVarSet -> Bool
-isThere (The _)  =  True
-isThere _        =  False
+% isThere :: NVarSet -> Bool
+% isThere (The _)  =  True
+% isThere _        =  False
 
-nsngl :: GenVar -> NVarSet
-nsngl x = The $ S.singleton x
+% nsngl :: GenVar -> NVarSet
+% nsngl x = The $ S.singleton x
 
 
--- WE WILL NEED TO REVISIT THESE
--- USE CASE 1  - both sets have same status 
--- USE CASE 2  - set 1 is the relevant one, unchanged if set 2 is NA
-nmbr :: GenVar -> NVarSet -> Bool
-nmbr _ NA       =  False
-nmbr x (The s)  =  x `S.member` s
+% -- WE WILL NEED TO REVISIT THESE
+% -- USE CASE 1  - both sets have same status 
+% -- USE CASE 2  - set 1 is the relevant one, unchanged if set 2 is NA
+% nmbr :: GenVar -> NVarSet -> Bool
+% nmbr _ NA       =  False
+% nmbr x (The s)  =  x `S.member` s
 
-ndiff :: NVarSet -> NVarSet -> NVarSet
-ndiff _        NA   =  The S.empty
-ndiff NA  _         =  NA -- approximation
-ndiff (The s) (The t)  =  The (s `S.difference` t)
+% ndiff :: NVarSet -> NVarSet -> NVarSet
+% ndiff _        NA   =  The S.empty
+% ndiff NA  _         =  NA -- approximation
+% ndiff (The s) (The t)  =  The (s `S.difference` t)
 
-nunion :: NVarSet -> NVarSet -> NVarSet
-nunion _        NA   =  NA
-nunion NA  _         =  NA
-nunion (The s) (The t)  =  The (s `S.union` t)
+% nunion :: NVarSet -> NVarSet -> NVarSet
+% nunion _        NA   =  NA
+% nunion NA  _         =  NA
+% nunion (The s) (The t)  =  The (s `S.union` t)
 
-nintsct :: NVarSet -> NVarSet -> NVarSet
-nintsct uset1    NA   =  uset1
-nintsct NA  uset2     =  uset2
-nintsct (The s) (The t)  =  The (s `S.intersection` t)
+% nintsct :: NVarSet -> NVarSet -> NVarSet
+% nintsct uset1    NA   =  uset1
+% nintsct NA  uset2     =  uset2
+% nintsct (The s) (The t)  =  The (s `S.intersection` t)
 
-nsubset :: NVarSet -> NVarSet -> Bool
-nsubset _        NA   =  False
-nsubset NA  _         =  False
-nsubset (The s) (The t)  =  s `S.isSubsetOf` t
+% nsubset :: NVarSet -> NVarSet -> Bool
+% nsubset _        NA   =  False
+% nsubset NA  _         =  False
+% nsubset (The s) (The t)  =  s `S.isSubsetOf` t
 
-ndisj :: NVarSet -> NVarSet -> Bool
-NA `ndisj` _  =  False
-_ `ndisj` NA  =  False
-(The s) `ndisj` (The t)  =  s `S.disjoint` t
-\end{code}
+% ndisj :: NVarSet -> NVarSet -> Bool
+% NA `ndisj` _  =  False
+% _ `ndisj` NA  =  False
+% (The s) `ndisj` (The t)  =  s `S.disjoint` t
+% \end{code}
 
 
 Now we define side-conditions for a given general variable:
 \begin{code}
-data  VarSideConds -- (V,D,C,Cd)
-  = VSC  GenVar       --  v,T,l$
-         (NA VarSet)  --  D, if applicable
-         (NA VarSet)  --  C, if applicable
-         (NA VarSet)  --  Cd, if applicable
-  deriving (Eq, Ord, Show, Read)
+type  VarSideConds = VSetPred
+--data  VarSideConds -- (V,D,C,Cd)
+--  = VSC  GenVar       --  v,T,l$
+--         (NA VarSet)  --  D, if applicable
+--         (NA VarSet)  --  C, if applicable
+--         (NA VarSet)  --  Cd, if applicable
+--  deriving (Eq, Ord, Show, Read)
 
-termVar        :: VarSideConds -> GenVar
-termVar (VSC gv nvsD nvsC nvsCd)         =  gv
-disjointFrom   :: VarSideConds -> NVarSet
-disjointFrom (VSC gv nvsD nvsC nvsCd)    =  nvsD
-coveredBy      :: VarSideConds -> NVarSet
-coveredBy (VSC gv nvsD nvsC nvsCd)       =  nvsC
-coveredDynamic :: VarSideConds -> NVarSet
-coveredDynamic (VSC gv nvsD nvsC nvsCd)  =  nvsCd
+--termVar        :: VarSideConds -> GenVar
+--termVar (VSC gv nvsD nvsC nvsCd)         =  gv
+--disjointFrom   :: VarSideConds -> NVarSet
+--disjointFrom (VSC gv nvsD nvsC nvsCd)    =  nvsD
+--coveredBy      :: VarSideConds -> NVarSet
+--coveredBy (VSC gv nvsD nvsC nvsCd)       =  nvsC
+--coveredDynamic :: VarSideConds -> NVarSet
+--coveredDynamic (VSC gv nvsD nvsC nvsCd)  =  nvsCd
 
 nset :: NVarSet -> VarSet -- partial
 nset (The vs)  =  vs

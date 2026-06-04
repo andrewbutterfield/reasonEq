@@ -10,7 +10,7 @@ module Instantiate
 ( InsContext(..), mkInsCtxt
 , instTerm
 , instVarSet
-, instVSC
+, instVSP
 , instantiateSC
 ) where
 import Data.Maybe
@@ -480,18 +480,7 @@ instVarSet :: MonadFail m
 instVarSet ictx binding vs
   = do fvss <- sequence $ map (instGVar ictx binding) $ S.toList vs
        return $ mrgFreeVarList fvss
-
-type NFreeVars = (NVarSet,[(GenVar,VarSet)])
-instNVarSet :: MonadFail m 
-            => InsContext -> Binding -> NVarSet 
-            -> m NFreeVars
-instNVarSet _       _        NA   =  return (NA,[]) 
-instNVarSet ictx binding (The vs)  
-  =  do (f,less) <- instVarSet ictx binding vs 
-        return (The f,less)
 \end{code}
-
-
 
 For a general variable:
 \begin{eqnarray*}
@@ -841,78 +830,9 @@ This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
 \newpage
 \subsection{The Calculus}
 
-\subsubsection{From Side Condition to Set-Predicates}
 
-We map a variable side-condition to a list of set-expressions,
-one for each non-trivial side-condition.
-This list is interpreted as a logical conjunction of its elements
-\begin{code}
-vsc2vsp :: VarSideConds -> [VSetPred]
-vsc2vsp (VSC gv nvsD nvsC nvsCd)
-  = mkVSP VSDisj gv nvsD ++ mkVSP VSSub gv nvsC ++ mkVSP VSSubD gv nvsCd
+\subsection{Instantiating Set-Predicates}
 
-mkVSP :: (VSetExpr -> VSetExpr -> VSetPred) -> GenVar -> NVarSet 
-      -> [VSetPred]
-mkVSP _ _ NA           =  []
-mkVSP rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
-\end{code}
-
-\newpage
-\subsubsection{From Set-Predicate to Side-Condition}
-
-Here we expect set-predicates each of the form 
-\m{gvs \mathrel{rel} enum}.
-First, converting such into a list of variable side-conditions.
-\begin{code}
-vsp2vsc :: MonadFail mf => VSetPred -> mf [Maybe VarSideConds]
-
-vsp2vsc VSTrueP  =  return []
-
-
-vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
-  | S.null vs  =  return []
-  | otherwise  =  sequence $ map (mkDisjVSC vs) (S.toList gvs)
-
-vsp2vsc (VSSub  (VSEnum gvs) (VSEnum vs))
-  = sequence $ map (mkCovVSC vs) (S.toList gvs)
-
-vsp2vsc (VSSubD  (VSEnum gvs) (VSEnum vs))
-  = sequence $ map (mkCovDVSC vs) (S.toList gvs)
-
--- how do we handle this ?
---      VSDisj (VSEnum P) ( VSMinus (VSEnum x$) (VSEnum y$) ) )
-vsp2vsc vsp 
-  = fail $ unlines'
-      [ "vsp2vsc: " ++ trVSPred vsp
-      , "X-vsp2vsc: " ++ show vsp
-      , "not disjoint or superset with enumerations"
-      ]
-
-mkDisjVSC :: MonadFail mf 
-          => VarSet -> GenVar -> mf (Maybe VarSideConds)
-mkDisjVSC vs gv = mkVSC gv (The vs) NA NA
-
-mkCovVSC :: MonadFail mf 
-         => Set GenVar -> GenVar -> mf (Maybe VarSideConds)
-mkCovVSC vs gv =  mkVSC gv NA (The vs) NA
-
-mkCovDVSC :: MonadFail mf 
-         => Set GenVar -> GenVar -> mf (Maybe VarSideConds)
-mkCovDVSC vs gv = mkVSC gv NA NA (The vs)
-\end{code}
-
-Then walk \h{vsp2vsc} over a list to convert:
-\begin{code}
-vsps2vscs :: MonadFail mf => [VSetPred] -> mf [VarSideConds]
-vsps2vscs vsps = do
-  mvscss <- sequence (map vsp2vsc vsps)
-  let vscs = catMaybes $ concat mvscss
-  mergeVarConds vscs
-\end{code}
-
-\subsubsection{Instantiating Set-Predicates}
-
-Here we assume that the VSE have been produced by \h{vsc2vsp} above.
 \begin{code}
 instVSP :: MonadFail mf
         => InsContext -> Binding -> VSetPred -> mf VSetPred
@@ -1002,13 +922,11 @@ $$
 $$
 Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
-instantiateSC ictx bind (vscs,freshvs)
-  = do let vsps = concat $ map vsc2vsp vscs
-       vsps' <- fmap nub $ sequence $ map (instVSP ictx bind) vsps
+instantiateSC ictx bind (vsps,freshvs)
+  = do vsps' <- fmap nub $ sequence $ map (instVSP ictx bind) vsps
        let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
-       vscs2 <- vsps2vscs vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond vscs2 $ theFreeVars freshvs'
+       mkSideCond vsps2 $ theFreeVars freshvs'
 \end{code}
 
 This transforms 
@@ -1037,7 +955,7 @@ mergeSimplifiedVSetPreds simplified
     in tvarPreds ++ concat adjunctPredss
 -- we should really analyse the adjunctPredss to shrink them
 -- the shrink could expose contradictions
--- but those should get smoked out when we convert back to VSCs.
+-- but those should get smoked out somehow.
 \end{code}
 
 
@@ -1066,19 +984,20 @@ $(F \cup \bigcup_i\setof{\dots,(e_i \setminus B_i),\dots})$
 where $e_i$ are expression or predicate variables, 
 and $F$ is disjoint from any $e_i,B_i$.
 \begin{code}
-instantiateVSC :: MonadFail m 
-                => InsContext -> Binding -> VarSideConds 
-                -> m [VarSideConds]
-instantiateVSC ictx bind vsc@(VSC gV mvsD mvsC mvsCd)
-  = do let (fvsT,diffsT) = instantiateSCGVar ictx bind gV
-       fmvsD   <-  instNVarSet ictx bind mvsD
-       fmvsC   <-  instNVarSet ictx bind mvsC
-       fmvsCd  <-  instNVarSet ictx bind mvsCd
-       if null diffsT
-         then do vscss <- mapM (instVSC ictx fmvsD fmvsC fmvsCd)
-                               (S.toList fvsT)
-                 return $ concat $ vscss
-         else fail "instantiateVSC: explicit diffs in var-set not handled."
+instantiateVSP :: MonadFail m 
+                => InsContext -> Binding -> VSetPred 
+                -> m [VSetPred]
+instantiateVSP ictx bind vsp = fail "instantiateVSP NYI"
+--instantiateVSC ictx bind vsc@(XXX gV mvsD mvsC mvsCd)
+--  = do let (fvsT,diffsT) = instantiateSCGVar ictx bind gV
+--       fmvsD   <-  instNVarSet ictx bind mvsD
+--       fmvsC   <-  instNVarSet ictx bind mvsC
+--       fmvsCd  <-  instNVarSet ictx bind mvsCd
+--       if null diffsT
+--         then do vscss <- mapM (instVSC ictx fmvsD fmvsC fmvsCd)
+--                               (S.toList fvsT)
+--                return $ concat $ vscss
+--         else fail "instantiateVSC: explicit diffs in var-set not handled."
 \end{code}
 
 \begin{eqnarray*}
@@ -1091,15 +1010,16 @@ instantiateVSC ictx bind vsc@(VSC gV mvsD mvsC mvsCd)
              v \in \bigcup(\power(beta)Cd) )
 \end{eqnarray*}
 \begin{code}
-instVSC :: MonadFail m 
-         => InsContext -> NFreeVars -> NFreeVars -> NFreeVars -> GenVar
-         -> m [VarSideConds]
+instXXX :: MonadFail m 
+         => InsContext -> FreeVars -> FreeVars -> FreeVars -> GenVar
+         -> m [VSetPred]
 -- we ignore the vBless components for now
-instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
-  = do mvscsD <- mkVSC gV mvsD   covByNA covByNA
-       mvscsC <- mkVSC gV disjNA mvsC    covByNA
-       mvscCd <- mkVSC gV disjNA covByNA mvsCd 
-       return $ catMaybes [mvscsD,mvscsC,mvscCd]
+instXXX ictx _ _ _ gV  = fail "instXXX NYI - remove?"
+--instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
+--  = do mvscsD <- mkVSC gV mvsD   covByNA covByNA
+--       mvscsC <- mkVSC gV disjNA mvsC    covByNA
+--       mvscCd <- mkVSC gV disjNA covByNA mvsCd 
+--       return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
 \newpage
@@ -1127,7 +1047,7 @@ $$
 \end{eqnarray*}
 % \begin{code}
 % instDisjoint :: MonadFail m 
-%              => InsContext -> FreeVars -> GenVar -> m [VarSideConds]
+%              => InsContext -> FreeVars -> GenVar -> m [VSetPred]
 % instDisjoint ictx fvsD@(fF,vLessBs) gv
 %   =  return (vsc1s ++ vsc2s)
 %   where
@@ -1149,8 +1069,8 @@ $$
 
 % \begin{code}
 % instCovers :: MonadFail m 
-%            => InsContext -> NFreeVars -> GenVar-- NFreeVars !!!
-%            -> m [VarSideConds]
+%            => InsContext -> FreeVars -> GenVar-- FreeVars !!!
+%            -> m [VSetPred]
 % instCovers ictx (Nothing,_)       gv  =  return []
 % instCovers ictx (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
 %   where
@@ -1181,8 +1101,8 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 
 % \begin{code}
 % instDynCvg :: MonadFail m 
-%            => InsContext -> NFreeVars -> GenVar
-%            -> m [VarSideConds]
+%            => InsContext -> FreeVars -> GenVar
+%            -> m [VSetPred]
 % instDynCvg ictx (Nothing,vLessBs)    gv    =  return []
 % instDynCvg ictx (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)
 %   where
@@ -1318,13 +1238,14 @@ or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \\ \vscsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
 \end{eqnarray*}
 \begin{code}
-vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
+vscsVarExpand :: GenVar -> [VSetPred] -> FreeVars
 vscsVarExpand e []            =  injVarSet $ S.singleton e
-vscsVarExpand e (VSC e' _ (The vsC) _ : _)
-  |  e == e'                  =  injVarSet vsC
-vscsVarExpand e (VSC e' _ _ (The vsCd) : _)
-  | isDynGVar e && (e == e')  =  injVarSet vsCd
-vscsVarExpand e (_:vscs)      =  vscsVarExpand e vscs
+vscsVarExpand e vsps = error "vscsVarExpand NYfI"
+--vscsVarExpand e (XXX e' _ (The vsC) _ : _)
+--  |  e == e'                  =  injVarSet vsC
+--vscsVarExpand e (XXX e' _ _ (The vsCd) : _)
+--  | isDynGVar e && (e == e')  =  injVarSet vsCd
+--vscsVarExpand e (_:vscs)      =  vscsVarExpand e vscs
 \end{code}
 
 Given the expression $e_i \setminus B_i$,

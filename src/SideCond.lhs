@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   disjfrom, coveredby, dyncovered
+, simplifyVSetPred
 , SideCond, scTrue
 , isTrivialSC -- used just here and in TestRendering !!!!
 , mrgVarConds -- AbstractProver  (xtndCoverage for float replacements) ?

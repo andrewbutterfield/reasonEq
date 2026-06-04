@@ -9,18 +9,21 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module NewSideCond (
   disjfrom, coveredby, dyncovered
 , SideCond, scTrue
-, isTrivialSC , onlyFreshSC -- both only in TestRendering !!!!
-, mrgVarConds, mergeVarConds
-, mrgSideCond
-, mkSideCond
-, scDischarge
-, isFloatingVSC
-, addFreshVars
-, notin, covers, dyncover, fresh
-, findGenVarInSC, findAllGenVar
-, findCoveredGenVar
-, mentionedBy
-, (.:), mrgscs
+, isTrivialSC -- used just here and in TestRendering !!!!
+, mrgVarConds -- AbstractProver  (xtndCoverage for float replacements) ?
+, mergeVarConds -- Instantiate - KEEP for now
+, mrgSideCond -- AbstractProver - KEEP
+, mkSideCond -- Instantiate, Assertions, SourceHandling - KEEP
+, scDischarge -- AbstractProver, LiveProofs - KEEP
+, isFloatingVSC -- LiveProofs - KEEP
+, addFreshVars -- AbstractProver - KEEP
+, notin, covers, dyncover, fresh -- builtins,etc., - KEEP
+, findGenVarInSC  -- Substitution - KEEP
+, findAllGenVar -- Instantiate - KEEP for now
+, findCoveredGenVar -- FreeVars - KEEP for now
+, mentionedBy -- Substitution - KEEP
+-- below, unsafe, testing or builtins only
+, (.:), mrgscs -- both unsafe, latter is mrgSideCond*s* 
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -415,13 +418,6 @@ scTrue = ([],S.empty)
 isTrivialSC :: SideCond -> Bool
 isTrivialSC ([],fvs)  =  S.null fvs
 isTrivialSC _         =  False
-\end{code}
-
-We are also interested when the only side-conditions we
-have are to do with freshness:
-\begin{code}
-onlyFreshSC :: SideCond -> Bool
-onlyFreshSC (vscs,_) = null vscs
 \end{code}
 
 

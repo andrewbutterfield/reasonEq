@@ -613,6 +613,7 @@ trvspred trid (VSSub vse1 vse2)
   = "("++trvsexpr trid vse1++_subseteq++trvsexpr trid vse2++")"
 trvspred trid (VSSubD vse1 vse2) 
   = "("++trvsexpr trid vse1++_subseteq++_subStr "a"++trvsexpr trid vse2++")"
+trvspred trid VSFalseP = "true"
 
 trvspreds trid = seplist "," $ trvspred trid
 
@@ -629,28 +630,11 @@ trSideCondU = trsidecond trIdU
 trsidecond trid sc@(vscs,fvs)
   | isTrivialSC sc  =  _top
   | otherwise       =  intcalNN ", " 
-                         ( concat (map (trtvarsidecond trid) vscs)
+                         ( (map (trvspred trid) vscs)
                            ++ [trfresh trid fvs] )
 scdbg = rdbg trSideCond
 
-trtvarsidecond trid (VSC gv NA NA NA) = [_top]
-trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
-  = [trDisjSC trid gv mvsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
-
-vscdbg nm vscs = ldbg (concat . trtvarsidecond trId) nm vscs
-
-trDisjSC trid gv NA = ""
-trDisjSC trid gv (The vsD)
-  | S.null vsD  =  ""
-  | otherwise   =  trovset trid vsD ++ _disj ++ trgvar trid gv
-
-trCovByM trid gv NA = ""
-trCovByM trid gv (The vsC) 
-  = trovset trid vsC ++ _supseteq ++ trgvar trid gv
-
-trDynCovM trid gv NA = ""
-trDynCovM trid gv (The vsC) 
-  = trovset trid vsC ++ _supseteq ++_subStr "a" ++ trgvar trid gv
+vscdbg nm vscs = ldbg (trvspred trId) nm vscs
 
 
 trfresh trid fvs

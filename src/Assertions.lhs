@@ -32,6 +32,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetExpr
 import FreeVars
 import SideCond
 import VarData
@@ -168,7 +169,8 @@ does not have both free and bound occurrences.
 
 
 \begin{code}
-newtype Assertion = ASN (Term, SideCond) deriving (Eq,Ord,Show,Read)
+newtype Assertion = ASN (Term, SideCond) 
+ deriving (Eq,Ord,Show)
 
 pattern Assertion tm sc  <-  ASN (tm, sc)
 pattern AssnT tm         <-  ASN (tm, _ )
@@ -412,10 +414,11 @@ csubsafe x (Substn es lvlvs)
 Finally, we get our variables from a side-condition:
 \begin{code}
 safeSideCondition :: Term -> SideCond -> Bool
-safeSideCondition tm sc  =  all (\ x -> scSafe x tm) $ S.toList $ scVarSet sc
+safeSideCondition tm (vsps,_)  
+  =  all (\ x -> scSafe x tm) $ concat $ map (S.toList . vPredVars) vsps
 \end{code}
 \textbf{
-  The use of \texttt{scVarSet} is problematic --- loss of uniformity info.
+  The use of \texttt{vPredVars} is problematic --- loss of uniformity info?.
 }
 
 \section{Normalising Bound Variables}
@@ -621,9 +624,10 @@ normSC vv (vscs,fvs)
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (VSC gv nvsD nvsC nvsCd)  
-  =  fromJust $ mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
-            (normQVNset vv nvsC) (normQVNset vv nvsCd)
+normASC vv vsp = error "normASC NYI"  
+--normASC vv (VSC gv nvsD nvsC nvsCd)  
+--  =  fromJust $ mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
+--            (normQVNset vv nvsC) (normQVNset vv nvsCd)
 
 normQVNset _ NA = NA
 normQVNset vv (The vs) = The $ normQVSet vv vs

@@ -9,8 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarSetExpr (
   VSetExpr(..)
 , VSetPred(..)
-, vsEmpty, vsSngl, vsUnion, vsMinus
-, vsFalse, vsTrue, vsDisj, vsSub, vsSubD
+, vsEmpty, vsSngl, vsUnion, vsMinus, vSetVars
+, vsFalse, vsTrue, vsDisj, vsSub, vsSubD, vPredVars
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -91,6 +91,17 @@ vsMinus vsplus vsminus
   | otherwise           =  VSMinus vsplus vsminus
 \end{code}
 
+\section{Set Expression Queries}
+
+Just collect all mentioned variables
+\begin{code}
+vSetVars :: VSetExpr -> VarSet
+vSetVars (VSEnum gvs)          =  gvs
+vSetVars (VSUnion vse1 vse2)   =  vSetVars vse1 `S.union` vSetVars vse2
+vSetVars (VSIntsct vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
+vSetVars (VSMinus vse1 vse2)   =  vSetVars vse1 `S.union` vSetVars vse2
+\end{code}
+
 \section{Simplifying Set Expressions}
 
 \section{Smart Set Predicate constructors}
@@ -123,6 +134,17 @@ vsSubD (VSEnum vs1) (VSEnum vs2)
     vs1d = S.filter isDynGVar vs1
     vs2d = S.filter isDynGVar vs2
 vsSubD vse1 vse2              =  VSSubD vse1 vse2
+\end{code}
+
+
+\section{Set Predicate Queries}
+
+\begin{code}
+vPredVars :: VSetPred -> VarSet
+vPredVars (VSDisj vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
+vPredVars (VSSub  vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
+vPredVars (VSSubD vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
+vPredVars _                   =  S.empty
 \end{code}
 
 \section{Simplifying Set Predicates}

@@ -15,6 +15,7 @@ module VarSetExpr (
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
+import LexBase
 import Variables
 
 import Debugger
@@ -40,6 +41,9 @@ over such expressions, to produce set predicates.
 
 \subsection{Variable-Set Datatypes}
 
+Given that we want to use \h{Show} \emph{and \h{Read}} for save and restore,
+we develop a bespoke \h{Read} for \h{VarSet}.
+
 \begin{code}
 data VSetExpr 
   =  VSEnum   VarSet             
@@ -48,13 +52,22 @@ data VSetExpr
   |  VSMinus  VSetExpr VSetExpr 
   deriving (Eq,Ord,Show)
 
+instance Read VSetExpr where
+  readsPrec _ str = [(readVListExpr str,"")]
+
+readVListExpr :: String -> VSetExpr
+readVListExpr ""  = bad_VSetExpr
+readVListExpr str = bad_VSetExpr
+
+bad_VSetExpr = vsSngl $ StdVar $ PredVar (jId "BAD_VSetExpr") Static
+
 data VSetPred
   =  VSFalseP -- yes, we need this
   |  VSDisj  VSetExpr VSetExpr  
   |  VSSub   VSetExpr VSetExpr 
   |  VSSubD  VSetExpr VSetExpr  -- limited to dynamic vars
   |  VSTrueP
-  deriving (Eq,Ord,Show)
+  deriving (Eq,Ord,Show,Read)
 \end{code}
 
 \section{Smart Set Expression Constructors}

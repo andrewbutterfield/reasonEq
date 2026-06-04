@@ -1,6 +1,6 @@
 \chapter{Substitution}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2019-24
+Copyright  Andrew Butterfield (c) 2019-26
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -28,6 +28,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetExpr
 import SideCond
 import FreeVars
 import VarData
@@ -490,16 +491,16 @@ This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
-  let (possSC,vsc) = possibleSideConditionOption vscs (StdVar v) tlv
+getTermVarInvolvement (SubCtxt (vsps, _) vts) v lvlv@(tlv,rlv) =
+  let (possSC,vsp) = possibleSideConditionOption vsps (StdVar v) tlv
       (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
       poss = max possSC possER 
   in case poss of
     Uninvolved ->  -- last chance
-      case vsc of
-        (VSC _ _ _ (The vsCd)) -> checkExpansion vsCd xtvars xrvars lvlv
-        (VSC _ _ (The vsC)  _) -> checkExpansion vsC  xtvars xrvars lvlv        
-        _                      -> ( poss, lvlv, noexp ) 
+      case vsp of
+        (VSSubD _ (VSEnum vsCd)) -> checkExpansion vsCd xtvars xrvars lvlv
+        (VSSub  _ (VSEnum vsC )) -> checkExpansion vsC  xtvars xrvars lvlv        
+        _                        -> ( poss, lvlv, noexp ) 
     _ ->
       if null xrvars
       then ( poss, lvlv, noexp )
@@ -511,25 +512,27 @@ getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}  
-possibleSideConditionOption vscs gv tlv
-  = case gv `mentionedBy` vscs of
-      Just (vsc,mwhen) -> 
-        ( getSCInvolvement gv (LstVar tlv) vsc mwhen, vsc )
-      Nothing ->  (Uninvolved,vscTrue gv)
+possibleSideConditionOption vsps gv tlv
+  = case gv `mentionedBy` vsps of
+      Just (vsp,mwhen) -> 
+        ( getSCInvolvement gv (LstVar tlv) vsp mwhen, vsp )
+      Nothing ->  (Uninvolved,vsTrue) -- gv)
 
-getSCInvolvement gv  gtlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
-  | gtlv `nmbr` nvsD   =  DisjInvolvement
-  | gtlv `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen nvsC
-  | gtlv `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen nvsCd
-  | otherwise = Uninvolved 
-
+getSCInvolvement gv  gtlv vsp mwhen = case vsp of
+  (VSDisj _ (VSEnum vsD))  
+    | gtlv `S.member` vsD  -> DisjInvolvement
+  (VSSub gvs (VSEnum vsC))   
+    | gtlv `S.member` vsC  -> possCoverInvolvement gv (theGV gvs) mwhen vsC
+  (VSSubD gvs (VSEnum vsCd)) 
+    | gtlv `S.member` vsCd -> possCoverInvolvement gv (theGV gvs) mwhen vsCd
+  _                        -> Uninvolved 
 
 -- mwhen == Nothing ==> gv' == gv
-possCoverInvolvement gv gv' Nothing (The vsC)
+possCoverInvolvement gv (Just gv') Nothing vsC
   | gv == gv'  =  CoverInvolvement vsC
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-possCoverInvolvement gv gv' (Just vw') (The vsCd)
+possCoverInvolvement gv (Just gv') (Just vw') vsCd
   = case gv `dynGVarEq` gv' of
       Just vwd  ->  CoverInvolvement vsCd
       _         ->  Uninvolved
@@ -739,14 +742,16 @@ lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw)
   -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
   -- vc = ExprV,PredV
   = case (StdVar v) `mentionedBy` fst sc of
-      Nothing  ->  Right [lvlv] -- v not mentioned 
-      Just ( (VSC gv' nvsD nvsC nvsCd), Nothing ) -- gv==StdVar v
-        | gtlv `nmbr` nvsD 
-            ->  Right [] -- tlv mentioned in disjoint-set
-        | gtlv `nmbr` nvsC
-            ->  possub vw lvlv -- tlv in coverage
-        | otherwise  ->  Left lvlv 
-      _  ->  Right [lvlv] -- this shouldn't happen for Term Vars?
+ 
+    Nothing                 ->  Right [lvlv] 
+    Just ((VSDisj _ (VSEnum vsD)),Nothing) 
+      | gtlv `S.member` vsD  ->  Right [] 
+    Just ((VSSub _ (VSEnum vsC)), Nothing) 
+      | gtlv `S.member` vsC  ->  possub vw lvlv 
+    Just (_,Nothing ) 
+      | otherwise            ->  Left lvlv 
+    -- below, shouldn't happen for Term Vars?
+    _                                                    ->  Right [lvlv]
     where
       gtlv = LstVar tlv 
       possub vw lvlv = if isDynamic vw then Left lvlv else Right [lvlv]
@@ -854,7 +859,7 @@ scSimplify :: SideCond -> GenVar -> Substn -> Substn
 scSimplify sc gv sub 
   = case findGenVarInSC gv sc of
       Nothing   ->  sub
-      Just vsc  ->  vscSimplify vsc gv sub
+      Just vsp  ->  vspSimplify vsp gv sub
 \end{code}
 
 We have the following situation $P[T/V$] 
@@ -878,15 +883,13 @@ $$
 $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
-vscSimplify :: VarSideConds -> GenVar -> Substn -> Substn
-vscSimplify (VSC _ mvsD mvsC mvsCd) gv sub  
-  =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not mvsD sub
-  where 
-    mSimp mvs sub  =  targetsCheck id mvs sub
+vspSimplify :: VSetPred -> GenVar -> Substn -> Substn
+vspSimplify (VSDisj _ (VSEnum  vsD)) gv sub  =  targetsCheck not vsD  sub
+vspSimplify (VSSub  _ (VSEnum  vsC)) gv sub  =  targetsCheck id  vsC  sub
+vspSimplify (VSSubD _ (VSEnum vsCd)) gv sub  =  targetsCheck id  vsCd sub
 
-targetsCheck :: (Bool -> Bool) -> NVarSet -> Substn -> Substn
-targetsCheck keep NA sub  =  sub
-targetsCheck keep (The vs) (Substn ts lvs)
+targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
+targetsCheck keep vs (Substn ts lvs)
   = let tl'  = filter (varTargetsCheck  keep vs) $ S.toList ts
         lvl' = filter (lvarTargetsCheck keep vs) $ S.toList lvs
     in jSubstn tl' lvl'
@@ -1627,19 +1630,18 @@ otherwise we drop it as it won't apply.
 \begin{code}
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
-  = case findGenVarInSC gtv sc of
+  = case findGenVarInSC (StdVar tv) sc of
       Nothing  ->  sub1
-      Just (VSC _ _ nvsC nvsCd)  
-        ->  jSubstn ts' (S.toList lvs)
-            where
-              ts' = filter allowed $ S.toList ts
-              allowed (t,_) 
-                = let gt = StdVar t
-                  in gt `lmbr` nvsCd || gt `lmbr` nvsC 
-  where
-    lmbr gv NA = False -- NA really means irrelevant!!!
-    lmbr gv (The vs) = gv `S.member` vs
-    gtv = StdVar tv
+      Just (VSSub _ (VSEnum vsC))  
+               ->  jSubstn tsC' lvl
+                   where tsC' = filter (allowed vsC) $ S.toList ts
+      Just (VSSubD _ (VSEnum vsCd))  
+               ->  jSubstn tsCd' lvl
+                   where tsCd' = filter (allowed vsCd) $ S.toList ts
+      _        ->  sub1
+  where 
+    lvl = S.toList lvs
+    allowed vs (t,_) = (StdVar t) `S.member` vs
 \end{code}
 Given \m{\setof{s,s'} \supseteq_a a},
 this transforms 

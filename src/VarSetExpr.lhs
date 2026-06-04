@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarSetExpr (
   VSetExpr(..)
 , VSetPred(..)
-, vsEmpty, vsSngl, vsUnion, vsMinus, vSetVars
+, vsEmpty, vsSngl, vsUnion, vsMinus
+, vSetVars, theGV
 , vsFalse, vsTrue, vsDisj, vsSub, vsSubD, vPredVars
 ) where
 import Data.Set(Set)
@@ -100,6 +101,15 @@ vSetVars (VSEnum gvs)          =  gvs
 vSetVars (VSUnion vse1 vse2)   =  vSetVars vse1 `S.union` vSetVars vse2
 vSetVars (VSIntsct vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
 vSetVars (VSMinus vse1 vse2)   =  vSetVars vse1 `S.union` vSetVars vse2
+\end{code}
+
+Extract ``the'' general variable:
+\begin{code}
+theGV :: MonadFail mf => VSetExpr -> mf GenVar
+theGV (VSEnum gvs) = case S.toList gvs of
+  [gv]     ->  return gv
+  _        ->  fail "theGV: singleton enumeration expected"
+theGV vse  =  fail "theGV: singleton enumeration expected"
 \end{code}
 
 \section{Simplifying Set Expressions}

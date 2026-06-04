@@ -49,6 +49,8 @@ Fixing bugs as we go.
      *Changed from superset to subset*
      **Need to check `simplifyVSetPred` simplifications**
 
+     Rework required?: SideCond, Assertion, Instantiate, Substitution
+
     
    Diagnosis: 
      we get the following outcome from the instantiated law s.c.: `P ⋔ (x$\y$)`.

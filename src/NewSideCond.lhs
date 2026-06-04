@@ -224,13 +224,124 @@ $$
 We provide some builders when only one of the three conditions is involved:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
-gv `disjfrom`   vsD   =  VSDisj (onegv gv) vsD
-gv `coveredby`  vsC   =  VSSub  (onegv gv) vsC
-gv `dyncovered` vsCd  =  VSSubD (onegv gv) vsCd
+gv `disjfrom`   vsD   =  VSDisj (onegv gv) $ VSEnum vsD
+gv `coveredby`  vsC   =  VSSub  (onegv gv) $ VSEnum vsC
+gv `dyncovered` vsCd  =  VSSubD (onegv gv) $ VSEnum vsCd
 
 onegv :: GenVar -> VSetExpr
-onegv gv = VSEnum $ singleton gv
+onegv gv = VSEnum $ S.singleton gv
 \end{code}
+
+\textbf{Changed from using superset to using subset}
+\emph{
+  What we see eveywhere are $s,s'\supseteq_a P$,
+   and it is easier to have $P \subseteq s,s'$.
+}
+
+\begin{eqnarray*}
+   \setof{O,O'} \supseteq \setof{ls,ls',a} 
+   \land \setof{O,O'} \supseteq \setof{a}
+   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
+\\ (P\setminus \lst y) \disj \lst x 
+   &=&
+   \setof{P} \disj (\lst x \setminus \lst y) 
+\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
+\end{eqnarray*}
+
+Here we are generally interested in single relations ($\disj$,$\supseteq$)
+with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
+We want to pull $P$ out to be the sole 1st argument of the relation.
+These should \emph{not} reduce the relations to \true\ or \false.
+In general we may need extra terms not involving $P$ in the output.
+We want to distinguish therse so we keep them separate.
+\begin{code}
+simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
+\end{code}  
+
+\subsection{Union and Diff vs. Disjoint and Superset}
+
+$$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
+\begin{code}
+simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
+             =  (p `VSDisj` (y `vsMinus` x), [])
+\end{code} 
+
+$$ 
+   (P \cup X) \disj Y 
+   ~=~ 
+   (P \disj Y) \land (X \disj Y)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
+               = (p `VSDisj` y , [x `VSDisj` y ] )
+\end{code} 
+
+$$  
+   P \subseteq (X \setminus Y) 
+   ~=~ 
+   ?
+$$
+\begin{code}
+simplifyVSetPred (y `VSSub` (p `VSMinus` x)) 
+  = ( p `VSSub` (y `vsMinus` x) , [x `VSDisj` y  ] )
+\end{code} 
+
+$$ P \subseteq (X \cup Y)
+   ~=~ 
+   ?
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSSub` y)  
+             =  (p `VSSub` (y `vsMinus` x), [])
+\end{code} 
+
+
+\subsection{Union and Diff vs. Dynamic Superset}
+
+Dynamic superset ($\supseteq_d$) is defined as:
+$$
+  P \supseteq_d X \quad \defs \quad P|d \supseteq X|d
+$$
+where $S|d$ is $S$ restricted to the dynamic variables in $d$.
+The key question is: does this affect the laws?
+The answer is no, because being dynamic is a pointwise property
+and restriction w.r.t a set element (or sets of elements) is idempotent.
+\begin{eqnarray*}
+   \emptyset|d &\defs& \emptyset
+\\ \setof{x}|d &\defs& \setof{x} \cond{x \in d} \emptyset
+\\ (S\cup T)|d &\defs& S|d \cup T|d
+\\ (S\cap T)|d &\defs& S|d \cap T|d
+\\ (S\setminus T)|d &\defs& S|d \setminus T|d
+\end{eqnarray*}
+
+$$  
+   (P \setminus X) \supseteq_d Y 
+   ~=~ 
+   P \supseteq_d (Y \setminus X) \land (X \disj Y)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSMinus` x) `VSSubD` y) 
+  = ( p `VSSubD` (y `vsMinus` x) , [x `VSDisj` y  ] )
+\end{code} 
+
+$$ (P \cup X) \supseteq_d Y 
+   ~=~ 
+   P \supseteq_d (Y \setminus X)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSSubD` y)  
+             =  (p `VSSubD` (y `vsMinus` x), [])
+\end{code} 
+
+\subsection{All other cases: no change}
+
+For now we notice that that none of the laws above
+introduce intersections or disjunctions.
+We'll only add laws about those if they arise elsewhere.
+\begin{code}
+simplifyVSetPred vse = (vse,[]) 
+\end{code}  
+
 
 
 % \subsection{Checking Atomic Sideconditions}
@@ -246,16 +357,17 @@ onegv gv = VSEnum $ singleton gv
 % and otherwise returns a \texttt{Maybe} type,
 % where \texttt{Nothing} denotes a condition that is demonstrably true.
 
-% \begin{code}
-% mscTrue = Nothing
-% vscCheck :: MonadFail m => VSetPred 
-%           -> m (Maybe VSetPred)
-% vscCheck (VSC gv nvsD nvsC nvsCd)
-%   = do  nvsD'  <- disjointCheck  gv nvsD
-%         nvsC'  <- coveredByCheck gv nvsC
-%         nvsCd' <- dynCvrgCheck   gv nvsCd
-%         mkVSC gv nvsD' nvsC' nvsCd'
-% \end{code}
+\begin{code}
+mscTrue = Nothing
+vscCheck :: MonadFail m => VSetPred 
+          -> m (Maybe VSetPred)
+vscCheck vsp = fail "vscCheck NYI (obsolete?)"
+--vscCheck (VSC gv nvsD nvsC nvsCd)
+--  = do  nvsD'  <- disjointCheck  gv nvsD
+--        nvsC'  <- coveredByCheck gv nvsC
+--        nvsCd' <- dynCvrgCheck   gv nvsCd
+--        mkVSC gv nvsD' nvsC' nvsCd'
+\end{code}
 
 % The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
 % and break it down into individual comparisons (\m{g ~R~ \setof{g_i}}).
@@ -444,7 +556,7 @@ that \texttt{vscCheck vsc' == Just vsc'}.
 
 We start by checking the new VCS:
 \begin{code}
- vsc vscs
+mrgVarConds vsc vscs
   = do masc <- vscCheck vsc
        case masc of
          Nothing    ->  return vscs -- vsc is in fact true
@@ -454,7 +566,7 @@ We start by checking the new VCS:
 Now we search to see if there is a VSCs with the
 same general-variable, respecting the ordering:
 \begin{code}
-mrgVSC :: MonadFail m => [VSetPred] -> m [VSetPred]
+mrgVSC :: MonadFail m => VSetPred -> [VSetPred] -> m [VSetPred]
 
 mrgVSC vsc' []  = return [vsc']
 
@@ -485,12 +597,12 @@ Now, merging an VSC in with another VSC referring to the same general variable:
 \begin{code}
 mrgSameGVSC :: MonadFail m 
             => VSetPred -> VSetPred -> m (Maybe VSetPred)
-mrgSameGVSC (VSC gv nvsD1 uvsC1 uvsCd1) (VSC _ nvsD2 uvsC2 uvsCd2) 
-  = let  -- merging, both sets have equal status
-      nvsD'   = nvsD1  `nunion` nvsD2
-      nvsC'  =  uvsC1  `nintsct` uvsC2
-      nvsCd' =  uvsCd1 `nintsct` uvsCd2
-    in mkVSC gv nvsD' nvsC' nvsCd'
+mrgSameGVSC vsp1 vsp2 = fail "mrgSameGVSC NYI"
+--  = let  -- merging, both sets have equal status
+--      nvsD'   = nvsD1  `nunion` nvsD2
+--     nvsC'  =  uvsC1  `nintsct` uvsC2
+--      nvsCd' =  uvsCd1 `nintsct` uvsCd2
+--    in mkVSC gv nvsD' nvsC' nvsCd'
 \end{code}
 
 Finally, something to merge lists (and lists of lists) of VSCs:
@@ -617,7 +729,7 @@ mrgTVarCondLists :: MonadFail m
 mrgTVarCondLists vscs1 []  =  return vscs1
 mrgTVarCondLists [] vscs2  =  return vscs2
 mrgTVarCondLists (vsc:vscs1) vscs2
-  | isTrueVSC vsc  =  mrgTVarCondLists vscs1 vscs2
+  | (vsc == VSTrueP)  =  mrgTVarCondLists vscs1 vscs2
   | otherwise = do 
       vscs2' <- mrgVarConds vsc vscs2 
       mrgTVarCondLists vscs1 vscs2'
@@ -637,9 +749,10 @@ mrgTVarFreshConditions freshvs vscs
 
 coveredVarsOf :: [VSetPred] -> VarSet
 coveredVarsOf vscs = S.unions $ map coveringsOf vscs
-coveringsOf (VSC _ _ nvsC nvsCd)  =  cvr nvsC `S.union` cvr nvsCd
-cvr NA    =  S.empty -- universe does not contain fresh vars
-cvr (The vs)  =  vs
+coveringsOf vsp  =  error "coveringsOf NYI"
+--coveringsOf (VSC _ _ nvsC nvsCd)  =  cvr nvsC `S.union` cvr nvsCd
+--cvr NA    =  S.empty -- universe does not contain fresh vars
+--cvr (The vs)  =  vs
 \end{code}
 
 \section{From VSC and Free-list to Side-Condition}
@@ -649,7 +762,7 @@ mkSideCond :: MonadFail m
            => [VSetPred] -> VarSet -> m SideCond
 mkSideCond vscs fvs
  = do vscs' <-  mrgTVarCondLists vscs []
-      mrgTVarFreshConditions fvs $ filter (not . isTrueVSC) vscs'
+      mrgTVarFreshConditions fvs $ filter (not . (== VSTrueP)) vscs'
 \end{code}
 
 
@@ -847,20 +960,21 @@ scDischarge'  :: MonadFail m => VarSet
               -> m [VSetPred]
 scDischarge' _ _ []      =  return []     --  discharged
 scDischarge' _ [] vscL  =  return vscL  --  not discharged
-scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
-                   vscLs@(vscL@(VSC gvL _ _ _):restL) -- cnsq
-  | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
-  | gvG > gvL  =  do -- nothing available to discharge vscL
-                     rest' <- scDischarge' obsv restG restL
-                     return (vscL:rest')
-  | otherwise  =  do -- use vscG to discharge vscL
-                     vsc' <- vscDischarge obsv vscG vscL
-                     vscChecked <- vscCheck vsc'
-                     case  vscChecked of
-                       Nothing ->  scDischarge' obsv restG restL
-                       Just vsc'' -> do
-                         rest' <- scDischarge' obsv restG restL
-                         return (vsc'':rest')
+scDischarge' _ _ _ = fail "scDischarge' NYfI"
+--scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
+--                   vscLs@(vscL@(VSC gvL _ _ _):restL) -- cnsq
+--  | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
+--  | gvG > gvL  =  do -- nothing available to discharge vscL
+--                     rest' <- scDischarge' obsv restG restL
+--                     return (vscL:rest')
+--  | otherwise  =  do -- use vscG to discharge vscL
+--                     vsc' <- vscDischarge obsv vscG vscL
+--                     vscChecked <- vscCheck vsc'
+--                     case  vscChecked of
+--                       Nothing ->  scDischarge' obsv restG restL
+--                       Just vsc'' -> do
+--                         rest' <- scDischarge' obsv restG restL
+--                         return (vsc'':rest')
 \end{code}
 
 \newpage
@@ -904,8 +1018,9 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
-  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
+vscDischarge _ _ _ = fail "vscDischarge NYI"
+--vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
+--  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
 \newpage
@@ -954,23 +1069,23 @@ We start with the \m{C} and \m{Cd} components because $\subseteq$
 is strong enough to potentially falsify some side-conditions, 
 whereas $\disj$ is too weak for this.
 
-\begin{code}
-vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
-  = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
-        nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
-        nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
+% \begin{code}
+% vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
+%   = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
+%         nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
+%         nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
 
-        nvsD''   <- cdDischarge obsv gv nvsCG  nvsD'
-        nvsD'''  <- cdDischarge obsv gv nvsCdG nvsD''
+%         nvsD''   <- cdDischarge obsv gv nvsCG  nvsD'
+%         nvsD'''  <- cdDischarge obsv gv nvsCdG nvsD''
 
-        nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
+%         nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
 
-        nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
-        case mkVSC gv nvsD''' nvsC'' nvsCd'' of
-          Nothing          ->  fail "vsc-dishcarged failed"
-          Just Nothing     ->  return $ vscTrue gv
-          Just (Just vsc)  ->  return vsc
-\end{code}
+%         nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
+%         case mkVSC gv nvsD''' nvsC'' nvsCd'' of
+%           Nothing          ->  fail "vsc-dishcarged failed"
+%           Just Nothing     ->  return $ vscTrue gv
+%           Just (Just vsc)  ->  return vsc
+% \end{code}
 
 \newpage
 \subsubsection{Pairwise Discharging (C:C)}
@@ -997,15 +1112,16 @@ Edge cases:
 ccDischarge :: MonadFail m 
             => VarSet -> GenVar -> VSetExpr -> VSetExpr 
             -> m VSetExpr
-ccDischarge _  _  _  NA     =  return NA
-ccDischarge _  _  NA uvsCL  =  return uvsCL
-ccDischarge obsv gv (The vsCG) tvsCL@(The vsCL)
+ccDischarge _  _  _  _     =  fail "ccDischarge NYI"
+--ccDischarge _  _  _  NA     =  return NA
+--ccDischarge _  _  NA uvsCL  =  return uvsCL
+--ccDischarge obsv gv (The vsCG) tvsCL@(The vsCL)
   -- | S.null vsCG               =  return tvsCL
-  | vsCG `S.isSubsetOf` vsCL  =  return NA -- discharged!
-  | vsCL `S.disjoint` vsCG 
-    && isObsGVar gv           =  fail "CC - disjoint coverage"
-  | otherwise  =  return $ The ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
-  where vsCLf = S.filter isFloatingGVar vsCL
+--  | vsCG `S.isSubsetOf` vsCL  =  return NA -- discharged!
+--  | vsCL `S.disjoint` vsCG 
+--    && isObsGVar gv           =  fail "CC - disjoint coverage"
+--  | otherwise  =  return $ The ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
+--  where vsCLf = S.filter isFloatingGVar vsCL
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:D)}
@@ -1024,12 +1140,13 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 ddDischarge :: MonadFail m 
             => VarSet -> GenVar -> VSetExpr -> VSetExpr 
             -> m VSetExpr
-ddDischarge _    _  _     NA     =  return NA
-ddDischarge _    _  NA    nvsDL  =  return nvsDL
-ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
-  | S.null vsDG                  =  return tvsDL
-  | vsDL `S.isSubsetOf` vsDG     =  return NA -- discharged!
-  | otherwise                    =  return $ The (vsDL S.\\ vsDG)
+ddDischarge _    _  _     _     =  fail "ddDischarge NYI"
+--ddDischarge _    _  _     NA     =  return NA
+--ddDischarge _    _  NA    nvsDL  =  return nvsDL
+--ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
+--  | S.null vsDG                  =  return tvsDL
+--  | vsDL `S.isSubsetOf` vsDG     =  return NA -- discharged!
+--  | otherwise                    =  return $ The (vsDL S.\\ vsDG)
 \end{code}
 
 \newpage
@@ -1064,14 +1181,15 @@ Edge cases:
 cdDischarge :: MonadFail m 
             => VarSet -> GenVar -> VSetExpr -> VSetExpr 
             -> m VSetExpr
-cdDischarge _    _  _  NA     =  return NA
-cdDischarge obsv gv NA nvsDL  =  return nvsDL
-cdDischarge obsv gv (The vsCG) tvsDL@(The vsDL)
-  | S.null vsCG               =  return tvsDL
-  | vsCG `S.disjoint` vsDL    =  return NA -- discharged !
-  | vsCG `S.isSubsetOf` vsDL 
-    && isObsGVar gv           =  fail "CD - obs cover under disjoint"
-  | otherwise                 =  return $ The (vsDL `S.intersection` vsCG)
+cdDischarge _    _  _  _     =  fail "cdDischarge NYI"
+--cdDischarge _    _  _  NA     =  return NA
+--cdDischarge obsv gv NA nvsDL  =  return nvsDL
+--cdDischarge obsv gv (The vsCG) tvsDL@(The vsDL)
+--  | S.null vsCG               =  return tvsDL
+--  | vsCG `S.disjoint` vsDL    =  return NA -- discharged !
+--  | vsCG `S.isSubsetOf` vsDL 
+--    && isObsGVar gv           =  fail "CD - obs cover under disjoint"
+--  | otherwise                 =  return $ The (vsDL `S.intersection` vsCG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
@@ -1094,13 +1212,13 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 dcDischarge :: MonadFail m 
             => VarSet -> GenVar -> VSetExpr -> VSetExpr 
             -> m VSetExpr
-dcDischarge _    _  _     NA     =  return NA
-dcDischarge obsv gv NA    nvsCL  =  return nvsCL
-dcDischarge obsv gv (The vsDG) tvsCL@(The vsCL)
-  | S.null vsDG                  =  return tvsCL
-  | vsCL `S.isSubsetOf` vsDG 
-    && isObsGVar gv              =  fail "DC - obs cover under disjoint"
-  | otherwise                    =  return $ The (vsCL S.\\ vsDG)
+dcDischarge _    _  _     _     =  fail "dcDischarge NYI"
+--dcDischarge obsv gv NA    nvsCL  =  return nvsCL
+--dcDischarge obsv gv (The vsDG) tvsCL@(The vsCL)
+--  | S.null vsDG                  =  return tvsCL
+--  | vsCL `S.isSubsetOf` vsDG 
+--    && isObsGVar gv              =  fail "DC - obs cover under disjoint"
+--  | otherwise                    =  return $ The (vsCL S.\\ vsDG)
 \end{code}
 
 \newpage
@@ -1194,15 +1312,16 @@ based on the idea that $G_F \disj V$ by construction
    &\mapsto&  Cd_L \setminus G_F \supseteq_a V
 \end{eqnarray*}
 \begin{code}
-freshTVarDischarge obsv gF (VSC gv nvsD nvsC nvsCd) = do
-  let nvsgF = The gF
-  let nvsD' = nvsD `ndiff` nvsgF
-  let nvsC' = nvsC `ndiff` nvsgF
-  let nvsCd' = if gv `S.member` obsv then nvsCd `ndiff` nvsgF else NA
-  case mkVSC gv nvsD' nvsC' nvsCd' of
-    Nothing  ->  fail "fresh-var s.c. discharge failed"
-    Just Nothing -> return []
-    Just (Just vsc')  ->  return [vsc']
+freshTVarDischarge _ _ _ = fail "freshTVarDischarge NYI"
+--freshTVarDischarge obsv gF (VSC gv nvsD nvsC nvsCd) = do
+--  let nvsgF = The gF
+--  let nvsD' = nvsD `ndiff` nvsgF
+--  let nvsC' = nvsC `ndiff` nvsgF
+--  let nvsCd' = if gv `S.member` obsv then nvsCd `ndiff` nvsgF else NA
+--  case mkVSC gv nvsD' nvsC' nvsCd' of
+--    Nothing  ->  fail "fresh-var s.c. discharge failed"
+--    Just Nothing -> return []
+--    Just (Just vsc')  ->  return [vsc']
 \end{code}
   % | vsc' == vscTrue gv  =  return []
   % | otherwise  =  return [vsc']
@@ -1229,14 +1348,12 @@ mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingVSC :: VSetPred -> Bool
-isFloatingVSC (VSC  gv nvsD nvsC nvsCd)
-  = isFloatingGVar gv 
-      || hasFloatingM nvsD || hasFloatingM nvsC || hasFloatingM nvsCd 
+isFloatingVSC vsp = error "isFloatingVSC NYI"
+--isFloatingVSC (VSC  gv nvsD nvsC nvsCd)
+--  = isFloatingGVar gv 
+--      || hasFloatingM nvsD || hasFloatingM nvsC || hasFloatingM nvsCd 
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
-hasFloatingM :: VSetExpr -> Bool
-hasFloatingM NA = False
-hasFloatingM (The vs) = hasFloating vs
 \end{code}
 % One exception to this, during law matching,
 % is that coverage may reduce to the empty set
@@ -1326,9 +1443,10 @@ findDisjointGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findDisjointGenVar gv ( vscs, _ ) = findDGV gv vscs
 
 findDGV gv []         =  fail ("Disjoint "++show gv ++ " not found")
-findDGV gv ((VSC gv' (The vsD) _ _):vscs)
-  | gv == gv' && not (S.null vsD)  =  return vsD
-findDGV gv (_:vscs)                =  findDGV gv vscs
+findDGV _ _ = fail "findDGV NYfI"
+--findDGV gv ((VSC gv' (The vsD) _ _):vscs)
+--  | gv == gv' && not (S.null vsD)  =  return vsD
+--findDGV gv (_:vscs)                =  findDGV gv vscs
 \end{code}
 
 For regular coverage we look for precisely the given general variable,
@@ -1338,11 +1456,12 @@ findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( vscs, _ ) = findCGV gv vscs
 
 findCGV gv []           =  fail ("Covered "++show gv ++ " not found")
-findCGV gv ((VSC gv' _ (The vs) _):vscs)
-  | gv == gv'           =  return vs
-findCGV gv ((VSC gv' _ _ (The vs)):vscs)
-  | gv == gv'           =  return vs
-findCGV gv (_:vscs)     =  findCGV gv vscs
+findCGV gv _           =  fail "findCGV NYfI"
+--findCGV gv ((VSC gv' _ (The vs) _):vscs)
+--  | gv == gv'           =  return vs
+--findCGV gv ((VSC gv' _ _ (The vs)):vscs)
+--  | gv == gv'           =  return vs
+--findCGV gv (_:vscs)     =  findCGV gv vscs
 \end{code}
 
 For dynamic coverage we don't care about temporality,
@@ -1352,10 +1471,11 @@ findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VSetExpr, VarWhen 
 findDynCvrdGenVar gv ( vscs, _ ) = findDCGV gv vscs
 
 findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")
-findDCGV gv ((VSC gv' _ _ uvs):vscs)
-  = case gv `dynGVarEq` gv' of
-      Just vw'  ->  return (uvs, vw')
-      Nothing   ->  findDCGV gv vscs
+findDCGV gv _         =  fail "findDCGV NYfI"
+--findDCGV gv ((VSC gv' _ _ uvs):vscs)
+--  = case gv `dynGVarEq` gv' of
+--      Just vw'  ->  return (uvs, vw')
+--      Nothing   ->  findDCGV gv vscs
 \end{code}
 
 We have a catch-all :
@@ -1363,13 +1483,14 @@ We have a catch-all :
 mentionedBy :: MonadFail m 
             => GenVar -> [VSetPred] -> m ( VSetPred, Maybe VarWhen)
 gv `mentionedBy` []  =  fail ("variable "++show gv++" not mentioned")
-gv `mentionedBy` (vsc@(VSC gv' _ _ nvsCd):vscs)
-  | gv == gv'       =  return ( vsc, Nothing )
-  | isThere nvsCd -- we need an explicit mention of gv'
-      = case gv `dynGVarEq` gv' of
-          Just vw'  ->  return ( vsc, Just vw')
-          _         ->  gv `mentionedBy` vscs
-  | otherwise       =   gv `mentionedBy` vscs
+gv `mentionedBy` _ = fail "mentionedBy NYfI"
+--gv `mentionedBy` (vsc@(VSC gv' _ _ nvsCd):vscs)
+--  | gv == gv'       =  return ( vsc, Nothing )
+--  | isThere nvsCd -- we need an explicit mention of gv'
+--      = case gv `dynGVarEq` gv' of
+--          Just vw'  ->  return ( vsc, Just vw')
+--          _         ->  gv `mentionedBy` vscs
+--  | otherwise       =   gv `mentionedBy` vscs
 \end{code}
 
 
@@ -1478,15 +1599,16 @@ nNotObs = [gO,gO'] `notin` gN
 eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
 nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 
+mkVSC _ _ _ _ = Nothing
 tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
-    [ testCase "Definitely True: ls   `disj` ls'"
-       ( mkVSC (StdVar vls) (nsngl $ StdVar vls') NA NA 
-         @?= Just Nothing )
-    , testCase "Definitely True: ls_1 `disj` ls"
-       ( mkVSC (StdVar vls1) (nsngl $ StdVar vls) NA NA 
-         @?= Just Nothing )
-    , testCase "gv_a `disjoint` empty is True"
+    [ --testCase "Definitely True: ls   `disj` ls'"
+      -- ( mkVSC (StdVar vls) (StdVar vls') NA NA 
+      --   @?= Just Nothing )
+    --, testCase "Definitely True: ls_1 `disj` ls"
+      -- ( mkVSC (StdVar vls1) (StdVar vls) NA NA 
+      --   @?= Just Nothing )
+      testCase "gv_a `disjoint` empty is True"
        ( vscCheck (disjfrom  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
        ( vscCheck (disjfrom  v_e S.empty) @?= tstTrue )

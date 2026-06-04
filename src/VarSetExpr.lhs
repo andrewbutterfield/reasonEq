@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarSetExpr (
   VSetExpr(..)
 , VSetPred(..)
-, vsEmpty, vsSngl, vsUnion, vsMinus
+, vsEmpty, vsSngl, vsList, vsUnion, vsMinus
 , vSetVars, theGV
 , vsFalse, vsTrue, vsDisj, vsSub, vsSubD, vPredVars
 ) where
@@ -53,13 +53,44 @@ data VSetExpr
   deriving (Eq,Ord,Show)
 
 instance Read VSetExpr where
-  readsPrec _ str = [(readVListExpr str,"")]
+  readsPrec _ str = [readVListExpr str]
 
-readVListExpr :: String -> VSetExpr
-readVListExpr ""  = bad_VSetExpr
-readVListExpr str = bad_VSetExpr
+bad_res msg = vsSngl $ StdVar $ PredVar (jId msg) Static
+bad_VSetExpr = bad_res "BAD_VSetExpr"
+bad_NYI str = bad_res (str++"_NYI")
 
-bad_VSetExpr = vsSngl $ StdVar $ PredVar (jId "BAD_VSetExpr") Static
+readVListExpr :: String -> (VSetExpr,String)
+-- expect VS to begin
+readVListExpr ('V':'S':str) = readVKind str
+readVListExpr str = (bad_VSetExpr,str)
+
+readVKind :: String -> (VSetExpr, String)
+-- expect Enum|Union|Intsct|Minus
+readVKind str
+  | take 4 str == "Enum" = readPar readEnum $ drop 4 str
+  | otherwise  = (bad_NYI "UIM",str)
+
+readPar :: (String -> (VSetExpr, String)) -> String 
+        -> (VSetExpr, String)
+-- expect ( something )
+readPar readSomeThing ('(':str) 
+ = let (thing,str') = readSomeThing str in 
+     case str' of
+        "" -> (bad_NYI "missing_rpar",str')
+        (')':str'') -> (thing,str'')
+readPar _ str = (bad_NYI "missing_lpar",str)
+
+readEnum :: String -> (VSetExpr, String)
+-- expect fromList [ ... ]
+readEnum str = (bad_res "readEnum_NYI",str)
+
+vE  = ExprVar (jId "E") Static ; gE  = StdVar vE  ; sE  = vsSngl gE
+vN  = ExprVar (jId "N") Static ; gN  = StdVar vN  ; sN  = vsSngl gN
+vx  = ObsVar  (jId "x") Before ; gx  = StdVar vx  ; sx  = vsSngl gx
+vx' = ObsVar  (jId "x") After  ; gx' = StdVar vx' ; sx' = vsSngl gx'
+sEdN  = VSDisj sE sN
+sEsN  = VSSub  sE sN
+sEsdN = VSSubD sE sN
 
 data VSetPred
   =  VSFalseP -- yes, we need this
@@ -79,6 +110,9 @@ vsEmpty = VSEnum S.empty
 
 vsSngl :: GenVar -> VSetExpr
 vsSngl = VSEnum . S.singleton
+
+vsList :: VarList -> VSetExpr
+vsList = VSEnum . S.fromList
 \end{code}
 
 We do the obvious simplifications for enumeration, union and removal.

@@ -67,8 +67,9 @@ readVListExpr str = (bad_VSetExpr,str)
 readVKind :: String -> (VSetExpr, String)
 -- expect Enum|Union|Intsct|Minus
 readVKind str
-  | take 4 str == "Enum" = readPar readEnum $ drop 4 str
+  | before5 == "Enum " = readPar readEnum after5
   | otherwise  = (bad_NYI "UIM",str)
+  where (before5,after5) = splitAt 5 str
 
 readPar :: (String -> (VSetExpr, String)) -> String 
         -> (VSetExpr, String)
@@ -82,7 +83,15 @@ readPar _ str = (bad_NYI "missing_lpar",str)
 
 readEnum :: String -> (VSetExpr, String)
 -- expect fromList [ ... ]
-readEnum str = (bad_res "readEnum_NYI",str)
+readEnum str
+  | before == "fromList " 
+    = case readsPrec 0 after of
+        ((varlist,str'):_)  -> ((VSEnum $ S.fromList varlist),str')
+        _             -> (bad_NYI "missing_varlist_1",str)
+  where (before,after) = splitAt 9 str
+
+readEnum str = (bad_res "missing_varlist_2",str)
+
 
 vE  = ExprVar (jId "E") Static ; gE  = StdVar vE  ; sE  = vsSngl gE
 vN  = ExprVar (jId "N") Static ; gN  = StdVar vN  ; sN  = vsSngl gN

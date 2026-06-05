@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module LexBase  -- NU (Not Used) means can delete defn too
  ( Identifier
  , pattern Identifier
+ , isIdContChar
  , validIdent
  , ident, uident, brktIdent
  , isSymbId
@@ -33,6 +34,8 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
+
+import Debugger
 \end{code}
 
 \newpage
@@ -159,7 +162,7 @@ identTests
 
 \begin{code}
 jId :: String -> Identifier
-jId = fromJust . ident
+jId = fromJust . ident 
 jIdU :: String -> Int -> Identifier
 jIdU nm u = fromJust $ uident nm u
 identi :: String -> Int ->Identifier

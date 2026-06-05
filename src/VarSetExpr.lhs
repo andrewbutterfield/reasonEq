@@ -13,6 +13,7 @@ module VarSetExpr (
 , vSetVars, theGV
 , vsFalse, vsTrue, vsDisj, vsSub, vsSubD, vPredVars
 ) where
+import Data.Char(isSpace)
 import Data.Set(Set)
 import qualified Data.Set as S
 import LexBase
@@ -53,33 +54,43 @@ data VSetExpr
   deriving (Eq,Ord,Show)
 
 instance Read VSetExpr where
-  readsPrec _ str = [readVListExpr str]
+  readsPrec _ str = [readVListExpr $ pdbg "READVLIST.STR" str]
 
 bad_res msg = vsSngl $ StdVar $ PredVar (jId msg) Static
-bad_VSetExpr = bad_res "BAD_VSetExpr"
+bad_VSetExpr str = bad_res ("BAD_VSetExpr_"++map clean(take 5 $ pdbg "BVSE.str" str))
+clean c = if isIdContChar c then c else '?'
 bad_NYI str = bad_res (str++"_NYI")
 
 readVListExpr :: String -> (VSetExpr,String)
 -- expect VS to begin
+readVListExpr (c:str) | isSpace c = readVListExpr str
 readVListExpr ('V':'S':str) = readVKind str
-readVListExpr str = (bad_VSetExpr,str)
+readVListExpr str = (bad_VSetExpr str,str)
 
 readVKind :: String -> (VSetExpr, String)
+-- seen VS
 -- expect Enum|Union|Intsct|Minus
 readVKind str
-  | before5 == "Enum " = readPar readEnum after5
-  | otherwise  = (bad_NYI "UIM",str)
-  where (before5,after5) = splitAt 5 str
+  | before4 == "Enum"   = readPar   readEnum after4
+  | before5 == "Union"  = read2Sets VSUnion  after5
+  | before6 == "Intsct" = read2Sets VSIntsct after6
+  | before5 == "Minus"  = read2Sets VSMinus  after5
+  | otherwise           = (bad_res "invalid_set_constructor",str)
+  where 
+   (before4,after4) = splitAt 4 str
+   (before5,after5) = splitAt 5 str
+   (before6,after6) = splitAt 6 str
 
 readPar :: (String -> (VSetExpr, String)) -> String 
         -> (VSetExpr, String)
 -- expect ( something )
+readPar readSomeThing (c:str) | isSpace c = readPar readSomeThing str
 readPar readSomeThing ('(':str) 
  = let (thing,str') = readSomeThing str in 
      case str' of
-        "" -> (bad_NYI "missing_rpar",str')
-        (')':str'') -> (thing,str'')
-readPar _ str = (bad_NYI "missing_lpar",str)
+        (')':str'')  ->  (thing,str'')
+        _            ->  (bad_res "missing_rpar",str')
+readPar _ str = (bad_res "missing_lpar",str)
 
 readEnum :: String -> (VSetExpr, String)
 -- expect fromList [ ... ]
@@ -89,9 +100,17 @@ readEnum str
         ((varlist,str'):_)  -> ((VSEnum $ S.fromList varlist),str')
         _             -> (bad_NYI "missing_varlist_1",str)
   where (before,after) = splitAt 9 str
-
 readEnum str = (bad_res "missing_varlist_2",str)
 
+read2Sets :: (VSetExpr -> VSetExpr -> VSetExpr) 
+          -> String -> (VSetExpr,String)
+read2Sets make str0 
+  = let (set1,str1) = readPar readVListExpr str0
+    in case str1 of
+         (' ':str1') 
+            ->  let (set2,str2) = readPar readVListExpr str1'
+                in (make set1 set2,str2)
+         _  ->  (bad_res "missing_space_between_2_sets",str1)
 
 vE  = ExprVar (jId "E") Static ; gE  = StdVar vE  ; sE  = vsSngl gE
 vN  = ExprVar (jId "N") Static ; gN  = StdVar vN  ; sN  = vsSngl gN

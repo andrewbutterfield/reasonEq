@@ -30,6 +30,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetExpr
 import SideCond
 import Laws
 import VarData
@@ -867,14 +868,14 @@ scond2sidecond ctxt (SCFull vsconds (VSet gvars)) = do
 \subsubsection{VSCond to VarSideCond}
 
 \begin{code}
-vscond2varsidecond :: Context -> VSCond -> VarSideConds
+vscond2varsidecond :: Context -> VSCond -> [VSetPred]
 vscond2varsidecond ctxt (VSCDisj gv gvs)  = vscond2VSC ctxt disjfrom gv gvs
 vscond2varsidecond ctxt (VSCCovBy gv gvs) = vscond2VSC ctxt coveredby gv gvs
 vscond2varsidecond ctxt (VSCDynCov gv gvs) 
                                          = vscond2VSC ctxt dyncovered gv gvs
 
-vscond2VSC :: Context -> (GenVar -> VarSet -> VarSideConds)
-           -> GVar ->  VrSet -> VarSideConds
+vscond2VSC :: Context -> (GenVar -> VarSet -> [VSetPred])
+           -> GVar ->  VrSet -> [VSetPred]
 vscond2VSC ctxt op gv (VSet gvs)
   = gvar2genvar ctxt gv `op` (S.fromList $ map (gvar2genvar ctxt) gvs)
 \end{code}
@@ -891,11 +892,12 @@ sidecond2scond (vscs,fvs)
   | otherwise   =  SCFull (concat $ map varsidecond2vscond vscs)
                           (VSet $ map genvar2gvar $ S.toList fvs)
 
-varsidecond2vscond :: VarSideConds -> [VSCond]
-varsidecond2vscond (VSC gv nvsD nvsC nvsCd)
-  =     mkDisj   gv nvsD
-     ++ mkCovby  gv nvsC 
-     ++ mkDynCon gv nvsCd
+varsidecond2vscond :: [VSetPred] -> [VSCond]
+varsidecond2vscond _ = error "varsidecond2vscond needs rework"
+--(VSC gv nvsD nvsC nvsCd)
+--  =     mkDisj   gv nvsD
+--     ++ mkCovby  gv nvsC 
+--     ++ mkDynCon gv nvsCd
 
 mkDisj _  NA        =  []
 mkDisj gv (The vsD) 

@@ -28,6 +28,7 @@ import WriteRead
 import LexBase
 import Variables
 import AST
+import VarSetExpr
 import SideCond
 import Assertions
 import TermZipper
@@ -100,11 +101,12 @@ expandSCKnowns vts (vscs,freshvs)
     , mapVToverVarSet vts freshvs ) 
 --    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 
-expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
-expandVSCKnowns vts (VSC gv nvsD nvsC nvsCd) 
- = VSC gv (expandNVarSet vts nvsD) 
-          (expandNVarSet vts nvsC) 
-          (expandNVarSet vts nvsCd)
+expandVSCKnowns :: [VarTable] -> [VSetPred] -> [VSetPred]
+expandVSCKnowns vts = error "expandVSCKnowns needs rework"
+--(VSC gv nvsD nvsC nvsCd) 
+-- = VSC gv (expandNVarSet vts nvsD) 
+--          (expandNVarSet vts nvsC) 
+--          (expandNVarSet vts nvsCd)
 
 expandNVarSet :: [VarTable] -> NVarSet -> NVarSet
 expandNVarSet vts NA = NA

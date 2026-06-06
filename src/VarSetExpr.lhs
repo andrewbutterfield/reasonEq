@@ -26,11 +26,6 @@ import Debugger
 
 We provide set-expressions and predicates built over \h{VarSet},
 along with constructors and simplifiers.
-
-
-\newpage
-\section{Variable-Set Term Syntax}
-
 We assume our basic building blocks to be enumerations of general variables:
 $$\setof{gv_1,\dots,gv_n}, \qquad n \geq 0 .$$
 These can then be combined with set-theoretic operators 
@@ -40,7 +35,7 @@ We then add set-theoretic relations
 ($=$,$\subseteq$,$\disj$) 
 over such expressions, to produce set predicates.
 
-\subsection{Variable-Set Datatypes}
+\section{Variable-Set Expressions}
 
 Given that we want to use \h{Show} \emph{and \h{Read}} for save and restore,
 we develop a bespoke \h{Read} for \h{VarSet}.
@@ -54,23 +49,23 @@ data VSetExpr
   deriving (Eq,Ord,Show)
 
 instance Read VSetExpr where
-  readsPrec _ str = [readVListExpr $ pdbg "READVLIST.STR" str]
+  readsPrec _ str = [readVListExpr str]
 
 bad_res msg = vsSngl $ StdVar $ PredVar (jId msg) Static
-bad_VSetExpr str = bad_res ("BAD_VSetExpr_"++map clean(take 5 $ pdbg "BVSE.str" str))
+bad_VSetExpr str = bad_res ("BAD_VSetExpr_"++map clean(take 5 str))
 clean c = if isIdContChar c then c else '?'
 bad_NYI str = bad_res (str++"_NYI")
 
 readVListExpr :: String -> (VSetExpr,String)
 -- expect VS to begin
 readVListExpr (c:str) | isSpace c = readVListExpr str
-readVListExpr ('V':'S':str) = readVKind str
+readVListExpr ('V':'S':str) = readVExprKind str
 readVListExpr str = (bad_VSetExpr str,str)
 
-readVKind :: String -> (VSetExpr, String)
+readVExprKind :: String -> (VSetExpr, String)
 -- seen VS
 -- expect Enum|Union|Intsct|Minus
-readVKind str
+readVExprKind str
   | before4 == "Enum"   = readPar   readEnum after4
   | before5 == "Union"  = read2Sets VSUnion  after5
   | before6 == "Intsct" = read2Sets VSIntsct after6
@@ -119,17 +114,9 @@ vx' = ObsVar  (jId "x") After  ; gx' = StdVar vx' ; sx' = vsSngl gx'
 sEdN  = VSDisj sE sN
 sEsN  = VSSub  sE sN
 sEsdN = VSSubD sE sN
-
-data VSetPred
-  =  VSFalseP -- yes, we need this
-  |  VSDisj  VSetExpr VSetExpr  
-  |  VSSub   VSetExpr VSetExpr 
-  |  VSSubD  VSetExpr VSetExpr  -- limited to dynamic vars
-  |  VSTrueP
-  deriving (Eq,Ord,Show,Read)
 \end{code}
 
-\section{Smart Set Expression Constructors}
+\subsection{Smart Set Expression Constructors}
 
 Empty and singleton sets:
 \begin{code}
@@ -167,7 +154,7 @@ vsMinus vsplus vsminus
   | otherwise           =  VSMinus vsplus vsminus
 \end{code}
 
-\section{Set Expression Queries}
+\subsection{Set Expression Queries}
 
 Just collect all mentioned variables
 \begin{code}
@@ -187,9 +174,63 @@ theGV (VSEnum gvs) = case S.toList gvs of
 theGV vse  =  fail "theGV: singleton enumeration expected"
 \end{code}
 
-\section{Simplifying Set Expressions}
+\subsection{Simplifying Set Expressions}
 
-\section{Smart Set Predicate constructors}
+T.B.D.
+
+\section{Variable-Set Predicates}
+
+\begin{code}
+data VSetPred
+  =  VSFalseP -- yes, we need this
+  |  VSDisj  VSetExpr VSetExpr  
+  |  VSSub   VSetExpr VSetExpr 
+  |  VSSubD  VSetExpr VSetExpr  -- limited to dynamic vars
+  |  VSTrueP
+  deriving (Eq,Ord,Show)
+
+instance Read VSetPred where
+  readsPrec _ str = [readVListPred str]
+
+bad_VSetPred str 
+  =  VSSub (bad_res ("BAD_VSetPred_"++map clean(take 5 str)))
+           (bad_res "?")
+
+readVListPred :: String -> (VSetPred,String)
+-- expect VS to begin
+readVListPred (c:str) | isSpace c = readVListPred str
+readVListPred ('V':'S':str) = readVPredKind str
+readVListPred str = (bad_VSetPred str,str)
+
+readVPredKind :: String -> (VSetPred, String)
+-- seen VS
+-- expect FalseP|Disj|Sub|SubD|TrueP
+readVPredKind str
+  | before6 == "FalseP" = (VSFalseP,after6)
+  | before4 == "Disj"   = read2Preds VSDisj after4
+  | before4 == "SubD"   = read2Preds VSSubD after4
+  | before3 == "Sub"    = read2Preds VSSub  after3
+  | before5 == "TrueP"  = (VSTrueP,after5)
+  | otherwise           = (bad_VSetPred "invalid_pred_constructor",str)
+  where 
+   (before3,after3) = splitAt 3 str
+   (before4,after4) = splitAt 4 str
+   (before5,after5) = splitAt 5 str
+   (before6,after6) = splitAt 6 str
+
+read2Preds :: (VSetExpr -> VSetExpr -> VSetPred) 
+          -> String -> (VSetPred,String)
+read2Preds make str0 
+  = let (set1,str1) = readPar readVListExpr str0
+    in case str1 of
+         (' ':str1') 
+            ->  let (set2,str2) = readPar readVListExpr str1'
+                in (make set1 set2,str2)
+         _  ->  (bad_VSetPred "missing_space_between_2_sets",str1)
+\end{code}
+
+
+\subsection{Smart Set Predicate constructors}
 
 \begin{code}
 vsFalse :: VSetPred
@@ -222,7 +263,7 @@ vsSubD vse1 vse2              =  VSSubD vse1 vse2
 \end{code}
 
 
-\section{Set Predicate Queries}
+\subsection{Set Predicate Queries}
 
 \begin{code}
 vPredVars :: VSetPred -> VarSet
@@ -232,9 +273,9 @@ vPredVars (VSSubD vse1 vse2)  =  vSetVars vse1 `S.union` vSetVars vse2
 vPredVars _                   =  S.empty
 \end{code}
 
-\section{Simplifying Set Predicates}
+\subsection{Simplifying Set Predicates}
 
-
+T.B.D.
 
 
 

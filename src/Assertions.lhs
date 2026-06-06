@@ -170,7 +170,7 @@ does not have both free and bound occurrences.
 
 \begin{code}
 newtype Assertion = ASN (Term, SideCond) 
- deriving (Eq,Ord,Show)
+ deriving (Eq,Ord,Show,Read)
 
 pattern Assertion tm sc  <-  ASN (tm, sc)
 pattern AssnT tm         <-  ASN (tm, _ )

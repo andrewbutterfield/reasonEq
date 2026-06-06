@@ -70,7 +70,7 @@ and a set of other (general) variables ($x,\lst{v}$).
 In general we have a conjunction of term variable conditions,
 but we need to be able to distinguish between no conditions (always ``true'')
 and inconsistent conditions
-(e.g. $x \disj \fv(T) \land x = \fv(T) $, always ``false'').
+(e.g. $\fv(T) \disj x \land \fv(T) = x$, always ``false'').
 As a false side-condition means a match failure,
 we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
@@ -81,34 +81,40 @@ NEW: the term $T$ is represented using the \texttt{StdVar} variant of a
 However there are emerging use cases that want to relate a list-variable with a
 set of general variables. 
 These crop up in the UTCP theory when defining $X(E|R|a|N)$,
-such as $\lst O,\lst O' \disj E$, 
-or $\setof{E} \disj \lst O \land \setof{E} \disj \lst O'$, 
-where $E$ is an (unknown) expression variable.
+such as $E \disj \lst O,\lst O'$, 
+where $E$ is  (set-valued) expression variable.
 
 \subsection{Term (List-Variable?)/Variable-Set Relations}
 
 An term variable side-condition (VSC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
-   x,\lst v   \disj  T
-   && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
-\\ x,\lst v \supseteq T 
-   && \mbox{covering, short for }\{x,\lst v\} \supseteq \fv(T)
-\\ x_d,\lst v_d \supseteq_a T 
-   && \mbox{dynamic coverage, short for } \{x_d,\lst v_d\} \supseteq \dfv(T)
-\\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
+   T \disj x,\lst v
+   && \mbox{disjoint, short for }\fv(T) \cap \{x,\lst v\} = \emptyset
+\\ T \subseteq x,\lst v 
+   && \mbox{covering, short for }\fv(T) \subseteq \{x,\lst v\}
+\\ T \subseteq_a  x_d,\lst v_d
+   && \mbox{dynamic coverage, short for } \dfv(T) \subseteq \{x_d,\lst v_d\}
+\\ pre      \subseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
 The dynamic variables here correspond to what UTP calls the ``alphabet''
 of a predicate, hence the use of subscript `a'.`
 For dynamic coverage, a fuller more rigorous definition is:
 \begin{equation*}
-V \supseteq_a T 
+T \subseteq_a V
 \quad\defs\quad 
 (\forall g \in V \bullet \isdyn(g))
 \land
-V \supseteq \dfv(T)
+\dfv(T) \subseteq V
 \end{equation*}
-We use the suffix 
+\textbf{
+NOTE: 
+The above definition evaluates to false if $V$ contains any non-dynamic variables.
+An alternative definition is that we restrict both sides to dynamic variables,
+before doing the check. 
+Which is better? Which is correct?
+}
+
 
 In most cases the term $T$ will be very general,
 and will be represented by a variable.
@@ -117,112 +123,70 @@ usually expressions, and we will expect there to be only one general variable
 which will itself be a list variable:
 \begin{eqnarray*}
    \lst v   \disj  \lst e && \mbox{disjoint, short for }
-   v_1\disj \fv(e_1) \land \dots \land v_n\disj \fv(e_n)
+   \fv(e_1) \disj v_1\disj \land \dots \land \fv(e_n) \disj v_n 
 \end{eqnarray*}
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
-We could also have the UTCP situation mentioned above where the term is replaced
-by a list variable, which in this case represents a set of variables, not terms
-(not entirely sure about this).
 
 We note that disjointness and being a (pre-)condition
 distribute through conjunction without restrictions,
 so we have, for example, that:
 \begin{eqnarray*}
-   x,y \disj S,T
+   S,T \disj x,y 
    &\equiv&
    x \disj S \land x \disj T \land y \disj S \land y \disj T
-\\ pre \supseteq S,T
+\\ S,T \subseteq pre
    &\equiv&
-   pre \supseteq S \land pre \supseteq T
+   S \subseteq pre \land T \subseteq pre
 \end{eqnarray*}
 However, covering only distributes (like $pre$) w.r.t. conjunction
 as far as terms are concerned.
 The variable-list must be retained as a unit.
 \begin{eqnarray*}
-   x \supseteq S,T
+   S,T \subseteq x
    &\equiv&
-   x \supseteq S \land x \supseteq T
-\\ x,y \supseteq T
+   S\subseteq x \land T \subseteq x
+\\ T \subseteq x,y
    &\not\equiv&
-   x \supseteq T \land y \supseteq T
+   T\subseteq x \land T \subseteq y
 \end{eqnarray*}
 In general we are assuming that law side-conditions have term variables,
 but when we instantiate such side-conditions with a match binding,
 we may find observational variables appearing.
 In some of these cases, we may be able to simplify a side-condition further:
 \begin{eqnarray*}
-   \dots,z,\dots   \disj  z  && \false
-\\ \dots,z,\dots{} \supseteq z  && \true
-\\ \emptyset \supseteq z   && \false
-\\ \emptyset \supseteq_a z && \lnot\isdyn(z)
-\\ pre       \supseteq z   && z \textrm{ is a \texttt{Before} variable}
+   z \disj \dots,z,\dots        && \false
+\\ z \subseteq \dots,z,\dots{}  && \true
+\\ z \subseteq \emptyset        && \false
+\\ z \subseteq_a \emptyset      && \lnot\isdyn(z)
+\\ z \subseteq pre              && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 For list variables, we can add:
 \begin{eqnarray*}
-   \lst\ell  \supseteq \lst\ell\less x,\dots  && \true
-\\ \lst\ell  \supseteq_a \lst\ell\less x,\dots  && \isdyn(\lst\ell)
+   \lst\ell\less x,\dots \subseteq \lst\ell   && \true
+\\ \lst\ell\less x,\dots \subseteq_a \lst\ell   && \isdyn(\lst\ell)
 \end{eqnarray*}
 
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
-In general a given term variable $T$ could be involved 
-in all three condition types:
-$$
-  D \disj T \land C \supseteq T \land C_d \supseteq_a T
-$$
-which can be normalised to
-$$
-  D \disj T \land 
-  (C \setminus D) \supseteq T 
-  \land (C_d \setminus D) \supseteq_a T
-$$
-We can compress this to $(T,D,C,C_d)$.
 
-The disjoint condition is true for any variable if $D$ is null.
-The coverage conditions are true if $C$ or $C_d$ cover all possible variables.
-which we can capture with the idea of a universe set $U$ or $U_d$.
-However doing this causes both conceptual confusion 
-and results in erroneous inferences. 
-A ``true'' side-condition is basically one 
-that we don't consider or assess in any way.
-It denotes the lack of any condition that needs to be satisfied.
+\section{Variable Side-Conditions (VSC)}
 
-We use the \h{NA} type to indicate when a component is irrelevant.
-
-\newpage
-\section{Variable Side-Conditions}
-
-We now introduce our notion of term-variable side-conditions.
+We now introduce our notion of variable side-conditions.
 We will not represent $pre$ explicitly here,
-and instead will use $\lst O \supseteq T$.
-
-First we need to be able to say when a specific side-condition is inapplicable:
-
-
-
-Now we define side-conditions for a given general variable:
-\begin{code}
-
--- probably obsolete
-termVar            :: VSetPred -> GenVar
-termVar vsp        = error ("NYI: termVar "++show vsp)
-disjointFrom       :: VSetPred -> VSetExpr
-disjointFrom vsp   = error ("NYI: disjointFrom "++show vsp)
-coveredBy          :: VSetPred -> VSetExpr
-coveredBy vsp      = error ("NYI: coveredBy "++show vsp)
-coveredDynamic     :: VSetPred -> VSetExpr
-coveredDynamic vsp = error ("NYI: coveredDynamic "++show vsp)
-\end{code}
-
-Our variable side-conditions are built up from three basic forms,
-each of which relates a global variable to a variable set:
+and instead will use $T \subseteq \lst O$.
+Our basic VSC is implemented using \h{VSetPred},
+and are built up from three basic forms,
+each of which will relate a \emph{single} global (term) 
+variable to a variable set:
 $$
-   v_G \disj S \qquad  v_G 
+   \setof{v_G} \disj S \qquad  v_G 
 $$
 
-We provide some builders when only one of the three conditions is involved:
+\subsection{VSC Builders}
+
+We provide some builders for the three conditions:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
 gv `disjfrom`   vsD   =  VSDisj (onegv gv) $ VSEnum vsD
@@ -233,21 +197,44 @@ onegv :: GenVar -> VSetExpr
 onegv gv = VSEnum $ S.singleton gv
 \end{code}
 
-\textbf{Changed from using superset to using subset}
-\emph{
-  What we see eveywhere are $s,s'\supseteq_a P$,
-   and it is easier to have $P \subseteq s,s'$.
-}
+\newpage
+\subsection{VSC Queries}
 
-\begin{eqnarray*}
-   \setof{O,O'} \supseteq \setof{ls,ls',a} 
-   \land \setof{O,O'} \supseteq \setof{a}
-   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
-\\ (P\setminus \lst y) \disj \lst x 
-   &=&
-   \setof{P} \disj (\lst x \setminus \lst y) 
-\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
-\end{eqnarray*}
+In general it can be useful to allow the first enumerated set to 
+be non-empty, rather than kimited to being a singleton.
+
+We define a predicate that checks for this form,
+and a queries that returns the global variables, if any,
+and the second component.
+\begin{code}
+validSC :: VSetPred -> Bool
+validSC VSFalseP                =  True
+validSC VSTrueP                 =  True
+validSC (VSDisj (VSEnum gs) _)  =  not $ S.null gs 
+validSC (VSSub  (VSEnum gs) _)  =  not $ S.null gs
+validSC (VSSubD (VSEnum gs) _)  =  not $ S.null gs
+valisSC _                       =  False
+
+termVar :: MonadFail mf => VSetPred -> mf GenVar
+termVar (VSDisj s1 _) = theTermVar s1
+termVar (VSSub  s1 _) = theTermVar s1
+termVar (VSSubD s1 _) = theTermVar s1
+termVar vsp           = fail "no term-var involved"
+
+theTermVar (VSEnum vs)
+  = case S.toList vs of
+      [g] -> return g
+      _ -> fail "term-var set not singleton"
+theTermVar vse  =  fail "term-var set not enum"
+
+theSetExpr :: MonadFail mf => VSetPred -> mf VSetExpr
+theSetExpr (VSDisj _ s2) = return s2
+theSetExpr (VSSub  _ s2) = return s2
+theSetExpr (VSSubD _ s2) = return s2
+theSetExpr vsp           = fail "no set-expression involved"
+\end{code}
+
+\subsection{VSC Laws}
 
 Here we are generally interested in single relations ($\disj$,$\supseteq$)
 with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
@@ -1420,9 +1407,9 @@ findGenVarInSC :: MonadFail m => GenVar -> SideCond -> m VSetPred
 findGenVarInSC gv ( vscs, _ )  =  findGV gv vscs
 
 findGV _ [] = fail "findGenVarInSC: not in any term variable side-condition"
-findGV gv (vsc:vscs)
-  | gv == termVar vsc  =  return vsc
-  | otherwise          =  findGV gv vscs
+findGV gv (vsc:vscs) = fail "findGV NYI"
+--  | gv == termVar vsc  =  return vsc
+--  | otherwise          =  findGV gv vscs
 \end{code}
 
 We then look at returning all mentions of a variable:
@@ -1431,9 +1418,9 @@ findAllGenVar :: GenVar -> SideCond -> [VSetPred]
 findAllGenVar gv ( vscs, _ )  =  findAGV gv [] vscs
 
 findAGV _ scsa []  =  reverse scsa
-findAGV gv scsa (vsc:vscs)
-  | gv == termVar vsc  =  findAGV gv (vsc:scsa) vscs
-  | otherwise          =  findAGV gv scsa       vscs
+findAGV gv scsa (vsc:vscs) = []
+--  | gv == termVar vsc  =  findAGV gv (vsc:scsa) vscs
+-- | otherwise          =  findAGV gv scsa       vscs
 \end{code}
 
 We sometimes want mentions for a specific condition type:

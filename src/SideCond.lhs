@@ -241,17 +241,25 @@ with a single distinguished term variable $P$ embedded inside set operations ($\
 We want to pull $P$ out to be the sole 1st argument of the relation.
 These should \emph{not} reduce the relations to \true\ or \false.
 In general we may need extra terms not involving $P$ in the output.
-We want to distinguish therse so we keep them separate.
+We want to distinguish these so we keep them separate.
 \begin{code}
 simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
 \end{code}  
 
 \subsection{Union and Diff vs. Disjoint and Superset}
 
+We have the following variations:
+\begin{eqnarray*}
+   (P \setminus X)     \disj Y &=& P \disj (Y \setminus X)
+\\ (P \cup X)          \disj Y &=& (P \disj Y) \land (X \disj Y)
+\\ (P \setminus X) \subseteq Y &=& P \setminus (X \cup Y) \subseteq \emptyset
+\\ (P \cup X)      \subseteq Y &=& P \subseteq Y \land X \subseteq Y
+\end{eqnarray*}
+
 $$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
 \begin{code}
 simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
-             =  (p `VSDisj` (y `vsMinus` x), [])
+             =  ( p `VSDisj` (y `vsMinus` x) , [] )
 \end{code} 
 
 $$ 
@@ -261,34 +269,34 @@ $$
 $$
 \begin{code}
 simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
-               = (p `VSDisj` y , [x `VSDisj` y ] )
+               = ( p `VSDisj` y , [x `VSDisj` y ] )
 \end{code} 
 
 $$  
-   P \subseteq (X \setminus Y) 
+   (P \setminus X) \subseteq Y
    ~=~ 
-   ?
+   P \setminus (X \cup Y) \subseteq \emptyset
 $$
 \begin{code}
-simplifyVSetPred (y `VSSub` (p `VSMinus` x)) 
-  = ( p `VSSub` (y `vsMinus` x) , [x `VSDisj` y  ] )
+simplifyVSetPred ((p `VSMinus` x) `VSSub` y) 
+  = ( p `VSMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
 \end{code} 
 
-$$ P \subseteq (X \cup Y)
+$$ (P \cup X) \subseteq Y
    ~=~ 
-   ?
+   P \subseteq Y \land X \subseteq Y
 $$
 \begin{code}
 simplifyVSetPred ((p `VSUnion` x) `VSSub` y)  
-             =  (p `VSSub` (y `vsMinus` x), [])
+             =  ( p `VSSub` y , [x `VSSub` y] )
 \end{code} 
 
 
 \subsection{Union and Diff vs. Dynamic Superset}
 
-Dynamic superset ($\supseteq_d$) is defined as:
+Dynamic subset ($\subseteq_d$) is defined as:
 $$
-  P \supseteq_d X \quad \defs \quad P|d \supseteq X|d
+  P \subseteq_d X \quad \defs \quad P|d \subseteq X|d
 $$
 where $S|d$ is $S$ restricted to the dynamic variables in $d$.
 The key question is: does this affect the laws?
@@ -303,22 +311,22 @@ and restriction w.r.t a set element (or sets of elements) is idempotent.
 \end{eqnarray*}
 
 $$  
-   (P \setminus X) \supseteq_d Y 
+   (P \setminus X) \subseteq_a Y
    ~=~ 
-   P \supseteq_d (Y \setminus X) \land (X \disj Y)
+   P \setminus (X \cup Y) \subseteq_a \emptyset
 $$
 \begin{code}
 simplifyVSetPred ((p `VSMinus` x) `VSSubD` y) 
-  = ( p `VSSubD` (y `vsMinus` x) , [x `VSDisj` y  ] )
+  = ( p `VSMinus` (x `VSUnion` x) `VSSubD` vsEmpty , [] )
 \end{code} 
 
-$$ (P \cup X) \supseteq_d Y 
+$$ (P \cup X) \subseteq_a Y
    ~=~ 
-   P \supseteq_d (Y \setminus X)
+   P \subseteq_a Y \land X \subseteq_a Y
 $$
 \begin{code}
 simplifyVSetPred ((p `VSUnion` x) `VSSubD` y)  
-             =  (p `VSSubD` (y `vsMinus` x), [])
+             =  ( p `VSSubD` y , [x `VSSubD` y] )
 \end{code} 
 
 \subsection{All other cases: no change}

@@ -4,22 +4,6 @@
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
-**The derived instance of `Read` for `VSetPred`,based on my hand-written instance for `VSetExpr` (because ghc cannot derive it),behaves really wierdly!!!**
-
-```
-ghci> VSDisj sN sE
-VSDisj (VSEnum (fromList [GV (VR (Id "N" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id "E" 0,VE,WS))]))
-
-ghci> show it
-"VSDisj (VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))"
-
-ghci> readsPrec 0 it :: [(VSetPred,String)]
-@READVLIST.STR:  " (VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))"
-@READVLIST.STR:  "(VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))"
-[(VSDisj (VSEnum (fromList [GV (VR (@BVSE.str:  "(VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))"
-Id "BAD_VSetExpr_?VSEn" 0,VP,WS))])) (VSEnum (fromList [GV (VR (@BVSE.str:  "(VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))"
-Id "BAD_VSetExpr_?VSEn" 0,VP,WS))])),"(VSEnum (fromList [GV (VR (Id \"N\" 0,VE,WS))])) (VSEnum (fromList [GV (VR (Id \"E\" 0,VE,WS))]))")]
-```
 
 ## URGENT or NEXT
 
@@ -58,14 +42,10 @@ Fixing bugs as we go.
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 
    Plan:
-     `VSet(Expr|Pred)` has now got its own module, out of `Instantiate`.
-     We now replace `VarSideConds` in `SideCond` with sorted `[VSetPred]`, 
-     and follow the consequences through. 
-     Initially we modify `NewSideCond` so the prover stays "operational".
-     *Changed from superset to subset*
-     **Need to check `simplifyVSetPred` simplifications**
-
      Rework required?: SideCond, Assertion, Instantiate, Substitution
+
+     Focus: `SideCond.mrgSameGVSC` is key. `vscCheck` is obsolete. 
+     The are too many uses of `mergeX` and `mrgX` - these should be rationalised.
 
     
    Diagnosis: 

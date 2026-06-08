@@ -17,7 +17,7 @@ module SideCond (
 , mkSideCond -- Instantiate, Assertions, SourceHandling - KEEP
 , scDischarge -- AbstractProver, LiveProofs - KEEP
 , isFloatingVSC -- LiveProofs - KEEP
-, addFreshVars -- AbstractProver - KEEP
+, addFreshVars, onlyFreshSC -- AbstractProver - KEEP
 , notin, covers, dyncover, fresh -- builtins,etc., - KEEP
 , findGenVarInSC  -- Substitution - KEEP
 , findAllGenVar -- Instantiate - KEEP for now
@@ -1336,6 +1336,9 @@ Later proof steps need to know this has happened\dots
 \begin{code}
 addFreshVars :: VarSet -> SideCond -> SideCond
 addFreshVars freshlynew (vsps,freshv) = (vsps,freshlynew `S.union` freshv)
+
+onlyFreshSC :: SideCond -> Bool
+onlyFreshSC (vsps,fvars) = null vsps
 \end{code}
 
 
@@ -1451,6 +1454,7 @@ gv `mentionedBy` _ = fail "mentionedBy NYfI"
 --          _         ->  gv `mentionedBy` vsps
 --  | otherwise       =   gv `mentionedBy` vsps
 \end{code}
+
 
 
 We convert variable-sets into ordered lists of lists,

@@ -65,6 +65,7 @@ import Laws
 import TermZipper
 import Types
 import AST
+import VarSetExpr
 import FreeVars
 import AlphaEquiv
 import Substitution
@@ -354,7 +355,7 @@ applyMatchToFocus1 i liveProof
                                `S.union`
                                mentionedVars goal
                                `S.union`
-                               scVarSet (mLawSC mtch) )
+                               S.unions (map vPredVars (fst $ mLawSC mtch) ))
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
@@ -439,19 +440,20 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage obsv lvvls (tvarSCs,_)
-  = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage tvarSCs)
+extendGoalSCCoverage obsv lvvls (vsps,_)
+  = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage vsps)
   where
-    isCoverage (VSC _ _ mvsC mvsCd)  
-      =  mvsC /= NA || mvsCd /= NA
+    isCoverage (VSSub _ _)   =  True 
+    isCoverage (VSSubD _ _)  =  True 
+    isCoverage _             =  False
 
     xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements
-                 -> [VarSideConds] -- extra side-conditions (so far)
-                 -> [VarSideConds] -- Law coverage side-conditions
+                 -> [VSetPred] -- extra side-conditions (so far)
+                 -> [VSetPred] -- Law coverage side-conditions
                  -> m SideCond
-    xtndCoverage _ _ vscs [] = return (vscs, S.empty)
-    xtndCoverage obsv ffvls vscs ((VSC gv _ mvsC mvsCd) : rest)
+    xtndCoverage _ _ vsps [] = return (vsps, S.empty)
+    xtndCoverage obsv ffvls vsps (vsp@(VSSub gvs (VSEnum vsC)) : rest)
       | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
@@ -459,16 +461,20 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do vscs' <- mrgVarConds justcov vscs  
-              xtndCoverage obsv ffvls vscs' rest
-      | otherwise  =  xtndCoverage obsv ffvls vscs rest
-      where 
-         cunion NA (The vsCd) = vsCd
-         cunion (The vsC)  NA = vsC
-         cunion (The vsC) (The vsCd) = vsC `S.union` vsCd
-         cunion _ _ = S.empty
-         vsC = mvsC `cunion` mvsCd
-         justcov = VSC gv disjNA mvsC mvsCd
+         = do vsps' <- mrgVarConds vsp vsps  
+              xtndCoverage obsv ffvls vsps' rest
+      | otherwise  =  xtndCoverage obsv ffvls vsps rest
+    xtndCoverage obsv ffvls vsps (vsp@(VSSubD gvs (VSEnum vsCd)) : rest)
+      | S.toList vsCd `elem` ffvls
+
+             -- DO WE NEED THIS?
+             -- (Assertion conj _) = conjecture liveProof
+             -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
+             --              $ S.map gvarWhen $ mentionedVars conj
+
+         = do vsps' <- mrgVarConds vsp vsps  
+              xtndCoverage obsv ffvls vsps' rest
+      | otherwise  =  xtndCoverage obsv ffvls vsps rest
 \end{code}
 
 \newpage

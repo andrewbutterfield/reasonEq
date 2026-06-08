@@ -627,7 +627,7 @@ vspsdbg = rdbg (seplist "_land" $ trVSPred)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid sc@(vscs,fvs)
+trsidecond trid sc@(SCD vscs fvs)
   | isTrivialSC sc  =  _top
   | otherwise       =  intcalNN ", " 
                          ( (map (trvspred trid) vscs)
@@ -674,8 +674,9 @@ fvsdbg = rdbg trFreeVars
 trAsn = trasn trId
 trAsnU = trasn trIdU
 
-trasn trid (Assertion trm ([],_))  =  trterm trid 0 trm
-trasn trid (Assertion trm sc)      =  trterm trid 0 trm ++ ", " ++ trSideCond sc
+trasn trid (Assertion trm (SCD [] _))  =  trterm trid 0 trm
+trasn trid (Assertion trm sc)          
+  =  trterm trid 0 trm ++ ", " ++ trSideCond sc
 
 trNmdAsn = trnmdasn trId
 trNmdAsnU = trnmdasn trIdU

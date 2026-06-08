@@ -355,7 +355,8 @@ applyMatchToFocus1 i liveProof
                                `S.union`
                                mentionedVars goal
                                `S.union`
-                               S.unions (map vPredVars (fst $ mLawSC mtch) ))
+                               S.unions 
+                                  (map vPredVars (scVSPreds $ mLawSC mtch)) )
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
@@ -399,7 +400,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
           scCX <- mrgSideCond scC scCL
           scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
-            then do let freshneeded = snd scD
+            then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent
                     let (fbind,fresh)
@@ -440,7 +441,7 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage obsv lvvls (vsps,_)
+extendGoalSCCoverage obsv lvvls (SCD vsps _)
   = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage vsps)
   where
     isCoverage (VSSub _ _)   =  True 
@@ -452,7 +453,7 @@ extendGoalSCCoverage obsv lvvls (vsps,_)
                  -> [VSetPred] -- extra side-conditions (so far)
                  -> [VSetPred] -- Law coverage side-conditions
                  -> m SideCond
-    xtndCoverage _ _ vsps [] = return (vsps, S.empty)
+    xtndCoverage _ _ vsps [] = return (SCD vsps S.empty)
     xtndCoverage obsv ffvls vsps (vsp@(VSSub gvs (VSEnum vsC)) : rest)
       | S.toList vsC `elem` ffvls
 

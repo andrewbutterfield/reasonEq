@@ -283,7 +283,7 @@ tmVbecomesE = tmConj ("v"-.-"becomes"-.-"e")
 mkSC :: String -> SideCond -> (String,(Term,SideCond))
 mkSC name sc = ( "sc"-.-name, ( mkBody, sc ))
 
-mkvsc name vsc = mkSC name ([vsc],S.empty)
+mkvsc name vsc = mkSC name (SCD [vsc] S.empty)
 
 vP = Vbl (jId "P") PredV Static ; gvP = StdVar vP
 vQ = Vbl (jId "Q") PredV Static ; gvQ = StdVar vQ
@@ -291,16 +291,16 @@ just_a = S.singleton gva
 a_and_bl = S.fromList [gva,glvb']
 
 tmSCtrue = mkSC "true" scTrue
-tmSCfree1 = mkSC ("free"-.-"a") ([],S.singleton gva)
+tmSCfree1 = mkSC ("free"-.-"a") (SCD [] just_a)
 tmSCvarDisj = mkvsc ("P"-.-"disj"-.-"a") (gvP `disjfrom` just_a)
 tmSCvarCov = mkvsc ("P"-.-"cov"-.-"a") (gvP `coveredby` just_a)
 tmSCvarDCov = mkvsc ("P"-.-"dyncov"-.-"a") (gvP `dyncovered` just_a)
-tmSCmixed = mkSC ("mixed") ([gvP `disjfrom` just_a],just_a)
+tmSCmixed = mkSC ("mixed") (SCD [gvP `disjfrom` just_a] just_a)
 tmSCall = mkSC "all" 
-  ( [ gvP `disjfrom` just_a
-    , gvQ `coveredby` S.fromList [gva,glvb']
-    , gvQ `dyncovered` S.fromList [glva,gvb'] ]
-  , S.fromList [gva,glvb']
+  (SCD [ gvP `disjfrom`   just_a
+       , gvQ `coveredby`  S.fromList [gva,glvb']
+       , gvQ `dyncovered` S.fromList [glva,gvb'] ]
+       (S.fromList [gva,glvb'])
   )
 \end{code}
 

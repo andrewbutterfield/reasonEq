@@ -491,7 +491,7 @@ This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
-getTermVarInvolvement (SubCtxt (vsps, _) vts) v lvlv@(tlv,rlv) =
+getTermVarInvolvement (SubCtxt (SCD vsps _) vts) v lvlv@(tlv,rlv) =
   let (possSC,vsp) = possibleSideConditionOption vsps (StdVar v) tlv
       (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
       poss = max possSC possER 
@@ -736,12 +736,12 @@ For term variables we have the following examples:
 
 Term Variables should have side-conditions: 
 \begin{code}
-lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw) 
+lvlvSub sctx@(SubCtxt sc@(SCD vsps _) vdata) tk v@(Vbl i vc vw) 
         lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
              , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
   -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
   -- vc = ExprV,PredV
-  = case (StdVar v) `mentionedBy` fst sc of
+  = case (StdVar v) `mentionedBy` vsps of
  
     Nothing                 ->  Right [lvlv] 
     Just ((VSDisj _ (VSEnum vsD)),Nothing) 

@@ -26,6 +26,7 @@ module Proofs
 import Utilities
 import LexBase
 import AST
+import SideCond
 import Assertions
 import TermZipper
 import Binding
@@ -508,7 +509,7 @@ shStep ( (UseLaw how lnm bind dpath), asn@(Assertion trm sc) )
               , "    " ++ trBinding bind
               ]
    where
-     trSC ([],_) = ""
+     trSC (SCD [] _) = ""
      trSC sc = " ,  "++trSideCond sc
 shStep ( just, asn )  =  unlines' [ trAsn asn
                                   , showJustification just ]

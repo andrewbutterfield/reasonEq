@@ -96,9 +96,8 @@ expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
 \section{Expanding Knowns in Side-Conditions}
 \begin{code}
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
-expandSCKnowns vts (vscs,freshvs)
-  = ( expandVSCKnowns vts vscs
-    , mapVToverVarSet vts freshvs ) 
+expandSCKnowns vts (SCD vscs freshvs)
+  = SCD (expandVSCKnowns vts vscs) (mapVToverVarSet vts freshvs ) 
 --    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 
 expandVSCKnowns :: [VarTable] -> [VSetPred] -> [VSetPred]

@@ -884,10 +884,10 @@ vscond2VSC ctxt op gv (VSet gvs)
 
 \begin{code}
 sidecond2scond :: SideCond -> SCond
-sidecond2scond ([],fvs)
+sidecond2scond (SCD [] fvs)
   | S.null fvs  =  SCnone
   | otherwise   =  SCFresh $ VSet $ map genvar2gvar $ S.toList fvs
-sidecond2scond (vscs,fvs)
+sidecond2scond (SCD vscs fvs)
   | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond [vscs]
   | otherwise   =  SCFull (concat $ map varsidecond2vscond [vscs])
                           (VSet $ map genvar2gvar $ S.toList fvs)

@@ -885,15 +885,15 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind <- match vts fits tC partsP
+  =  do bind  <- match vts fits tC partsP
         kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC
-        tP' <- instTerm insctxt fbind replP
-        scP' <- instantiateSC insctxt fbind scP
+        tP'   <- instTerm insctxt fbind replP
+        scP'  <- instantiateSC insctxt fbind scP
         scP'' <- scDischarge (getDynamicObservables vts) scC scP'
 
-        if all isFloatingVSC (fst scP'')
+        if all isFloatingVSC (scVSPreds scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)
                              fbind replP scC scP' tP'
           else fail "undischargeable s.c."

@@ -414,7 +414,7 @@ csubsafe x (Substn es lvlvs)
 Finally, we get our variables from a side-condition:
 \begin{code}
 safeSideCondition :: Term -> SideCond -> Bool
-safeSideCondition tm (vsps,_)  
+safeSideCondition tm (SCD vsps _)  
   =  all (\ x -> scSafe x tm) $ concat $ map (S.toList . vPredVars) vsps
 \end{code}
 \textbf{
@@ -618,7 +618,7 @@ we need to produce $n+1$ side-conditions, for $v_0$ \dots $v_n$.
 We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv (vscs,fvs)
+normSC vv (SCD vscs fvs)
   = case mkSideCond (map (fromJust . normASC vv) vscs) (normFresh vv fvs) of
       Yes sc    ->  sc
       -- this should not fail, but just in case ...

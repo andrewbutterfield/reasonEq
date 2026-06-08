@@ -97,7 +97,7 @@ expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
 \begin{code}
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
 expandSCKnowns vts (vscs,freshvs)
-  = ( map (expandVSCKnowns vts) vscs
+  = ( expandVSCKnowns vts vscs
     , mapVToverVarSet vts freshvs ) 
 --    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 
@@ -108,9 +108,8 @@ expandVSCKnowns vts = error "expandVSCKnowns needs rework"
 --          (expandNVarSet vts nvsC) 
 --          (expandNVarSet vts nvsCd)
 
-expandNVarSet :: [VarTable] -> NVarSet -> NVarSet
-expandNVarSet vts NA = NA
-expandNVarSet vts (The vs) = The $ mapVToverVarSet vts vs
+expandNVarSet :: [VarTable] -> VarSet -> VarSet
+expandNVarSet vts vs = mapVToverVarSet vts vs
 
 expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
 expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv

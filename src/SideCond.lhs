@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module SideCond (
   disjfrom, coveredby, dyncovered
 , simplifyVSetPred
-, SideCond, scTrue
+, SideCond(..), scVSPreds, scFVars
+, scTrue
 , isTrivialSC -- used just here and in TestRendering !!!!
 , mrgVarConds -- AbstractProver  (xtndCoverage for float replacements) ?
 --, mergeVarConds -- not used elsewhere!
@@ -487,19 +488,71 @@ a list of term-variable side-conditions,
 interpreted as their conjunction,
 along with a set defining fresh variables.
 \begin{code}
-type SideCond = ( [VSetPred]  -- all must be true
-                , VarSet )       -- must be fresh
+data SideCond 
+  = SCD [VSetPred] VarSet
+  deriving (Eq,Ord,Show)
+
+instance Read SideCond where
+
+  readsPrec _ str = [readSideCond str]
+
+-- SCD [...] (fromList [...])
+readSideCond :: String -> (SideCond,String)
+readSideCond str
+ | before3 == "SCD" = readSC1 after3
+ | otherwise  =  error ("readSideCond, SCD expected")
+ where (before3,after3) = splitAt 3 str
+
+-- [...] (fromList [...])
+readSC1 :: String -> (SideCond,String)
+readSC1 (c:str) | isSpace c = readSC1 str
+readSC1 str
+  = case readsPrec 0 str of
+      ((vsps,str'):_) -> readSC2 vsps str'
+      _               -> error ("readSC1, [VSetPred] expected, seen: '"++str)
+
+-- (fromList [...])
+readSC2 :: [VSetPred] -> String -> (SideCond,String)
+readSC2 vsps str@(c:str') 
+  | isSpace c = readSC2 vsps str'
+  | before10 == "(fromList " = readSC2' vsps after10
+  where (before10,after10) = splitAt 10 str
+readSC2 _ str = error ("readSC2, (fromList [VarSet]) expected, seen: '"++str)
+
+-- [...])
+readSC2' :: [VSetPred] -> String -> (SideCond,String)
+readSC2' vsps str 
+  = case readsPrec 0 str of
+      ((fvl,str'):_)  -> readSC2'' (SCD vsps (S.fromList fvl)) str'
+      _               -> error ("readSC2', [VarSet]) expected, seen: '"++str)
+
+-- )
+readSC2'' :: SideCond -> String -> (SideCond,String)
+readSC2'' sc (')':str) = (sc,str)
+readSC2'' sc str =   error ("readSC2'', close-par expected, seen: '"++str)
+
+sE  = vsSngl gE
+sN  = vsSngl gN
+sEdN  = VSDisj sE sN
+sEsN  = VSSub  sE sN
+sEsdN = VSSubD sE sN
+
+scVSPreds :: SideCond -> [VSetPred]
+scVSPreds (SCD vsps _)  =  vsps
+
+scFVars :: SideCond -> VarSet
+scFVars (SCD _ fvs)  =  fvs
 \end{code}
 
 If the term variable condition list is empty,
 then we have the trivial side-condition, which is always true:
 \begin{code}
 scTrue :: SideCond
-scTrue = ([],S.empty)
+scTrue = SCD [] S.empty
 
 isTrivialSC :: SideCond -> Bool
-isTrivialSC ([],fvs)  =  S.null fvs
-isTrivialSC _         =  False
+isTrivialSC (SCD [] fvs)  =  S.null fvs
+isTrivialSC _             =  False
 \end{code}
 
 
@@ -702,7 +755,7 @@ mrgTVarFreshConditions :: MonadFail m
                        => VarSet -> [VSetPred] 
                        -> m SideCond
 mrgTVarFreshConditions freshvs vsps
-  | freshvs `disjoint` coveredVarsOf vsps  =  return (vsps,freshvs)
+  | freshvs `disjoint` coveredVarsOf vsps  =  return $ SCD vsps freshvs
   -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
@@ -730,13 +783,13 @@ one at a time.
 \begin{code}
 mrgSideCond :: MonadFail m 
             => SideCond -> SideCond -> m SideCond
-mrgSideCond (vsps1,fvs1) (vsps2,fvs2)
+mrgSideCond (SCD vsps1 fvs1) (SCD vsps2 fvs2)
      = do vsps' <- mrgTVarCondLists vsps1 vsps2
           mrgTVarFreshConditions (fvs1 `S.union` fvs2) vsps'
           -- the above may require a obsv-savvy union?
 
 mrgSideConds :: MonadFail m => [SideCond] -> m SideCond
-mrgSideConds []        = return ([],S.empty)
+mrgSideConds []        = return scTrue
 mrgSideConds (sc:scs)
   | isTrivialSC sc  =  mrgSideConds scs
   | otherwise       =  do scs' <- mrgSideConds scs ; mrgSideCond sc scs'
@@ -880,7 +933,7 @@ are available, as variable \texttt{obsv}.
 We first simplfiy the consequence 
 
 \begin{code}
-scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
+scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
   = if isTrivialSC cnsqSC then return scTrue
     else if isTrivialSC anteSC then return cnsqSC
     else do vsp' <- scDischarge' obsv anteVSC cnsqVSC
@@ -1219,7 +1272,7 @@ freshDischarge :: MonadFail m
                -> m SideCond
 freshDischarge obsv anteFvs cnsqFvs vsp
   = do vsp' <- freshDischarge' obsv anteFvs vsp
-       return (vsp' , cnsqFvs S.\\ anteFvs )
+       return (SCD vsp'  (cnsqFvs S.\\ anteFvs) )
 \end{code}
 
 \begin{code}
@@ -1331,10 +1384,11 @@ Later proof steps need to know this has happened\dots
 
 \begin{code}
 addFreshVars :: VarSet -> SideCond -> SideCond
-addFreshVars freshlynew (vsps,freshv) = (vsps,freshlynew `S.union` freshv)
+addFreshVars freshlynew (SCD vsps freshv) 
+  = SCD vsps (freshlynew `S.union` freshv)
 
 onlyFreshSC :: SideCond -> Bool
-onlyFreshSC (vsps,fvars) = null vsps
+onlyFreshSC (SCD vsps fvars) = null vsps
 \end{code}
 
 
@@ -1346,25 +1400,25 @@ Simple side-condition builders.
 $\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
-vl `notin` tV  =  ( [ tV `disjfrom`(S.fromList vl) ], S.empty )
+vl `notin` tV  =  SCD [ tV `disjfrom`(S.fromList vl) ]  S.empty 
 \end{code}
 
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
-vl `covers` tV  =  ( [ tV `coveredby` (S.fromList vl) ], S.empty )
+vl `covers` tV  =  SCD [ tV `coveredby` (S.fromList vl) ] S.empty 
 \end{code}
 
 $\lst v \supseteq_a \fv(T)$
 \begin{code}
 dyncover :: VarList -> GenVar -> SideCond
-vl `dyncover` tV  =  ( [ tV `dyncovered` (S.fromList vl) ], S.empty )
+vl `dyncover` tV  =  SCD [ tV `dyncovered` (S.fromList vl) ] S.empty 
 \end{code}
 
 $u,v,\dots \textbf{fresh.}$
 \begin{code}
 fresh :: VarSet -> SideCond
-fresh fvs = ( [], fvs )
+fresh fvs = SCD [] fvs
 \end{code}
 
 \newpage
@@ -1374,7 +1428,7 @@ First, some simple queries to find term variable side-conditions of interest.
 We start by checking if a variable is mentioned.
 \begin{code}
 findGenVarInSC :: MonadFail m => GenVar -> SideCond -> m VSetPred
-findGenVarInSC gv ( vsps, _ )  =  findGV gv vsps
+findGenVarInSC gv (SCD vsps _ )  =  findGV gv vsps
 
 findGV _ [] = fail "findGenVarInSC: not in any term variable side-condition"
 findGV gv (vsp:vsps) = fail "findGV NYI"
@@ -1385,7 +1439,7 @@ findGV gv (vsp:vsps) = fail "findGV NYI"
 We then look at returning all mentions of a variable:
 \begin{code}
 findAllGenVar :: GenVar -> SideCond -> [VSetPred]
-findAllGenVar gv ( vsps, _ )  =  findAGV gv [] vsps
+findAllGenVar gv (SCD vsps _)  =  findAGV gv [] vsps
 
 findAGV _ scsa []  =  reverse scsa
 findAGV gv scsa (vsp:vsps) = []
@@ -1398,7 +1452,7 @@ We sometimes want mentions for a specific condition type:
 For disjointness we look for precisely the given general variable.
 \begin{code}
 findDisjointGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
-findDisjointGenVar gv ( vsps, _ ) = findDGV gv vsps
+findDisjointGenVar gv (SCD vsps _) = findDGV gv vsps
 
 findDGV gv []         =  fail ("Disjoint "++show gv ++ " not found")
 findDGV _ _ = fail "findDGV NYfI"
@@ -1411,7 +1465,7 @@ For regular coverage we look for precisely the given general variable,
 while for dynamic coverage we ignore differences in temporality.
 \begin{code}
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
-findCoveredGenVar gv ( vsps, _ ) = findCGV gv vsps
+findCoveredGenVar gv (SCD vsps _) = findCGV gv vsps
 
 findCGV gv []           =  fail ("Covered "++show gv ++ " not found")
 findCGV gv _           =  fail "findCGV NYfI"
@@ -1426,7 +1480,7 @@ For dynamic coverage we don't care about temporality,
 but do report what temporality was found.
 \begin{code}
 findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VSetExpr, VarWhen )
-findDynCvrdGenVar gv ( vsps, _ ) = findDCGV gv vsps
+findDynCvrdGenVar gv (SCD vsps _) = findDCGV gv vsps
 
 findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")
 findDCGV gv _         =  fail "findDCGV NYfI"

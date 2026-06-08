@@ -860,7 +860,7 @@ scond2sidecond ctxt (SCVSCs vsconds)
 scond2sidecond ctxt (SCFresh vrset)
   = scond2sidecond ctxt (SCFull [] vrset)
 scond2sidecond ctxt (SCFull vsconds (VSet gvars)) = do
-  let vscs  = map (vscond2varsidecond ctxt) vsconds
+  let vscs  = concat $ map (vscond2varsidecond ctxt) vsconds
   let fvs = S.fromList $ map (gvar2genvar ctxt) gvars
   mkSideCond vscs fvs
 \end{code}
@@ -874,10 +874,10 @@ vscond2varsidecond ctxt (VSCCovBy gv gvs) = vscond2VSC ctxt coveredby gv gvs
 vscond2varsidecond ctxt (VSCDynCov gv gvs) 
                                          = vscond2VSC ctxt dyncovered gv gvs
 
-vscond2VSC :: Context -> (GenVar -> VarSet -> [VSetPred])
+vscond2VSC :: Context -> (GenVar -> VarSet -> VSetPred)
            -> GVar ->  VrSet -> [VSetPred]
 vscond2VSC ctxt op gv (VSet gvs)
-  = gvar2genvar ctxt gv `op` (S.fromList $ map (gvar2genvar ctxt) gvs)
+  = [gvar2genvar ctxt gv `op` (S.fromList $ map (gvar2genvar ctxt) gvs)]
 \end{code}
 
 \subsection{SideCond to SCond}
@@ -888,8 +888,8 @@ sidecond2scond ([],fvs)
   | S.null fvs  =  SCnone
   | otherwise   =  SCFresh $ VSet $ map genvar2gvar $ S.toList fvs
 sidecond2scond (vscs,fvs)
-  | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond vscs
-  | otherwise   =  SCFull (concat $ map varsidecond2vscond vscs)
+  | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond [vscs]
+  | otherwise   =  SCFull (concat $ map varsidecond2vscond [vscs])
                           (VSet $ map genvar2gvar $ S.toList fvs)
 
 varsidecond2vscond :: [VSetPred] -> [VSCond]

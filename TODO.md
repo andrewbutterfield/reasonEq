@@ -38,6 +38,14 @@ EQV
 Fixing bugs as we go.
 
 #### Bugs Found
+ - fails to `restore` theory:
+   
+   ```
+   Laws:
+   req: Prelude.read: ambiguous parse
+   ```
+   Issue:  vsTrue renders as `([],fromList [])`. 
+   We need to tag this as being a `VSetPred`.
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 

@@ -707,11 +707,7 @@ mrgTVarFreshConditions freshvs vsps
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
 coveredVarsOf :: [VSetPred] -> VarSet
-coveredVarsOf vsps = S.unions $ map coveringsOf vsps
-coveringsOf vsp  =  error "coveringsOf NYI"
---coveringsOf (VSC _ _ nvsC nvsCd)  =  cvr nvsC `S.union` cvr nvsCd
---cvr NA    =  S.empty -- universe does not contain fresh vars
---cvr (The vs)  =  vs
+coveredVarsOf vsps = S.unions $ map vPredVars vsps
 \end{code}
 
 \section{From VSC and Free-list to Side-Condition}

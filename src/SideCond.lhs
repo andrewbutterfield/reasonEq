@@ -202,7 +202,7 @@ onegv gv = VSEnum $ S.singleton gv
 \subsection{VSC Queries}
 
 In general it can be useful to allow the first enumerated set to 
-be non-empty, rather than kimited to being a singleton.
+be non-empty, rather than limited to being a singleton.
 
 We define a predicate that checks for this form,
 and a queries that returns the global variables, if any,
@@ -222,6 +222,7 @@ termVar (VSSub  s1 _) = theTermVar s1
 termVar (VSSubD s1 _) = theTermVar s1
 termVar vsp           = fail "no term-var involved"
 
+theTermVar :: MonadFail mf => VSetExpr -> mf GenVar
 theTermVar (VSEnum vs)
   = case S.toList vs of
       [g] -> return g
@@ -235,7 +236,28 @@ theSetExpr (VSSubD _ s2) = return s2
 theSetExpr vsp           = fail "no set-expression involved"
 \end{code}
 
-\subsection{VSC Laws}
+\subsection{Assembling \protect\h{VSetPred} Lists}
+
+We want to specify side-conditions by lists of \h{VSetPred}.
+However we want to ``normalise'' these, 
+by ordering them by the global variable,
+and by reducing all the conditions for a given such variable down to 
+a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
+In effect we try to shrink the enumerations involved.
+
+In effect we get the following four laws:
+\begin{eqnarray*}
+   g \disj D \land g \subseteq C 
+   &=?& g \disj (D \setminus C) \land g \subseteq (C \setminus D)
+\\ g \disj D \land g \subseteq_a C 
+   &=?& g \disj (D \setminus C) \land g \subseteq_a (C \setminus D)
+\\ g \subseteq_a C \land g \subseteq_a Cd 
+   &=& \dots
+\\ g \disj D \land g \subseteq_a C \land g \subseteq_a Cd 
+   &=& \dots
+\end{eqnarray*}
+
+\section{VSC Laws}
 
 Here we are generally interested in single relations ($\disj$,$\supseteq$)
 with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
@@ -617,21 +639,6 @@ mrgSameGVSC vsp1 vsp2 = fail "mrgSameGVSC NYI"
 --    in mkVSC gv nvsD' nvsC' nvsCd'
 \end{code}
 
-Finally, something to merge lists (and lists of lists) of VSCs:
-\begin{code}
-joinVarConds :: MonadFail m 
-             => [VSetPred] -> [VSetPred] -> m [VSetPred]
-joinVarConds vsps1 [] = return vsps1
-joinVarConds vsps1 (vsp2:vsps2) = do
-  vsps1' <- mrgVarConds vsp2 vsps1
-  joinVarConds vsps1' vsps2
-concatVarConds :: MonadFail m => [[VSetPred]] -> m [VSetPred]
-concatVarConds [] = return []
-concatVarConds [vsps] = return vsps
-concatVarConds (vsps1:vsps2:vscss) = do
-  vsps' <- joinVarConds vsps1 vsps2
-  concatVarConds (vsps':vscss)
-\end{code}
 
 \newpage
 \subsection{VSC Merge Laws}

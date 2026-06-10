@@ -94,7 +94,7 @@ where $T$ abbreviates $\fv(T)$:
    && \mbox{disjoint, short for }\fv(T) \cap \{x,\lst v\} = \emptyset
 \\ T \subseteq x,\lst v 
    && \mbox{covering, short for }\fv(T) \subseteq \{x,\lst v\}
-\\ T \subseteq_a  x_d,\lst v_d
+\\ T \subseteq_d  x_d,\lst v_d
    && \mbox{dynamic coverage, short for } \dfv(T) \subseteq \{x_d,\lst v_d\}
 \\ pre      \subseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
@@ -102,7 +102,7 @@ The dynamic variables here correspond to what UTP calls the ``alphabet''
 of a predicate, hence the use of subscript `a'.`
 For dynamic coverage, a fuller more rigorous definition is:
 \begin{equation*}
-T \subseteq_a V
+T \subseteq_d V
 \quad\defs\quad 
 (\forall g \in V \bullet \isdyn(g))
 \land
@@ -159,13 +159,13 @@ In some of these cases, we may be able to simplify a side-condition further:
    z \disj \dots,z,\dots        && \false
 \\ z \subseteq \dots,z,\dots{}  && \true
 \\ z \subseteq \emptyset        && \false
-\\ z \subseteq_a \emptyset      && \lnot\isdyn(z)
+\\ z \subseteq_d \emptyset      && \lnot\isdyn(z)
 \\ z \subseteq pre              && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 For list variables, we can add:
 \begin{eqnarray*}
    \lst\ell\less x,\dots \subseteq \lst\ell   && \true
-\\ \lst\ell\less x,\dots \subseteq_a \lst\ell   && \isdyn(\lst\ell)
+\\ \lst\ell\less x,\dots \subseteq_d \lst\ell   && \isdyn(\lst\ell)
 \end{eqnarray*}
 
 We also need to take account of known variables of various kinds
@@ -244,30 +244,14 @@ by ordering them by the global variable,
 and by reducing all the conditions, for a given such variable, 
 down to  a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
 
-First, a formal definition of $\subseteq_a$:
-
-Dynamic subset ($\subseteq_a$) is defined as:
-$$
-  g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
-$$
-where $S|d$ is $S$ restricted to the dynamic variables in scope.
-The key question is: does this affect the laws?
-The answer is no, because being dynamic is a pointwise property
-and restriction w.r.t a set element (or sets of elements) is idempotent.
-\begin{eqnarray*}
-   \emptyset|d &\defs& \emptyset
-\\ \setof{x}|d &\defs& \setof{x} \cond{x \in d} \emptyset
-\\ (S\cup T)|d &\defs& S|d \cup T|d
-\\ (S\cap T)|d &\defs& S|d \cap T|d
-\\ (S\setminus T)|d &\defs& S|d \setminus T|d
-\end{eqnarray*}
-The starting point is a sorted list of \h{VSetPred} of the form $\setof{g} ~rel~ E$,
+The starting point is a sorted list of \h{VSetPred} 
+of the form $\setof{g} ~rel~ E$,
 where $g$ is a general variable, and $E$ is a \h{VSetExpr}.
 The sortedness means that for each distinct variable $g_i$ we will have
 a sequence of $\setof{g_i}rel_1{E_1}~;\dots;~\setof{g_i}rel_n{E_n}$.
 This sequence will be ordered by the relations ($rel_1,\dots,rel_n$)
 drawn from the three available relations, 
-themselves ordered as $\disj,\subseteq,\subseteq_a$.
+themselves ordered as $\disj,\subseteq,\subseteq_d$.
 In effect, the list $rel_1,\dots,rel_n$ has the form:
 $\disj_1,\dots,\disj_i
 ,\subseteq_1,\dots,\subseteq_j
@@ -286,32 +270,14 @@ In effect we try to shrink the enumerations involved.
 We start with some same-predicate simplification laws,
 that reduce a list of predicates with the same relation down to 
 a single instance of that relation.
-\begin{eqnarray*}
-   g \disj D_1 \land g \disj D_2
-   &=& g \disj D_1 \cup D_2
-\\ g \subseteq C_1 \land g \subseteq C_2
-   &=& g \subseteq C_1 \cap C_2
-\\ g \subseteq_a Cd_1 \land g \subseteq_a Cd_2 
-   &=& g \subseteq_a Cd_1 \cap Cd_2
-\end{eqnarray*}
 At this stage we have $i,j,k \leq 1$,
 and then add the following four different-predicate normalising laws,
 that combine and simplify relations as much as possible.
-\begin{eqnarray*}
-   g \disj D \land g \subseteq C 
-   &=& g \disj (D \setminus C) \land g \subseteq (C \setminus D)
-\\ g \disj D \land g \subseteq_a Cd 
-   &=& g \disj (D \setminus Cd) \land g \subseteq_a (Cd \setminus D)
-\\ g \subseteq C \land g \subseteq_a Cd 
-   &=& g \subseteq_a (C \cap Cd)
-\\ g \disj D \land g \subseteq C \land g \subseteq_a Cd 
-   &=& g \disj (D \setminus Cd) \land g \subseteq_a (Cd \setminus D)
-\end{eqnarray*}
 So we should only use $\subseteq$ with \h{Static} $g$,
 and $\subseteq_d$ with dynamic $g_d$.
 
 Here we are generally interested in single relations 
-($\disj$,$\subseteq$,$\subseteq_a$)
+($\disj$,$\subseteq$,$\subseteq_d$)
 with a single distinguished term variable $g$ embedded inside set operations ($\cup$,$\setminus$).
 We want to pull $g$ out to be the sole 1st argument of the relation.
 These should \emph{not} reduce the relations to \true\ or \false.
@@ -323,8 +289,8 @@ This leads to the following predicate-splitting laws:
 \\ (g \cup X)          \disj Y &=& (g \disj Y) \land (X \disj Y)
 \\ (g \setminus X) \subseteq Y &=& g \setminus (X \cup Y) \subseteq \emptyset
 \\ (g \cup X)      \subseteq Y &=& g \subseteq Y \land X \subseteq Y
-\\ (g \setminus X) \subseteq_a Y &=& g \setminus (X \cup Y) \subseteq_a \emptyset
-\\ (g \cup X) \subseteq_a Y &=& g \subseteq_a Y \land X \subseteq_a Y
+\\ (g \setminus X) \subseteq_d Y &=& g \setminus (X \cup Y) \subseteq_d \emptyset
+\\ (g \cup X) \subseteq_d Y &=& g \subseteq_d Y \land X \subseteq_d Y
 \end{eqnarray*}
 
 
@@ -381,18 +347,18 @@ $$
 $$
 
 $$  
-   (g \setminus X) \subseteq_a Y
+   (g \setminus X) \subseteq_d Y
    ~=~ 
-   g \setminus (X \cup Y) \subseteq_a \emptyset
+   g \setminus (X \cup Y) \subseteq_d \emptyset
 $$
 \begin{code}
 simplifyVSetPred ((g `VSMinus` x) `VSSubD` y) 
   = ( g `VSMinus` (x `VSUnion` x) `VSSubD` vsEmpty , [] )
 \end{code} 
 
-$$ (g \cup X) \subseteq_a Y
+$$ (g \cup X) \subseteq_d Y
    ~=~ 
-   g \subseteq_a Y \land X \subseteq_a Y
+   g \subseteq_d Y \land X \subseteq_d Y
 $$
 \begin{code}
 simplifyVSetPred ((g `VSUnion` x) `VSSubD` y)  

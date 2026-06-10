@@ -685,7 +685,7 @@ Here are examples of where observation variables are being substituted:
    &\mapsto& ls 
 \end{eqnarray*}
 For $a$ should we have $a \subseteq \lst O,\lst O$,
-rather than $a \subseteq_a \lst O,\lst O$?
+rather than $a \subseteq_d \lst O,\lst O$?
 
 The basic idea seems to be, if $v$ is an observable, then look at variable-data,
 otherwise look to side-conditions.
@@ -714,7 +714,7 @@ For term variables we have the following examples:
    &\mapsto& E_1
 \\   a[\lst O_1/\lst O'] 
    ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
+   a \subseteq_d \lst O,\lst O' 
    &=& a[\lst O_1/\lst O']
 \\ E_2[\lst O_1/\lst O] 
    ~~~\text{given}~~~ 
@@ -722,15 +722,15 @@ For term variables we have the following examples:
    &\mapsto& E_2
 \\   a[\lst O_1/\lst O] 
    ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
+   a \subseteq_d \lst O,\lst O' 
    &=& a[\lst O_1/\lst O]
 \\   a[\lst O_1/\lst O] 
    ~~~\text{given}~~~ 
-   a \subseteq_a \setof{s,s'} \land \lst O = \setof{s,ls}
+   a \subseteq_d \setof{s,s'} \land \lst O = \setof{s,ls}
    &\mapsto& a[s_1/s]
 \\   a[\lst O_1/\lst O] 
    ~~~\text{given}~~~ 
-   a \subseteq_a \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
+   a \subseteq_d \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
    &\mapsto& a[s_1,ls_1/s,ls]
 \end{eqnarray*}
 
@@ -1612,7 +1612,7 @@ we actually get \m{\xxaCmpOneRec}.
 Tailor substitution for given term-variable.
 Consider a term-variable \m{T},
 with general side condition 
-\m{T \disj D \land T \subseteq C \land T \subseteq_a C_d}.
+\m{T \disj D \land T \subseteq C \land T \subseteq_d C_d}.
 Given a target variable \m{t} and replacement term \m{r},
 we want to ask when we can definitely state that \m{T[r/t]=T},
 based on $t$'s membership of $D$, $C$, and $C_d$.

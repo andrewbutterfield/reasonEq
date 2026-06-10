@@ -17,11 +17,12 @@ We have classified various `VSet(Expr|Pred)` laws in `SideCond` (VSC Laws):
 
 The first two, if `g` is interpreted as arbitrary set `G`, 
 are purely set-theoretic, so should be implemented in `VarSetExpr`.
+**first two moved, first one implemented**
 The third is tailored to our side-condition usage and should be implemented
 in `SideCond`.
 
-The definition of the semantics of `\subseteq_a` (`VSSubD`) 
-should be moved to `VarSetExpr`.
+The definition of the semantics of `\subseteq_d` (`VSSubD`) 
+should be moved to `VarSetExpr`. **DONE**
 
 ### Systematic Proof of all Conjectures
 

@@ -236,92 +236,21 @@ theSetExpr (VSSubD _ s2) = return s2
 theSetExpr vsp           = fail "no set-expression involved"
 \end{code}
 
-\subsection{Assembling \protect\h{VSetPred} Lists}
+\section{VSC Laws}
 
 We want to specify side-conditions by lists of \h{VSetPred}.
 However we want to ``normalise'' these, 
 by ordering them by the global variable,
-and by reducing all the conditions for a given such variable down to 
-a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
-In effect we try to shrink the enumerations involved.
+and by reducing all the conditions, for a given such variable, 
+down to  a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
 
-In effect we get the following four laws:
-\begin{eqnarray*}
-   g \disj D \land g \subseteq C 
-   &=?& g \disj (D \setminus C) \land g \subseteq (C \setminus D)
-\\ g \disj D \land g \subseteq_a C 
-   &=?& g \disj (D \setminus C) \land g \subseteq_a (C \setminus D)
-\\ g \subseteq_a C \land g \subseteq_a Cd 
-   &=& \dots
-\\ g \disj D \land g \subseteq_a C \land g \subseteq_a Cd 
-   &=& \dots
-\end{eqnarray*}
+First, a formal definition of $\subseteq_a$:
 
-\section{VSC Laws}
-
-Here we are generally interested in single relations ($\disj$,$\supseteq$)
-with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
-We want to pull $P$ out to be the sole 1st argument of the relation.
-These should \emph{not} reduce the relations to \true\ or \false.
-In general we may need extra terms not involving $P$ in the output.
-We want to distinguish these so we keep them separate.
-\begin{code}
-simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
-\end{code}  
-
-\subsection{Union and Diff vs. Disjoint and Superset}
-
-We have the following variations:
-\begin{eqnarray*}
-   (P \setminus X)     \disj Y &=& P \disj (Y \setminus X)
-\\ (P \cup X)          \disj Y &=& (P \disj Y) \land (X \disj Y)
-\\ (P \setminus X) \subseteq Y &=& P \setminus (X \cup Y) \subseteq \emptyset
-\\ (P \cup X)      \subseteq Y &=& P \subseteq Y \land X \subseteq Y
-\end{eqnarray*}
-
-$$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
-\begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
-             =  ( p `VSDisj` (y `vsMinus` x) , [] )
-\end{code} 
-
-$$ 
-   (P \cup X) \disj Y 
-   ~=~ 
-   (P \disj Y) \land (X \disj Y)
+Dynamic subset ($\subseteq_a$) is defined as:
 $$
-\begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
-               = ( p `VSDisj` y , [x `VSDisj` y ] )
-\end{code} 
-
-$$  
-   (P \setminus X) \subseteq Y
-   ~=~ 
-   P \setminus (X \cup Y) \subseteq \emptyset
+  g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
 $$
-\begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSSub` y) 
-  = ( p `VSMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
-\end{code} 
-
-$$ (P \cup X) \subseteq Y
-   ~=~ 
-   P \subseteq Y \land X \subseteq Y
-$$
-\begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSSub` y)  
-             =  ( p `VSSub` y , [x `VSSub` y] )
-\end{code} 
-
-
-\subsection{Union and Diff vs. Dynamic Superset}
-
-Dynamic subset ($\subseteq_d$) is defined as:
-$$
-  P \subseteq_d X \quad \defs \quad P|d \subseteq X|d
-$$
-where $S|d$ is $S$ restricted to the dynamic variables in $d$.
+where $S|d$ is $S$ restricted to the dynamic variables in scope.
 The key question is: does this affect the laws?
 The answer is no, because being dynamic is a pointwise property
 and restriction w.r.t a set element (or sets of elements) is idempotent.
@@ -332,24 +261,142 @@ and restriction w.r.t a set element (or sets of elements) is idempotent.
 \\ (S\cap T)|d &\defs& S|d \cap T|d
 \\ (S\setminus T)|d &\defs& S|d \setminus T|d
 \end{eqnarray*}
+The starting point is a sorted list of \h{VSetPred} of the form $\setof{g} ~rel~ E$,
+where $g$ is a general variable, and $E$ is a \h{VSetExpr}.
+The sortedness means that for each distinct variable $g_i$ we will have
+a sequence of $\setof{g_i}rel_1{E_1}~;\dots;~\setof{g_i}rel_n{E_n}$.
+This sequence will be ordered by the relations ($rel_1,\dots,rel_n$)
+drawn from the three available relations, 
+themselves ordered as $\disj,\subseteq,\subseteq_a$.
+In effect, the list $rel_1,\dots,rel_n$ has the form:
+$\disj_1,\dots,\disj_i
+,\subseteq_1,\dots,\subseteq_j
+,\subseteq_{a_1},\dots,\subseteq_{a_k}$
+where $i,j,k, \geq 0$ and $n=i+j+k$.
 
-$$  
-   (P \setminus X) \subseteq_a Y
-   ~=~ 
-   P \setminus (X \cup Y) \subseteq_a \emptyset
-$$
+
+\subsection{Assembling \protect\h{VSetPred} Lists}
+
+We want to specify side-conditions by lists of \h{VSetPred}.
+However we want to ``normalise'' these, 
+by ordering them by the global variable,
+and by reducing all the conditions, for a given such variable, 
+down to  a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
+In effect we try to shrink the enumerations involved.
+We start with some same-predicate simplification laws,
+that reduce a list of predicates with the same relation down to 
+a single instance of that relation.
+\begin{eqnarray*}
+   g \disj D_1 \land g \disj D_2
+   &=& g \disj D_1 \cup D_2
+\\ g \subseteq C_1 \land g \subseteq C_2
+   &=& g \subseteq C_1 \cap C_2
+\\ g \subseteq_a Cd_1 \land g \subseteq_a Cd_2 
+   &=& g \subseteq_a Cd_1 \cap Cd_2
+\end{eqnarray*}
+At this stage we have $i,j,k \leq 1$,
+and then add the following four different-predicate normalising laws,
+that combine and simplify relations as much as possible.
+\begin{eqnarray*}
+   g \disj D \land g \subseteq C 
+   &=& g \disj (D \setminus C) \land g \subseteq (C \setminus D)
+\\ g \disj D \land g \subseteq_a Cd 
+   &=& g \disj (D \setminus Cd) \land g \subseteq_a (Cd \setminus D)
+\\ g \subseteq C \land g \subseteq_a Cd 
+   &=& g \subseteq_a (C \cap Cd)
+\\ g \disj D \land g \subseteq C \land g \subseteq_a Cd 
+   &=& g \disj (D \setminus Cd) \land g \subseteq_a (Cd \setminus D)
+\end{eqnarray*}
+So we should only use $\subseteq$ with \h{Static} $g$,
+and $\subseteq_d$ with dynamic $g_d$.
+
+Here we are generally interested in single relations 
+($\disj$,$\subseteq$,$\subseteq_a$)
+with a single distinguished term variable $g$ embedded inside set operations ($\cup$,$\setminus$).
+We want to pull $g$ out to be the sole 1st argument of the relation.
+These should \emph{not} reduce the relations to \true\ or \false.
+In general we may need extra terms not involving $g$ in the output.
+We want to distinguish these so we keep them separate.
+This leads to the following predicate-splitting laws:
+\begin{eqnarray*}
+   (g \setminus X)     \disj Y &=& g \disj (Y \setminus X)
+\\ (g \cup X)          \disj Y &=& (g \disj Y) \land (X \disj Y)
+\\ (g \setminus X) \subseteq Y &=& g \setminus (X \cup Y) \subseteq \emptyset
+\\ (g \cup X)      \subseteq Y &=& g \subseteq Y \land X \subseteq Y
+\\ (g \setminus X) \subseteq_a Y &=& g \setminus (X \cup Y) \subseteq_a \emptyset
+\\ (g \cup X) \subseteq_a Y &=& g \subseteq_a Y \land X \subseteq_a Y
+\end{eqnarray*}
+
+
 \begin{code}
-simplifyVSetPred ((p `VSMinus` x) `VSSubD` y) 
-  = ( p `VSMinus` (x `VSUnion` x) `VSSubD` vsEmpty , [] )
+simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
+\end{code}  
+
+\subsection{Union and Diff vs. Disjoint and Superset}
+
+We have the following variations:
+
+
+$$(g \setminus X) \disj Y ~=~ g \disj (Y \setminus X)$$
+\begin{code}
+simplifyVSetPred ((g `VSMinus` x) `VSDisj` y)  
+             =  ( g `VSDisj` (y `vsMinus` x) , [] )
 \end{code} 
 
-$$ (P \cup X) \subseteq_a Y
+$$ 
+   (g \cup X) \disj Y 
    ~=~ 
-   P \subseteq_a Y \land X \subseteq_a Y
+   (g \disj Y) \land (X \disj Y)
 $$
 \begin{code}
-simplifyVSetPred ((p `VSUnion` x) `VSSubD` y)  
-             =  ( p `VSSubD` y , [x `VSSubD` y] )
+simplifyVSetPred ((g `VSUnion` x) `VSDisj` y)  
+               = ( g `VSDisj` y , [x `VSDisj` y ] )
+\end{code} 
+
+$$  
+   (g \setminus X) \subseteq Y
+   ~=~ 
+   g \setminus (X \cup Y) \subseteq \emptyset
+$$
+\begin{code}
+simplifyVSetPred ((g `VSMinus` x) `VSSub` y) 
+  = ( g `VSMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
+\end{code} 
+
+$$ (g \cup X) \subseteq Y
+   ~=~ 
+   g \subseteq Y \land X \subseteq Y
+$$
+\begin{code}
+simplifyVSetPred ((g `VSUnion` x) `VSSub` y)  
+             =  ( g `VSSub` y , [x `VSSub` y] )
+\end{code} 
+
+
+\subsection{Union and Diff vs. Dynamic Superset}
+
+Reminder: Dynamic subset ($\subseteq_d$) is defined as:
+$$
+  g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
+$$
+
+$$  
+   (g \setminus X) \subseteq_a Y
+   ~=~ 
+   g \setminus (X \cup Y) \subseteq_a \emptyset
+$$
+\begin{code}
+simplifyVSetPred ((g `VSMinus` x) `VSSubD` y) 
+  = ( g `VSMinus` (x `VSUnion` x) `VSSubD` vsEmpty , [] )
+\end{code} 
+
+$$ (g \cup X) \subseteq_a Y
+   ~=~ 
+   g \subseteq_a Y \land X \subseteq_a Y
+$$
+\begin{code}
+simplifyVSetPred ((g `VSUnion` x) `VSSubD` y)  
+             =  ( g `VSSubD` y , [x `VSSubD` y] )
 \end{code} 
 
 \subsection{All other cases: no change}

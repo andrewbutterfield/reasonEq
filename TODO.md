@@ -9,6 +9,20 @@
 
 We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`. In practise, this means a separate module, **THIS IS A MAJOR REWRITE**
 
+We have classified various `VSet(Expr|Pred)` laws in `SideCond` (VSC Laws):
+
+ - same-predicate simplifications
+ - different-predicate simplifications
+ - predicate-splitting laws
+
+The first two, if `g` is interpreted as arbitrary set `G`, 
+are purely set-theoretic, so should be implemented in `VarSetExpr`.
+The third is tailored to our side-condition usage and should be implemented
+in `SideCond`.
+
+The definition of the semantics of `\subseteq_a` (`VSSubD`) 
+should be moved to `VarSetExpr`.
+
 ### Systematic Proof of all Conjectures
 
 ```
@@ -38,14 +52,6 @@ EQV
 Fixing bugs as we go.
 
 #### Bugs Found
- - fails to `restore` theory:
-   
-   ```
-   Laws:
-   req: Prelude.read: ambiguous parse
-   ```
-   Issue:  vsTrue renders as `([],fromList [])`. 
-   We need to tag this as being a `VSetPred`.
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 
@@ -110,6 +116,15 @@ so it throws its hand up. *The discharge step occurs later - we are not supposed
 #### Bugs Fixed
 
 Most recent first...
+
+ - fails to `restore` theory:
+   
+   ```
+   Laws:
+   req: Prelude.read: ambiguous parse
+   ```
+   Issue:  vsTrue renders as `([],fromList [])`. 
+   We need to tag this as being a `VSetPred`. **FIXED**
 
  - `vsUnion | otherwise = VSUnion vse1 vse1` 
  

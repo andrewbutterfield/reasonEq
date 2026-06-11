@@ -11,6 +11,18 @@ We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`.
 
 *Everything compiles - experimentation time!*
 
+*`save` and `restore` work*
+
+**`gen` fails with runtime error**
+
+```
+🛠 devproj.EQV> gen
+generating to devproj/EQV/EQV-gen.utp
+req: varsidecond2vscond needs rework
+CallStack (from HasCallStack):
+  error, called at src/SourceHandling.lhs:896:24 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SourceHandling
+```
+
 
 
 ### Systematic Proof of all Conjectures

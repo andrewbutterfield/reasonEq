@@ -498,9 +498,9 @@ getTermVarInvolvement (SubCtxt (SCD vsps _) vts) v lvlv@(tlv,rlv) =
   in case poss of
     Uninvolved ->  -- last chance
       case vsp of
-        (VSSubD _ (VSEnum vsCd)) -> checkExpansion vsCd xtvars xrvars lvlv
-        (VSSub  _ (VSEnum vsC )) -> checkExpansion vsC  xtvars xrvars lvlv        
-        _                        -> ( poss, lvlv, noexp ) 
+        (VSSubD _ vsCd) -> checkExpansion vsCd xtvars xrvars lvlv
+        (VSSub  _ vsC ) -> checkExpansion vsC  xtvars xrvars lvlv        
+        _               -> ( poss, lvlv, noexp ) 
     _ ->
       if null xrvars
       then ( poss, lvlv, noexp )
@@ -516,23 +516,23 @@ possibleSideConditionOption vsps gv tlv
   = case gv `mentionedBy` vsps of
       Just (vsp,mwhen) -> 
         ( getSCInvolvement gv (LstVar tlv) vsp mwhen, vsp )
-      Nothing ->  (Uninvolved,vsTrue) -- gv)
+      Nothing ->  (Uninvolved,VSTrueP) -- gv)
 
-getSCInvolvement gv  gtlv vsp mwhen = case vsp of
-  (VSDisj _ (VSEnum vsD))  
+getSCInvolvement gv gtlv vsp mwhen = case vsp of
+  (VSDisj _ vsD)  
     | gtlv `S.member` vsD  -> DisjInvolvement
-  (VSSub gvs (VSEnum vsC))   
-    | gtlv `S.member` vsC  -> possCoverInvolvement gv (theGV gvs) mwhen vsC
-  (VSSubD gvs (VSEnum vsCd)) 
-    | gtlv `S.member` vsCd -> possCoverInvolvement gv (theGV gvs) mwhen vsCd
+  (VSSub gv' vsC)   
+    | gtlv `S.member` vsC  -> possCoverInvolvement gv gv' mwhen vsC
+  (VSSubD gv' vsCd) 
+    | gtlv `S.member` vsCd -> possCoverInvolvement gv gv' mwhen vsCd
   _                        -> Uninvolved 
 
 -- mwhen == Nothing ==> gv' == gv
-possCoverInvolvement gv (Just gv') Nothing vsC
+possCoverInvolvement gv gv' Nothing vsC
   | gv == gv'  =  CoverInvolvement vsC
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-possCoverInvolvement gv (Just gv') (Just vw') vsCd
+possCoverInvolvement gv gv' (Just vw') vsCd
   = case gv `dynGVarEq` gv' of
       Just vwd  ->  CoverInvolvement vsCd
       _         ->  Uninvolved
@@ -744,9 +744,9 @@ lvlvSub sctx@(SubCtxt sc@(SCD vsps _) vdata) tk v@(Vbl i vc vw)
   = case (StdVar v) `mentionedBy` vsps of
  
     Nothing                 ->  Right [lvlv] 
-    Just ((VSDisj _ (VSEnum vsD)),Nothing) 
+    Just ((VSDisj _ vsD),Nothing) 
       | gtlv `S.member` vsD  ->  Right [] 
-    Just ((VSSub _ (VSEnum vsC)), Nothing) 
+    Just ((VSSub _ vsC), Nothing) 
       | gtlv `S.member` vsC  ->  possub vw lvlv 
     Just (_,Nothing ) 
       | otherwise            ->  Left lvlv 
@@ -884,9 +884,9 @@ $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
 vspSimplify :: VSetPred -> GenVar -> Substn -> Substn
-vspSimplify (VSDisj _ (VSEnum  vsD)) gv sub  =  targetsCheck not vsD  sub
-vspSimplify (VSSub  _ (VSEnum  vsC)) gv sub  =  targetsCheck id  vsC  sub
-vspSimplify (VSSubD _ (VSEnum vsCd)) gv sub  =  targetsCheck id  vsCd sub
+vspSimplify (VSDisj _ vsD) gv sub  =  targetsCheck not vsD  sub
+vspSimplify (VSSub  _ vsC) gv sub  =  targetsCheck id  vsC  sub
+vspSimplify (VSSubD _ vsCd) gv sub  =  targetsCheck id  vsCd sub
 
 targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
 targetsCheck keep vs (Substn ts lvs)
@@ -1632,10 +1632,10 @@ subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
   = case findGenVarInSC (StdVar tv) sc of
       Nothing  ->  sub1
-      Just (VSSub _ (VSEnum vsC))  
+      Just (VSSub _ vsC)  
                ->  jSubstn tsC' lvl
                    where tsC' = filter (allowed vsC) $ S.toList ts
-      Just (VSSubD _ (VSEnum vsCd))  
+      Just (VSSubD _ vsCd)  
                ->  jSubstn tsCd' lvl
                    where tsCd' = filter (allowed vsCd) $ S.toList ts
       _        ->  sub1

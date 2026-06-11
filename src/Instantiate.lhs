@@ -10,7 +10,7 @@ module Instantiate
 ( InsContext(..), mkInsCtxt
 , instTerm
 , instVarSet
-, instVSP
+-- , instVSP
 , instantiateSC
 ) where
 import Data.Maybe
@@ -835,22 +835,35 @@ This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
 
 \begin{code}
 instVSP :: MonadFail mf
-        => InsContext -> Binding -> VSetPred -> mf VSetPred
--- instVSP ictx bind (VSSub (VSEnum sgv) (VSEnum vs))
-instVSP ictx bind (VSDisj (VSEnum gvs) (VSEnum vs)) = do
-  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
-  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
-  return $ VSDisj (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSP ictx bind (VSSub (VSEnum gvs) (VSEnum vs)) = do
-  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
-  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
-  return $ VSSub (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSP ictx bind (VSSubD (VSEnum gvs) (VSEnum vs)) = do
-  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
-  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
-  return $ VSSubD (fvs2vses sgvfvs) (fvs2vses vsfvs)
+        => InsContext -> Binding -> VSetPred -> mf [VSetPred]
+-- instVSP ictx bind (VSSub gv vset)
+instVSP ictx bind (VSDisj gv vset) = do
+  let sgvfvs = instantiateSCGVar ictx bind gv
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
+  splitGVars VSDisj sgvfvs vsfvs
+instVSP ictx bind (VSSub gv vset) = do
+  let sgvfvs = instantiateSCGVar ictx bind gv
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
+  splitGVars VSSub sgvfvs vsfvs
+instVSP ictx bind (VSSubD gv vset) = do
+  let sgvfvs = instantiateSCGVar ictx bind gv
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
+  splitGVars VSSubD sgvfvs vsfvs
 instVSP _ _ vsp
   = fail ("instVSP: cannot instantiate "++trVSPred vsp)
+
+splitGVars :: MonadFail mf
+           => (GenVar -> VarSet -> VSetPred)
+           -> FreeVars -> FreeVars -> mf [VSetPred]
+splitGVars makePred sgvfvs vsfvs 
+  = let
+      gvl  = S.toList $ fvs2vses sgvfvs -- VarSet
+      vset = fvs2vses vsfvs  -- VarSet
+      makeDerp vset' gv' = makePred gv' vset'
+      vspreds = map (makeDerp vset) gvl
+    in if null vspreds 
+       then fail "instVSP: no genvars"
+       else return vspreds
 \end{code}
 
 \subsection{Required Simplifications}
@@ -924,9 +937,11 @@ Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (SCD vsps freshvs)
   = do vsps' <- fmap nub $ sequence $ map (instVSP ictx bind) vsps
-       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
+       -- let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
+       let vsps2 = mergeSimplifiedVSetPreds $ concat $ map (map pretend) vsps'
        freshvs' <- instVarSet ictx bind $ freshvs
        mkSideCond vsps2 $ theFreeVars freshvs'
+  where pretend vsp = (vsp,[])  -- temporary fudge
 \end{code}
 
 This transforms 

@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   disjfrom, coveredby, dyncovered
-, simplifyVSetPred
+-- , simplifyVSetPred
 , SideCond(..), scVSPreds, scFVars
 , scTrue
 , isTrivialSC -- used just here and in TestRendering !!!!
@@ -190,50 +190,26 @@ $$
 We provide some builders for the three conditions:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
-gv `disjfrom`   vsD   =  VSDisj (onegv gv) $ VSEnum vsD
-gv `coveredby`  vsC   =  VSSub  (onegv gv) $ VSEnum vsC
-gv `dyncovered` vsCd  =  VSSubD (onegv gv) $ VSEnum vsCd
-
-onegv :: GenVar -> VSetExpr
-onegv gv = VSEnum $ S.singleton gv
+gv `disjfrom`   vsD   =  VSDisj gv vsD
+gv `coveredby`  vsC   =  VSSub  gv vsC
+gv `dyncovered` vsCd  =  VSSubD gv vsCd
 \end{code}
 
 \newpage
 \subsection{VSC Queries}
 
-In general it can be useful to allow the first enumerated set to 
-be non-empty, rather than limited to being a singleton.
-
-We define a predicate that checks for this form,
-and a queries that returns the global variables, if any,
-and the second component.
 \begin{code}
-validSC :: VSetPred -> Bool
-validSC VSFalseP                =  True
-validSC VSTrueP                 =  True
-validSC (VSDisj (VSEnum gs) _)  =  not $ S.null gs 
-validSC (VSSub  (VSEnum gs) _)  =  not $ S.null gs
-validSC (VSSubD (VSEnum gs) _)  =  not $ S.null gs
-valisSC _                       =  False
-
 termVar :: MonadFail mf => VSetPred -> mf GenVar
-termVar (VSDisj s1 _) = theTermVar s1
-termVar (VSSub  s1 _) = theTermVar s1
-termVar (VSSubD s1 _) = theTermVar s1
-termVar vsp           = fail "no term-var involved"
+termVar (VSDisj gv _)  =  return gv
+termVar (VSSub  gv _)  =  return gv
+termVar (VSSubD gv _)  =  return gv
+termVar vsp            =  fail "no term-var involved"
 
-theTermVar :: MonadFail mf => VSetExpr -> mf GenVar
-theTermVar (VSEnum vs)
-  = case S.toList vs of
-      [g] -> return g
-      _ -> fail "term-var set not singleton"
-theTermVar vse  =  fail "term-var set not enum"
-
-theSetExpr :: MonadFail mf => VSetPred -> mf VSetExpr
-theSetExpr (VSDisj _ s2) = return s2
-theSetExpr (VSSub  _ s2) = return s2
-theSetExpr (VSSubD _ s2) = return s2
-theSetExpr vsp           = fail "no set-expression involved"
+theSetExpr :: MonadFail mf => VSetPred -> mf VarSet
+theSetExpr (VSDisj _ s2)  =  return s2
+theSetExpr (VSSub  _ s2)  =  return s2
+theSetExpr (VSSubD _ s2)  =  return s2
+theSetExpr vsp            =  fail "no set-expression involved"
 \end{code}
 
 \section{VSC Laws}
@@ -246,7 +222,7 @@ down to  a normal form (at most exactly one each of \h{VS(Disj|Sub|SubD)}).
 
 The starting point is a sorted list of \h{VSetPred} 
 of the form $\setof{g} ~rel~ E$,
-where $g$ is a general variable, and $E$ is a \h{VSetExpr}.
+where $g$ is a general variable, and $E$ is a \h{VarSet}.
 The sortedness means that for each distinct variable $g_i$ we will have
 a sequence of $\setof{g_i}rel_1{E_1}~;\dots;~\setof{g_i}rel_n{E_n}$.
 This sequence will be ordered by the relations ($rel_1,\dots,rel_n$)
@@ -294,85 +270,85 @@ This leads to the following predicate-splitting laws:
 \end{eqnarray*}
 
 
-\begin{code}
-simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
-\end{code}  
+% \begin{code}
+% simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
+% \end{code}  
 
-\subsection{Union and Diff vs. Disjoint and Superset}
+% \subsection{Union and Diff vs. Disjoint and Superset}
 
-We have the following variations:
-
-
-$$(g \setminus X) \disj Y ~=~ g \disj (Y \setminus X)$$
-\begin{code}
-simplifyVSetPred ((g `VSMinus` x) `VSDisj` y)  
-             =  ( g `VSDisj` (y `vsMinus` x) , [] )
-\end{code} 
-
-$$ 
-   (g \cup X) \disj Y 
-   ~=~ 
-   (g \disj Y) \land (X \disj Y)
-$$
-\begin{code}
-simplifyVSetPred ((g `VSUnion` x) `VSDisj` y)  
-               = ( g `VSDisj` y , [x `VSDisj` y ] )
-\end{code} 
-
-$$  
-   (g \setminus X) \subseteq Y
-   ~=~ 
-   g \setminus (X \cup Y) \subseteq \emptyset
-$$
-\begin{code}
-simplifyVSetPred ((g `VSMinus` x) `VSSub` y) 
-  = ( g `VSMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
-\end{code} 
-
-$$ (g \cup X) \subseteq Y
-   ~=~ 
-   g \subseteq Y \land X \subseteq Y
-$$
-\begin{code}
-simplifyVSetPred ((g `VSUnion` x) `VSSub` y)  
-             =  ( g `VSSub` y , [x `VSSub` y] )
-\end{code} 
+% We have the following variations:
 
 
-\subsection{Union and Diff vs. Dynamic Superset}
+% $$(g \setminus X) \disj Y ~=~ g \disj (Y \setminus X)$$
+% \begin{code}
+% simplifyVSetPred ((g `vsMinus` x) `VSDisj` y)  
+%              =  ( g `VSDisj` (y `vsMinus` x) , [] )
+% \end{code} 
 
-Reminder: Dynamic subset ($\subseteq_d$) is defined as:
-$$
-  g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
-$$
+% $$ 
+%    (g \cup X) \disj Y 
+%    ~=~ 
+%    (g \disj Y) \land (X \disj Y)
+% $$
+% \begin{code}
+% simplifyVSetPred ((g `vsUnion` x) `VSDisj` y)  
+%                = ( g `VSDisj` y , [x `VSDisj` y ] )
+% \end{code} 
 
-$$  
-   (g \setminus X) \subseteq_d Y
-   ~=~ 
-   g \setminus (X \cup Y) \subseteq_d \emptyset
-$$
-\begin{code}
-simplifyVSetPred ((g `VSMinus` x) `VSSubD` y) 
-  = ( g `VSMinus` (x `VSUnion` x) `VSSubD` vsEmpty , [] )
-\end{code} 
+% $$  
+%    (g \setminus X) \subseteq Y
+%    ~=~ 
+%    g \setminus (X \cup Y) \subseteq \emptyset
+% $$
+% \begin{code}
+% simplifyVSetPred ((g `vsMinus` x) `VSSub` y) 
+%   = ( g `vsMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
+% \end{code} 
 
-$$ (g \cup X) \subseteq_d Y
-   ~=~ 
-   g \subseteq_d Y \land X \subseteq_d Y
-$$
-\begin{code}
-simplifyVSetPred ((g `VSUnion` x) `VSSubD` y)  
-             =  ( g `VSSubD` y , [x `VSSubD` y] )
-\end{code} 
+% $$ (g \cup X) \subseteq Y
+%    ~=~ 
+%    g \subseteq Y \land X \subseteq Y
+% $$
+% \begin{code}
+% simplifyVSetPred ((g `vsUnion` x) `VSSub` y)  
+%              =  ( g `VSSub` y , [x `VSSub` y] )
+% \end{code} 
 
-\subsection{All other cases: no change}
 
-For now we notice that that none of the laws above
-introduce intersections or disjunctions.
-We'll only add laws about those if they arise elsewhere.
-\begin{code}
-simplifyVSetPred vse = (vse,[]) 
-\end{code}  
+% \subsection{Union and Diff vs. Dynamic Superset}
+
+% Reminder: Dynamic subset ($\subseteq_d$) is defined as:
+% $$
+%   g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
+% $$
+
+% $$  
+%    (g \setminus X) \subseteq_d Y
+%    ~=~ 
+%    g \setminus (X \cup Y) \subseteq_d \emptyset
+% $$
+% \begin{code}
+% simplifyVSetPred ((g `vsMinus` x) `VSSubD` y) 
+%   = ( g `vsMinus` (x `vsUnion` x) `VSSubD` vsEmpty , [] )
+% \end{code} 
+
+% $$ (g \cup X) \subseteq_d Y
+%    ~=~ 
+%    g \subseteq_d Y \land X \subseteq_d Y
+% $$
+% \begin{code}
+% simplifyVSetPred ((g `vsUnion` x) `VSSubD` y)  
+%              =  ( g `VSSubD` y , [x `VSSubD` y] )
+% \end{code} 
+
+% \subsection{All other cases: no change}
+
+% For now we notice that that none of the laws above
+% introduce intersections or disjunctions.
+% We'll only add laws about those if they arise elsewhere.
+% \begin{code}
+% simplifyVSetPred vse = (vse,[]) 
+% \end{code}  
 
 
 % The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
@@ -389,7 +365,7 @@ simplifyVSetPred vse = (vse,[])
 %      are both dynamic and have different dynamicity.
 % \end{itemize}
 % \begin{code}
-% disjointCheck  :: MonadFail m => GenVar -> VSetExpr -> m VSetExpr
+% disjointCheck  :: MonadFail m => GenVar -> VarSet -> m VarSet
 % disjointCheck gv NA         =  return disjNA
 % disjointCheck gv (The vsD) = do
 %   checked  <-  disjCheck gv S.empty $ S.toList vsD
@@ -418,7 +394,7 @@ simplifyVSetPred vse = (vse,[])
 % However we need to keep in mind that \m{g} can denote the universal set.
 
 % \begin{code}
-% coveredByCheck :: MonadFail m => GenVar -> VSetExpr -> m VSetExpr
+% coveredByCheck :: MonadFail m => GenVar -> VarSet -> m VarSet
 
 % coveredByCheck gv NA  =  return covByNA  -- gv `coveredby` U
 % coveredByCheck gv jvsC@(The vsC)
@@ -428,7 +404,7 @@ simplifyVSetPred vse = (vse,[])
 % We remove any observables that can't match.
 % Failure occurs if the genvar is an observable and the ending var-set is empty.
 % \begin{code}
-% covByCheck :: MonadFail m => GenVar -> VarSet -> [GenVar] -> m VSetExpr
+% covByCheck :: MonadFail m => GenVar -> VarSet -> [GenVar] -> m VarSet
 
 % covByCheck gv vsp []
 %   | S.null vsp && isObsGVar gv  = fail "covered by nothing" 
@@ -477,7 +453,7 @@ simplifyVSetPred vse = (vse,[])
 % we cannot deduce that $\emptyset \supseteq T$ is false.
 % Similarly, $T \supseteq z$ could also be true.
 % \begin{code}
-% dynCvrgCheck :: MonadFail m => GenVar -> VSetExpr -> m VSetExpr
+% dynCvrgCheck :: MonadFail m => GenVar -> VarSet -> m VarSet
 
 % dynCvrgCheck gv NA  =  return covByNA
 % dynCvrgCheck gv jvsCd@(The vsCd)
@@ -566,11 +542,10 @@ readSC2'' :: SideCond -> String -> (SideCond,String)
 readSC2'' sc (')':str) = (sc,str)
 readSC2'' sc str =   error ("readSC2'', close-par expected, seen: '"++str)
 
-sE  = vsSngl gE
-sN  = vsSngl gN
-sEdN  = VSDisj sE sN
-sEsN  = VSSub  sE sN
-sEsdN = VSSubD sE sN
+sN = vsSngl gN
+sEdN  = VSDisj gE sN
+sEsN  = VSSub  gE sN
+sEsdN = VSSubD gE sN
 
 scVSPreds :: SideCond -> [VSetPred]
 scVSPreds (SCD vsps _)  =  vsps
@@ -1138,8 +1113,8 @@ Edge cases:
 \end{eqnarray*}
 \begin{code}
 ccDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VSetExpr -> VSetExpr 
-            -> m VSetExpr
+            => VarSet -> GenVar -> VarSet -> VarSet 
+            -> m VarSet
 ccDischarge _  _  _  _     =  fail "ccDischarge NYI"
 --ccDischarge _  _  _  NA     =  return NA
 --ccDischarge _  _  NA uvsCL  =  return uvsCL
@@ -1166,8 +1141,8 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 \end{eqnarray*}
 \begin{code}
 ddDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VSetExpr -> VSetExpr 
-            -> m VSetExpr
+            => VarSet -> GenVar -> VarSet -> VarSet 
+            -> m VarSet
 ddDischarge _    _  _     _     =  fail "ddDischarge NYI"
 --ddDischarge _    _  _     NA     =  return NA
 --ddDischarge _    _  NA    nvsDL  =  return nvsDL
@@ -1207,8 +1182,8 @@ Edge cases:
 
 \begin{code}
 cdDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VSetExpr -> VSetExpr 
-            -> m VSetExpr
+            => VarSet -> GenVar -> VarSet -> VarSet 
+            -> m VarSet
 cdDischarge _    _  _  _     =  fail "cdDischarge NYI"
 --cdDischarge _    _  _  NA     =  return NA
 --cdDischarge obsv gv NA nvsDL  =  return nvsDL
@@ -1238,8 +1213,8 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 \end{eqnarray*}
 \begin{code}
 dcDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VSetExpr -> VSetExpr 
-            -> m VSetExpr
+            => VarSet -> GenVar -> VarSet -> VarSet 
+            -> m VarSet
 dcDischarge _    _  _     _     =  fail "dcDischarge NYI"
 --dcDischarge obsv gv NA    nvsCL  =  return nvsCL
 --dcDischarge obsv gv (The vsDG) tvsCL@(The vsCL)
@@ -1499,7 +1474,7 @@ findCGV gv _           =  fail "findCGV NYfI"
 For dynamic coverage we don't care about temporality,
 but do report what temporality was found.
 \begin{code}
-findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VSetExpr, VarWhen )
+findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VarSet, VarWhen )
 findDynCvrdGenVar gv (SCD vsps _) = findDCGV gv vsps
 
 findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")

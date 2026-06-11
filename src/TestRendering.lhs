@@ -587,17 +587,11 @@ Empty and singleton sets:
 \begin{code}
 trVSExpr = trvsexpr trId
 trVSExprU = trvsexpr trIdU
-trvsexpr trid (VSEnum vse) 
+trvsexpr trid vse
   | sz == 0    =  _emptyset
   | sz == 1    =  trgvar trid $ head $ S.toList vse
   | otherwise  =  trvset trid vse 
   where sz = S.size vse
-trvsexpr trid (VSUnion vse1 vse2) 
-  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
-trvsexpr trid (VSIntsct vse1 vse2) 
-  = "("++trvsexpr trid vse1++_intsct++trvsexpr trid vse2++")"
-trvsexpr trid (VSMinus vse1 vse2) 
-  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
 
 trvsets trid = seplist "," $ trvset trid
 
@@ -607,12 +601,12 @@ vsesdbg = rdbg (seplist ";" $ trVSExpr)
 trVSPred = trvspred trId
 trVSPredU = trvspred trIdU
 trvspred trid VSTrueP = "true"
-trvspred trid (VSDisj vse1 vse2) 
-  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
-trvspred trid (VSSub vse1 vse2) 
-  = "("++trvsexpr trid vse1++_subseteq++trvsexpr trid vse2++")"
-trvspred trid (VSSubD vse1 vse2) 
-  = "("++trvsexpr trid vse1++_subseteq++_subStr "a"++trvsexpr trid vse2++")"
+trvspred trid (VSDisj gv vset) 
+  = "("++trgvar trid gv++_disj++trvsexpr trid vset++")"
+trvspred trid (VSSub gv vset) 
+  = "("++trgvar trid gv++_subseteq++trvsexpr trid vset++")"
+trvspred trid (VSSubD gv vset) 
+  = "("++trgvar trid gv++_subseteq++_subStr "a"++trvsexpr trid vset++")"
 trvspred trid VSFalseP = "true"
 
 trvspreds trid = seplist "," $ trvspred trid

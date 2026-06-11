@@ -649,12 +649,12 @@ setVarIdNumber u (Vbl (Identifier nm _) cls whn)
 
 Here we convert free-variables into set-expressions:
 \begin{code}
-fvs2vses :: FreeVars -> VSetExpr
+fvs2vses :: FreeVars -> VarSet
 fvs2vses (fvs,diffs) 
-  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
+  = foldl vsUnion fvs (map diff2vses diffs)
 
-diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
+diff2vses :: (GenVar,VarSet) -> VarSet
+diff2vses (gv,vs) = vsMinus (vsSngl gv) vs
 \end{code}
 
 

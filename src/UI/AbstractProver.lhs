@@ -454,7 +454,7 @@ extendGoalSCCoverage obsv lvvls (SCD vsps _)
                  -> [VSetPred] -- Law coverage side-conditions
                  -> m SideCond
     xtndCoverage _ _ vsps [] = return (SCD vsps S.empty)
-    xtndCoverage obsv ffvls vsps (vsp@(VSSub gvs (VSEnum vsC)) : rest)
+    xtndCoverage obsv ffvls vsps (vsp@(VSSub _ vsC) : rest)
       | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
@@ -465,7 +465,7 @@ extendGoalSCCoverage obsv lvvls (SCD vsps _)
          = do vsps' <- mrgVarConds vsp vsps  
               xtndCoverage obsv ffvls vsps' rest
       | otherwise  =  xtndCoverage obsv ffvls vsps rest
-    xtndCoverage obsv ffvls vsps (vsp@(VSSubD gvs (VSEnum vsCd)) : rest)
+    xtndCoverage obsv ffvls vsps (vsp@(VSSubD _ vsCd) : rest)
       | S.toList vsCd `elem` ffvls
 
              -- DO WE NEED THIS?

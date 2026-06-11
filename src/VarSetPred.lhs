@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module VarSetPred (
   VSetPred(..)
+, vPredVars
 , vsEmpty, vsSngl, vsList, vsUnion, vsMinus
 , enumSamePred
 ) where
@@ -134,9 +135,6 @@ $$ (G~rel_1~V_1) \land (G~rel_2~V_2) \quad = ?$$
 This breaks down into two sub-categories:
 same predicate ($rel_1=rel_2$),
 and different predicate ($rel_1 \neq rel_2$).
-
-
-
 
 \subsubsection{Same Predicate Simplification}
 

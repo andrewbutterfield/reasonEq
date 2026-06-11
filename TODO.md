@@ -7,24 +7,11 @@
 
 ## URGENT or NEXT
 
-**`VarSetExpr` to become `VarSetPred` and `VSetExpr` to be replaced by `VarSet` and first argument of binary predicates to be a `GenVar`.**  **DONE**
-
 We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`. In practise, this means a separate module, **THIS IS A MAJOR REWRITE**
 
-We have classified various `VSet(Expr|Pred)` laws in `SideCond` (VSC Laws):
+*Everything compiles - experimentation time!*
 
- - same-predicate simplifications
- - different-predicate simplifications
- - predicate-splitting laws
 
-The first two, if `g` is interpreted as arbitrary set `G`, 
-are purely set-theoretic, so should be implemented in `VarSetExpr`.
-**first two moved, first one implemented**
-The third is tailored to our side-condition usage and should be implemented
-in `SideCond`.
-
-The definition of the semantics of `\subseteq_d` (`VSSubD`) 
-should be moved to `VarSetExpr`. **DONE**
 
 ### Systematic Proof of all Conjectures
 

@@ -7,6 +7,8 @@
 
 ## URGENT or NEXT
 
+**`VarSetExpr` to become `VarSetPred` and `VSetExpr` to be replaced by `VarSet` and first argument of binary predicates to be a `GenVar`.**
+
 We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`. In practise, this means a separate module, **THIS IS A MAJOR REWRITE**
 
 We have classified various `VSet(Expr|Pred)` laws in `SideCond` (VSC Laws):

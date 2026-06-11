@@ -33,7 +33,7 @@ import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
 import AST
-import VarSetExpr
+import VarSetPred
 import SideCond
 
 

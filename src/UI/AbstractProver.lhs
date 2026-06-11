@@ -65,7 +65,7 @@ import Laws
 import TermZipper
 import Types
 import AST
-import VarSetExpr
+import VarSetPred
 import FreeVars
 import AlphaEquiv
 import Substitution

@@ -43,7 +43,7 @@ import LexBase
 import Variables
 import Types
 import AST
-import VarSetExpr
+import VarSetPred
 
 
 import Test.HUnit hiding (Assertion)

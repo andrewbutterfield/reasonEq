@@ -55,7 +55,7 @@ import Variables
 import Types
 import Typing
 import AST
-import VarSetExpr
+import VarSetPred
 import SideCond
 import FreeVars 
 import Assertions

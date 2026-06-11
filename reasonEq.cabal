@@ -72,7 +72,7 @@ library
       Utilities
       VarData
       Variables
-      VarSetExpr
+      VarSetPred
       WriteRead
       YesBut
       AndOrInvert

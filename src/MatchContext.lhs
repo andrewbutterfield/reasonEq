@@ -28,7 +28,7 @@ import WriteRead
 import LexBase
 import Variables
 import AST
-import VarSetExpr
+import VarSetPred
 import SideCond
 import Assertions
 import TermZipper

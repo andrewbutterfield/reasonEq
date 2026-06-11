@@ -32,7 +32,7 @@ import LexBase
 import Variables
 import Types
 import AST
-import VarSetExpr
+import VarSetPred
 import FreeVars
 import SideCond
 import VarData

@@ -21,7 +21,7 @@ import qualified Data.Map as M
 import Data.List 
 import Data.Char
 
-import NotApplicable
+--import NotApplicable
 import YesBut
 import Control
 import Utilities
@@ -888,28 +888,31 @@ sidecond2scond (SCD [] fvs)
   | S.null fvs  =  SCnone
   | otherwise   =  SCFresh $ VSet $ map genvar2gvar $ S.toList fvs
 sidecond2scond (SCD vscs fvs)
-  | S.null fvs  =  SCVSCs $ concat $ map varsidecond2vscond [vscs]
-  | otherwise   =  SCFull (concat $ map varsidecond2vscond [vscs])
+  | S.null fvs  =  SCVSCs $ map varsidecond2vscond vscs
+  | otherwise   =  SCFull (map varsidecond2vscond vscs)
                           (VSet $ map genvar2gvar $ S.toList fvs)
 
-varsidecond2vscond :: [VSetPred] -> [VSCond]
-varsidecond2vscond _ = error "varsidecond2vscond needs rework"
---(VSC gv nvsD nvsC nvsCd)
---  =     mkDisj   gv nvsD
---     ++ mkCovby  gv nvsC 
---     ++ mkDynCon gv nvsCd
+varsidecond2vscond :: VSetPred -> VSCond
+varsidecond2vscond (VSDisj gv vsD)
+  = VSCDisj (genvar2gvar gv) (VSet $ map genvar2gvar $ S.toList vsD)
+varsidecond2vscond (VSSub gv vsD)
+  = VSCCovBy (genvar2gvar gv) (VSet $ map genvar2gvar $ S.toList vsD)
+varsidecond2vscond (VSSubD gv vsD)
+  = VSCDynCov (genvar2gvar gv) (VSet $ map genvar2gvar $ S.toList vsD)
+varsidecond2vscond vsp 
+  = error ("varsidecond2vscond "++show vsp++"needs rework")
 
-mkDisj _  NA        =  []
-mkDisj gv (The vsD) 
+mkDisj :: GenVar -> VarSet -> [VSCond]
+mkDisj gv vsD
   =  [VSCDisj (genvar2gvar gv) (varset2vset vsD) ]
 
-mkCovby _ NA = []
-mkCovby gv (The vsC)   
+mkCovby :: GenVar -> VarSet -> [VSCond]
+mkCovby gv vsC  
   =  [VSCCovBy (genvar2gvar gv) (varset2vset vsC) ]
 
-mkDynCon _ NA = []
-mkDynCon gv (The vsCd)  
-  =  [VSCDisj (genvar2gvar gv) (varset2vset vsCd) ]
+mkDynCov :: GenVar -> VarSet -> [VSCond]
+mkDynCov gv vsCd  
+  =  [VSCDynCov (genvar2gvar gv) (varset2vset vsCd) ]
 
 varset2vset :: VarSet -> VrSet
 varset2vset vs = VSet $ map genvar2gvar $ S.toList vs

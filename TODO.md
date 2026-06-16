@@ -13,16 +13,7 @@ We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`.
 
 *`save` and `restore` work*
 
-**`gen` fails with runtime error**
-
-```
-🛠 devproj.EQV> gen
-generating to devproj/EQV/EQV-gen.utp
-req: varsidecond2vscond needs rework
-CallStack (from HasCallStack):
-  error, called at src/SourceHandling.lhs:896:24 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SourceHandling
-```
-
+**`gen` and `load` now work**
 
 
 ### Systematic Proof of all Conjectures
@@ -57,51 +48,23 @@ Fixing bugs as we go.
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 
-   Plan:
-     Rework required?: SideCond, Assertion, Instantiate, Substitution
-
-     Focus: `SideCond.mrgSameGVSC` is key. `vscCheck` is obsolete. 
-     The are too many uses of `mergeX` and `mrgX` - these should be rationalised.
-
-    
-   Diagnosis: 
-     we get the following outcome from the instantiated law s.c.: `P ⋔ (x$\y$)`.
-     This cannot be captured using the VSC datatype. In this particular case,
-     the conjecture  s.c. `y$ ⊇ x$` means that `x$\y$ = Ø`, 
-     but in general this may not be the case.
-
-   **Concern:** *This proof step used to work before. Why not now?* Perhaps things are going wrong *above* the `vsp2vsc` level? YES
-
-     L2R  
-     Conjecture `∀x$ • ∀y$ • P ≡ ∀y$ • P  ,  y$⊇x$`
-
-     LHS: `∀x$ • ∀y$ • P , y$⊇x$`
-
+We observe:
 ```
 proof> tm 1 forall_remove
 Match against 'forall_remove'[1] failed!
 try s.c. instantiation failed
-
-{ B  ⟼ 𝔹  , P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
-&& x$⋔P
-
+{ B  ⟼ 𝔹  , P  ⟼ true, x$  ⟼ {x$} } && (P⋔x$)
 lnm[parts]=forall_remove[1]
-tC=(∀ x$  • (∀ y$  • P))
-scC=y$⊇x$
-tP'=(∀ y$  • P)
+tC=(∀ x$  • true)
+scC=⊤
+tP'=true
 partsP=(∀ x$  • P)
 replP=P
-scP=x$⋔P
-
-vsp2vsc: (P⋔(x$∖y$))
-X-vsp2vsc: VSDisj (VSEnum (fromList [GV (VR (Id "P" 0,VP,WS))])) (VSMinus (VSEnum (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) (VSEnum (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])))
-not disjoint or superset with enumerations
+scP=(P⋔x$)
+instVSP: no genvars
 ```
 
-Problem is that here `vsp2vsc` has no context to realise that y$ dominates x$,
-so it throws its hand up. *The discharge step occurs later - we are not supposed to rely on such context here* 
-
-**Note: `Instantiate.lhs` suggests that `VSetExpr` and `VSetPred` should replace the current SideCond datastructure. Is the above case what forces our hand here?**
+**Issue is that `P`, being `true` means that `P⋔x$` is `Ø⋔x$` which is true.** 
 
  - fix match ranking
  

@@ -9,9 +9,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module MatchContext
  ( MatchContext
  , buildMatchContext
+ , getVarTables
  , expandSideCondKnownVars         
  , expandSCKnowns
- , getVarTables
  ) where
 
 import Data.Maybe
@@ -86,34 +86,6 @@ buildMatchContext (thy:thys) -- thys not null
     in (thName thy, laws thy, known thy : vts') : mcs'
 \end{code}
 
-Expanding Known Variables in Side-Conditions
-\begin{code}
-expandSideCondKnownVars :: [MatchContext] -> SideCond -> SideCond
-expandSideCondKnownVars [] sc = sc
-expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
-\end{code}
-
-\section{Expanding Knowns in Side-Conditions}
-\begin{code}
-expandSCKnowns :: [VarTable] -> SideCond -> SideCond
-expandSCKnowns vts (SCD vscs freshvs)
-  = SCD (expandVSCKnowns vts vscs) (mapVToverVarSet vts freshvs ) 
---    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
-
-expandVSCKnowns :: [VarTable] -> [VSetPred] -> [VSetPred]
-expandVSCKnowns vts = error "expandVSCKnowns needs rework"
---(VSC gv nvsD nvsC nvsCd) 
--- = VSC gv (expandNVarSet vts nvsD) 
---          (expandNVarSet vts nvsC) 
---          (expandNVarSet vts nvsCd)
-
-expandNVarSet :: [VarTable] -> VarSet -> VarSet
-expandNVarSet vts vs = mapVToverVarSet vts vs
-
-expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
-expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv
-\end{code}
-
 We commonly want to get all the \h{VarTables}s 
 found in a list of match-contexts:
 \begin{code}  
@@ -123,3 +95,44 @@ getVarTables :: [MatchContext] -> [VarTable]
 getVarTables [] = []
 getVarTables (mc:_) = thd3 mc
 \end{code}
+
+\newpage
+\section{Expanding Knowns in Side-Conditions}
+
+\begin{code}
+expandSideCondKnownVars :: [MatchContext] -> SideCond -> SideCond
+expandSideCondKnownVars [] sc = sc
+expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
+
+expandSCKnowns :: [VarTable] -> SideCond -> SideCond
+expandSCKnowns vts (SCD vscs freshvs)
+  = SCD (concat $ map (expandVSCKnowns vts) vscs) 
+        (mapVToverVarSet vts freshvs ) 
+
+expandVSCKnowns :: [VarTable] -> VSetPred -> [VSetPred]
+expandVSCKnowns vts  (VSDisj gv vset) 
+  = buildVSCS VSDisj (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+expandVSCKnowns vts  (VSSub gv vset) 
+  = buildVSCS VSSub  (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+expandVSCKnowns vts  (VSSubD gv vset) 
+  = buildVSCS VSSubD (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+expandVSCKnowns vts vsp  =  [vsp]
+\end{code}
+We have $g~rel~vs$, 
+but expansion (if $g$ is a list-variable)
+may replace $g$ by $g_1,\dots,g_n$, where $n \geq 0$.
+So we need to rely on the following laws:
+\begin{eqnarray*}
+   G_1 \cup G_2 \disj V &\equiv& G_1 \disj V \land G_2 \disj V
+\\ G_1 \cup G_2 \subseteq V &\equiv& G_1 \subseteq V \land G_2 \subseteq V
+\end{eqnarray*}
+\begin{code}
+expandVSCGenVar :: [VarTable] -> GenVar -> [GenVar]
+expandVSCGenVar vts gv = S.toList $ mapVToverVarSet vts $ S.singleton gv
+
+buildVSCS :: (GenVar -> VarSet -> VSetPred) 
+          -> [GenVar] -> VarSet -> [VSetPred]
+buildVSCS cons gvs vset = map (flip cons vset) gvs
+\end{code}
+
+

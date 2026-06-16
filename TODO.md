@@ -46,26 +46,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
-
-We observe:
-```
-proof> tm 1 forall_remove
-Match against 'forall_remove'[1] failed!
-try s.c. instantiation failed
-{ B  ⟼ 𝔹  , P  ⟼ true, x$  ⟼ {x$} } && (P⋔x$)
-lnm[parts]=forall_remove[1]
-tC=(∀ x$  • true)
-scC=⊤
-tP'=true
-partsP=(∀ x$  • P)
-replP=P
-scP=(P⋔x$)
-instVSP: no genvars
-```
-
-**Issue is that `P`, being `true` means that `P⋔x$` is `Ø⋔x$` which is true.** 
-
  - fix match ranking
  
    law `equiv_refl`/outcome `true` should always 
@@ -81,6 +61,26 @@ instVSP: no genvars
 #### Bugs Fixed
 
 Most recent first...
+
+ - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
+
+    We observe:
+    ```
+    proof> tm 1 forall_remove
+    Match against 'forall_remove'[1] failed!
+    try s.c. instantiation failed
+    { B  ⟼ 𝔹  , P  ⟼ true, x$  ⟼ {x$} } && (P⋔x$)
+    lnm[parts]=forall_remove[1]
+    tC=(∀ x$  • true)
+    scC=⊤
+    tP'=true
+    partsP=(∀ x$  • P)
+    replP=P
+    scP=(P⋔x$)
+    instVSP: no genvars
+    ```
+
+**Issue is that `P`, being `true` means that `P⋔x$` is `Ø⋔x$` which is true.** 
 
  - fails to `restore` theory:
    

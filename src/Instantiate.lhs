@@ -836,11 +836,10 @@ This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
 \begin{code}
 instVSP :: MonadFail mf
         => InsContext -> Binding -> VSetPred -> mf [VSetPred]
--- instVSP ictx bind (VSSub gv vset)
 instVSP ictx bind (VSDisj gv vset) = do
-  let sgvfvs = instantiateSCGVar ictx bind gv
-  let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
-  splitGVars VSDisj sgvfvs vsfvs
+  let sgvfvs = instantiateSCGVar ictx bind $ pdbg "GV" gv
+  let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VSET" vset)
+  splitGVars VSDisj (pdbg "SGVFVS" sgvfvs) $ pdbg "VSFVS" vsfvs
 instVSP ictx bind (VSSub gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
@@ -849,9 +848,11 @@ instVSP ictx bind (VSSubD gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
   splitGVars VSSubD sgvfvs vsfvs
-instVSP _ _ vsp
-  = fail ("instVSP: cannot instantiate "++trVSPred vsp)
+instVSP _ _ vsp = return [vsp]
+\end{code}
 
+Note: $\emptyset \disj S \land \emptyset \subseteq S$, for any set $S$.
+\begin{code}
 splitGVars :: MonadFail mf
            => (GenVar -> VarSet -> VSetPred)
            -> FreeVars -> FreeVars -> mf [VSetPred]
@@ -859,10 +860,10 @@ splitGVars makePred sgvfvs vsfvs
   = let
       gvl  = S.toList $ fvs2vses sgvfvs -- VarSet
       vset = fvs2vses vsfvs  -- VarSet
-      makeDerp vset' gv' = makePred gv' vset'
-      vspreds = map (makeDerp vset) gvl
-    in if null vspreds 
-       then fail "instVSP: no genvars"
+      vspreds = map (flip makePred vset) gvl
+
+    in if null vspreds --   emptyset sats both disj and subset
+       then return [VSTrueP]
        else return vspreds
 \end{code}
 
@@ -1172,7 +1173,7 @@ instantiateSCVar ictx bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  freeVars (icSC ictx) t
+        Just (BindTerm t)  ->  freeVars (icSC ictx) $ pdbg "T" t
 \end{code}
 
 

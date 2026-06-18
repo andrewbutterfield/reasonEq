@@ -46,6 +46,26 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+ - wierd `readSideCond` usage:
+
+  Somehow `save` tries to call `readSideCond` !!!!
+
+  ```
+  true
+  ⊢
+  ∀x$ • true ≡ true
+  ⊤
+  Focus = [] :: 𝔹  
+  Target (RHS): 
+  true
+  XPNDD:
+  ⊤
+  proof> save
+  req: readSideCond, SCD expected, saw: ([],fromLi
+  CallStack (from HasCallStack):
+    error, called at src/SideCond.lhs:514:18 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
+  ```
+
  - fix `isFloatingVSC`
 
     Proof for forall_swap

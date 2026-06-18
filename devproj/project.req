@@ -23,7 +23,7 @@ TS = False
 FV = False
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K (TG (Id "B" 0)) (VB True)),[(1,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [K (TG (Id "B" 0)) (VB True)])])
+TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K (TG (Id "B" 0)) (VB True)),K (TG (Id "B" 0)) (VB True)],[])
 BEGIN SEQUENT'
 SIDECOND = SCD [] (fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.forall_true", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}

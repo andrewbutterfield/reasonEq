@@ -511,7 +511,7 @@ instance Read SideCond where
 readSideCond :: String -> (SideCond,String)
 readSideCond str
  | before3 == "SCD" = readSC1 after3
- | otherwise  =  error ("readSideCond, SCD expected")
+ | otherwise  =  error ("readSideCond, SCD expected, saw: "++take 10 str)
  where (before3,after3) = splitAt 3 str
 
 -- [...] (fromList [...])

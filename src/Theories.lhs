@@ -140,7 +140,7 @@ renderTheory :: Theory
                , [(String,String)] )  -- [namedprooffiles]
 renderTheory thry
   = ( [ thryHDR nm
-      , depsKEY ++ show (thDeps thry)
+      , depsKEY ++ show (thDeps $ pdbg "rT.thry" thry)
       , knwnKEY ++ show (known thry) ] ++
       writePerLine lawsKEY show (laws thry) ++
       writePerLine simpKEY show (simps $ lwkinds thry) ++
@@ -158,7 +158,7 @@ parseTheory :: MonadFail m
            -> m (Theory,[String])
 parseTheory ([],_) = fail "parseTheory: no text."
 parseTheory (txts,ptxts)
-  = do (nm,  rest1) <- readKey (thryHDR "") id txts
+  = do (nm,  rest1) <- readKey (thryHDR "") id  txts
        (deps,rest2) <- readKey depsKEY read     rest1
        (knwn,rest3) <- readKey knwnKEY read     rest2
        (lws, rest4) <- readPerLine lawsKEY read rest3

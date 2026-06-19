@@ -268,7 +268,7 @@ generateState2 theory reqs = do
   return reqs
 \end{code}
 
-
+\newpage
 \subsection{Load Theory Text}
 
 \begin{code}
@@ -328,7 +328,7 @@ loadTheTheoryFile reqs thNm pthry
       But msgs -> doshow reqs (unlines' msgs) 
 \end{code}
 
-
+\newpage
 \subsection{Save Proof Artifact}
 
 We save/restore theories by default,
@@ -373,7 +373,7 @@ saveState [nm] reqs
        -> do putStrLn ("saveState: No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do saveNamedTheory (projectDir reqs) (nm',thry)
+       -> do saveNamedTheory (projectDir reqs) (pdbg "Saving Theory" nm',thry)
              return reqs
 saveState [what,nm] reqs
   | what == prfObj  = do
@@ -405,7 +405,7 @@ cmdRestore
 
         [ ( resCmd ++ "             -- restore prover state" )
         , ( resCmd ++ " <thry>      -- restore theory <thry>" )
-        , "   -- warns if it modifies an existing theory" 
+        , "   -- notifys if it modifies an existing theory" 
         , ( resCmd ++ " " ++ prfObj 
                   ++ " <proof>      -- restore proof <proof>" )
         , "  CAUTION: will search for and restore into current theory (!)"
@@ -421,7 +421,7 @@ restoreState [] reqs = do
   return reqs'{ inDevMode = inDevMode reqs}
 restoreState [nm] reqs = do
   let dirfp = projectDir reqs
-  (ok,old,theories') <- restoreNamedTheory (theories reqs) dirfp nm
+  (ok,old,theories') <- restoreNamedTheory (theories reqs) (pdbg "rS.dirfp" dirfp) $ pdbg "rS.nm" nm
   if ok
   then ( if old
           then do putStr "keep change? (y/N)? "

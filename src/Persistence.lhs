@@ -351,10 +351,10 @@ saveNamedTheory pjdir (nm,theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let thryDir = theoryDir pjdir nm
-            createDirectoryIfMissing True thryDir
-            let fp = theoryPath pjdir nm
-            let (thryTxt,_) = renderTheory theory
-            writeFile fp $ unlines thryTxt
+            createDirectoryIfMissing True $ pdbg "sNT.thryDir" thryDir
+            let fp = theoryPath (pdbg "sNT.pjdir" pjdir) nm
+            let (thryTxt,_) = renderTheory $ pdbg "sNT.theory" theory
+            writeFile fp $ unlines $ pdbg "sNT.thryTxt" thryTxt
             sequence $ map (saveProof pjdir) (proofs theory)
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
@@ -376,14 +376,14 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
 
 \begin{code}
 restoreNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
-restoreNamedTheory thrys projfp nm
+restoreNamedTheory thrys projfp thnm
   = let 
-      thryfp = theoryPath projfp nm
+      thryfp = theoryPath (pdbg "rNT.projfp" projfp) thnm
     in ifFileExists "Theory" (False,False,undefined) 
-                    thryfp (doReadNamedTheory thrys thryfp nm)
+                    (pdbg "rNT.thryfp" thryfp) (doReadNamedTheory thrys projfp thnm)
   where
-    doReadNamedTheory thrys thryfp nm
-      = do  (nm,thry) <- getNamedTheory thryfp nm
+    doReadNamedTheory thrys projfp thnm
+      = do  (nm,thry) <- getNamedTheory projfp thnm
             let isOld = nm `isATheoryIn` thrys
             let thrys' = ( if isOld
                            then replaceTheory' thry thrys
@@ -395,14 +395,15 @@ restoreNamedTheory thrys projfp nm
 
 -- assumes fp exists
 getNamedTheory :: String -> String -> IO (String,Theory)
-getNamedTheory thDir nm 
-  = do  let thryfp = thDir </> nm <.> "thr"
-        thryTxt <- readFile thryfp
-        prffiles <- fmap (filter isProofFile) $ listDirectory thDir 
-        prfTxts <- sequence $ map (readFile . (thDir </>)) prffiles
-        (thry,_) <- parseTheory (lines thryTxt, prfTxts)
-        putStrLn ("Loaded theory '"++nm++"' ("++thryfp++")")
-        return (nm,thry)
+getNamedTheory projfp thnm 
+  = do  let thryfp = theoryPath projfp thnm
+        thryTxt <- readFile $ pdbg "gNT.thryfp" thryfp
+        let projDir = theoryDir projfp thnm
+        prffiles <- fmap (filter isProofFile) $ listDirectory projDir
+        prfTxts <- sequence $ map (readFile . (projDir </>)) prffiles
+        (thry,_) <- parseTheory (lines $ thryTxt, prfTxts)
+        putStrLn ("Loaded theory '"++thnm++"' ("++thryfp++")")
+        return (thnm,thry)
 \end{code}
 
 \newpage

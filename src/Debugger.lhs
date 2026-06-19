@@ -32,8 +32,8 @@ dbg msg x = trace (msg++show x) x
 Secondly, marking output (with \texttt{@}) and optionally starting a newline:
 \begin{code}
 pdbg, pdbn :: Show a => Dbg a
-pdbg nm x = dbg ('@':nm++":  ") x
-pdbn nm x = dbg ('@':nm++":\n") x
+pdbg nm x = dbg ('\n':'@':nm++":  ") x
+pdbn nm x = dbg ('\n':'@':nm++":\n") x
 \end{code}
 
 Next, a version to handle monadic-fail types,

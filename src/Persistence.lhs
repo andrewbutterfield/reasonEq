@@ -281,10 +281,10 @@ saveAllState reqs
     doWriteAll reqs pjdir
       = do  let (tsTxt,setsTxt,nTsTxts) = renderREqState reqs
             let fp = projectPath pjdir
-            writeFile fp $ unlines tsTxt
+            writeFile fp $ unlines $ pdbg "tsTxt" tsTxt
             let sp = settingsPath pjdir
-            writeFile sp $ unlines setsTxt
-            sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
+            writeFile sp $ unlines $ pdbg "setsTxt" setsTxt
+            sequence_ $ map (writeNamedTheoryTxt pjdir) $ pdbg "sAS.nTsTxts" nTsTxts
             putStrLn ("State saved in '"++projectDir reqs++"'.")
             putStrLn ( "Contents: Prover State, and  Theory and Proofs for "
                        ++ intercalate " " (map fst nTsTxts) ++ " .")
@@ -327,7 +327,7 @@ getNamedTheories' projfp (nm:nms)
     in ifFileExists "Theory" [] thfile (doGetNamedTheories projfp thDir nm nms)
   where
     doGetNamedTheories projfp thDir nm nms
-      =  do nmdThry <- getNamedTheory thDir nm
+      =  do nmdThry <- getNamedTheory projfp nm
             nmdThrys <- getNamedTheories' projfp nms
             return (nmdThry:nmdThrys)
 \end{code}
@@ -351,10 +351,10 @@ saveNamedTheory pjdir (nm,theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let thryDir = theoryDir pjdir nm
-            createDirectoryIfMissing True $ pdbg "sNT.thryDir" thryDir
-            let fp = theoryPath (pdbg "sNT.pjdir" pjdir) nm
-            let (thryTxt,_) = renderTheory $ pdbg "sNT.theory" theory
-            writeFile fp $ unlines $ pdbg "sNT.thryTxt" thryTxt
+            createDirectoryIfMissing True thryDir
+            let fp = theoryPath pjdir nm
+            let (thryTxt,_) = renderTheory theory
+            writeFile fp $ unlines thryTxt
             sequence $ map (saveProof pjdir) (proofs theory)
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
@@ -378,9 +378,9 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
 restoreNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
 restoreNamedTheory thrys projfp thnm
   = let 
-      thryfp = theoryPath (pdbg "rNT.projfp" projfp) thnm
+      thryfp = theoryPath projfp thnm
     in ifFileExists "Theory" (False,False,undefined) 
-                    (pdbg "rNT.thryfp" thryfp) (doReadNamedTheory thrys projfp thnm)
+                    thryfp (doReadNamedTheory thrys projfp thnm)
   where
     doReadNamedTheory thrys projfp thnm
       = do  (nm,thry) <- getNamedTheory projfp thnm
@@ -397,7 +397,7 @@ restoreNamedTheory thrys projfp thnm
 getNamedTheory :: String -> String -> IO (String,Theory)
 getNamedTheory projfp thnm 
   = do  let thryfp = theoryPath projfp thnm
-        thryTxt <- readFile $ pdbg "gNT.thryfp" thryfp
+        thryTxt <- readFile thryfp
         let projDir = theoryDir projfp thnm
         prffiles <- fmap (filter isProofFile) $ listDirectory projDir
         prfTxts <- sequence $ map (readFile . (projDir </>)) prffiles

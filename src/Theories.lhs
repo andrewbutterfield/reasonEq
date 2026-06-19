@@ -139,13 +139,13 @@ renderTheory :: Theory
             -> ( [String]    -- lines theoryfile
                , [(String,String)] )  -- [namedprooffiles]
 renderTheory thry
-  = ( [ thryHDR nm
-      , depsKEY ++ show (thDeps $ pdbg "rT.thry" thry)
-      , knwnKEY ++ show (known thry) ] ++
-      writePerLine lawsKEY show (laws thry) ++
-      writePerLine simpKEY show (simps $ lwkinds thry) ++
+  = ( [ thryHDR $ pdbg "rT.nm" nm
+      , depsKEY ++ show (pdbg "rT.thDeps" $ thDeps thry)
+      , knwnKEY ++ show (pdbg "rT.known" $ known thry) ] ++
+      writePerLine lawsKEY show (pdbg "rT.laws" $ laws thry) ++
+      writePerLine simpKEY show (pdbg "rT.simps" $ simps $ lwkinds thry) ++
       writePerLine foldKEY id (folds $ lwkinds thry) ++
-      writePerLine conjKEY show (conjs thry) ++
+      writePerLine conjKEY show (pdbg "rT.conjs" $ conjs thry) ++
       [ thryTRL nm ]
     , map showproof $ proofs thry )
   where 

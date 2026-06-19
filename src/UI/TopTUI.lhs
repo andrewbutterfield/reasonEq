@@ -373,7 +373,7 @@ saveState [nm] reqs
        -> do putStrLn ("saveState: No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do saveNamedTheory (projectDir reqs) (pdbg "Saving Theory" nm',thry)
+       -> do saveNamedTheory (projectDir reqs) (nm',thry)
              return reqs
 saveState [what,nm] reqs
   | what == prfObj  = do
@@ -421,7 +421,7 @@ restoreState [] reqs = do
   return reqs'{ inDevMode = inDevMode reqs}
 restoreState [nm] reqs = do
   let dirfp = projectDir reqs
-  (ok,old,theories') <- restoreNamedTheory (theories reqs) (pdbg "rS.dirfp" dirfp) $ pdbg "rS.nm" nm
+  (ok,old,theories') <- restoreNamedTheory (theories reqs) dirfp nm
   if ok
   then ( if old
           then do putStr "keep change? (y/N)? "

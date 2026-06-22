@@ -147,7 +147,7 @@ renderTheory thry
       writePerLine foldKEY id (folds $ lwkinds thry) ++
       writePerLine conjKEY show (pdbg "rT.conjs" $ conjs thry) ++
       [ thryTRL nm ]
-    , map showproof $ proofs thry )
+    , map showproof $ pdbg "rT.proofs" $ proofs thry )
   where 
   nm = thName thry
   showproof prf@(_,pnm,_,_,_) = (pnm,show prf)
@@ -170,7 +170,7 @@ parseTheory (txts,ptxts)
                        , thDeps   =  deps
                        , known    =  knwn
                        , laws     =  lws
-                       , proofs   =  map read ptxts
+                       , proofs   =  map read $ pdbg "pT.ptxts" ptxts
                        , lwkinds     =  ClassifiedLaws simp fold
                        , conjs    =  conj
                        }

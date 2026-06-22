@@ -281,10 +281,10 @@ saveAllState reqs
     doWriteAll reqs pjdir
       = do  let (tsTxt,setsTxt,nTsTxts) = renderREqState reqs
             let fp = projectPath pjdir
-            writeFile fp $ unlines $ pdbg "tsTxt" tsTxt
+            writeFile fp $ unlines tsTxt
             let sp = settingsPath pjdir
-            writeFile sp $ unlines $ pdbg "setsTxt" setsTxt
-            sequence_ $ map (writeNamedTheoryTxt pjdir) $ pdbg "sAS.nTsTxts" nTsTxts
+            writeFile sp $ unlines setsTxt
+            sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
             putStrLn ("State saved in '"++projectDir reqs++"'.")
             putStrLn ( "Contents: Prover State, and  Theory and Proofs for "
                        ++ intercalate " " (map fst nTsTxts) ++ " .")

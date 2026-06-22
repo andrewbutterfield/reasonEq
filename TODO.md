@@ -46,36 +46,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - wierd `readSideCond` usage:
-
-  Somehow `save` tries to call `readSideCond` !!!!
-
-  We see `parseTheory` being called, and it looks like the following line triggers the error:
-  
-  ```
-  , proofs   =  map read $ pdbg "pT.ptxts" ptxts
-  ```
-
-  The only call is from `Persistence.getNamedTheory`. 
-  That is called locally by `restoreNamedTheory` and `getNamedTheories'`.
-
-
-  ```
-  true
-  ⊢
-  ∀x$ • true ≡ true
-  ⊤
-  Focus = [] :: 𝔹  
-  Target (RHS): 
-  true
-  XPNDD:
-  ⊤
-  proof> save
-  req: readSideCond, SCD expected, saw: "([],fromList [])),\"red-All\",(K (TG (Id \"B\" 0)) (VB True),[(UseLaw (ByMatch MEL) \"golden_rule\" (BD (f"
-  CallStack (from HasCallStack):
-    error, called at src/SideCond.lhs:514:18 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
-  ```
-
  - fix `isFloatingVSC`
 
     Proof for forall_swap
@@ -105,6 +75,38 @@ Fixing bugs as we go.
 #### Bugs Fixed
 
 Most recent first...
+
+  - wierd `readSideCond` usage:
+
+   **Deleting a one-year old proof from `Arith` fixed the bug!!**
+
+    Somehow `save` tries to call `readSideCond` !!!!
+
+    We see `parseTheory` being called, and it looks like the following line triggers the error:
+    
+    ```
+    , proofs   =  map read $ pdbg "pT.ptxts" ptxts
+    ```
+
+    The only call is from `Persistence.getNamedTheory`. 
+    That is called locally by `restoreNamedTheory` and `getNamedTheories'`.
+
+
+    ```
+    true
+    ⊢
+    ∀x$ • true ≡ true
+    ⊤
+    Focus = [] :: 𝔹  
+    Target (RHS): 
+    true
+    XPNDD:
+    ⊤
+    proof> save
+    req: readSideCond, SCD expected, saw: "([],fromList [])),\"red-All\",(K (TG (Id \"B\" 0)) (VB True),[(UseLaw (ByMatch MEL) \"golden_rule\" (BD (f"
+    CallStack (from HasCallStack):
+      error, called at src/SideCond.lhs:514:18 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
+    ```
 
  - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
 

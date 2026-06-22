@@ -837,9 +837,9 @@ This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
 instVSP :: MonadFail mf
         => InsContext -> Binding -> VSetPred -> mf [VSetPred]
 instVSP ictx bind (VSDisj gv vset) = do
-  let sgvfvs = instantiateSCGVar ictx bind $ pdbg "GV" gv
-  let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VSET" vset)
-  splitGVars VSDisj (pdbg "SGVFVS" sgvfvs) $ pdbg "VSFVS" vsfvs
+  let sgvfvs = instantiateSCGVar ictx bind gv
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
+  splitGVars VSDisj sgvfvs vsfvs
 instVSP ictx bind (VSSub gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
@@ -1173,7 +1173,7 @@ instantiateSCVar ictx bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  freeVars (icSC ictx) $ pdbg "T" t
+        Just (BindTerm t)  ->  freeVars (icSC ictx) t
 \end{code}
 
 

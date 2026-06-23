@@ -602,30 +602,41 @@ mrgVarConds vsp' vsps@(vsp1:vsps') = do
     GT  ->  do vsps'' <- mrgVarConds vsp' vsps'
                return ( vsp1 : vsps'' )
     EQ  ->  case mrgSameGVSC vsp' vsp1 of
-              Nothing            -> fail "mgrTVarConds: false s.c."
-              Just Nothing       -> return vsps' -- mrg is true 
-              Just (Just vsp'') -> return (vsp'':vsps')
-\end{code}
-
-Finally, given a list of un-merged VSCs,  we want to merge them:
-\begin{code}
-mergeVarConds :: MonadFail mf => [VSetPred] -> mf [VSetPred]
-mergeVarConds [] = return []
-mergeVarConds (vsp:vsps) = mrgVarConds vsp vsps
+      Nothing          ->  fail "mgrTVarConds: false s.c."
+      Just []          ->  return vsps' -- mrg is true 
+      Just [vsp'']     ->  return (vsp'':vsps')
+      Just [vspA,vspB] -> do
+        vsps'' <- mrgVarConds vspB vsps'
+        return (vspA : vsps'')
 \end{code}
 
 \subsection{Merging two (checked) VSCs}
 
-Now, merging an VSC in with another VSC referring to the same general variable:
+Now, merging an VSC in with another VSC 
+referring to the same general variable (\h{gv}).
+If two predicates are returned, they have the same general variable,
+but a different predicate. They are both returned, sorted.
 \begin{code}
 mrgSameGVSC :: MonadFail m 
-            => VSetPred -> VSetPred -> m (Maybe VSetPred)
-mrgSameGVSC vsp1 vsp2 = fail "mrgSameGVSC NYI"
---  = let  -- merging, both sets have equal status
---      nvsD'   = nvsD1  `nunion` nvsD2
---     nvsC'  =  uvsC1  `nintsct` uvsC2
---      nvsCd' =  uvsCd1 `nintsct` uvsCd2
---    in mkVSC gv nvsD' nvsC' nvsCd'
+            => VSetPred -> VSetPred -> m [VSetPred]
+
+mrgSameGVSC (VSDisj gv vs1) (VSDisj _ vs2) 
+   = return [VSDisj gv (vs1 `S.union` vs2)]
+
+mrgSameGVSC vspDisj@(VSDisj _ _) vspSubX = return [vspDisj,vspSubX]
+
+mrgSameGVSC (VSSub gv vs1) (VSSub _ vs2)
+  | not (S.null vsi)  =  return [VSSub gv vsi]
+  where vsi = vs1 `S.intersection` vs2
+
+mrgSameGVSC vspSub@(VSSub _ _) vspDisj@(VSDisj _ _) = return [vspDisj,vspSub]
+mrgSameGVSC vspSub@(VSSub _ _) vspSubD@(VSSubD _ _) = return [vspSub,vspSubD]
+
+mrgSameGVSC (VSSubD gv vs1) (VSSubD _ vs2)
+  | not (S.null vsi)  =  return [VSSubD gv vsi]
+  where vsi = vs1 `S.intersection` vs2
+
+mrgSameGVSC vspSubD@(VSSubD _ _) vspX = return [vspX,vspSubD]
 \end{code}
 
 
@@ -1316,16 +1327,21 @@ based on the idea that $G_F \disj V$ by construction
    &\mapsto&  Cd_L \setminus G_F \supseteq_a V
 \end{eqnarray*}
 \begin{code}
-freshTVarDischarge _ _ _ = fail "freshTVarDischarge NYI"
---freshTVarDischarge obsv gF (VSC gv nvsD nvsC nvsCd) = do
---  let nvsgF = The gF
---  let nvsD' = nvsD `ndiff` nvsgF
---  let nvsC' = nvsC `ndiff` nvsgF
---  let nvsCd' = if gv `S.member` obsv then nvsCd `ndiff` nvsgF else NA
---  case mkVSC gv nvsD' nvsC' nvsCd' of
---    Nothing  ->  fail "fresh-var s.c. discharge failed"
---    Just Nothing -> return []
---    Just (Just vsp')  ->  return [vsp']
+freshTVarDischarge obsv gF (VSDisj gv vsD) = do
+  let vsD' = (vsD S.\\ gF)
+  if S.null vsD' then return []
+                 else return [VSDisj gv vsD']
+freshTVarDischarge obsv gF (VSSub  gv vsC) = do
+  let vsC' = (vsC S.\\ gF)
+  if S.null vsC' then fail "fresh-var s.c. discharge failed (C)"
+                 else return [VSSub gv vsC']
+freshTVarDischarge obsv gF (VSSubD gv vsCd)
+  = if gv `S.member` obsv then do
+      let vsCd' =  (vsCd S.\\ gF)
+      if S.null vsCd' then fail "fresh-var s.c. discharge failed (Cd)"
+                      else return [VSSubD gv vsCd']
+    else return []
+freshTVarDischarge _ _ _ = return []
 \end{code}
   % | vsp' == vscTrue gv  =  return []
   % | otherwise  =  return [vsp']
@@ -1427,9 +1443,10 @@ findGenVarInSC :: MonadFail m => GenVar -> SideCond -> m VSetPred
 findGenVarInSC gv (SCD vsps _ )  =  findGV gv vsps
 
 findGV _ [] = fail "findGenVarInSC: not in any term variable side-condition"
-findGV gv (vsp:vsps) = fail "findGV NYI"
---  | gv == termVar vsp  =  return vsp
---  | otherwise          =  findGV gv vsps
+findGV gv (vsp:vsps) 
+  = case termVar vsp of
+      Just gv' | gv== gv'  ->  return vsp
+      _                    ->  findGV gv vsps
 \end{code}
 
 We then look at returning all mentions of a variable:

@@ -612,41 +612,7 @@ mrgVarConds vsp' vsps@(vsp1:vsps') = do
 
 \subsection{Merging two (checked) VSCs}
 
-Now, merging an VSC in with another VSC 
-referring to the same general variable (\h{gv}).
-If two predicates are returned, they have the same general variable,
-but a different predicate. They are both returned, sorted.
-\begin{code}
-mrgSameGVSC :: MonadFail m 
-            => VSetPred -> VSetPred -> m [VSetPred]
-
-mrgSameGVSC (VSDisj gv vs1) (VSDisj _ vs2) 
-   = return [VSDisj gv (vs1 `S.union` vs2)]
-
-mrgSameGVSC vspDisj@(VSDisj _ _) vspSubX = return [vspDisj,vspSubX]
-
-mrgSameGVSC (VSSub gv vs1) (VSSub _ vs2)
-  | not (S.null vsi)  =  return [VSSub gv vsi]
-  where vsi = vs1 `S.intersection` vs2
-
-mrgSameGVSC vspSub@(VSSub _ _) vspDisj@(VSDisj _ _) = return [vspDisj,vspSub]
-mrgSameGVSC vspSub@(VSSub _ _) vspSubD@(VSSubD _ _) = return [vspSub,vspSubD]
-
-mrgSameGVSC (VSSubD gv vs1) (VSSubD _ vs2)
-  | not (S.null vsi)  =  return [VSSubD gv vsi]
-  where vsi = vs1 `S.intersection` vs2
-
-mrgSameGVSC vspSubD@(VSSubD _ _) vspX = return [vspX,vspSubD]
-\end{code}
-
-
-\newpage
-\subsection{VSC Merge Laws}
-
-We have the following interactions,
-where $D$ and $C$ are the variable-sets found
-in \texttt{Disjoint} and \texttt{CoveredBy} respectively.
-So the semantics of the disjoint ($D$), covering ($C$),
+The semantics of the disjoint ($D$), covering ($C$),
 and dynamic covering ($C_d$) variable-sets,
 parameterised by a general variable $G$,
 are:
@@ -655,86 +621,94 @@ are:
 \\ \sem{D}_G &=& \fv.G \cap D = \emptyset
 \\ \sem{C}_G &=& \fv.G \subseteq C
 \\         &=& \fv.G = \emptyset, \quad \IF \quad C = \emptyset
-\\ \sem{C_d}_G &=& \dfv.G \subseteq C \land \forall_{\isdyn}(C)
-\\             &=& \dfv.G = \emptyset, \quad \IF \quad C = \emptyset
+\\ \sem{C_d}_G &=& \dfv.G \subseteq C_d \land \forall_{\isdyn}(C_d)
+\\             &=& \dfv.G = \emptyset, \quad \IF \quad C_d = \emptyset
 \end{eqnarray*}
-We get the following (fairly obvious) laws:
+In the sequel we assume: $\forall_{\isdyn}(C_d)$
+
+
+
+
+Here we perform trying to merging an VSC in with another VSC 
+referring to the same general variable (\h{gv}).
+If two predicates are returned, they have the same general variable,
+but a different predicate. They are both returned, simplified and sorted.
+
+We work through every combination of two VSCs,
+ensuring they follow the ordering $D;C;C_d$.
+\begin{code}
+mrgSameGVSC :: MonadFail m 
+            => VSetPred -> VSetPred -> m [VSetPred]
+\end{code}
+
+$D_1 \times D_2$
 \begin{eqnarray*}
-   \sem{D_1}_G \land \sem{D_2}_G &=&  \sem{D_1 \cup D_2}_G
-\\ \sem{C_1}_G \land \sem{C_2}_G &=&  \sem{C_1 \cap C_2}_G
-\\ \sem{C1_d}_G \land \sem{C2_d}_G &=&  \sem{(C1 \cap C2)_d}_G
-\\ \sem{D}_G \land \sem{C}_G
-   &=&  \sem{D}_G \land \sem{C \setminus D}_G
-\\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
-\\ \sem{D}_G \land \sem{C_d}_G
-   &=&  \sem{D}_G \land \sem{(C \setminus D)_d}_G
-\\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
+   \fv.G \cap D_1 = \emptyset \land \fv.G \cap D_1 = \emptyset 
+   &\equiv&  \fv.G \cap (D_1 \cup D_2) = \emptyset
 \end{eqnarray*}
-Combining the two coverage conditions goes as follows:
+\begin{code}
+mrgSameGVSC (VSDisj gv vsD1) (VSDisj _ vsD2) 
+                                   = return [VSDisj gv (vsD1 `S.union` vsD2)]
+\end{code}
+
+$D \times C \qquad D \times C_d$
 \begin{eqnarray*}
-\lefteqn{\sem{C1}_G \land \sem{C2_d}_G}
-\\ &=& \fv.G \subseteq C1
-       \land
-       \dfv.G \subseteq C2 \land \forall_{\isdyn}(C2)
+   \fv.G \cap D = \emptyset \land \fv.G \subseteq C
+   &\equiv&  \fv.G \cap D = \emptyset \land \fv.G \subseteq (C\setminus D)
+\\ \fv.G \cap D = \emptyset \land \fv.G \subseteq C_d
+   &\equiv&  \fv.G \cap D = \emptyset \land \fv.G \subseteq (C_d\setminus D)
 \end{eqnarray*}
-There is no simple simplication of this.
-So we have the following 3-way rule:
+\begin{code}
+mrgSameGVSC vspDisj@(VSDisj gv vsD) (VSSub _ vsC) 
+                                   = return [vspDisj,VSSub gv (vsC S.\\ vsD)]
+mrgSameGVSC vspDisj@(VSDisj gv vsD) (VSSubD _ vsCd) 
+                                 = return [vspDisj,VSSubD gv (vsCd S.\\ vsD)]
+\end{code}
+
+$C_1 \times C_2 \qquad Cd_1 \times Cd_2$
 \begin{eqnarray*}
-   \sem{D}_G \land \sem{C1}_G \land \sem{C2_d}_G
-   &=&  \sem{D}_G \land 
-        \sem{C1 \setminus D}_G \land \sem{(C2 \setminus D)_d}_G
-\\ &=& \fv.G = \emptyset, \quad\IF\quad (C1 \cup C2) \setminus D = \emptyset
+   \fv.G \subseteq C_1 \land \fv.G \subseteq C_2 &=&  \fv.G \subseteq (C_1 \cap C_2)
+\\ \fv.G \subseteq Cd_1 \land \fv.G \subseteq Cd_2 &=&  \fv.G \subseteq (Cd_1 \cap Cd_2)
 \end{eqnarray*}
+\begin{code}
+mrgSameGVSC (VSSub gv vsC1) (VSSub _ vsC2)
+                             = return [VSSub gv (vsC1 `S.intersection` vsC2)]
+mrgSameGVSC (VSSubD gv vsCd1) (VSSubD _ vsCd2)
+                           = return [VSSub gv (vsCd1 `S.intersection` vsCd2)]
+\end{code}
 
-We note that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
-becomes an assertion that $G$ is closed.
-For any given general variable $G$,
-these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
-
-It is instructive to ask when each of the three conditions 
-is (trivially?) $\true$:
+$C \times D \qquad C_d \times D$
 \begin{eqnarray*}
-   \sem{\emptyset}_G &=& \fv.G \cap \emptyset = \true
-\\ \sem{U}_G &=& \fv.G \subseteq U = \true
-\\ \sem{U_d}_G &=& \dfv.G \subseteq U_d \land \forall_{\isdyn}(U_d) = \true
+   \fv.G \subseteq C \land \fv.G \cap D = \emptyset
+   &=&  \fv.G \cap D = \emptyset \land \fv.G \subseteq (C \setminus D)
+\\ \fv.G \subseteq C_d \land \fv.G \cap D = \emptyset
+   &=&  \fv.G \cap D = \emptyset \land \fv.G \subseteq (C_d \setminus D)
 \end{eqnarray*}
-Here $U$ ($U_d$) is the set of all variables (all dynamic variables) in play.
-This allows us to represent all term variable side-conditions regarding general variable $G$ as:
-\begin{equation*}
-\sem{D}_G \land \sem{C}_G \land \sem{C_d}_G
-\quad\text{or}\quad
-(G,D,C,C_d)
-\end{equation*}
+\begin{code}
+mrgSameGVSC vspSub@(VSSub _ vsC1) vspDisj@(VSDisj gv vsD2)
+                                 = return [vspDisj,VSSub gv (vsC1 S.\\ vsD2)]
+mrgSameGVSC vspSub@(VSSubD _ vsCd1) vspDisj@(VSDisj gv vsD2)
+                               = return [vspDisj,VSSubD gv (vsCd1 S.\\ vsD2)]
+\end{code}
 
+$C \times C_d \qquad C_d \times C$
+\begin{eqnarray*}
+   \fv.G \subseteq C \land \fv.G \subseteq C_d 
+   &=?&  \fv.G \subseteq (C \setminus C_d) 
+        \land  \fv.G \subseteq C_d 
+\\ \fv.G \subseteq C_d \land \fv.G \subseteq C 
+   &=?&  \fv.G \subseteq (C \setminus C_d) 
+        \land  \fv.G \subseteq C_d 
+\end{eqnarray*}
+This is unclear. 
+$C_d$ only contains (and cares about) dynamic variables.
+$C$ can be a mix and cares precisely about those.
 
-
-It is worth noting side conditions currently in use:
-\begin{description}
-  \item[Forall/Exists]~\\
-     $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
-   \item[Closure]~\\
-    $\lst x \supseteq P \qquad \emptyset \supseteq P$
-  \item[UTPNaiveWhile]~\\
-    $
-      \lst O,\lst O' \supseteq_a P
-      \quad
-      \lst O,\lst O' \supseteq_a Q
-      \quad
-      \lst O,\lst O' \supseteq_a R
-    $ \\
-    $
-      \lst O \supseteq b
-      \quad
-      \lst O \supseteq e
-      \quad
-      \lst O \supseteq f
-      \quad
-      \lst O \supseteq x
-      \qquad
-      O_0 \textrm{ fresh}
-     $
-\end{description}
-
+For now, we fudge, and just re-order them if needed.
+\begin{code}
+mrgSameGVSC vspSubD@(VSSubD _ _) vspSub  =  return [vspSub,vspSubD]
+mrgSameGVSC vspSub vspSubD               =  return [vspSub,vspSubD]
+\end{code}
 
 
 \subsection{Merging Term-Var Side-Condition Lists}

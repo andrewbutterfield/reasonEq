@@ -911,8 +911,9 @@ of the goal.
 
 This is the first point in matching where the expanded known observables
 are available, as variable \texttt{obsv}.
-We first simplfiy the consequence 
-
+We first check for trivial side-conditions on either side,
+and then process the variable side-conditions first,
+the finishing off by processing the fresh variables:
 \begin{code}
 scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
   = if isTrivialSC cnsqSC then return scTrue
@@ -948,22 +949,21 @@ scDischarge'  :: MonadFail m => VarSet
               -> [VSetPred] -> [VSetPred]
               -> m [VSetPred]
 scDischarge' _ _ []      =  return []     --  discharged
-scDischarge' _ [] vscL  =  return vscL  --  not discharged
-scDischarge' _ _ _ = fail "scDischarge' NYfI"
---scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
---                   vscLs@(vscL@(VSC gvL _ _ _):restL) -- cnsq
---  | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
---  | gvG > gvL  =  do -- nothing available to discharge vscL
---                     rest' <- scDischarge' obsv restG restL
---                     return (vscL:rest')
---  | otherwise  =  do -- use vscG to discharge vscL
---                     vsp' <- vscDischarge obsv vscG vscL
---                     vscChecked <- vscCheck vsp'
---                     case  vscChecked of
---                       Nothing ->  scDischarge' obsv restG restL
---                       Just vsp'' -> do
---                         rest' <- scDischarge' obsv restG restL
---                         return (vsp'':rest')
+scDischarge' _ [] vspL  =  return vspL  --  not discharged
+scDischarge' obsv       (vspG:restG) -- ante
+                  vspLs@(vspL:restL) -- cnsq
+  = do  gvG <- termVar vspG ; gvL <- termVar vspL
+        case compare gvG gvL of
+          LT  ->  scDischarge' obsv restG vspLs -- vspG not needed
+          GT  ->  do -- nothing available to discharge vspL
+                     rest' <- scDischarge' obsv restG restL
+                     return (vspL:rest')
+          EQ  ->  do -- use vspG to discharge vspL
+                     vsp' <- vspDischarge obsv vspG vspL
+                     rest' <- scDischarge' obsv restG restL
+                     return (vsp':rest')
+  where
+    
 \end{code}
 
 \newpage
@@ -978,7 +978,7 @@ At this point we have the form, for given term-variable $T$:
 Finally, we have arrived at where the real work is done.
 
 \begin{code}
-vscDischarge  :: MonadFail m 
+vspDischarge  :: MonadFail m 
               => VarSet
               -> VSetPred -> VSetPred 
               -> m VSetPred
@@ -1007,8 +1007,8 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vscDischarge _ _ _ = fail "vscDischarge NYI"
---vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
+vspDischarge _ _ _ = fail "vspDischarge NYI"
+--vspDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
 --  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
@@ -1059,7 +1059,7 @@ is strong enough to potentially falsify some side-conditions,
 whereas $\disj$ is too weak for this.
 
 % \begin{code}
-% vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
+% vspDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
 %   = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
 %         nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
 %         nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
@@ -1072,7 +1072,7 @@ whereas $\disj$ is too weak for this.
 %         nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
 %         case mkVSC gv nvsD''' nvsC'' nvsCd'' of
 %           Nothing          ->  fail "vsp-dishcarged failed"
-%           Just Nothing     ->  return $ vscTrue gv
+%           Just Nothing     ->  return $ vspTrue gv
 %           Just (Just vsp)  ->  return vsp
 % \end{code}
 
@@ -1317,7 +1317,7 @@ freshTVarDischarge obsv gF (VSSubD gv vsCd)
     else return []
 freshTVarDischarge _ _ _ = return []
 \end{code}
-  % | vsp' == vscTrue gv  =  return []
+  % | vsp' == vspTrue gv  =  return []
   % | otherwise  =  return [vsp']
   % where
   %   nvsgF = The gF
@@ -1328,7 +1328,7 @@ freshTVarDischarge _ _ _ = return []
   %            else NA
   %   vsp' = case mkVSC gv nvsD' nvsC' nvsCd' of
   %            Nothinh
-  %            Nothing   ->  vscTrue gv
+  %            Nothing   ->  vspTrue gv
   %            Just vsp  ->  vsp
 
 

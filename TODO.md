@@ -46,19 +46,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
- - fix `isFloatingVSC`
-
-    Proof for forall_swap
-        ∀x$ • ∀y$ • P ≡ ∀y$ • ∀x$ • P
-        ⊤
-    by red-All
-    @GV:  GV (VR (Id "P" 0,VP,WS))
-    @T:  B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-    @SGVFVS:  (fromList [],[(GV (VR (Id "P" 0,VP,WS)),fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])])
-    req: isFloatingVSC NYI
-    CallStack (from HasCallStack):
-      error, called at src/SideCond.lhs:1354:21 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
-
 
  - fix match ranking
  
@@ -75,6 +62,20 @@ Fixing bugs as we go.
 #### Bugs Fixed
 
 Most recent first...
+
+  - fix `isFloatingVSC`
+
+    Proof for forall_swap
+        ∀x$ • ∀y$ • P ≡ ∀y$ • ∀x$ • P
+        ⊤
+    by red-All
+    @GV:  GV (VR (Id "P" 0,VP,WS))
+    @T:  B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+    @SGVFVS:  (fromList [],[(GV (VR (Id "P" 0,VP,WS)),fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])])
+    req: isFloatingVSC NYI
+    CallStack (from HasCallStack):
+      error, called at src/SideCond.lhs:1354:21 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
+
 
   - wierd `readSideCond` usage:
 

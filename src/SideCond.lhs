@@ -1352,10 +1352,10 @@ mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingVSC :: VSetPred -> Bool
-isFloatingVSC vsp = error "isFloatingVSC NYI"
---isFloatingVSC (VSC  gv nvsD nvsC nvsCd)
---  = isFloatingGVar gv 
---      || hasFloatingM nvsD || hasFloatingM nvsC || hasFloatingM nvsCd 
+isFloatingVSC (VSDisj gv vset) = isFloatingGVar gv || hasFloating vset
+isFloatingVSC (VSSub  gv vset) = isFloatingGVar gv || hasFloating vset
+isFloatingVSC (VSSubD gv vset) = isFloatingGVar gv || hasFloating vset
+isFloatingVSC vsp = True -- true or false
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
 \end{code}

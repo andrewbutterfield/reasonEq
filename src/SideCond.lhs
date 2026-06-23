@@ -962,18 +962,16 @@ scDischarge' obsv       (vspG:restG) -- ante
                      vsp' <- vspDischarge obsv vspG vspL
                      rest' <- scDischarge' obsv restG restL
                      return (vsp':rest')
-  where
-    
 \end{code}
 
 \newpage
-\subsubsection{VSC Discharge}
+\subsubsection{VSP Discharge}
 
-At this point we have the form, for given term-variable $T$:
+At this point we have the form, for given (usually term) variable $V$:
 \begin{equation}
- \left( D_G \disj T \land C_G \supseteq T \land Cd_G \supseteq_a T \right)
+ \left( V ~rel~ S_G\right)
  \vdash
- \left( D_L \disj T \land C_L \supseteq T \land Cd_L \supseteq_a T \right)
+ \left( V ~rel~ S_L\right)
 \end{equation}
 Finally, we have arrived at where the real work is done.
 
@@ -1007,10 +1005,29 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vspDischarge _ _ _ = fail "vspDischarge NYI"
---vspDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
---  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
+vspDischarge _ _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
+  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
+
+\begin{code}
+vspDischarge obsv vspG vspL = fail "vspDischarge NYfI"
+-- vspDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
+--  = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
+--        nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
+--        nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
+--
+--        nvsD''   <- cdDischarge obsv gv nvsCG  nvsD'
+--        nvsD'''  <- cdDischarge obsv gv nvsCdG nvsD''
+--
+--        nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
+--
+--        nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
+--        case mkVSC gv nvsD''' nvsC'' nvsCd'' of
+--          Nothing          ->  fail "vsp-dishcarged failed"
+--          Just Nothing     ->  return $ vspTrue gv
+--          Just (Just vsp)  ->  return vsp
+\end{code}
+
 
 \newpage
 Any occurrences of a floating variable in a translated law side-condition
@@ -1058,23 +1075,6 @@ We start with the \m{C} and \m{Cd} components because $\subseteq$
 is strong enough to potentially falsify some side-conditions, 
 whereas $\disj$ is too weak for this.
 
-% \begin{code}
-% vspDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
-%   = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
-%         nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
-%         nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
-
-%         nvsD''   <- cdDischarge obsv gv nvsCG  nvsD'
-%         nvsD'''  <- cdDischarge obsv gv nvsCdG nvsD''
-
-%         nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
-
-%         nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
-%         case mkVSC gv nvsD''' nvsC'' nvsCd'' of
-%           Nothing          ->  fail "vsp-dishcarged failed"
-%           Just Nothing     ->  return $ vspTrue gv
-%           Just (Just vsp)  ->  return vsp
-% \end{code}
 
 \newpage
 \subsubsection{Pairwise Discharging (C:C)}

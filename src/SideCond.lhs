@@ -1350,10 +1350,9 @@ findDisjointGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findDisjointGenVar gv (SCD vsps _) = findDGV gv vsps
 
 findDGV gv []         =  fail ("Disjoint "++show gv ++ " not found")
-findDGV _ _ = fail "findDGV NYfI"
---findDGV gv ((VSC gv' (The vsD) _ _):vsps)
---  | gv == gv' && not (S.null vsD)  =  return vsD
---findDGV gv (_:vsps)                =  findDGV gv vsps
+findDGV gv (VSDisj gv' vsD : vsps)
+  | gv == gv' && not (S.null vsD)  =  return vsD
+findDGV gv (_:vsps)                =  findDGV gv vsps
 \end{code}
 
 For regular coverage we look for precisely the given general variable,
@@ -1363,12 +1362,11 @@ findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv (SCD vsps _) = findCGV gv vsps
 
 findCGV gv []           =  fail ("Covered "++show gv ++ " not found")
-findCGV gv _           =  fail "findCGV NYfI"
---findCGV gv ((VSC gv' _ (The vs) _):vsps)
---  | gv == gv'           =  return vs
---findCGV gv ((VSC gv' _ _ (The vs)):vsps)
---  | gv == gv'           =  return vs
---findCGV gv (_:vsps)     =  findCGV gv vsps
+findCGV gv (VSSub gv' vsC : vsps)
+  | gv == gv'           =  return vsC
+findCGV gv (VSSubD gv' vsCd : vsps)
+  | gv == gv'           =  return vsCd
+findCGV gv (_:vsps)     =  findCGV gv vsps
 \end{code}
 
 For dynamic coverage we don't care about temporality,
@@ -1378,11 +1376,10 @@ findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VarSet, VarWhen )
 findDynCvrdGenVar gv (SCD vsps _) = findDCGV gv vsps
 
 findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")
-findDCGV gv _         =  fail "findDCGV NYfI"
---findDCGV gv ((VSC gv' _ _ uvs):vsps)
---  = case gv `dynGVarEq` gv' of
---      Just vw'  ->  return (uvs, vw')
---      Nothing   ->  findDCGV gv vsps
+findDCGV gv (VSSubD gv' vsCd : vsps)
+  = case gv `dynGVarEq` gv' of
+      Just vw'  ->  return (vsCd, vw')
+      Nothing   ->  findDCGV gv vsps
 \end{code}
 
 We have a catch-all :
@@ -1390,14 +1387,17 @@ We have a catch-all :
 mentionedBy :: MonadFail m 
             => GenVar -> [VSetPred] -> m ( VSetPred, Maybe VarWhen)
 gv `mentionedBy` []  =  fail ("variable "++show gv++" not mentioned")
-gv `mentionedBy` _ = fail "mentionedBy NYfI"
---gv `mentionedBy` (vsp@(VSC gv' _ _ nvsCd):vsps)
---  | gv == gv'       =  return ( vsp, Nothing )
---  | isThere nvsCd -- we need an explicit mention of gv'
---      = case gv `dynGVarEq` gv' of
---          Just vw'  ->  return ( vsp, Just vw')
---          _         ->  gv `mentionedBy` vsps
---  | otherwise       =   gv `mentionedBy` vsps
+gv `mentionedBy` (vsp@(VSSubD gv' vsCd):vsps)
+  | gv == gv'       =  return ( vsp, Nothing )
+  | otherwise
+      = case gv `dynGVarEq` gv' of
+          Just vw'  ->  return ( vsp, Just vw')
+          _         ->  gv `mentionedBy` vsps
+gv `mentionedBy` (vsp:vsps)
+  = case vPredVar vsp of
+      Nothing -> gv `mentionedBy` vsps
+      Just gv' | gv == gv' -> return ( vsp, Nothing )
+               | otherwise -> gv `mentionedBy` vsps
 \end{code}
 
 

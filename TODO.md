@@ -46,7 +46,28 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - need to be able to toggle all show-matches setting on/off 
+  - Still can't apply the following:
+
+    ```
+    proof> tm 1 forall_remove
+    Match against 'forall_remove'[1] was successful
+    Binding:
+      { B  ⟼ 𝔹  , P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
+    Instantiated Replacement:
+      (∀ y$  • P)
+    Instantiated Variables: {P,y$}
+    Floating Vars?: False
+    Law S.C.:
+      (P⋔x$)
+    Instantiated Law S.C.:
+      (P⋔x$)
+    Goal S.C.:
+      (x$⊆y$)
+    Discharged Law S.C.:
+      (P⋔x$)
+    ```
+
+    Using `m forall_remove` results in `∀?x$ • ∀x$ • ∀y$ • P [trivial!2]`.
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
@@ -58,6 +79,8 @@ Fixing bugs as we go.
 #### Bugs Fixed
 
 Most recent first...
+
+  - need to be able to toggle all show-matches setting on/off 
 
   - fix match ranking
  

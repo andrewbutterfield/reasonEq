@@ -999,19 +999,66 @@ we should be able to reduce this to true.
 \\ O,O' \supseteq v &=& v \in O \lor v \in O'
 \end{eqnarray*}
 
-The following cases need special treatment:
+The following case needs special treatment:
 
 A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vspDischarge _ _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
+vspDischarge obsv _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
   | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
+\subsubsection{Pairwise Discharging (C:C) and (Cd:Cd)}
+
+\begin{eqnarray*}
+   \_ \discharges C_L \supseteq V
+   & = & C_L \supseteq V
+\\ C_G \supseteq V \discharges C_L \supseteq V
+   & = & \true, \quad \IF \quad C_G \subseteq C_L
+\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isObsVar(V)
+\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
+\end{eqnarray*}
+Edge cases:
+  If \m{V} is a term variable, 
+  then it is possible that \m{\fv(V)=\emptyset},
+  in which case the fact that \m{C_G \disj C_L} is irrelevant.
 \begin{code}
-vspDischarge obsv vspG vspL = fail "vspDischarge NYfI"
--- vspDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
+vspDischarge obsv (VSSub gv vsCG) predL@(VSSub _ vsCL)
+  | S.null vsCG                             =  return predL
+  | vsCG `S.isSubsetOf` vsCL                =  return VSTrueP -- discharged!
+  | vsCL `S.disjoint` vsCG && isObsGVar gv  =  fail "CC - disjoint coverage"
+  | otherwise  
+          = return $ VSSub vg ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
+  where vsCLf = S.filter isFloatingGVar vsCL
+vspDischarge obsv (VSSubD gv vsCdG) predL@(VSSubD _ vsCdL)
+  | S.null vsCdG                            =  return predL
+  | vsCG `S.isSubsetOf` vsCdL               =  return VSTrueP -- discharged!
+  | vsCL `S.disjoint` vsCdG && isObsGVar gv = fail "CdCd - disjoint coverage"
+  | otherwise  
+       = return $ VSSubD vg ((vsCdG `S.intersection` vsCdL) `S.union` vsCdLf)
+  where vsCdLf = S.filter isFloatingGVar vsCdL
+\end{code}
+
+\subsubsection{Pairwise Discharging (D:D)}
+
+\begin{eqnarray*}
+   D_G \disj V \discharges D_L \disj V
+   & = & \true
+         \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
+\end{eqnarray*}
+Edge case: \m{D_G = \emptyset} means no change to law s.c.
+\begin{code}
+vspDischarge obsv (VSDisj gv vsDG) predL@(VSDisj _ vsDL)
+--ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
+  | S.null vsDG                  =  return predL
+  | vsDL `S.isSubsetOf` vsDG     =  return VSTrueP -- discharged!
+  | otherwise                    =  return $ VSDisj gv (vsDL S.\\ vsDG)
+\end{code}
+
+$$x $$
+\begin{code}
+--
 --  = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
 --        nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
 --        nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
@@ -1026,6 +1073,7 @@ vspDischarge obsv vspG vspL = fail "vspDischarge NYfI"
 --          Nothing          ->  fail "vsp-dishcarged failed"
 --          Just Nothing     ->  return $ vspTrue gv
 --          Just (Just vsp)  ->  return vsp
+vspDischarge obsv vspG vspL = fail "vspDischarge NYfI"
 \end{code}
 
 
@@ -1077,66 +1125,7 @@ whereas $\disj$ is too weak for this.
 
 
 \newpage
-\subsubsection{Pairwise Discharging (C:C)}
-General idea: 
-\newline
-  \m{C_G \supseteq V} discharges \m{C_L \supseteq V} if \m{C_G \subseteq C_L}
-\newline
-  \m{C_G \supseteq V} falsifies \m{C_L \supseteq V} if \m{C_G \disj C_L}
 
-Edge cases:
-\newline
-  If \m{V} is a term variable, 
-  then it is possible that \m{\fv(V)=\emptyset},
-  in which case the fact that \m{C_G \disj C_L} is irrelevant.
-\begin{eqnarray*}
-   \_ \discharges C_L \supseteq V
-   & = & C_L \supseteq V
-\\ C_G \supseteq V \discharges C_L \supseteq V
-   & = & \true, \quad \IF \quad C_G \subseteq C_L
-\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isObsVar(V)
-\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
-\end{eqnarray*}
-\begin{code}
-ccDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VarSet -> VarSet 
-            -> m VarSet
-ccDischarge _  _  _  _     =  fail "ccDischarge NYI"
---ccDischarge _  _  _  NA     =  return NA
---ccDischarge _  _  NA uvsCL  =  return uvsCL
---ccDischarge obsv gv (The vsCG) tvsCL@(The vsCL)
-  -- | S.null vsCG               =  return tvsCL
---  | vsCG `S.isSubsetOf` vsCL  =  return NA -- discharged!
---  | vsCL `S.disjoint` vsCG 
---    && isObsGVar gv           =  fail "CC - disjoint coverage"
---  | otherwise  =  return $ The ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
---  where vsCLf = S.filter isFloatingGVar vsCL
-\end{code}
-
-\subsubsection{Pairwise Discharging (D:D)}
-General idea (assuming \m{D_G \supset \emptyset}):
-\newline
-\m{D_G \disj V} discharges \m{D_L \disj V} if \m{D_L \subseteq D_G}
-
-Edge cases: \m{D_G = \emptyset} means no change to law s.c.
-\newline
-\begin{eqnarray*}
-   D_G \disj V \discharges D_L \disj V
-   & = & \true
-         \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
-\end{eqnarray*}
-\begin{code}
-ddDischarge :: MonadFail m 
-            => VarSet -> GenVar -> VarSet -> VarSet 
-            -> m VarSet
-ddDischarge _    _  _     _     =  fail "ddDischarge NYI"
---ddDischarge _    _  _     NA     =  return NA
---ddDischarge _    _  NA    nvsDL  =  return nvsDL
---ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
---  | S.null vsDG                  =  return tvsDL
---  | vsDL `S.isSubsetOf` vsDG     =  return NA -- discharged!
---  | otherwise                    =  return $ The (vsDL S.\\ vsDG)
-\end{code}
 
 \newpage
 \subsubsection{Pairwise Discharging (C:D)}

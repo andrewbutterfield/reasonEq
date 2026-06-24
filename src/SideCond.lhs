@@ -796,88 +796,41 @@ builtins or tests.
 \newpage
 \section{Discharging Side-conditions}
 
-We start with some examples that arise from key theories:
-\begin{description}
-  \item[ForAll.forall\_remove]
-    Instantiated Replacement = $\lnot P$ \newline
-    Instantiated Law S.C. = $\lst x \disj P$ \newline
-    Goal S.C. = $\lst x \disj P$ \newline
-    Discharged Law S.C. = $\top$  (CORRECT)
-  \item[ForAll.forall\_one\_point]
-    Instantiated Replacement = $\forall \lst y \bullet (\lnot P)[\lst e/\lst x]$ \newline
-    Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
-    Goal S.C. = $\lst x \disj \lst e$ \newline
-    Discharged Law S.C. = $\top$  (CORRECT)
-  \item[Closure.{[}{]}\_def]
-    Instantiated Law S.C. = $?\lst x\supseteq P$  \newline
-    Goal S.C. = $\emptyset\supseteq P$ \newline
-    Discharged Law S.C. = $?\lst x\supseteq P$.
-    From $\emptyset \supseteq P$ we should be able to conclude 
-    that $A \supseteq P$ for any arbitrary set $A$.
-  \item[UTCP.X\_X\_comp]~
-    Instantiated Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ \newline
-    Goal S.C.: \newline
-    $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
-    $s,s' \supseteq_a a, s,s' \supseteq_a b, fresh:\lst O_1$ \newline
-    Discharged Law S.C. = $\top$.
-    From $fresh:\lst O_1$ we deduce $fresh: ls_1,s_1$,
-    and should immediately be able to say that therefore $ls_1 \notin N1,R1$.
-    \newline
-    We also know that $\lst O = \setof{s,ls}$ (homogeneous),
-    which then means that $s_1$ and $ls_1$ are fresh.
-  \item[UTCP.X\_X\_comp]~
-    Instantiated Law S.C. = $\lst O' \disj a$ \newline
-    Goal S.C.: \newline
-    $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
-    Discharged Law S.C. = $\bot$ (FALSE):
-    $\lst O=\setof{ls,s} \land \setof{s,s'} \supseteq_a  a 
-     \not\implies 
-     \lst O' \disj a$.
-     It implies $\lnot(\lst O' \disj a)$, because $s \in a$.
-  \item[UTCP.X\_X\_comp]~
-    Instantiated Law S.C. =  % s∉E1, s∉E2, s∉N1, s∉N2, s∉R1, s∉R2, s∉ls, s∉ls'
-    $s \disj E1,E2,N1,N2,R1,R2,ls,ls'$
-    \newline
-    Goal S.C. =  % ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
-    $ls,ls,s,s \disj E1,E2,N1,N2,R1,R2, s,s \supseteq_a a,b, fresh: ls_1,s_1$
-    \newline
-    Discharged Law S.C. = $s \disj ls,ls'$ (INCORRECT) \newline
-    Should be $\top$.
-\end{description}
+A succesful match of a goal $G$ against a law $L$
+results in a binding $\beta$ 
+that maps law variables to goal components.
+We can lift $\beta$ to a function $B$ that maps $L$ into the goal ($G = B(L)$).
+The same function $B$ can be adapted to map the law side-condition $sc_L$
+to an equivalent one ($sc_M=B(sc_L)$)
+that uses the same variables as the goal side-condition $sc_G$.
+What we need to show is that $sc_G$ implies $sc_M$.
+In effect $sc_G \implies sc_M$ should be a theorem.
+
+Current challenge:
+\begin{eqnarray*}
+   G &=& \forall \lst x \bullet \forall \lst y \bullet P
+\\ sc_G &=& \lst x \subseteq \lst y
+\\ L &=& \forall \lst x \bullet P
+\\ sc_L &=& \fv(P) \disj \lst x
+\\ \beta &=& 
+   \{ P \mapsto (\forall \lst y \bullet P), \lst x \mapsto \setof{\lst x}\}
+\\ sc_M &=& \fv{(\forall \lst y \bullet P)} \disj \setof{\lst x}
+\\ \lst x \subseteq \lst y 
+   &\implies& 
+   \fv{(\forall \lst y \bullet P)} \disj \setof{\lst x}
+\end{eqnarray*}
+
 General comment about freshness: 
 if $fresh: f$, 
 and term-variable $N$ occurs in the goal, and is not under a substitution 
 of the form $[f/\_]$,
 then $f \disj N$ holds.
 
-We need a gallery of ``interesting'' side-conditions:
-\begin{mathpar}
-   fresh: \lst O_1 \land 
-   \lst O = \setof{ls,s} 
-   \implies 
-   ls_1 \notin T 
-          \mapsto \top
-\\ fresh: \lst O_1 \land 
-   \lst O = \setof{ls,s} 
-   \implies 
-   ls_1 \subseteq T \mapsto  \bot
-\\ \lst O = \setof{ls,s} \land 
-   s,s' \supseteq_a a 
-   \implies 
-   \lst O' \disj a \mapsto \bot \qquad (\lst O' \cap a = \setof{s'})
-\end{mathpar}
-
-
-Here we simply check validity of $sc'_G \implies sc'_L$,
-where $sc'_G$ is the goal side-condition,
-and $sc'_L$ is the law side-condition translated into goal ``space''
-after a successful match.
 Because we may be handing side-conditions with ``questionable'' variables,
 we attempt to return a simplified side-condition
 that has the questionable bits \emph{that are not dischargeable}.
 If we discover a contradiction,
-then we need to signal this,
-because \texttt{SideCond} cannot represent a false side-condition explicitly.
+then we need to signal this.
 \begin{code}
 scDischarge :: MonadFail m 
             => VarSet -> SideCond -> SideCond -> m SideCond
@@ -893,6 +846,25 @@ goal and law respectively.
 As these are global,
 the plan is first to use the $G_i$ to discharge the $L_i$,
 and then finish by using $G_F$ to discharge $G_L$ and any remaining $L_i$.
+
+Our discharge theorem has a form that can be encapsulated as:
+$$ (A \land B) \implies (C \land D)~.                                                            $$
+Implication satisfies the following two laws:
+\begin{eqnarray*}
+   A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
+\\ A \implies C \land D &=& (A \implies C) \land (A \implies D)
+\end{eqnarray*}
+Extending to multiple $A$s and $C$s, we get:
+$$
+  A_1 \land \dots \land A_m \implies C_1 \land \dots \land C_n
+  \quad=\quad
+  \lnot A_1 \lor \dots \lor \lnot A_m
+  \lor
+  C_1 \land \dots \land C_n
+$$
+If we can show that some $A_{i_1},\dots,A_{i_k} \implies C_j$,
+then $C_j$ has been satisfied. Hopefully we can do this for all the $C_x$.
+
 
 In our representation both the $G_i$ and $L_j$
 are ordered by general variable ($V$).
@@ -918,8 +890,8 @@ the finishing off by processing the fresh variables:
 scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
   = if isTrivialSC cnsqSC then return scTrue
     else if isTrivialSC anteSC then return cnsqSC
-    else do vsp' <- scDischarge' obsv anteVSC cnsqVSC
-            freshDischarge obsv anteFvs cnsqFvs vsp'
+    else do vsp' <- scDischarge' obsv (pdbg "scD.anteVSC" anteVSC) $ pdbg "scD.cnsqVSC" cnsqVSC
+            freshDischarge obsv anteFvs cnsqFvs $ pdbg "scD.vsp'" vsp'
 \end{code}
 
 % \begin{code}    
@@ -959,7 +931,7 @@ scDischarge' obsv       (vspG:restG) -- ante
                      rest' <- scDischarge' obsv restG restL
                      return (vspL:rest')
           EQ  ->  do -- use vspG to discharge vspL
-                     vsp' <- vspDischarge obsv vspG vspL
+                     vsp' <- vspDischarge obsv (pdbg "vspD.vspG" vspG) $ pdbg "vspD.vspL" vspL
                      rest' <- scDischarge' obsv restG restL
                      return (vsp':rest')
 \end{code}

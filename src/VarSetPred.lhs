@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module VarSetPred (
   VSetPred(..)
-, vPredVars
+, vPredVar, vPredVars
 , vsEmpty, vsSngl, vsList, vsUnion, vsMinus
 , enumSamePred
 ) where
@@ -93,6 +93,15 @@ data VSetPred
 \end{code}
 
 \subsection{Set Predicate Queries}
+
+\begin{code}
+vPredVar :: MonadFail mf => VSetPred -> mf GenVar
+vPredVar (VSDisj gv _)  =  return gv
+vPredVar (VSSub  gv _)  =  return gv
+vPredVar (VSSubD gv _)  =  return gv
+vPredVar _              =  fail "VSetPred has no GenVar"
+\end{code}
+
 
 \begin{code}
 vPredVars :: VSetPred -> VarSet

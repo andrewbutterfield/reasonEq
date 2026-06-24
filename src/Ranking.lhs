@@ -206,13 +206,21 @@ sizeOrd _ m  =  termSize $ mRepl m
 Show matches to laws named as definitions first,
 then those matching LHS of equivalence laws,
 and then the rest.
+Key exceptions: replacement \h{true} trumps definitions.
 \begin{code}
-favourDefLHSOrd :: OrderFunction (Int,Int,Int)
+favourDefLHSOrd :: OrderFunction (Int,Int,Int,Int)
 favourDefLHSOrd ctxt m
-  = ( subMatchDef $ mName m
+  = ( subMatchRepl $ mRepl m
+    , subMatchDef $ mName m
     , subMatchOrd $ mClass m
     , sizeOrd ctxt m
     )
+
+subMatchRepl :: Term -> Int
+subMatchRepl term
+  | term == theTrue  =  0
+  | otherwise        =  1
+
 
 subMatchDef :: String -> Int
 subMatchDef lawname
@@ -228,3 +236,4 @@ subMatchOrd MatchAnte        =  3
 subMatchOrd MatchCnsq        =  3
 subMatchOrd (MatchEqvVar _)  =  3
 \end{code}
+

@@ -1225,20 +1225,6 @@ freshTVarDischarge obsv gF (VSSubD gv vsCd)
     else return []
 freshTVarDischarge _ _ _ = return []
 \end{code}
-  % | vsp' == vspTrue gv  =  return []
-  % | otherwise  =  return [vsp']
-  % where
-  %   nvsgF = The gF
-  %   nvsD' = nvsD `ndiff` nvsgF
-  %   nvsC' = nvsC `ndiff` nvsgF
-  %   nvsCd' = if gv `S.member` obsv
-  %            then nvsCd `ndiff` nvsgF
-  %            else NA
-  %   vsp' = case mkVSC gv nvsD' nvsC' nvsCd' of
-  %            Nothinh
-  %            Nothing   ->  vspTrue gv
-  %            Just vsp  ->  vsp
-
 
 \newpage
 \section{Check for Floating Conditions}

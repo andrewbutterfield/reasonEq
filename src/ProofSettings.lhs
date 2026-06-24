@@ -7,12 +7,14 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module ProofSettings ( 
   ProofSettings(..) -- used elsewhere
-, proofSettingsCount
+, proofSettingsCount, proofShowAllMatches
 , initProofSettings     -- used elsewhere
 , renderProofSettings   -- used elsewhere
 , parseProofSettings    -- used elsewhere
 , showPrfSettings       -- used elsewhere
 , changePrfSettings     -- used elsewhere
+, enableAllSpecialMatches
+, disableAllSpecialMatches
 )
 where
 
@@ -49,6 +51,7 @@ data ProofSettings
 
 -- metadata about the above
 proofSettingsCount = (7::Int)
+proofShowAllMatches = (10::Int)
 prfSettingTypes = replicate 2 "Number" ++ replicate 5 "Bool"
 \end{code}
 
@@ -250,4 +253,18 @@ changePrfSettings setno valstr rqset
       6 -> return $ showTrivialSubst_      (readBool valstr) rqset 
       7 -> return $ showFloatingVariables_ (readBool valstr) rqset 
       _ -> return rqset -- fail silently with no change
+
+enableAllSpecialMatches :: ProofSettings -> ProofSettings
+enableAllSpecialMatches prfset
+  = showTrivialMatches_    True $
+    showTrivialListVars_   True $
+    showTrivialSubst_      True $
+    showFloatingVariables_ True $ prfset
+
+disableAllSpecialMatches :: ProofSettings -> ProofSettings
+disableAllSpecialMatches prfset
+  = showTrivialMatches_    False $
+    showTrivialListVars_   False $
+    showTrivialSubst_      False $
+    showFloatingVariables_ False $ prfset
 \end{code}

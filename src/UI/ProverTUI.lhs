@@ -912,15 +912,22 @@ updateProverSettings
 updateProverSettings _ prfset = do
   --putStrLn $ show prfset
   putStrLn $ showPrfSettings prfset
+  putStrLn "Entering 0 turns off all showX settings."
+  putStrLn 
+    ("Entering "++show proofShowAllMatches++" turns on all showX settings.")
   str <- userPrompt "Select setting by number: "
   let choice = readNat str
-  if choice `elem` [1..proofSettingsCount]
-  then do
-    newval <- userPrompt "Enter new value: " 
-    changePrfSettings choice newval prfset
-  else do
-    putStrLn ("Invalid choice "++str)
-    return prfset
+  case choice of
+    0 -> return $ disableAllSpecialMatches prfset
+    c | c == proofShowAllMatches 
+      -> return $ enableAllSpecialMatches prfset
+    _ -> if choice `elem` [1..proofSettingsCount]
+         then do
+           newval <- userPrompt "Enter new value: " 
+           changePrfSettings choice newval prfset
+         else do
+         putStrLn ("Invalid choice "++str)
+         return prfset
 \end{code}
 
 

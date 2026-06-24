@@ -46,6 +46,7 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - need to be able to toggle all show-matches setting on/off 
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 

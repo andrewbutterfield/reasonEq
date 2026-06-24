@@ -47,12 +47,7 @@ Fixing bugs as we go.
 #### Bugs Found
 
 
- - fix match ranking
- 
-   law `equiv_refl`/outcome `true` should always 
-   rank higher than a `XXXX_def` law.
-
- - need to enable `b` for the `ge` proof step (*not urgent*)
+  - need to enable `b` for the `ge` proof step (*not urgent*)
 
    Issues: `Laws.assocFlatten` loses information 
    about pre-flatten shape, so we cannot reverse that. 
@@ -63,6 +58,12 @@ Fixing bugs as we go.
 
 Most recent first...
 
+  - fix match ranking
+ 
+   outcome `true` should always 
+   rank higher than a `XXXX_def` law.
+
+ 
   - fix `isFloatingVSC`
 
     Proof for forall_swap

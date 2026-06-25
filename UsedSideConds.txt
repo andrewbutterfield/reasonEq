@@ -1,0 +1,61 @@
+SideCond usage:
+
+VSDisj: Proto UTCP Exists Forall 
+VSSub: Closure Proto Forall 
+VSSubD: UWhile Designs Proto UTCP DWhile 
+
+EQV 
+  P⋔x$
+Proto 
+  fresh:a 
+  (P⋔a)
+  (P⊆a)
+  (P⊆ₐa)
+  (P⋔a), fresh:a
+  (P⋔a), (Q⊆{a,b$'}), (Q⊆ₐ{b',a$}), fresh:a,b$'
+Forall 
+  (P⋔x$)
+  (e$⋔x$)
+  (P⋔x$)
+  (P⋔y$)
+  -- 
+  (x$⊆y$)
+  (e$⋔x$)
+Exists 
+  --
+  (P⋔x$)
+  (e$⋔x$)
+  (P⋔x$)
+  (P⋔y$)
+Closure 
+  (P⊆x$)
+  --
+  (P⊆Ø)
+UWhile 
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), fresh:O$_0
+  --
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'})
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'}), (b⊆ₐO$)
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'})
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'}) 
+Designs 
+  --
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (ok⊆ₐO$), (ok'⊆ₐO$')
+  (R⊆ₐ{O$,O$'}), (ok⊆ₐO$), (ok'⊆ₐO$')
+  (Q⊆ₐ{O$,O$'}), (p⊆ₐO$)
+  (R⊆ₐ{O$,O$'}), (ok⊆ₐO$), (ok'⊆ₐO$')
+DWhile 
+  --
+  (e⊆ₐO$), (f⊆ₐO$), (x⊆ₐO$)
+  (P⊆ₐ{O$,O$'}), (Q⊆ₐ{O$,O$'}), (b⊆ₐO$), (e⊆ₐO$), (x⊆ₐO$)
+  (II⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'})
+  (II⊆ₐ{O$,O$'}), (R⊆ₐ{O$,O$'})
+UTCP
+  (R⋔{O$,O$'}), (a⊆ₐ{s,s'})
+  (E⋔{O$,O$'}), (N⋔{O$,O$'}), (a⊆ₐ{s,s'})
+  --
+  (E⋔{O$,O$'}), (N⋔{O$,O$'}), (a⊆ₐ{s,s'})
+  (E1⋔{O$,O$'}), (E2⋔{O$,O$'}), (N1⋔{O$,O$'}), (N2⋔{O$,O$'}), (R1⋔{O$,O$'}), 
+                 (R2⋔{O$,O$'}), (a⊆ₐ{s,s'}), (b⊆ₐ{s,s'})
+
+

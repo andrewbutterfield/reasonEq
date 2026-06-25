@@ -820,6 +820,24 @@ Current challenge:
    \fv{(\forall \lst y \bullet P)} \disj \setof{\lst x}
 \end{eqnarray*}
 
+We can reason as follows:
+\begin{eqnarray*}
+  && \lst x \subseteq \lst y 
+     \implies
+     \fv{(\forall \lst y \bullet P)} \disj \setof{\lst x}
+\\&=& \text{defn. of $\fv$}
+\\&& \lst x \subseteq \lst y 
+     \implies
+     (\fv(P)\setminus\setof{\lst y}) \disj \setof{\lst x}
+\\&=& \text{Lemma: }  S \subseteq T \implies (U \setminus T) \disj S
+\\&& \true
+\end{eqnarray*}
+Basically we need to provide (and justify) lemmas like the one above.
+
+This also suggests we need to use 
+$\setof{\lst x} \disj \fv{(\forall \lst y \bullet P)}$
+if we are ordering by the first general variable.
+
 General comment about freshness: 
 if $fresh: f$, 
 and term-variable $N$ occurs in the goal, and is not under a substitution 

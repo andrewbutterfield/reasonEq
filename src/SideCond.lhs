@@ -881,11 +881,11 @@ and then finish by using $G_F$ to discharge $G_L$ and any remaining $L_i$.
 \newpage
 \begin{code}
 scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
-scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
-  = if isTrivialSC cnsqSC then scTrue
-    else if isTrivialSC anteSC then cnsqSC
-    else let vsp' = vspsDischarge obsv anteVSC cnsqVSC
-         in freshDischarge obsv anteFvs cnsqFvs vsp'
+scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
+  = if isTrivialSC ilawSC then scTrue
+    else if isTrivialSC goalSC then ilawSC
+    else let vsp' = vspsDischarge obsv ilawVSC goalVSC -- note reversal
+         in freshDischarge obsv goalFvs ilawFvs vsp'
 \end{code}
 
 
@@ -965,24 +965,24 @@ Failure occurs if any $L_j$ group results in $\false$.
 Now onto processing those ordered Term-Variable Side-Conditions:
 \begin{code}
 -- vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
-vspsDischarge _   _     []     =  []     --  discharged
-vspsDischarge _   []    vspsL  =  vspsL  --  not discharged
+vspsDischarge _   []    _   =  []     --  discharged
+vspsDischarge _   vspsL []  =  vspsL  --  not discharged
 -- now deprecated:
-vspsDischarge obsv       (vspG:restG) -- ante
-                  vspLs@(vspL:restL) -- cnsq
+vspsDischarge obsv vspLs@(vspL:restL) -- inst. law s.c
+                   (vspG:restG) -- goal s.c.                 
   = let gvG = fromJust $ termVar vspG 
         gvL = fromJust $ termVar vspL
     in case compare gvG gvL of
-      LT  ->  vspsDischarge obsv restG vspLs -- vspG not needed
+      LT  ->  vspsDischarge obsv vspLs restG -- vspG not needed
       GT  ->  let -- nothing available to discharge vspL
-                  rest' = vspsDischarge obsv restG restL
+                  rest' = vspsDischarge obsv restL restG
               in (vspL:rest')
       EQ  ->  let -- use vspG to discharge vspL
                   vsp' = vspDischarge obsv vspG vspL
-                  rest' = vspsDischarge obsv restG restL
+                  rest' = vspsDischarge obsv restL restG
               in (vsp':rest')
 -- new version below TBD              
-vspsDischarge obs vspsG vspsL  =  error "vspsDischarge NYfI"
+vspsDischarge obs vspsL vspsG  =  error "vspsDischarge NYfI"
 \end{code}
 
 
@@ -998,7 +998,7 @@ Finally, we have arrived at where the real work is done.
 
 \begin{code}
 vspDischarge  :: VarSet
-              -> VSetPred -> VSetPred 
+              -> VSetPred -> VSetPred   -- goal -> ilaw
               -> VSetPred
 \end{code}
 
@@ -1178,18 +1178,18 @@ $$
 \begin{code}
 freshDischarge :: VarSet -> VarSet -> VarSet -> [VSetPred] 
                -> SideCond
-freshDischarge obsv anteFvs cnsqFvs vsp
-  = let vsp' =  freshDischarge' obsv anteFvs vsp
-    in  (SCD vsp'  (cnsqFvs S.\\ anteFvs) )
+freshDischarge obsv goalFvs ilawFvs vsp
+  = let vsp' =  freshDischarge' obsv goalFvs vsp
+    in  (SCD vsp'  (ilawFvs S.\\ goalFvs) )
 \end{code}
 
 \begin{code}
 freshDischarge' :: VarSet -> VarSet -> [VSetPred] 
                 -> [VSetPred]
-freshDischarge' obsv anteFvs [] = []
-freshDischarge' obsv anteFvs (vsp:vsps)
-  = let ascl = freshTVarDischarge obsv anteFvs vsp
-        vsps' = freshDischarge'   obsv anteFvs vsps
+freshDischarge' obsv goalFvs [] = []
+freshDischarge' obsv goalFvs (vsp:vsps)
+  = let ascl = freshTVarDischarge obsv goalFvs vsp
+        vsps' = freshDischarge'   obsv goalFvs vsps
     in (ascl:vsps') 
 \end{code}
 

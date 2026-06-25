@@ -84,7 +84,7 @@ and restriction w.r.t a set element (or sets of elements) is idempotent.
 
 \begin{code}
 data VSetPred
-  =  VSFalseP -- yes, we need this
+  =  VSFalseP String -- yes, we need this
   |  VSDisj  GenVar VarSet  
   |  VSSub   GenVar VarSet 
   |  VSSubD  GenVar VarSet  -- limited to dynamic vars
@@ -158,11 +158,10 @@ enumSamePred (VSSub gv1 vs1) (VSSub gv2 vs2)
   | gv1 == gv2  = enumSameSub gv1 vs1 vs2
 enumSamePred (VSSubD gv1 vs1) (VSSubD gv2 vs2)
   | gv1 == gv2  = enumSameSubD gv1 vs1 vs2
-enumSamePred VSFalseP _ = VSFalseP
-enumSamePred _ VSFalseP = VSFalseP
-enumSamePred VSTrueP vsp2 = vsp2
+enumSamePred f@(VSFalseP _) _ = f
+enumSamePred _ f@(VSFalseP _) = f
 enumSamePred vsp1 VSTrueP = vsp1
-enumSamePred vsp1 vsp2 = VSFalseP -- shouldn't happen if used properly
+enumSamePred vsp1 vsp2 = VSFalseP "enumSamePred: differing relations."
 \end{code}
 \begin{eqnarray*}
    G \disj D_1 \land G \disj D_2

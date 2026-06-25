@@ -607,7 +607,7 @@ trvspred trid (VSSub gv vset)
   = "("++trgvar trid gv++_subseteq++trvsexpr trid vset++")"
 trvspred trid (VSSubD gv vset) 
   = "("++trgvar trid gv++_subseteq++_subStr "a"++trvsexpr trid vset++")"
-trvspred trid VSFalseP = "true"
+trvspred trid (VSFalseP msg) = "false("++msg++")"
 
 trvspreds trid = seplist "," $ trvspred trid
 

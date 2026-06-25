@@ -865,8 +865,7 @@ that has the questionable bits \emph{that are not dischargeable}.
 If we discover a contradiction,
 then we need to signal this.
 \begin{code}
-scDischarge :: MonadFail m 
-            => VarSet -> SideCond -> SideCond -> m SideCond
+scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
 \end{code}
 We have something of the form:
 $$
@@ -921,10 +920,10 @@ and then process the variable side-conditions first,
 the finishing off by processing the fresh variables:
 \begin{code}
 scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
-  = if isTrivialSC cnsqSC then return scTrue
-    else if isTrivialSC anteSC then return cnsqSC
-    else do vsp' <- scDischarge' obsv (pdbg "scD.anteVSC" anteVSC) $ pdbg "scD.cnsqVSC" cnsqVSC
-            freshDischarge obsv anteFvs cnsqFvs $ pdbg "scD.vsp'" vsp'
+  = if isTrivialSC cnsqSC then scTrue
+    else if isTrivialSC anteSC then cnsqSC
+    else let vsp' = scDischarge' obsv (pdbg "scD.anteVSC" anteVSC) $ pdbg "scD.cnsqVSC" cnsqVSC
+         in freshDischarge obsv anteFvs cnsqFvs $ pdbg "scD.vsp'" vsp'
 \end{code}
 
 % \begin{code}    
@@ -950,23 +949,24 @@ scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
 
 Now onto processing those ordered Term-Variable Side-Conditions:
 \begin{code}
-scDischarge'  :: MonadFail m => VarSet
+scDischarge'  :: VarSet
               -> [VSetPred] -> [VSetPred]
-              -> m [VSetPred]
-scDischarge' _ _ []      =  return []     --  discharged
-scDischarge' _ [] vspL  =  return vspL  --  not discharged
+              -> [VSetPred]
+scDischarge' _ _ []     =  []     --  discharged
+scDischarge' _ [] vspL  =  vspL  --  not discharged
 scDischarge' obsv       (vspG:restG) -- ante
                   vspLs@(vspL:restL) -- cnsq
-  = do  gvG <- termVar vspG ; gvL <- termVar vspL
-        case compare gvG gvL of
-          LT  ->  scDischarge' obsv restG vspLs -- vspG not needed
-          GT  ->  do -- nothing available to discharge vspL
-                     rest' <- scDischarge' obsv restG restL
-                     return (vspL:rest')
-          EQ  ->  do -- use vspG to discharge vspL
-                     vsp' <- vspDischarge obsv (pdbg "vspD.vspG" vspG) $ pdbg "vspD.vspL" vspL
-                     rest' <- scDischarge' obsv restG restL
-                     return (vsp':rest')
+  = let gvG = fromJust $ termVar vspG 
+        gvL = fromJust $ termVar vspL
+    in case compare gvG gvL of
+      LT  ->  scDischarge' obsv restG vspLs -- vspG not needed
+      GT  ->  let -- nothing available to discharge vspL
+                  rest' = scDischarge' obsv restG restL
+              in (vspL:rest')
+      EQ  ->  let -- use vspG to discharge vspL
+                  vsp' = vspDischarge obsv vspG vspL
+                  rest' = scDischarge' obsv restG restL
+              in (vsp':rest')
 \end{code}
 \textbf{Any occurrences of a floating variable in a translated law side-condition
 should be retained.
@@ -986,10 +986,9 @@ At this point we have the form, for given (usually term) variable $V$:
 Finally, we have arrived at where the real work is done.
 
 \begin{code}
-vspDischarge  :: MonadFail m 
-              => VarSet
+vspDischarge  :: VarSet
               -> VSetPred -> VSetPred 
-              -> m VSetPred
+              -> VSetPred
 \end{code}
 
 
@@ -1016,7 +1015,7 @@ where $v$ is a standard variable.
 This is simply false.
 \begin{code}
 vspDischarge obsv _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
-  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
+  | S.null vsC  =  VSFalseP "Empty set cannot cover a standard obs. variable"
 \end{code}
 
 \subsubsection{Pairwise Discharging (C:C) and (Cd:Cd)}
@@ -1037,18 +1036,18 @@ Edge cases:
   in which case the fact that \m{C_G \disj C_L} is irrelevant.
 \begin{code}
 vspDischarge obsv (VSSub gv vsCG) predL@(VSSub _ vsCL)
-  | S.null vsCG                             =  return predL
-  | vsCG `S.isSubsetOf` vsCL                =  return VSTrueP 
-  | vsCL `S.disjoint` vsCG && isObsGVar gv  =  fail "discharge CC false"
+  | S.null vsCG                             =  predL
+  | vsCG `S.isSubsetOf` vsCL                =  VSTrueP 
+  | vsCL `S.disjoint` vsCG && isObsGVar gv  =  VSFalseP "discharge CC false"
   | otherwise  
-          = return $ VSSub gv ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
+          = VSSub gv ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
   where vsCLf = S.filter isFloatingGVar vsCL
 vspDischarge obsv (VSSubD gv vsCdG) predL@(VSSubD _ vsCdL)
-  | S.null vsCdG                            = return predL
-  | vsCdG `S.isSubsetOf` vsCdL              = return VSTrueP 
-  | vsCdL `S.disjoint` vsCdG && isObsGVar gv = fail "discharge CdCd false"
+  | S.null vsCdG                            = predL
+  | vsCdG `S.isSubsetOf` vsCdL              = VSTrueP 
+  | vsCdL `S.disjoint` vsCdG && isObsGVar gv = VSFalseP "discharge CdCd false"
   | otherwise  
-       = return $ VSSubD gv ((vsCdG `S.intersection` vsCdL) `S.union` vsCdLf)
+       = VSSubD gv ((vsCdG `S.intersection` vsCdL) `S.union` vsCdLf)
   where vsCdLf = S.filter isFloatingGVar vsCdL
 \end{code}
 
@@ -1062,9 +1061,9 @@ vspDischarge obsv (VSSubD gv vsCdG) predL@(VSSubD _ vsCdL)
 Edge case: \m{D_G = \emptyset} means no change to law s.c.
 \begin{code}
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSDisj _ vsDL)
-  | S.null vsDG                  =  return predL
-  | vsDL `S.isSubsetOf` vsDG     =  return VSTrueP 
-  | otherwise                    =  return $ VSDisj gv (vsDL S.\\ vsDG)
+  | S.null vsDG                  =  predL
+  | vsDL `S.isSubsetOf` vsDG     =  VSTrueP 
+  | otherwise                    =  VSDisj gv (vsDL S.\\ vsDG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (C:D)}
@@ -1085,15 +1084,15 @@ Edge cases:
   in which case the fact that \m{C_G \subseteq D_L} is irrelevant.
 \begin{code}
 vspDischarge obsv (VSSub gv vsCG) predL@(VSDisj _ vsDL)
-  | S.null vsCG                               =  return predL
-  | vsCG `S.disjoint` vsDL                    =  return VSTrueP 
-  | vsCG `S.isSubsetOf` vsDL && isObsGVar gv  =  fail "discharge CD false"
-  | otherwise            =  return $ VSDisj gv  (vsDL `S.intersection` vsCG)
+  | S.null vsCG                               =  predL
+  | vsCG `S.disjoint` vsDL                    =  VSTrueP 
+  | vsCG `S.isSubsetOf` vsDL && isObsGVar gv  =  VSFalseP "discharge CD false"
+  | otherwise            =  VSDisj gv  (vsDL `S.intersection` vsCG)
 vspDischarge obsv (VSSubD gv vsCdG) predL@(VSDisj _ vsDL)
-  | S.null vsCdG                               =  return predL
-  | vsCdG `S.disjoint` vsDL                    =  return VSTrueP 
-  | vsCdG `S.isSubsetOf` vsDL && isObsGVar gv  =  fail "discharge CdD false"
-  | otherwise            =  return $ VSDisj gv  (vsDL `S.intersection` vsCdG)
+  | S.null vsCdG                               =  predL
+  | vsCdG `S.disjoint` vsDL                    =  VSTrueP 
+  | vsCdG `S.isSubsetOf` vsDL && isObsGVar gv  =  VSFalseP "discharge CdD false"
+  | otherwise            =  VSDisj gv  (vsDL `S.intersection` vsCdG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
@@ -1107,19 +1106,19 @@ vspDischarge obsv (VSSubD gv vsCdG) predL@(VSDisj _ vsDL)
 Edge case: \m{D_G = \emptyset} means no change to law s.c.
 \begin{code}
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSub _ vsCL)
-  | S.null vsDG                  =  return predL
-  | vsCL `S.isSubsetOf` vsDG && isObsGVar gv= fail "discharge DC false"
-  | otherwise  =  return $ VSSub gv (vsCL S.\\ vsDG)
+  | S.null vsDG                  =  predL
+  | vsCL `S.isSubsetOf` vsDG && isObsGVar gv = VSFalseP "discharge DC false"
+  | otherwise  =  VSSub gv (vsCL S.\\ vsDG)
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSubD _ vsCdL)
-  | S.null vsDG                  =  return predL
-  | vsCdL `S.isSubsetOf` vsDG && isObsGVar gv= fail "discharge DCd false"
-  | otherwise  =  return $ VSSubD gv (vsCdL S.\\ vsDG)
+  | S.null vsDG                  =  predL
+  | vsCdL `S.isSubsetOf` vsDG && isObsGVar gv = VSFalseP "discharge DCd false"
+  | otherwise  =  VSSubD gv (vsCdL S.\\ vsDG)
 \end{code}
 
 We have a catch-all here:
 \begin{code}
 vspDischarge obsv vspG vspL 
-  = fail ("vspDischarge NYfI:\n"++show vspG++" => "++show vspL)
+  = VSFalseP ("vspDischarge NYfI:\n"++show vspG++" => "++show vspL)
 \end{code}
 
 
@@ -1161,23 +1160,21 @@ $$
 }
 
 \begin{code}
-freshDischarge :: MonadFail m 
-               => VarSet -> VarSet -> VarSet -> [VSetPred] 
-               -> m SideCond
+freshDischarge :: VarSet -> VarSet -> VarSet -> [VSetPred] 
+               -> SideCond
 freshDischarge obsv anteFvs cnsqFvs vsp
-  = do vsp' <- freshDischarge' obsv anteFvs vsp
-       return (SCD vsp'  (cnsqFvs S.\\ anteFvs) )
+  = let vsp' =  freshDischarge' obsv anteFvs vsp
+    in  (SCD vsp'  (cnsqFvs S.\\ anteFvs) )
 \end{code}
 
 \begin{code}
-freshDischarge' :: MonadFail m 
-                => VarSet -> VarSet -> [VSetPred] 
-                -> m [VSetPred]
-freshDischarge' obsv anteFvs [] = return []
+freshDischarge' :: VarSet -> VarSet -> [VSetPred] 
+                -> [VSetPred]
+freshDischarge' obsv anteFvs [] = []
 freshDischarge' obsv anteFvs (vsp:vsps)
-  = do ascl   <- freshTVarDischarge obsv anteFvs vsp
-       vsps' <- freshDischarge'    obsv anteFvs vsps
-       return (ascl++vsps')
+  = let ascl = freshTVarDischarge obsv anteFvs vsp
+        vsps' = freshDischarge'   obsv anteFvs vsps
+    in (ascl:vsps') 
 \end{code}
 
 We use a set of fresh variables ($G_F$)
@@ -1185,16 +1182,9 @@ to try to discharge an term variable side-condition ($L_j$):
 $$
 G_F \vdash L_j
 $$
-there are three possible outcomes:
-\begin{description}
-  \item [Contradicted]  Fail
-  \item [Fully Discharged]  Return []
-  \item [Not Fully Discharged]  Return [$L'_j$]
-\end{description}
 \begin{code}
-freshTVarDischarge :: MonadFail m 
-                   => VarSet -> VarSet -> VSetPred 
-                   -> m [VSetPred]
+freshTVarDischarge :: VarSet -> VarSet -> VSetPred 
+                   -> VSetPred
 \end{code}
 Given
 \[G_F \discharges (D \disj V,C \supseteq V,Cd \supseteq_a V)\]
@@ -1216,19 +1206,19 @@ based on the idea that $G_F \disj V$ by construction
 \begin{code}
 freshTVarDischarge obsv gF (VSDisj gv vsD) = do
   let vsD' = (vsD S.\\ gF)
-  if S.null vsD' then return []
-                 else return [VSDisj gv vsD']
+  if S.null vsD' then VSTrueP
+                 else VSDisj gv vsD'
 freshTVarDischarge obsv gF (VSSub  gv vsC) = do
   let vsC' = (vsC S.\\ gF)
-  if S.null vsC' then fail "fresh-var s.c. discharge failed (C)"
-                 else return [VSSub gv vsC']
+  if S.null vsC' then VSFalseP "fresh-var s.c. discharge failed (C)"
+                 else VSSub gv vsC'
 freshTVarDischarge obsv gF (VSSubD gv vsCd)
   = if gv `S.member` obsv then do
       let vsCd' =  (vsCd S.\\ gF)
-      if S.null vsCd' then fail "fresh-var s.c. discharge failed (Cd)"
-                      else return [VSSubD gv vsCd']
-    else return []
-freshTVarDischarge _ _ _ = return []
+      if S.null vsCd' then VSFalseP "fresh-var s.c. discharge failed (Cd)"
+                      else VSSubD gv vsCd'
+    else VSTrueP
+freshTVarDischarge _ _ vsp = vsp
 \end{code}
 
 \newpage
@@ -1470,7 +1460,7 @@ tst_scCheck
      [tst_scChkDisjoint, tst_scChkCovers ]
 
 
-tstFalse = VSFalseP
+tstFalse = VSFalseP "test failed"
 tstTrue  = VSTrueP
 
 ils  = jId "ls" 

@@ -46,6 +46,7 @@ import LexBase
 import Variables
 import Types
 import AST
+import VarSetPred
 import SideCond
 import Assertions
 import TermZipper
@@ -460,24 +461,25 @@ Finally, try to discharge the instantiated side-condition:
       = case
                 scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',scP'')
-          But whynots -> But [ "try s.c. discharge failed"
-                             , unlines' whynots
-                             , ""
-                             , trSideCond scC
-                               ++ " " ++ _imp ++ " " ++
-                               trSideCond scP'
-                             , ""
-                             , "lnm[parts]="++lnm++show parts
-                             , "tC="++trTerm 0 tC
-                             , "scC="++trSideCond scC
-                             , "tP'="++trTerm 0 tP'
-                             , "partsP="++trTerm 0 partsP
-                             , "replP="++trTerm 0 replP
-                             , "scP'="++trSideCond scP'
-                             , "fbind:\n"
-                             , trBinding fbind
-                             ]
+          (SCD [VSFalseP whynot] _)
+            -> But  [ "try s.c. discharge failed"
+                    , whynot
+                    , ""
+                    , trSideCond scC
+                      ++ " " ++ _imp ++ " " ++
+                      trSideCond scP'
+                    , ""
+                    , "lnm[parts]="++lnm++show parts
+                    , "tC="++trTerm 0 tC
+                    , "scC="++trSideCond scC
+                    , "tP'="++trTerm 0 tP'
+                    , "partsP="++trTerm 0 partsP
+                    , "replP="++trTerm 0 replP
+                    , "scP'="++trSideCond scP'
+                    , "fbind:\n"
+                    , trBinding fbind
+                    ]
+          scP'' -> Yes (fbind,tP',scP',scP'')
 \end{code}
 
 Done.
@@ -891,7 +893,7 @@ basicMatch mc vts fits
         let insctxt = mkInsCtxt vts scC
         tP'   <- instTerm insctxt fbind replP
         scP'  <- instantiateSC insctxt fbind scP
-        scP'' <- scDischarge (getDynamicObservables vts) scC scP'
+        let scP'' = scDischarge (getDynamicObservables vts) scC scP'
 
         if all isFloatingVSC (scVSPreds scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)

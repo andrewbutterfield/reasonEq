@@ -398,7 +398,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage obsv lvvls scLasC
           scCX <- mrgSideCond scC scCL
-          scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
+          let scD = scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof

@@ -13,6 +13,14 @@ VSCs in use:
     P⊆Ø x$⊆y$
     b⊆ₐO$ a⊆ₐ{s,s'} b⊆ₐ{s,s'} e⊆ₐO$ f⊆ₐO$ ok⊆ₐO$ ok'⊆ₐO$' p⊆ₐO$ x⊆ₐO$
 
+Largest Law SideCond(s):
+  UWhile:  P⊆ₐ{O$,O$'}, Q⊆ₐ{O$,O$'}, fresh:O$_0
+  UTCP:    E⋔{O$,O$'}, N⋔{O$,O$'}, a⊆ₐ{s,s'}
+
+Largest Conjecture SideCond:
+  UTCP: E1⋔{O$,O$'}, E2⋔{O$,O$'}, N1⋔{O$,O$'}, N2⋔{O$,O$'}, 
+        R1⋔{O$,O$'}, R2⋔{O$,O$'}, a⊆ₐ{s,s'}, b⊆ₐ{s,s'}
+
 VSDisj: Proto UTCP Exists Forall 
 VSSub: Closure Proto Forall 
 VSSubD: UWhile Designs Proto UTCP DWhile 

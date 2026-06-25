@@ -834,9 +834,24 @@ We can reason as follows:
 \end{eqnarray*}
 Basically we need to provide (and justify) lemmas like the one above.
 
-This also suggests we need to use 
+This also might suggest we need to use 
 $\setof{\lst x} \disj \fv{(\forall \lst y \bullet P)}$
 if we are ordering by the first general variable.
+Instead we suggest the following possible heuristics:
+\begin{itemize}
+  \item Convert $complicated \disj v$ to $v \disj complicated$
+  \item Given $x \disj y$, also try $y \disj x$, if the former fails.
+  \item Given goal s.c. $x ~rel~ y$ and instantiated law s.c $blob \disj x$,
+    then switch the law s.c  to $x \disj blob$.
+\end{itemize}
+How should we order the law and goal VSD lists?
+
+\textsf{
+Hmmm. 
+The key thing here is to determine when a/some goal s.c.s
+are related to a/some instantiated law s.c.s. 
+This holds if they have any variables in common.
+}
 
 General comment about freshness: 
 if $fresh: f$, 

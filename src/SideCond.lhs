@@ -965,24 +965,31 @@ Failure occurs if any $L_j$ group results in $\false$.
 Now onto processing those ordered Term-Variable Side-Conditions:
 \begin{code}
 -- vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
-vspsDischarge _   []    _   =  []     --  discharged
-vspsDischarge _   vspsL []  =  vspsL  --  not discharged
+vspsDischarge _   _  []     =  []     --  discharged
+vspsDischarge _   [] vspsL  =  vspsL  --  not discharged
 -- now deprecated:
-vspsDischarge obsv vspLs@(vspL:restL) -- inst. law s.c
-                   (vspG:restG) -- goal s.c.                 
+vspsDischarge obsv (vspG:restG) -- goal s.c. 
+                    vspLs@(vspL:restL) -- inst law s.c.                       
   = let gvG = fromJust $ termVar vspG 
         gvL = fromJust $ termVar vspL
     in case compare gvG gvL of
-      LT  ->  vspsDischarge obsv vspLs restG -- vspG not needed
+      LT  ->  vspsDischarge obsv restG vspLs -- vspG not needed
       GT  ->  let -- nothing available to discharge vspL
-                  rest' = vspsDischarge obsv restL restG
+                  rest' = vspsDischarge obsv restG restL
               in (vspL:rest')
       EQ  ->  let -- use vspG to discharge vspL
-                  vsp' = vspDischarge obsv vspG vspL
-                  rest' = vspsDischarge obsv restL restG
+                  vsp' = vspDischarge obsv vspL vspG
+                  rest' = vspsDischarge obsv restG restL
               in (vsp':rest')
--- new version below TBD              
-vspsDischarge obs vspsL vspsG  =  error "vspsDischarge NYfI"
+-- new version below TBD
+-- neither vspsG nor vspsL are null              
+vspsDischarge obs vspsG (vspL:vspsL) 
+  = case goalsDischarge obs vspsG vspL of
+      _ -> error "vspsDischarge NYfI"
+
+goalsDischarge obs vspsG vspL = error "goalsDischarge NYI"
+ -- first step, collect those vspsG involved with vspL
+ -- this could be none of them.
 \end{code}
 
 

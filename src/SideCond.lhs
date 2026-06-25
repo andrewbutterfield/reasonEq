@@ -864,38 +864,70 @@ we attempt to return a simplified side-condition
 that has the questionable bits \emph{that are not dischargeable}.
 If we discover a contradiction,
 then we need to signal this.
-\begin{code}
-scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
-\end{code}
+
 We have something of the form:
 $$
  \left( \bigwedge_{i \in 1 \dots m} G_i \land G_F \right)
  \vdash
  \left( \bigwedge_{j \in 1 \dots n} L_j \land L_F  \right)
 $$
-Here $G_F$ and $L_F$ are the fresh variables associated with
+Here $G_i$ and $L_j$ are the variable-set predicates,
+and $G_F$ and $L_F$ are the fresh variables, associated with
 goal and law respectively.
 As these are global,
 the plan is first to use the $G_i$ to discharge the $L_i$,
 and then finish by using $G_F$ to discharge $G_L$ and any remaining $L_i$.
 
-Our discharge theorem has a form that can be encapsulated as:
-$$ (A \land B) \implies (C \land D)~.                                                            $$
+\newpage
+\begin{code}
+scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
+scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
+  = if isTrivialSC cnsqSC then scTrue
+    else if isTrivialSC anteSC then cnsqSC
+    else let vsp' = vspsDischarge obsv anteVSC cnsqVSC
+         in freshDischarge obsv anteFvs cnsqFvs vsp'
+\end{code}
+
+
+\subsection{Discharging Variable-Set Predicates}
+
+\begin{code}
+vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
+\end{code}
+
+Here we focus on 
+$$
+ \bigwedge_{i \in 1 \dots m} G_i 
+ \implies
+ \bigwedge_{j \in 1 \dots n} L_j 
+$$
+We can expand this out a bit:
+$$
+G_1 \land G_2 \land \dots \land G_m
+\implies
+L_1 \land L_2 \land \dots \land L_n
+$$
+For each $L_j$ we want to pull out all 
+the $G_i$ that share variables with $L_j$.
+We then propose to focus on reasoning about the following:
+$$
+  G_{i_A} \land G_{i_B} \land \dots \land G_{i_Z}
+  \implies
+  L_j
+$$
+We can then break this down to simple cases%
+\footnote{
 Implication satisfies the following two laws:
 \begin{eqnarray*}
    A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
 \\ A \implies C \land D &=& (A \implies C) \land (A \implies D)
 \end{eqnarray*}
-Extending to multiple $A$s and $C$s, we get:
+The first justifies the approach based on individual $L_j$.
+} 
+of the form:
 $$
-  A_1 \land \dots \land A_m \implies C_1 \land \dots \land C_n
-  \quad=\quad
-  \lnot A_1 \lor \dots \lor \lnot A_m
-  \lor
-  C_1 \land \dots \land C_n
+  G_{i_x} \implies L_j
 $$
-If we can show that some $A_{i_1},\dots,A_{i_k} \implies C_j$,
-then $C_j$ has been satisfied. Hopefully we can do this for all the $C_x$.
 
 
 In our representation both the $G_i$ and $L_j$
@@ -909,22 +941,6 @@ to discharge further.
 Success is when all such $L_j$ groups have been shown to be $\true$.
 Failure occurs if any $L_j$ group results in $\false$.
 
-Note that the freshness criteria may only be partly resolved here,
-and its final resolution will require examining the free variables 
-of the goal.
-
-This is the first point in matching where the expanded known observables
-are available, as variable \texttt{obsv}.
-We first check for trivial side-conditions on either side,
-and then process the variable side-conditions first,
-the finishing off by processing the fresh variables:
-\begin{code}
-scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
-  = if isTrivialSC cnsqSC then scTrue
-    else if isTrivialSC anteSC then cnsqSC
-    else let vsp' = scDischarge' obsv (pdbg "scD.anteVSC" anteVSC) $ pdbg "scD.cnsqVSC" cnsqVSC
-         in freshDischarge obsv anteFvs cnsqFvs $ pdbg "scD.vsp'" vsp'
-\end{code}
 
 % \begin{code}    
 % instFreshObsV :: VarSet -> VarSet -> VarSet
@@ -945,37 +961,32 @@ scDischarge obsv anteSC@(SCD anteVSC anteFvs) cnsqSC@(SCD cnsqVSC cnsqFvs)
 % vscMrg (vsp:vsps) = mrgVarConds vsp vsps    
 % \end{code}
 
-\subsection{Term-Variable  Condition  Discharge}
 
 Now onto processing those ordered Term-Variable Side-Conditions:
 \begin{code}
-scDischarge'  :: VarSet
-              -> [VSetPred] -> [VSetPred]
-              -> [VSetPred]
-scDischarge' _ _ []     =  []     --  discharged
-scDischarge' _ [] vspL  =  vspL  --  not discharged
-scDischarge' obsv       (vspG:restG) -- ante
+-- vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
+vspsDischarge _   _     []     =  []     --  discharged
+vspsDischarge _   []    vspsL  =  vspsL  --  not discharged
+-- now deprecated:
+vspsDischarge obsv       (vspG:restG) -- ante
                   vspLs@(vspL:restL) -- cnsq
   = let gvG = fromJust $ termVar vspG 
         gvL = fromJust $ termVar vspL
     in case compare gvG gvL of
-      LT  ->  scDischarge' obsv restG vspLs -- vspG not needed
+      LT  ->  vspsDischarge obsv restG vspLs -- vspG not needed
       GT  ->  let -- nothing available to discharge vspL
-                  rest' = scDischarge' obsv restG restL
+                  rest' = vspsDischarge obsv restG restL
               in (vspL:rest')
       EQ  ->  let -- use vspG to discharge vspL
                   vsp' = vspDischarge obsv vspG vspL
-                  rest' = scDischarge' obsv restG restL
+                  rest' = vspsDischarge obsv restG restL
               in (vsp':rest')
+-- new version below TBD              
+vspsDischarge obs vspsG vspsL  =  error "vspsDischarge NYfI"
 \end{code}
-\textbf{Any occurrences of a floating variable in a translated law side-condition
-should be retained.
-We let $D_{?L}$ and $C_{?L}$ denote
-the floating subsets of $D_L$ and $C_L$ respectively.
-Note sure if VSP Discharge below ensures this?}
 
-\newpage
-\subsubsection{VSP Discharge}
+
+\subsubsection{Discharging Variable-Set Pairs}
 
 At this point we have the form, for given (usually term) variable $V$:
 \begin{equation}
@@ -1124,6 +1135,11 @@ vspDischarge obsv vspG vspL
 
 
 \subsection{Freshness Condition  Discharge}
+
+Note that the freshness criteria may only be partly resolved here,
+and its final resolution will require examining the free variables 
+of the goal.
+
 
 We have reduced our original problem down to:
 $$

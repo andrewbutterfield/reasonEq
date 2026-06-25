@@ -71,10 +71,9 @@ Fixing bugs as we go.
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
-   Issues: `Laws.assocFlatten` loses information 
-   about pre-flatten shape, so we cannot reverse that. 
-   We should fix this, somehow. 
-   Similarly for `Laws.flattenImp`.
+Issues: `Laws.assocFlatten` loses information 
+about pre-flatten shape, so we cannot reverse that. 
+We should fix this, somehow. Similarly for `Laws.flattenImp`.
 
 #### Bugs Fixed
 
@@ -84,188 +83,30 @@ Most recent first...
 
   - fix match ranking
  
-   outcome `true` should always 
-   rank higher than a `XXXX_def` law.
-
- 
   - fix `isFloatingVSC`
-
-    Proof for forall_swap
-        ∀x$ • ∀y$ • P ≡ ∀y$ • ∀x$ • P
-        ⊤
-    by red-All
-    @GV:  GV (VR (Id "P" 0,VP,WS))
-    @T:  B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-    @SGVFVS:  (fromList [],[(GV (VR (Id "P" 0,VP,WS)),fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])])
-    req: isFloatingVSC NYI
-    CallStack (from HasCallStack):
-      error, called at src/SideCond.lhs:1354:21 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
-
 
   - wierd `readSideCond` usage:
 
-   **Deleting a one-year old proof from `Arith` fixed the bug!!**
-
-    Somehow `save` tries to call `readSideCond` !!!!
-
-    We see `parseTheory` being called, and it looks like the following line triggers the error:
-    
-    ```
-    , proofs   =  map read $ pdbg "pT.ptxts" ptxts
-    ```
-
-    The only call is from `Persistence.getNamedTheory`. 
-    That is called locally by `restoreNamedTheory` and `getNamedTheories'`.
-
-
-    ```
-    true
-    ⊢
-    ∀x$ • true ≡ true
-    ⊤
-    Focus = [] :: 𝔹  
-    Target (RHS): 
-    true
-    XPNDD:
-    ⊤
-    proof> save
-    req: readSideCond, SCD expected, saw: "([],fromList [])),\"red-All\",(K (TG (Id \"B\" 0)) (VB True),[(UseLaw (ByMatch MEL) \"golden_rule\" (BD (f"
-    CallStack (from HasCallStack):
-      error, called at src/SideCond.lhs:514:18 in reasonEq-0.9.3.0-E9MQNBNAckLtxDvcXIcyO:SideCond
-    ```
-
- - fails to match `forall_remove` (∀ x$  • P) ≡ P  x$⋔P
-
-    We observe:
-    ```
-    proof> tm 1 forall_remove
-    Match against 'forall_remove'[1] failed!
-    try s.c. instantiation failed
-    { B  ⟼ 𝔹  , P  ⟼ true, x$  ⟼ {x$} } && (P⋔x$)
-    lnm[parts]=forall_remove[1]
-    tC=(∀ x$  • true)
-    scC=⊤
-    tP'=true
-    partsP=(∀ x$  • P)
-    replP=P
-    scP=(P⋔x$)
-    instVSP: no genvars
-    ```
-
-**Issue is that `P`, being `true` means that `P⋔x$` is `Ø⋔x$` which is true.** 
-
  - fails to `restore` theory:
    
-   ```
-   Laws:
-   req: Prelude.read: ambiguous parse
-   ```
-   Issue:  vsTrue renders as `([],fromList [])`. 
-   We need to tag this as being a `VSetPred`. **FIXED**
+  - back command has stopped working !
 
- - `vsUnion | otherwise = VSUnion vse1 vse1` 
- 
-   (was `Instantiate`, now `VarSetExpr`)
-
-   Now `vsUnion | otherwise = VSUnion vse1 vse2`  **FIXED**
-
-
- - back command has stopped working !
-
-   Problem: 'b' is interpreted as 'b 0' and not 'b 1'. **FIXED**
-
-
- - justification should have emphasised law-name first, 
+  - justification should have emphasised law-name first, 
    then finer match details. **DONE**
 
  - fix proof settings UI
 
-   Use `show` to show settings, `set` to invoke mini-UI to change them.
-
-   Need to add top-level proof-settings to toplevel show (`sh`).
-   *Was there: `sh X`.
-
-   Refactored so `TopTUI` invokes  `Prover.updateProverSettings`, 
-   which still has old clunky behaviour (e.g `sh tm Y`).
-
-   We have an improved command-line dialogue set up. 
-   Just need to implement the desired change. **DONE**
-
-
  - Fix `b` command
 
-   Should restore focus properly, and take number of backups to do as well
-
-   First key step is to get rid of the `fPath` component of `LiveProof`,
-   as that information is now encoded in `TermZip`.
-
-   If the justification has a zip descent list 
-   (`UseLaw`,`Substitute`,`NormQuant`,`NestSimp`,`SAT`),
-   then setup the `TermZip` using it, otherwise set the focus to the top level.
-   **Note** *the actual focus when the `b` command is given, is irrelevant.*
-
-   Note that undoing `CloneH`, `Flatten`, and `Associate` is not yet implemented.
-   These don't zip-descent lists.
-
-  
-
-
  - While proving `deMorgan_and`.
-
- ```
- Focus = [1,2,2,1] :: 𝔹  proof> tm 2 not_invol
-Match against 'not_invol'[2] failed!
-try match failed
-P :: P
----
-termMatch': structural mismatch.
-tC = V (TV (Id "A1" 0)) (VR (Id "P" 0,VP,WS))
-tP = V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
-```
-
-Fix: modify `typeInference` to copy over given types.
 
  - Theory `AOI` uses the same name `and_not_or_absorb` 
    for two different conjectures. Second should be `or_not_and_absorb`.
 
-   Orignal error was in builtin version of the theory. 
-   Now fixed in both .utp and .thr files.
-
-
  - strange match with a mysterious integer type !!
-
-```
-proof> tm 1 false_def
-@TI.TRM:  K (TG (Id "B" 0)) (VB False)
-@TI.TYP:  TG (Id "Z" 0)
-Match against 'false_def'[1] failed!
----
-typeMatch: distinct types
-typC = TG (Id "Z" 0)
-typP = TG (Id "B" 0)
-hit <enter> to continue
-```
-
-Deciding that `GivenType`s are not a subset of `TypeVars` makes no difference.
-Id `Typing.canoniseTypes` messing things up?
-No, it's `Assertions.mkTypedAsn` that converts `false:bool` to `false:int`.
-And it's `Typing.typeInference` to blame!
-In fact it was  `StdTypeSignature.valueType` which mixed up its 
-`int`s and `bool`s!
-
-
 
  - structural mismatch in L2R proof of `or_zero` with `P ∨ (P ≡ P) :: P ∨ (Q ≡ R)`. 
  
- The types of the `P` in the candidate are `TV (Id "B" 0)` while those of  `P`, `Q`, and `R` in the pattern are `TG (Id "B" 0)`. 
- 
- In `Or.thr`, `TG` is used throughout. 
- 
- In the candidate this gets changed to `TV` somewhere in the prover.
-
- *Fix: `Instantiate.instType` now leaves `GivenType`s unchanged.
-
-
  - In `eqv_subst`, in L2R proof, `(P ≡ Q)[e$/x$]` renders as `P ≡ Q[e$/x$]`.It renders correctly in the conjectures list.
 
 

@@ -415,10 +415,10 @@ Finally, we get our variables from a side-condition:
 \begin{code}
 safeSideCondition :: Term -> SideCond -> Bool
 safeSideCondition tm (SCD vsps _)  
-  =  all (\ x -> scSafe x tm) $ concat $ map (S.toList . vPredVars) vsps
+  =  all (\ x -> scSafe x tm) $ concat $ map (S.toList . vspVSet) vsps
 \end{code}
 \textbf{
-  The use of \texttt{vPredVars} is problematic --- loss of uniformity info?.
+  The use of \texttt{vspVSet} is problematic --- loss of uniformity info?.
 }
 
 \section{Normalising Bound Variables}

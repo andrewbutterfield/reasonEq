@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module VarSetPred (
   VSetPred(..)
-, vPredVar, vPredVars
+, vspGVar, vspVSet, vspAllVars, vspCoverage, vspInvolved
 , vsEmpty, vsSngl, vsList, vsUnion, vsMinus
 , enumSamePred
 ) where
@@ -33,30 +33,6 @@ to produce set expressions.
 We then add set-theoretic relations 
 ($=$,$\subseteq$,$\disj$) 
 over such expressions, to produce set predicates.
-
-\section{Variable-Set Expressions}
-
-We use \h{VarSet}, and give constructor style names to set operations:
-\begin{code}
-vsEmpty :: VarSet
-vsEmpty = S.empty
-
-vsSngl :: GenVar -> VarSet
-vsSngl = S.singleton
-
-vsList :: VarList -> VarSet
-vsList = S.fromList
-
-vsUnion :: VarSet -> VarSet -> VarSet
-vsUnion = S.union
-
-vsIntsct :: VarSet -> VarSet -> VarSet
-vsIntsct  = S.intersection
-
-vsMinus :: VarSet -> VarSet -> VarSet
-vsMinus = S.difference
-\end{code}
-
 
 \section{Variable-Set Predicates}
 
@@ -92,27 +68,70 @@ data VSetPred
   deriving (Eq,Ord,Show,Read)
 \end{code}
 
-\subsection{Set Predicate Queries}
+\subsection{Variable-Set Predicate Queries}
 
+Extracting sub-components:
 \begin{code}
-vPredVar :: MonadFail mf => VSetPred -> mf GenVar
-vPredVar (VSDisj gv _)  =  return gv
-vPredVar (VSSub  gv _)  =  return gv
-vPredVar (VSSubD gv _)  =  return gv
-vPredVar _              =  fail "VSetPred has no GenVar"
+vspGVar :: MonadFail mf => VSetPred -> mf GenVar
+vspGVar (VSDisj gv _)  =  return gv
+vspGVar (VSSub  gv _)  =  return gv
+vspGVar (VSSubD gv _)  =  return gv
+vspGVar _              =  fail "VSetPred has no GenVar"
+
+vspVSet :: VSetPred -> VarSet
+vspVSet (VSDisj gv vset)  =  vset
+vspVSet (VSSub  gv vset)  =  vset
+vspVSet (VSSubD gv vset)  =  vset
+vspVSet _                 =  S.empty
+\end{code}
+
+All mentioned variables:
+\begin{code}
+vspAllVars :: VSetPred -> VarSet
+vspAllVars (VSDisj gv vset)  =  S.insert gv vset
+vspAllVars (VSSub  gv vset)  =  S.insert gv vset
+vspAllVars (VSSubD gv vset)  =  S.insert gv vset
+vspAllVars _                 =  S.empty
+\end{code}
+
+General variables covered by variable-set predicate:
+\begin{code}
+vspCoverage :: VSetPred -> VarSet
+vspCoverage (VSSub  gv vset)  =  vset
+vspCoverage (VSSubD gv vset)  =  vset
+vspCoverage _                 =  S.empty
+
+vspInvolved :: VSetPred -> VSetPred -> VarSet
+vsp1 `vspInvolved` vsp2  =  vspAllVars vsp1 `vsIntsct` vspAllVars vsp2
+\end{code}
+
+\subsection{Variable-Set Builders}
+
+We use \h{VarSet}, and give constructor style names to set operations:
+\begin{code}
+vsEmpty :: VarSet
+vsEmpty = S.empty
+
+vsSngl :: GenVar -> VarSet
+vsSngl = S.singleton
+
+vsList :: VarList -> VarSet
+vsList = S.fromList
+
+vsUnion :: VarSet -> VarSet -> VarSet
+vsUnion = S.union
+
+vsIntsct :: VarSet -> VarSet -> VarSet
+vsIntsct  = S.intersection
+
+vsMinus :: VarSet -> VarSet -> VarSet
+vsMinus = S.difference
 \end{code}
 
 
-\begin{code}
-vPredVars :: VSetPred -> VarSet
-vPredVars (VSDisj gv vset)  =  S.insert gv vset
-vPredVars (VSSub  gv vset)  =  S.insert gv vset
-vPredVars (VSSubD gv vset)  =  S.insert gv vset
-vPredVars _                 =  S.empty
-\end{code}
 
 \newpage
-\subsection{Simplifying Set Predicates}
+\subsection{Simplifying Variable-Set Predicates}
 
 We can/may encode some standard set-theoretic simplifications here.
 

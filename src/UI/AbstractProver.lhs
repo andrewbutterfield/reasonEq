@@ -356,7 +356,7 @@ applyMatchToFocus1 i liveProof
                                mentionedVars goal
                                `S.union`
                                S.unions 
-                                  (map vPredVars (scVSPreds $ mLawSC mtch)) )
+                                  (map vspVSet (scVSPreds $ mLawSC mtch)) )
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof

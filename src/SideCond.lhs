@@ -730,18 +730,16 @@ mrgTVarCondLists (vsp:vsps1) vsps2
 
 \subsection{Merging Term Variable and Freshness Side-Conditions}
 
-
 \begin{code}
 mrgTVarFreshConditions :: MonadFail m 
                        => VarSet -> [VSetPred] 
                        -> m SideCond
 mrgTVarFreshConditions freshvs vsps
   | freshvs `disjoint` coveredVarsOf vsps  =  return $ SCD vsps freshvs
-  -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
 coveredVarsOf :: [VSetPred] -> VarSet
-coveredVarsOf vsps = S.unions $ map vPredVars vsps
+coveredVarsOf vsps = S.unions $ map vspCoverage vsps
 \end{code}
 
 \section{From VSC and Free-list to Side-Condition}
@@ -985,9 +983,13 @@ vspsDischarge obsv (vspG:restG) -- goal s.c.
 -- neither vspsG nor vspsL are null              
 vspsDischarge obs vspsG (vspL:vspsL) 
   = case goalsDischarge obs vspsG vspL of
-      _ -> error "vspsDischarge NYfI"
+      [] ->  vspsDischarge obs vspsG vspsL
+      vspsGi -> error ("vspsDischarge("++show vspsGi++") NYfI")
 
-goalsDischarge obs vspsG vspL = error "goalsDischarge NYI"
+goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
+goalsDischarge obs vspsG vspL 
+  = let involved = filter (not . S.null . vspInvolved vspL) vspsG
+    in involved
  -- first step, collect those vspsG involved with vspL
  -- this could be none of them.
 \end{code}
@@ -1398,7 +1400,7 @@ gv `mentionedBy` (vsp@(VSSubD gv' vsCd):vsps)
           Just vw'  ->  return ( vsp, Just vw')
           _         ->  gv `mentionedBy` vsps
 gv `mentionedBy` (vsp:vsps)
-  = case vPredVar vsp of
+  = case vspGVar vsp of
       Nothing -> gv `mentionedBy` vsps
       Just gv' | gv == gv' -> return ( vsp, Nothing )
                | otherwise -> gv `mentionedBy` vsps

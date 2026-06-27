@@ -965,6 +965,11 @@ Now onto processing those ordered Term-Variable Side-Conditions:
 -- vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
 vspsDischarge _   _  []     =  []     --  discharged
 vspsDischarge _   [] vspsL  =  vspsL  --  not discharged
+vspsDischarge obs vspsG (vspL:vspsL) 
+  = case goalsDischarge obs vspsG vspL of
+      [] ->  vspsDischarge obs vspsG vspsL
+      vspsGi -> error ("vspsDischarge("++show vspsGi++") NYfI")
+
 -- now deprecated:
 vspsDischarge obsv (vspG:restG) -- goal s.c. 
                     vspLs@(vspL:restL) -- inst law s.c.                       
@@ -981,17 +986,29 @@ vspsDischarge obsv (vspG:restG) -- goal s.c.
               in (vsp':rest')
 -- new version below TBD
 -- neither vspsG nor vspsL are null              
-vspsDischarge obs vspsG (vspL:vspsL) 
-  = case goalsDischarge obs vspsG vspL of
-      [] ->  vspsDischarge obs vspsG vspsL
-      vspsGi -> error ("vspsDischarge("++show vspsGi++") NYfI")
 
 goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
 goalsDischarge obs vspsG vspL 
-  = let involved = filter (not . S.null . vspInvolved vspL) vspsG
-    in involved
- -- first step, collect those vspsG involved with vspL
- -- this could be none of them.
+  = let 
+      -- first step, collect those vspsG involved with vspL
+        -- this could be none of them.
+      involved = filter (not . S.null . vspInvolved vspL) vspsG
+      -- second step: condition both sides, noting that `disj` is commutative
+      optimised = map (optimiseVSPPairs vspL) vspsG
+      -- third step: discharge optimised pairs
+    in concat $ map (dischargeVSPPairs obs) optimised
+
+        -- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
+
+optimiseVSPPairs :: VSetPred -> VSetPred -> (VSetPred,VSetPred)
+optimiseVSPPairs vspL vspG = (vspL,vspG)
+
+dischargeVSPPairs :: VarSet -> (VSetPred,VSetPred) -> [VSetPred]
+dischargeVSPPairs obs (vspL,vspG )
+  = case vspDischarge obs vspL vspG of
+      VSFalseP _ ->  []  -- should we exit here?
+      VSTrueP    ->  []  -- discharged
+      vsp        ->  [vsp]
 \end{code}
 
 

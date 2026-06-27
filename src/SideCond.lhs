@@ -1055,6 +1055,10 @@ vspDischarge obsv _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
   | S.null vsC  =  VSFalseP "Empty set cannot cover a standard obs. variable"
 \end{code}
 
+
+\textbf{WE CANNOT USE `Set.setop` HERE IF ANY SET HAS TERM OR LISTVARS.
+It only works for actual alphabet variables.}
+
 \subsubsection{Pairwise Discharging (C:C) and (Cd:Cd)}
 
 We start with the \m{C} and \m{Cd} components because $\subseteq$

@@ -889,9 +889,6 @@ scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
 
 \subsection{Discharging Variable-Set Predicates}
 
-\begin{code}
-vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
-\end{code}
 
 Here we focus on 
 $$
@@ -905,6 +902,11 @@ G_1 \land G_2 \land \dots \land G_m
 \implies
 L_1 \land L_2 \land \dots \land L_n
 $$
+Implication satisfies the following two laws:
+\begin{eqnarray*}
+   A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
+\\ A \implies C \land D &=& (A \implies C) \land (A \implies D)
+\end{eqnarray*}
 For each $L_j$ we want to pull out all 
 the $G_i$ that share variables with $L_j$.
 We then propose to focus on reasoning about the following:
@@ -913,30 +915,30 @@ $$
   \implies
   L_j
 $$
-We can then break this down to simple cases%
-\footnote{
-Implication satisfies the following two laws:
-\begin{eqnarray*}
-   A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
-\\ A \implies C \land D &=& (A \implies C) \land (A \implies D)
-\end{eqnarray*}
-The first justifies the approach based on individual $L_j$.
-} 
-of the form:
+We can then break this down to simple cases of the form:
 $$
   G_{i_x} \implies L_j
 $$
+It is worth considering this simple example:
+\begin{eqnarray*}
+\lefteqn{A \land B \implies C \land D}
+\\&=& (A \land B \implies C) \land (A \land B \implies D) 
+\\&=& ((A \implies C) \lor  (B \implies C)) 
+      \land 
+      ((A \implies D) \lor  (B \implies D)) 
+\\ && \text{after all are discharged:}
+\\ &=& (AdC \lor  BdC) \land (AdD \lor  BdD) 
+\end{eqnarray*}
+At the inner level ($AdX \lor BdX$),
+outcome $\true$ short-circuits, returning $\true$.
+A $\false$ overall result requires both to be $\false$.
+
+At the outer level ($XsdC \land XsdD$),
+outcome $\false$ short-circuits, returning $\false$
+A non-$\false$ overall result requires none to be $\false$.
 
 
-In our representation both the $G_i$ and $L_j$
-are ordered by general variable ($V$).
-So we can work through both lists,
-using all the $G_i$ for a given g.v.,
-to attempt to discharge all the $L_j$ for that same g.v.
-Once this is complete, we then make use of the freshness information
-to discharge further.
-
-Success is when all such $L_j$ groups have been shown to be $\true$.
+Success is when all such $L_j$ groups have been shown to be non-$\false$.
 Failure occurs if any $L_j$ group results in $\false$.
 
 
@@ -960,55 +962,90 @@ Failure occurs if any $L_j$ group results in $\false$.
 % \end{code}
 
 
-Now onto processing those ordered Term-Variable Side-Conditions:
+We start with 
+$
+G_1 \land G_2 \land \dots \land G_m
+\implies
+L_1 \land L_2 \land \dots \land L_n
+$:
 \begin{code}
--- vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
+vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
 vspsDischarge _   _  []     =  []     --  discharged
 vspsDischarge _   [] vspsL  =  vspsL  --  not discharged
 vspsDischarge obs vspsG (vspL:vspsL) 
   = case goalsDischarge obs vspsG vspL of
-      [] ->  vspsDischarge obs vspsG vspsL
-      vspsGi -> error ("vspsDischarge("++show vspsGi++") NYfI")
+      f@[VSFalseP _]  ->  f
+      vsps ->  vsps ++ vspsDischarge obs vspsG vspsL
+\end{code}
 
--- now deprecated:
-vspsDischarge obsv (vspG:restG) -- goal s.c. 
-                    vspLs@(vspL:restL) -- inst law s.c.                       
-  = let gvG = fromJust $ termVar vspG 
-        gvL = fromJust $ termVar vspL
-    in case compare gvG gvL of
-      LT  ->  vspsDischarge obsv restG vspLs -- vspG not needed
-      GT  ->  let -- nothing available to discharge vspL
-                  rest' = vspsDischarge obsv restG restL
-              in (vspL:rest')
-      EQ  ->  let -- use vspG to discharge vspL
-                  vsp' = vspDischarge obsv vspL vspG
-                  rest' = vspsDischarge obsv restG restL
-              in (vsp':rest')
--- new version below TBD
--- neither vspsG nor vspsL are null              
+\newpage
 
+We are now working with
+$
+  G_{i_A} \land G_{i_B} \land \dots \land G_{i_Z}
+  \implies
+  L_j
+$
+\begin{code}
 goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
 goalsDischarge obs vspsG vspL 
   = let 
-      -- first step, collect those vspsG involved with vspL
-        -- this could be none of them.
       involved = filter (not . S.null . vspInvolved vspL) vspsG
-      -- second step: condition both sides, noting that `disj` is commutative
       optimised = map (optimiseVSPPairs vspL) vspsG
-      -- third step: discharge optimised pairs
-    in concat $ map (dischargeVSPPairs obs) optimised
+      discharged = sort $ concat $ map (dischargeVSPPairs obs) optimised
+    in case discharged of
+         []                              ->  []
+         _ |  all isFalseVSP discharged  ->  fcollapse discharged
+           |  otherwise                  ->  fremove discharged
 
-        -- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
+  where
+    fcollapse fails = [VSFalseP $ intercalate "\n" $ map falseVSPmsg fails]
+    fremove dschgd = filter (not . isFalseVSP) dschgd
+\end{code}
 
+We are now working with:
+$
+  L_j \impliedby G_{i_x} 
+$
+because we use $L_j$ to parameterise a mapping.
+
+We can only ``flip'' a disjoint of the form $x \disj \setof{y}$,
+so we propose the following heuristic:
+Given goal s.c. $x ~rel~ y$ 
+        and instantiated law s.c $z \disj \setof{x}$,
+        then switch the law s.c  to $x \disj \setof{z}$.
+\begin{code}
+-- condition both sides, noting that `disj` is commutative
+-- we have L, G in this order
+-- we return (G,L)
 optimiseVSPPairs :: VSetPred -> VSetPred -> (VSetPred,VSetPred)
-optimiseVSPPairs vspL vspG = (vspL,vspG)
+optimiseVSPPairs vspL@(VSDisj gvL vsetL) vspG
+  = case vspGVar vspG of
+      Nothing   ->   (vspL,vspG)
+      Just gvG  -> 
+        case vlistL of
+          [setGVL] | setGVL == gvG
+             ->  (vspG, VSDisj setGVL (S.singleton gvL))
+                   | otherwise  -> (vspL,vspG)
+          _  ->  (vspL,vspG)
+    where vlistL = S.toList vsetL
+optimiseVSPPairs vspL vspG = (vspG,vspL)
+\end{code}
 
+
+We are now (back) working with:
+$
+  G_{i_x} \implies L_j
+$
+\begin{code}
+-- discharge optimised pairs
+-- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
 dischargeVSPPairs :: VarSet -> (VSetPred,VSetPred) -> [VSetPred]
-dischargeVSPPairs obs (vspL,vspG )
-  = case vspDischarge obs vspL vspG of
-      VSFalseP _ ->  []  -- should we exit here?
-      VSTrueP    ->  []  -- discharged
-      vsp        ->  [vsp]
+dischargeVSPPairs obs (vspG,vspL)
+  = case vspDischarge obs vspG vspL of
+      f@(VSFalseP _)  ->  [f]  
+      VSTrueP         ->  []  -- discharged
+      vsp             ->  [vsp]
 \end{code}
 
 
@@ -1051,8 +1088,8 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vspDischarge obsv _ (VSSub (StdVar (Vbl _ ObsV _)) vsC)
-  | S.null vsC  =  VSFalseP "Empty set cannot cover a standard obs. variable"
+vspDischarge obsv _ (VSSub (StdVar (Vbl _ ObsV _)) vsCL)
+  | S.null vsCL = VSFalseP "Empty set cannot cover a standard obs. variable"
 \end{code}
 
 

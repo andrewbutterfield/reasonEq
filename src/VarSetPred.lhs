@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module VarSetPred (
   VSetPred(..)
+, isFalseVSP, falseVSPmsg
 , vspGVar, vspVSet, vspAllVars, vspCoverage, vspInvolved
 , vsEmpty, vsSngl, vsList, vsUnion, vsMinus
 , enumSamePred
@@ -69,6 +70,17 @@ data VSetPred
 \end{code}
 
 \subsection{Variable-Set Predicate Queries}
+
+Falsehood check:
+\begin{code}
+isFalseVSP :: VSetPred -> Bool
+isFalseVSP (VSFalseP _)  =  True
+isFalseVSP _             =  False
+
+falseVSPmsg :: VSetPred -> String
+falseVSPmsg (VSFalseP msg)  =  msg
+falseVSPmsg _               =  ""
+\end{code}
 
 Extracting sub-components:
 \begin{code}

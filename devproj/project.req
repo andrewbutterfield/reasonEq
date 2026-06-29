@@ -6,27 +6,27 @@ END THEORIES
 CURRTHEORY = Forall
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Forall","forall_idem")
+("Forall","one_point")
 BEGIN LIVE-PROOF
 TH-NAME: Forall
-CJ-NAME: forall_idem
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],SCD [VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])] (fromList []))
-SIDE = SCD [VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])] (fromList [])
+CJ-NAME: one_point
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))],SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList []))
+SIDE = SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])
 STRAT red-All
 BEGIN PRFSET
 MM = 30
 MS = 10
 BD = False
-TM = False
-TL = False
-TS = False
-FV = False
+TM = True
+TL = True
+TS = True
+FV = True
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),[(1,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))])])
+TERMZIP = (I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],[(1,Cons' (TG (Id "B" 0)) True (Id "and" 0) [] [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]),(1,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))])])
 BEGIN SEQUENT'
-SIDECOND = SCD [VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])] (fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.forall_idem", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+SIDECOND = SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.one_point", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
 END SEQUENT'
 END SEQZIP
 BEGIN LIST STEPS

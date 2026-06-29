@@ -882,7 +882,7 @@ scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
 scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
   = if isTrivialSC ilawSC then scTrue
     else if isTrivialSC goalSC then ilawSC
-    else let vsp' = vspsDischarge obsv ilawVSC goalVSC -- note reversal
+    else let vsp' = vspsDischarge obsv goalVSC ilawVSC  
          in freshDischarge obsv goalFvs ilawFvs vsp'
 \end{code}
 
@@ -1042,7 +1042,7 @@ $
 -- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
 dischargeVSPPairs :: VarSet -> (VSetPred,VSetPred) -> [VSetPred]
 dischargeVSPPairs obs (vspG,vspL)
-  = case vspDischarge obs vspG vspL of
+  = case vspDischarge obs vspG vspL  of
       f@(VSFalseP _)  ->  [f]  
       VSTrueP         ->  []  -- discharged
       vsp             ->  [vsp]
@@ -1051,11 +1051,12 @@ dischargeVSPPairs obs (vspG,vspL)
 
 \subsubsection{Discharging Variable-Set Pairs}
 
-At this point we have the form, for given (usually term) variable $V$:
+At this point we have the form, 
+for given (usually term) variables $V_G$ and $V_L$:
 \begin{equation}
- \left( V ~rel~ S_G\right)
- \vdash
- \left( V ~rel~ S_L\right)
+ \left( V_G ~rel_G~ S_G\right)
+ \implies
+ \left( V_L ~rel_L~ S_L\right)
 \end{equation}
 Finally, we have arrived at where the real work is done.
 

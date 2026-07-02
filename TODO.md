@@ -46,7 +46,29 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - need to check iteration matching
+  - need to fix match failure below:
+
+    ```
+    proof> tm 1 forall_one_point
+    Match against 'forall_one_point'[1] failed!
+    try match failed
+
+    (x$=e$) ⟹  P :: (∀ x$,y$  • (x$=e$) ⟹  P)
+
+    lnm[parts]=forall_one_point[1]
+    tP=(∀ x$,y$  • (x$=e$) ⟹  P) ≡ (∀ y$  • P[e$/x$])
+    partsP=(∀ x$,y$  • (x$=e$) ⟹  P)
+    replP=(∀ y$  • P[e$/x$])
+    tC=(x$=e$) ⟹  P
+    scC=(e$⋔x$)
+    ---
+    bindLVarToVList(static): already bound differently(2).
+    lv = (Id "x" 0,VO,[],[])
+    new vc1 = BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
+    old vc2 = BS (fromList [])
+    bind:
+    fromList [((Id "x" 0,VO,[],[]),BS (fromList [])),((Id "y" 0,VO,[],[]),BS (fromList []))]
+    ```
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 

@@ -259,7 +259,7 @@ cjAllIdem = preddef ("forall" -.- "idem")
 
 $$
   \begin{array}{lll}
-     \lst x = \lst e \land P \equiv P[\lst e/\lst x]
+     \lst x = \lst e \implies P \equiv P[\lst e/\lst x]
      & \lst x \notin \lst e
      & \QNAME{one-point}
   \end{array}
@@ -267,17 +267,11 @@ $$
 \vspace{-5pt}
 \begin{code}
 cjOnePoint = preddef ("one" -.- "point")
-                    (((lvxs `areEqualTo` lves) /\ p) 
+                    (((lvxs `areEqualTo` lves) ==> p) 
                      ===  
                      (mksub p esxs) )
                     ([xs] `notin` gves)
 \end{code} 
-\textsf{ 
-  Should this be \m{\lst x = \lst e \implies P \equiv P[\lst e/\lst x]}?
-  We could then exploit the law 
-  \m{A \land (A \implies B) \equiv A \land B} somehow.
-}
-
 
 We now collect our conjecture set:
 \begin{code}

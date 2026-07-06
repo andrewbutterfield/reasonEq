@@ -48,6 +48,14 @@ Fixing bugs as we go.
 
   - need to fix match failure below:
 
+    The `one_point` conjecture is not true: 
+    take `P == true` and consider when `x$ /= e$` (!)
+
+    A comment in `Forall.lhs` suggest we should use implication.
+    Let's do this.
+
+    This is still be a problem, though.
+
     ```
     proof> tm 1 forall_one_point
     Match against 'forall_one_point'[1] failed!

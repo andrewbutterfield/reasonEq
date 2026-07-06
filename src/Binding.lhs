@@ -538,7 +538,7 @@ tvtypEq :: MonadFail m
 tvtypEq fits nAPI d binding r r0
  | r `fits` r0    =  return r
  | otherwise  =  fail $ unlines
-                  [ (nAPI++": already bound differently(1).")
+                  [ (nAPI++": already bound differently(2).")
                   , "d = " ++ show d
                   , "old r = " ++ show r0
                   , "new r = " ++ show r
@@ -1296,7 +1296,7 @@ If none of the above, then we expect full equality.
 rangeEqvLSSub nAPI lv binding vc1 vc2
  | vc1 == vc2  =  return vc1
  | otherwise  =  fail $ unlines
-                  [ (nAPI++": already bound differently(2).")
+                  [ (nAPI++": already bound differently(3).")
                   , "lv = " ++ show lv
                   , "new vc1 = " ++ show vc1
                   , "old vc2 = " ++ show vc2

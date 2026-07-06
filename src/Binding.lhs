@@ -8,7 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
 ( TypeBind, pattern BindType
-, VarBind, pattern BindId, pattern BindVar, pattern BindTerm, pattern BindLVar
+, VarBind
+, pattern BindId, pattern BindVar, pattern BindTerm, pattern BindLVar
 , LVarOrTerm
 , injLV, injTM,lvOf, tmOf
 , lvsOf, tmsOf, lvtmSplit
@@ -348,14 +349,15 @@ type SubBinding = M.Map Subscript Subscript
 \begin{code}
 type LVarOrTerm = Either ListVar Term
 
-injLV :: ListVar    -> LVarOrTerm ; injLV lv = Left  lv
-injTM :: Term       -> LVarOrTerm ; injTM tm = Right tm
-lvOf  :: LVarOrTerm -> ListVar    ; lvOf = fromLeft  (error "lvOf: not ListVar")
-tmOf  :: LVarOrTerm -> Term       ; tmOf = fromRight (error "tmOf: not Term")
+injLV :: ListVar -> LVarOrTerm ; injLV lv = Left  lv
+injTM :: Term    -> LVarOrTerm ; injTM tm = Right tm
+lvOf  :: LVarOrTerm -> ListVar ; lvOf = fromLeft  (error "lvOf: not ListVar")
+tmOf  :: LVarOrTerm -> Term    ; tmOf = fromRight (error "tmOf: not Term")
 
 lvsOf     :: [LVarOrTerm] -> [ListVar]          ; lvsOf = lefts
 tmsOf     :: [LVarOrTerm] -> [Term]             ; tmsOf = rights
-lvtmSplit :: [LVarOrTerm] -> ([ListVar],[Term]) ; lvtmSplit = partitionEithers
+lvtmSplit :: [LVarOrTerm] -> ([ListVar],[Term]) 
+lvtmSplit = partitionEithers
 \end{code}
 
 We bind a list-variable to either a list or set of variables,
@@ -388,8 +390,10 @@ We put these together:
 newtype Binding = BD (TypeBinding, VarBinding, SubBinding, ListVarBinding)
  deriving (Eq, Ord, Show, Read)
 
+mt = M.empty
+
 emptyBinding :: Binding
-emptyBinding = BD (M.empty, M.empty, M.empty, M.empty)
+emptyBinding = BD (mt, mt, mt, mt)
 \end{code}
 
 Merging a binding (first takes precedence!):
@@ -614,7 +618,8 @@ bindVarToVar dv@(Vbl vi vc vw) rv@(Vbl xi xc xw)
 
 Can be useful to bind a list of (pattern/candidate) variables pairs:
 \begin{code}
-bindVarsToVars :: MonadFail m => [(Variable, Variable)] -> Binding -> m Binding
+bindVarsToVars :: MonadFail m 
+               => [(Variable, Variable)] -> Binding -> m Binding
 bindVarsToVars [] bind = return bind
 bindVarsToVars ((dv,rv):rest) bind
   = do bind' <- bindVarToVar dv rv bind
@@ -702,13 +707,14 @@ during insertion.
 bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (tbind,vbind,sbind,lbind))
  | isPred ct   =  fail "bindVarToTerm: e.-var. cannot bind predicate."
  | wsize  > 1  =  fail "bindVarToTerm: e.-var. mixed term temporality."
- | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR (rangeEq "bindVarToTerm(ev1)") (vi,ExprV) (BT ct) vbind
-        return $ BD (tbind,vbind',sbind,lbind)
- | otherwise -- term has one temporality
-    = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(ev2)" vt thectw sbind
-         vbind' <- insertDR (rangeEq "bindVarToTerm(ev3)") (vi,ExprV) (dnTerm2VarBind ct) vbind
-         return $ BD (tbind,vbind',sbind',lbind)
+ | wsize == 0  = do  -- term has no variables
+   vbind' <- insertDR (rangeEq "bindVarToTerm(ev1)") (vi,ExprV) (BT ct) vbind
+   return $ BD (tbind,vbind',sbind,lbind)
+ | otherwise = do -- term has one temporality
+   sbind' <- bindSubscriptToSubscript "bindVarToTerm(ev2)" vt thectw sbind
+   vbind' <- insertDR (rangeEq "bindVarToTerm(ev3)") 
+                      (vi,ExprV) (dnTerm2VarBind ct) vbind
+   return $ BD (tbind,vbind',sbind',lbind)
  where
    ctws = temporalityOf ct
    wsize = S.size ctws
@@ -722,13 +728,15 @@ predicate terms, all of whose dynamic variables have the same temporality.
 bindVarToTerm v@(Vbl vi PredV vt) ct (BD (tbind,vbind,sbind,lbind))
  | isExpr ct  =  fail "bindVarToTerm: p.-var. cannot bind expression."
  | wsize  > 1  =  fail "bindVarToTerm: p.-var. mixed term temporality."
- | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR (rangeEq "bindVarToTerm(pv1)") (vi,PredV) (dnTerm2VarBind ct) vbind
-        return $ BD (tbind,vbind',sbind,lbind)
- | otherwise
-    = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(pv2)" vt thectw sbind
-         vbind' <- insertDR (rangeEq "bindVarToTerm(pv3)") (vi,PredV) (dnTerm2VarBind ct) vbind
-         return $ BD (tbind,vbind',sbind',lbind)
+ | wsize == 0  = do  -- term has no variables
+   vbind' <- insertDR (rangeEq "bindVarToTerm(pv1)") 
+                      (vi,PredV) (dnTerm2VarBind ct) vbind
+   return $ BD (tbind,vbind',sbind,lbind)
+ | otherwise = do
+   sbind' <- bindSubscriptToSubscript "bindVarToTerm(pv2)" vt thectw sbind
+   vbind' <- insertDR (rangeEq "bindVarToTerm(pv3)") 
+                      (vi,PredV) (dnTerm2VarBind ct) vbind
+   return $ BD (tbind,vbind',sbind',lbind)
  where
    ctws = temporalityOf ct
    wsize = S.size ctws
@@ -854,44 +862,46 @@ We have two orthogonal well-formedness criteria for any such binding
 A \texttt{Static} list-variable binds to any variable-list
 without \texttt{Textual} variables.
 \begin{code}
-bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (tbind,vbind,sbind,lbind))
- | all (validStaticGVarClass vc) vl
-    =  do feasibility <- feasibleSelfReference lv vl
-          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
-                             (i,vc,is,ij) (BL vl) lbind
-          case feasibility of
-            Nothing -> return $ BD (tbind,vbind,sbind,lbind')
-            Just (vs,lv')
-             -> do bind' <- attemptFeasibleBinding lv lv'
-                                                   (BD (tbind,vbind,sbind,lbind'))
-                   return bind'
- | otherwise = fail "bindLVarToVList: Static incompatibility"
+bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl 
+                (BD (tbind,vbind,sbind,lbind))
+  | all (validStaticGVarClass vc) vl = do 
+      feasibility <- feasibleSelfReference lv vl
+      lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
+                         (i,vc,is,ij) (BL vl) lbind
+      case feasibility of
+        Nothing -> return $ BD (tbind,vbind,sbind,lbind')
+        Just (vs,lv') -> do 
+          bind' <- attemptFeasibleBinding lv lv'
+                     (BD (tbind,vbind,sbind,lbind'))
+          return bind'
+  | otherwise = fail "bindLVarToVList: Static incompatibility"
 \end{code}
 
 
 A dynamic list-variable binds to any list of dynamic variables
 all of which have the same class and temporality as itself.
 \begin{code}
-bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (tbind,vbind,sbind,lbind))
- | valid
-    = do feasibility <- feasibleSelfReference lv vl
-         sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
-                            (i,vc,is,ij) (BL $ map dnGVar vl) lbind
-         case feasibility of
-           Nothing -> return $ BD (tbind,vbind,sbind',lbind')
-           Just (vs,lv')
-            -> do bind' <- attemptFeasibleBinding lv lv'
-                                                  (BD (tbind,vbind,sbind',lbind'))
-                  return bind'
- | otherwise = fail "bindLVarToVList: dynamic incompatibility"
- where
-   (valid, vlw) = vlCompatible vc vw vl
+bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl 
+                (BD (tbind,vbind,sbind,lbind))
+  | valid = do 
+     feasibility <- feasibleSelfReference lv vl
+     sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
+     lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
+                        (i,vc,is,ij) (BL $ map dnGVar vl) lbind
+     case feasibility of
+       Nothing -> return $ BD (tbind,vbind,sbind',lbind')
+       Just (vs,lv') -> do 
+         bind' <- attemptFeasibleBinding lv lv'
+                    (BD (tbind,vbind,sbind',lbind'))
+         return bind'
+  | otherwise = fail "bindLVarToVList: dynamic incompatibility"
+  where (valid, vlw) = vlCompatible vc vw vl
 \end{code}
 
 Anything else fails.
 \begin{code}
-bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+bindLVarToVList _ _ _ 
+  = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
 If the list-variable is static,
@@ -1329,62 +1339,64 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 \begin{code}
 bindLVarToVSet :: MonadFail m => ListVar -> VarSet -> Binding -> m Binding
 
-bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (tbind,vbind,sbind,lbind))
- | valid
-    =  do feasibility <- feasibleSelfReference lv (S.toList vs)
-          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
-                             (i,vc,is,ij) (BS vs) lbind
-          case feasibility of
-            Nothing -> return $ BD (tbind,vbind,sbind,lbind')
-            Just (vs',lv')
-             -> do bind' <-  attemptFeasibleBinding lv lv'
-                                                    (BD (tbind,vbind,sbind,lbind'))
-                   return bind'
- | otherwise = fail $ unlines'
+bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs 
+               (BD (tbind,vbind,sbind,lbind))
+  | valid = do 
+      feasibility <- feasibleSelfReference lv (S.toList vs)
+      lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
+                         (i,vc,is,ij) (BS vs) lbind
+      case feasibility of
+        Nothing -> return $ BD (tbind,vbind,sbind,lbind')
+        Just (vs',lv') -> do 
+          bind' <-  attemptFeasibleBinding lv lv'
+                      (BD (tbind,vbind,sbind,lbind'))
+          return bind'
+  | otherwise = fail $ unlines'
                 [ "bindLVarToVSet: incompatible class in variable set."
                 , "lv = "++show lv
                 , "vs = "++show vs
                 ]
- where
-    (valid, vsw) = vsCompatible vc Static vs
+ where (valid, vsw) = vsCompatible vc Static vs
 
-bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (tbind,vbind,sbind,lbind))
- | valid
-    = do feasibility <- feasibleSelfReference lv (S.toList vs)
-         sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(2)")
-                            (i,vc,is,ij) (bvs vs) lbind
-         case feasibility of
-           Nothing -> return $ BD (tbind,vbind,sbind',lbind')
-           Just (vs',lv')
-            -> do bind' <-  attemptFeasibleBinding lv lv'
-                                                   (BD (tbind,vbind,sbind',lbind'))
-                  return bind'
- | otherwise = fail "bindLVarToVSet: incompatible dynamic class."
- where
-   (valid, vsw) = vsCompatible vc vw vs
+bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs 
+               (BD (tbind,vbind,sbind,lbind))
+  | valid = do 
+      feasibility <- feasibleSelfReference lv (S.toList vs)
+      sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
+      lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(2)")
+                         (i,vc,is,ij) (bvs vs) lbind
+      case feasibility of
+        Nothing -> return $ BD (tbind,vbind,sbind',lbind')
+        Just (vs',lv') -> do 
+          bind' <-  attemptFeasibleBinding lv lv'
+                      (BD (tbind,vbind,sbind',lbind'))
+          return bind'
+  | otherwise = fail "bindLVarToVSet: incompatible dynamic class."
+  where (valid, vsw) = vsCompatible vc vw vs
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 \begin{code}
-overrideLVarToVSet :: MonadFail m => ListVar -> VarSet -> Binding -> m Binding
-overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (tbind,vbind,sbind,lbind))
- | valid
-    =  return $ BD (tbind,vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
+overrideLVarToVSet :: MonadFail m 
+                   => ListVar -> VarSet -> Binding -> m Binding
+overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs 
+                   (BD (tbind,vbind,sbind,lbind))
+ | valid  =  return 
+             $ BD (tbind,vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
  | otherwise = fail "overrideLVarToVSet: incompatible class in variable set."
- where
-    (valid, vsw) = vsCompatible vc Static vs
+ where (valid, vsw) = vsCompatible vc Static vs
 
-overrideLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (tbind,vbind,sbind,lbind))
- | valid
-    = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
-         return $ BD (tbind,vbind,sbind',M.insert (i,vc,is,ij) (bvs vs) lbind)
+overrideLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs 
+                   (BD (tbind,vbind,sbind,lbind))
+ | valid = do 
+     sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
+     return $ BD (tbind,vbind,sbind',M.insert (i,vc,is,ij) (bvs vs) lbind)
  | otherwise = fail "overrideLVarToVSet: incompatible dynamic class."
- where
-   (valid, vsw) = vsCompatible vc vw vs
+ where (valid, vsw) = vsCompatible vc vw vs
 
-overrideLVarToVSet _ _ _ = fail "overrideLVarToVSet: invalid lvar. -> vset binding."
+overrideLVarToVSet _ _ _ 
+  = fail "overrideLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 We need to coerce dynamics temporality to \texttt{Before}.
@@ -1465,24 +1477,23 @@ expression terms, all of whose dynamic variables have the same temporality.
 bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL 
                   (BD (tbind,vbind,sbind,lbind))
  | vc == PredV && any isExpr cndTs
-           =  fail "bindLVarSubstRepl: pred. l-var. cannot bind to expression."
+   =  fail "bindLVarSubstRepl: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cndTs
-           =  fail "bindLVarSubstRepl: non-pred. l-var. cannot bind to predicate."
+   = fail "bindLVarSubstRepl: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
- | otherwise -- wsize == 0,1
-    = do feasibility <- feasibleSelfReference lv $ map LstVar cndVL
-         sbind' <- if wsize == 1
-                     then bindSubscriptToSubscript "bindLVarSubstRepl(sbind)"
-                                                   vt thectw sbind
-                     else return sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(lbind)")
-                            (vi,vc,is,ij) (BX (cndTsVL')) lbind
-         case feasibility of
-           Nothing ->  return $ BD (tbind,vbind,sbind',lbind')
-           Just (vs,lv')
-            -> do bind' <- attemptFeasibleBinding lv lv'
-                                                  (BD (tbind,vbind,sbind',lbind'))
-                  return bind'
+ | otherwise = do  -- wsize == 0,1
+     feasibility <- feasibleSelfReference lv $ map LstVar cndVL
+     sbind' <- 
+       if wsize == 1
+       then bindSubscriptToSubscript "bindLVarSubstRepl(sbind)"
+              vt thectw sbind
+       else return sbind
+     lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(lbind)")
+                        (vi,vc,is,ij) (BX (cndTsVL')) lbind
+     case feasibility of
+       Nothing ->  return $ BD (tbind,vbind,sbind',lbind')
+       Just (vs,lv') -> 
+         attemptFeasibleBinding lv lv' (BD (tbind,vbind,sbind',lbind'))
  where
    (cndVL,cndTs) = partitionEithers cndTsVL
    ctws = temporalitiesOf cndTs
@@ -1518,7 +1529,8 @@ while a standard-variable can only bind to a standard variable.
 bindGVarToGVar :: MonadFail m => GenVar -> GenVar -> Binding -> m Binding
 bindGVarToGVar (LstVar lv) gv binds = bindLVarToVList lv [gv] binds
 bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
-bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
+bindGVarToGVar _ _ _ 
+  = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
 \end{code}
 
 \subsection{Binding General-Variables to Variable-Lists}
@@ -1530,7 +1542,8 @@ a singleton list.
 bindGVarToVList :: MonadFail m => GenVar -> VarList -> Binding -> m Binding
 bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
 bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
-bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
+bindGVarToVList _ _ _ 
+  = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
 \newpage
@@ -1571,7 +1584,8 @@ lookupVarBind (BD (tbind,vbind,sbind,_)) v@(Vbl vi vc (During m))
      Nothing -> fail ("lookupVarBind: Subscript ''"++m++"'' not found.")
      Just n ->
        case M.lookup (vi,vc) vbind of
-         Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
+         Nothing  
+           ->  fail ("lookupVarBind: Variable "++show v++" not found.")
          Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
          Just (BT xt)  ->  return $ BindTerm $ unTerm (During n) xt
          Just b -> fail $ unlines
@@ -1613,7 +1627,8 @@ lookupLstBind (BD (_,_,sbind,lbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
      Just n ->
        let dn = During n in
        case M.lookup (i,vc,is,ij) lbind of
-         Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+         Nothing
+           ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
          Just (BL vl)  ->  return $ BindList  $ map   (unGVar dn) vl
          Just (BS vs)  ->  return $ BindSet   $ S.map (unGVar dn) vs
          Just (BX tlvl)
@@ -1621,7 +1636,8 @@ lookupLstBind (BD (_,_,sbind,lbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
 
 lookupLstBind (BD (_,_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
   = case M.lookup (i,vc,is,ij) lbind of
-     Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+     Nothing         
+       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
      Just (BL vl)  ->  return $ BindList  $ map   (unGVar vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (unGVar vw) vs
      Just (BX tlvl)
@@ -1707,7 +1723,8 @@ bindKnown vts bind trm
 Known list-variables may have ``less'' components
 that are themselves bound}
 \begin{code}
-mkKnownBindings :: MonadFail m => [VarTable] -> VarSet -> Binding -> m Binding
+mkKnownBindings :: MonadFail m 
+                => [VarTable] -> VarSet -> Binding -> m Binding
 mkKnownBindings vts unbound bind
   = mkKBs vts bind $ S.toList unbound
   where
@@ -1843,7 +1860,8 @@ to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}
-mkFloatingBinding :: [VarTable] -> Binding -> [[ListVar]] -> VarSet -> Binding
+mkFloatingBinding :: [VarTable] -> Binding 
+                  -> [[ListVar]] -> VarSet -> Binding
 mkFloatingBinding vts bind substEqv vs
   = qB emptyBinding $ S.toList vs
   where
@@ -2106,11 +2124,12 @@ when a match is being applied.
 
 \begin{code}
 patchVarBind :: Variable -> Term -> Binding -> Binding
-patchVarBind v t (BD (tbind,vbind,sbind,lbind)) = BD (tbind,vbind',sbind,lbind)
- where
-   vbind' = M.mapWithKey f vbind
-   f _ (BV v') | v == v'  =  term2VarBind t
-   f _ bv                 =  bv
+patchVarBind v t (BD (tbind,vbind,sbind,lbind)) 
+  = BD (tbind,vbind',sbind,lbind)
+  where
+    vbind' = M.mapWithKey f vbind
+    f _ (BV v') | v == v'  =  term2VarBind t
+    f _ bv                 =  bv
 
 term2VarBind (Var _ v)  =  BV v
 term2VarBind t          =  BT t
@@ -2118,7 +2137,8 @@ term2VarBind t          =  BT t
 
 \begin{code}
 patchVarListBind :: ListVar -> VarList -> Binding -> Binding
-patchVarListBind lv vl (BD (tbind,vbind,sbind,lbind)) = BD (tbind,vbind,sbind,lbind')
+patchVarListBind lv vl (BD (tbind,vbind,sbind,lbind)) 
+  = BD (tbind,vbind,sbind,lbind')
   where
     lbind' = M.mapWithKey f lbind
     f _ (BL [LstVar lv']) | lv == lv'  =  BL vl
@@ -2160,27 +2180,28 @@ obx = ObsVar x Before  ; oax = ObsVar x After ; otx = ObsVar x Textual
 odx = ObsVar x (During "")
 odxm = ObsVar x _m ; odxn = ObsVar x _n
 
+
 tst_bind_VarToVar
  = testGroup "bind Var to Var"
     [ testCase "Obs-Static g |-> in -- should succeed"
         ( bindVarToVar osg osin emptyBinding
-          @?= Just (BD (M.empty, M.fromList [((g,ObsV),BV osin)], M.empty, M.empty)) )
+          @?= Just (BD (mt, M.fromList [((g,ObsV),BV osin)], mt, mt)) )
     , testCase "Obs-Before v |-> x -- should succeed"
         ( bindVarToVar obv obx emptyBinding
-          @?= Just (BD (M.empty, M.fromList [((v,ObsV),BI x)], M.empty, M.empty)) )
+          @?= Just (BD (mt, M.fromList [((v,ObsV),BI x)], mt, mt)) )
     , testCase "Obs-During v_m |-> x_m -- should succeed"
         ( bindVarToVar odvm odxm emptyBinding
-          @?= Just (BD (M.empty, M.fromList [((v,ObsV),BI x)],
-                       (M.fromList [("m","m")]), M.empty)) )
+          @?= Just (BD (mt, M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","m")]), mt)) )
     , testCase "Obs-During v_m |-> x_n -- should succeed"
         ( bindVarToVar odvm odxn emptyBinding
-          @?= Just (BD (M.empty, M.fromList [((v,ObsV),BI x)],
-                       (M.fromList [("m","n")]), M.empty)) )
+          @?= Just (BD (mt, M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","n")]), mt)) )
     , testCase "Obs-Before-During v ; v_m |-> x ; x_n -- should succeed"
         ( ( bindVarToVar odvm odxn $ fromJust
           $ bindVarToVar obv obx emptyBinding )
-          @?= Just (BD (M.empty, M.fromList [((v,ObsV),BI x)],
-                       (M.fromList [("m","n")]), M.empty)) )
+          @?= Just (BD (mt, M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","n")]), mt)) )
     , testCase "Obs-During conflict v_m ; v_m |-> x_n ; x_m -- should fail"
         ( ( bindVarToVar odvm odxm $ fromJust
           $ bindVarToVar odvm odxn emptyBinding )
@@ -2229,52 +2250,52 @@ tst_bind_VarToTerm
     [ testCase "Obs-Static g |-> x+y -- should succeed"
       ( bindVarToTerm osg xy emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((g,ObsV),BT xy)], M.empty, M.empty)) )
+        Just (BD (mt, M.fromList [((g,ObsV),BT xy)], mt, mt)) )
     , testCase "Obs-Static g |-> x'+y' -- should succeed"
       ( bindVarToTerm osg x'y' emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((g,ObsV),BT x'y')], M.empty, M.empty)) )
+        Just (BD (mt, M.fromList [((g,ObsV),BT x'y')], mt, mt)) )
     , testCase "Obs-Static g |-> x+y' -- should succeed"
       ( bindVarToTerm osg xy' emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((g,ObsV),BT xy')], M.empty, M.empty)) )
+        Just (BD (mt, M.fromList [((g,ObsV),BT xy')], mt, mt)) )
     , testCase "Expr-Before e |-> x+y -- should succeed"
       ( bindVarToTerm ebe xy emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((e,ExprV),BT xy)], M.empty, M.empty)) )
+        Just (BD (mt, M.fromList [((e,ExprV),BT xy)], mt, mt)) )
     , testCase "Expr-During em |-> x_m+y_m -- should succeed"
       ( bindVarToTerm edem xmym emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((e,ExprV),BT xy)],
-                 (M.fromList [("m","m")]), M.empty)) )
+        Just (BD (mt, M.fromList [((e,ExprV),BT xy)],
+                 (M.fromList [("m","m")]), mt)) )
     , testCase "Expr-During em |-> x_n+y_n -- should succeed"
       ( bindVarToTerm edem xnyn emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((e,ExprV),BT xy)],
-                 (M.fromList [("m","n")]), M.empty)) )
+        Just (BD (mt, M.fromList [((e,ExprV),BT xy)],
+                 (M.fromList [("m","n")]), mt)) )
     , testCase "Expr-After e' |-> x'+y' -- should succeed"
       ( bindVarToTerm eae x'y' emptyBinding
         @?=
-        Just (BD (M.empty, M.fromList [((e,ExprV),BT xy)], M.empty, M.empty)) )
+        Just (BD (mt, M.fromList [((e,ExprV),BT xy)], mt, mt)) )
     , testCase "em |-> x_n+y_n onto previous x'+y'-- should succeed"
       ( ( bindVarToTerm edem xnyn $
-          BD (M.empty, M.fromList [((e,ExprV),BT xy)], M.empty, M.empty) )
+          BD (mt, M.fromList [((e,ExprV),BT xy)], mt, mt) )
         @?=
-        Just (BD ( M.empty, M.fromList [((e,ExprV),BT xy)],
-                   M.fromList [("m","n")], M.empty)) )
+        Just (BD ( mt, M.fromList [((e,ExprV),BT xy)],
+                   M.fromList [("m","n")], mt)) )
     , testCase "e' |-> x'+y' onto previous xn+yn-- should succeed"
       ( ( bindVarToTerm eae x'y' $
-          BD (M.empty, M.fromList [((e,ExprV),BT xy)],
-              M.fromList [("m","n")], M.empty) )
+          BD (mt, M.fromList [((e,ExprV),BT xy)],
+              M.fromList [("m","n")], mt) )
         @?=
-        Just (BD ( M.empty, M.fromList [((e,ExprV),BT xy)]
-                 , M.fromList [("m","n")], M.empty) ) )
+        Just (BD ( mt, M.fromList [((e,ExprV),BT xy)]
+                 , M.fromList [("m","n")], mt) ) )
     , testCase "e' |-> x'+y' ; em |-> x_n+y_n -- should succeed"
       ( ( bindVarToTerm edem xnyn $ fromJust
           $ bindVarToTerm eae x'y' emptyBinding )
         @?=
-        Just (BD (M.empty, M.fromList [((e,ExprV),BT xy)],
-                  M.fromList [("m","n")], M.empty)) )
+        Just (BD (mt, M.fromList [((e,ExprV),BT xy)],
+                  M.fromList [("m","n")], mt)) )
 
     -- all subsequent bind attempts should fail
     , testCase "Obs-Before v |-> x+y -- should fail"

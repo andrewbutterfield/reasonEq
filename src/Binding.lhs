@@ -31,7 +31,7 @@ module Binding
 , lookupTypeVarBind
 , lookupVarBind
 , lookupLstBind
-, bindLVarsToNull, bindLVarsToEmpty
+, bindLVarsToNull, bindLVarsToEmpty, bindLVarsToSelf
 , mappedVars
 , onlyTrivialListVarBindings
 , findUnboundVars, bindKnown
@@ -1254,7 +1254,7 @@ attemptFeasibleBinding lV lW bind
 
 
 \newpage
-\subsection{Binding List-Variables to Variable-Sets}
+\subsection{Binding List-Variables to Variable-Lists}
 
 When we are inserting a variable-set (\texttt{BS}),
 we may find that a variable-list (\texttt{BL}) is present
@@ -1649,6 +1649,7 @@ lookupLstBind (BD (_,_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
 
 Binding a list of list-variables to the null list:
 \begin{code}
+bindLVarsToNull :: MonadFail m => Binding -> [ListVar] -> m Binding
 bindLVarsToNull bind [] = return bind
 bindLVarsToNull bind (lv:lvs)
  = do bind' <- bindLVarToVList lv [] bind
@@ -1657,10 +1658,21 @@ bindLVarsToNull bind (lv:lvs)
 
 Binding a list of list-variables to the empty set:
 \begin{code}
+bindLVarsToEmpty :: MonadFail m => Binding -> [ListVar] -> m Binding
 bindLVarsToEmpty bind [] = return bind
 bindLVarsToEmpty bind (lv:lvs)
  = do bind' <- bindLVarToVSet lv S.empty bind
       bindLVarsToEmpty bind' lvs
+\end{code}
+
+
+Binding a list of list-variables to themselves:
+\begin{code}
+bindLVarsToSelf :: MonadFail m => Binding -> [ListVar] -> m Binding
+bindLVarsToSelf bind [] = return bind
+bindLVarsToSelf bind (lv:lvs)
+ = do bind' <- bindLVarToVSet lv (S.singleton $ LstVar lv) bind
+      bindLVarsToSelf bind' lvs
 \end{code}
 
 \section{Mapped Variables}

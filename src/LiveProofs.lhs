@@ -304,11 +304,11 @@ and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 
 \begin{code}
 tryLawByName :: Assertion -> String -> [Int] -> [MatchContext] -> TypCmp
-               -> YesBut ( Binding    -- mapping from pattern to candidate
-                         , SideCond   -- Law side-condition
-                         , Term       -- autoInstantiated Law
-                         , SideCond   -- updated expanded candidate side-cond.
-                         , SideCond ) -- discharged(?) law side-condition
+             -> YesBut ( Binding    -- mapping from pattern to candidate
+                       , SideCond   -- Law side-condition
+                       , Term       -- autoInstantiated Law
+                       , SideCond   -- updated expanded candidate side-cond.
+                       , SideCond ) -- discharged(?) law side-condition
 tryLawByName (Assertion tC scC) lnm parts mcs fits
   = do (((_,(Assertion tP scP)),_),vts) <- findLaw lnm mcs
        (partsP,replP) <- findParts parts tP
@@ -341,10 +341,11 @@ First, try the structural match.
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tP="++trTerm 0 tP
-                   , "partsP="++trTerm 0 partsP
-                   , "replP="++trTerm 0 replP
+                   , "  scP="++trSideCond scP
+                   , "  partsP="++trTerm 0 partsP
+                   , "  replP="++trTerm 0 replP
                    , "tC="++trTerm 0 tC
-                   , "scC="++trSideCond scC
+                   , "  scC="++trSideCond scC
                    , "---"
                    ]++msgs)
 \end{code}

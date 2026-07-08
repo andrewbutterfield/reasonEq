@@ -268,6 +268,8 @@ $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC@(Bnd ttC nC vsC tbodyC) (Var ttP vP)
   | termtype tbodyC `fits` ttP  =  tvMatch vts fits bind cbvs pbvs tC ttP vP
+termMatch' vts fits bind cbvs pbvs tC@(Lam ttC nC vlC tbodyC) (Var ttP vP)
+  | termtype tbodyC `fits` ttP  =  tvMatch vts fits bind cbvs pbvs tC ttP vP
 \end{code}
 
 $$

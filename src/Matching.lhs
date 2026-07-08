@@ -147,51 +147,162 @@ match vts fits cand patn
 
 \newpage
 \section{Type Matching}
+This is the first thing done by \h{termMatch}.
 
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{typeMatch}
+$$
 \begin{code}
 type TVCmp = Identifier -> Identifier -> Bool
 typeMatch :: MonadFail m 
-          => (TypCmp,TVCmp) -> Binding -> Type -> Type
+          => (TypCmp -- Type -> Type -> Bool
+             ,TVCmp) -- Identifier -> Identifier -> Bool
+          -> Binding -> Type -> Type
           -> m Binding
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: \top \leadsto \beta}
+   \quad
+   \texttt{typeMatch ArbType}
+$$
+\begin{code}
 typeMatch _ bind typC ArbType       =  return bind 
+\end{code}
 
+$$
+\inferrule
+   {tv_C \sim tv_P}
+   {\beta \vdash tv_C :: tv_P \leadsto \beta \uplus \mapof{{tv_P}\mapsto{t_C}}}
+   \quad
+   \texttt{typeMatch TVar-TVar}
+$$
+\begin{code}
 typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)
   | iC `vfits` iP  =  bindTypeVarToType fits iP typC bind
+\end{code}
+
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: tv_P \leadsto \beta \uplus \mapof{{tv_P}\mapsto{t_C}}}
+   \quad
+   \texttt{typeMatch Type-TVar}
+$$
+\begin{code}
 typeMatch (fits,_) bind typC (TypeVar iP) 
                    =  bindTypeVarToType fits iP typC bind
--- !! will this work?
-typeMatch (fits,_) bind (TypeVar iC) typP 
-                   =  bindTypeVarToType fits iC typP bind
+\end{code}
 
+% $$
+% \inferrule
+%    {???}
+%    {\beta \vdash tv_C :: t_P \leadsto \mapof{{tv_C}\mapsto{t_P}}}
+%    \quad
+%    \texttt{type Check?}
+% $$
+% \begin{code}
+% -- !! will this work?
+% typeMatch (fits,_) bind (TypeVar iC) typP 
+%                    =  bindTypeVarToType fits iC typP bind
+% \end{code}
+
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
   | iC `vfits` iP = do
     bindI <- bindTypeVarToType fits iP (TypeVar iC) bind
     typesMatch (fits,vfits) bindI tsC tsP
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 typeMatch (fits,vfits) bind typC@(AlgType iC fsC) (AlgType iP fsP)
   | iC `vfits` iP && fsC == fsP   =  bindTypeVarToType fits iP typC bind
   -- temporary: we should typeMatch fsC!!i :: fsP!!i
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 typeMatch (fits,vfits) bind typC@(FunType tdC trC) (FunType tdP trP) = do
   bindD <- typeMatch (fits,vfits) bind tdC tdP
   typeMatch (fits,vfits) bindD trC trP
 
 typeMatch _ bind _ BottomType = return bind  
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 -- `vfits` not relevant here
 typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
   | iC == iP  =  bindTypeVarToType fits iP typC bind
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 -- typeMatch (fits,_) bind typC typP@(GivenType iP)
 --   | typC `fits` typP  =  bindTypeVarToType fits iP typC bind
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 typeMatch (fits,vfits) bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
                    , "typC = " ++ show typC
                    , "typP = " ++ show typP ]
+\end{code}
 
+$$
+\inferrule
+   {}
+   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   \quad
+   \texttt{type X}
+$$
+\begin{code}
 typesMatch (fits,vfits) bind [] [] = return bind
 typesMatch (fits,vfits) bind (tC:tsC) (tP:tsP) = do
   bindH <- typeMatch (fits,vfits) bind tC tP

@@ -461,7 +461,7 @@ $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   | all (gVarIsUnknownLVar vts) vlP
-    =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
+    =  do bind' <- bindLVarsToSelf bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
           termMatch vts fits bind' cbvs pbvs' tC tP
   where vlP = S.toList vsP
@@ -512,7 +512,7 @@ $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Lam ttP nP vlP tP)
   | all (gVarIsUnknownLVar vts) vlP
-    =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
+    =  do bind' <- bindLVarsToSelf bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
           termMatch vts fits bind' cbvs pbvs' tC tP
 \end{code}

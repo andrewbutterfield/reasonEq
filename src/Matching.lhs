@@ -252,7 +252,7 @@ termMatch' _ _ bind _ _ kC@(Val _ _) kP@(Val _ _)
 Here we have 
 Variable matching is complicated, so we farm it out,
 as long as \texttt{Type}s match.
-Here we have an issue if \h{tC} is a \h{Bnd},
+Here we have an issue if \h{tC} is a \h{Bnd} or a \h{Lam},
 in which case we expect the type of its \emph{body} 
 to fit with the type of \h{vP}.
 

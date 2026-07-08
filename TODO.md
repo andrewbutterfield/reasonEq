@@ -48,16 +48,15 @@ Fixing bugs as we go.
 
   - need to fix match failure below:
 
-    The `one_point` conjecture is not true: 
-    take `P == true` and consider when `x$ /= e$` (!)
+    The issue is that we get a `Cons` goal matching a `Bnd` pattern with unknown list-variables as quantifiers (`termMatch Binding0`). Currently these are all bound to the empty set. 
 
-    A comment in `Forall.lhs` suggest we should use implication.
-    Let's do this.
-
-    This is still be a problem, though.
+    Proposal: bind them to themselves? 
+    Note that this has been done for a while without apparent harmfull effects.
 
     ```
     proof> tm 1 forall_one_point
+
+    @trmM.bindT = { B |-> Bool,  x$ |-> {},  y$ |-> {} }  
     Match against 'forall_one_point'[1] failed!
     try match failed
 
@@ -65,12 +64,13 @@ Fixing bugs as we go.
 
     lnm[parts]=forall_one_point[1]
     tP=(∀ x$,y$  • (x$=e$) ⟹  P) ≡ (∀ y$  • P[e$/x$])
-    partsP=(∀ x$,y$  • (x$=e$) ⟹  P)
-    replP=(∀ y$  • P[e$/x$])
+      scP=(e$⋔x$)
+      partsP=(∀ x$,y$  • (x$=e$) ⟹  P)
+      replP=(∀ y$  • P[e$/x$])
     tC=(x$=e$) ⟹  P
-    scC=(e$⋔x$)
+      scC=(e$⋔x$)
     ---
-    bindLVarToVList(static): already bound differently(2).
+    bindLVarToVList(static): already bound differently(var-aggregate).
     lv = (Id "x" 0,VO,[],[])
     new vc1 = BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
     old vc2 = BS (fromList [])

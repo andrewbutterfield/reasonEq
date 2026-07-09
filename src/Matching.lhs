@@ -1073,7 +1073,7 @@ $$
            {\beta \uplus \{ v_P \mapsto v_P \}}
   }
    \quad
-   \texttt{tvM-Knwn-Var-Refl}
+   \texttt{tvM-Kn-V-Refl}
 $$
 $$
 \inferrule
@@ -1085,11 +1085,10 @@ $$
      \and
      t_C = \kappa s(v_P)
   }
-   {\kappa s;\beta;B_P}{t_C}{v_P
-    \leadsto
-    \beta \uplus \{ v_P \mapsto v_C \}}
+  { \mrule{\kappa s;\beta;B_P}{t_C}{v_P}{\beta \uplus \{ v_P \mapsto v_C \}}
+  }
    \quad
-   \texttt{tvM-Knwn-Var-Var}
+   \texttt{tvM-KnV-V}
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
@@ -1108,11 +1107,11 @@ $$
      \and
      t_C = \kappa s(v_P)
   }
-   {\kappa s;\beta;B_P}{t_C}{v_P
-    \leadsto
-    \beta \uplus \{ v_P \mapsto t_C \}}
+  { \mrule {\kappa s;\beta;B_P}{t_C}{v_P}
+           {\beta \uplus \{ v_P \mapsto t_C \}}
+  }
    \quad
-   \texttt{tvM-Known-Var-TVal}
+   \texttt{tvM-KnV-TVal}
 $$
 $$
 \inferrule
@@ -1124,11 +1123,11 @@ $$
      \and
      \kappa s(v_P) : T
   }
-   {\kappa s;\beta;B_P}{t_C}{v_P
-    \leadsto
-    \beta \uplus \{ v_P \mapsto t_C \}}
+  { \mrule{ \kappa s;\beta;B_P}{t_C}{v_P}
+          {\beta \uplus \{ v_P \mapsto t_C \}}
+  }
    \quad
-   \texttt{tvM-Known-Var-TType}
+   \texttt{tvM-KnV-TTyp}
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
@@ -1266,10 +1265,9 @@ $$
       \and
      v_C \in B_C
    }
-   {\beta;(B_C,B_P)}{v_C}{v_P
-   }{\beta \uplus \{ v_P \mapsto v_C \}}
+   { \mrule{ \beta;(B_C,B_P)}{v_C}{v_P}{\beta \uplus \{ v_P \mapsto v_C \}} }
    \quad
-   \texttt{vMatch Bound-Var}
+   \texttt{vM-Bnd-V}
 $$
 In addition, both variables must have the same class.
 \begin{code}
@@ -1342,7 +1340,8 @@ where some candidates may be leftover, to be bound by collection variables.
 \section{Variable-List Matching}
 
 \begin{code}
-vlMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
+vlMatch :: (MonadPlus mp, MonadFail mp) 
+        => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
         -> VarList -> VarList -> mp Binding
 \end{code}
 
@@ -2308,7 +2307,7 @@ vsKnownMatch vts fits bind cbvs pbvs vsC (uvsP,ulsP)
 \newpage
 \subsection{Known List-Var Expansion Matching (Sets)}
 
-Our expansion clasification devloped above for lists
+Our expansion clasification developed above for lists
 applies equally well to sets, with cardinality replacing length.
 
 
@@ -2870,8 +2869,8 @@ So the substitution pattern match problem is:
 This an instance of a ``collection'' match (\textsection\ref{ssec:coll-matching})
 so the feasibility constraints given there apply:
 \begin{code}
-isFeasibleSubstnMatch :: Substn -> Substn -> Bool
-isFeasibleSubstnMatch (Substn tsC lvsC) (Substn tsP lvsP)
+isFeasibleSubMatch :: Substn -> Substn -> Bool
+isFeasibleSubMatch (Substn tsC lvsC) (Substn tsP lvsP)
   = let m = S.size tsP
         n = S.size lvsP
         p = S.size tsC
@@ -2896,16 +2895,15 @@ Similarly, $r$ denotes one substitution replacement (list-variable or term)
 while $R$ is a collection of same.
 $$
 \inferrule
-   { \beta}{G_{C_j}}{g_{P_i}}{\beta_{t_i}
+   { \mrule {\beta}{G_{C_j}}{g_{P_i}}{\beta_{t_i}}
      \and
-     \beta \uplus \{\beta_{t_i}\}}{R_{C_j}}{r_{P_i}}{\beta_{r_i}
+     \mrule {\beta \uplus \{\beta_{t_i}\}}{R_{C_j}}{r_{P_i}}{\beta_{r_i}}
    }
-   { \beta}{[R_{C_j}/G_{C_j}]_j}{[r_{P_i}/g_{P_i}]_i
-     \leadsto
-     \uplus \{\beta_{t_i}\uplus\beta_{r_i}\}
+   { \mrule {\beta}{[R_{C_j}/G_{C_j}]_j}{[r_{P_i}/g_{P_i}]_i}
+            {\uplus \{\beta_{t_i}\uplus\beta_{r_i}\} }
    }
    \quad
-   \texttt{sMatch}
+   \texttt{sM}
 $$
 \begin{code}
 sMatch :: (MonadPlus mp, MonadFail mp)
@@ -2913,8 +2911,8 @@ sMatch :: (MonadPlus mp, MonadFail mp)
        -> Substn -> Substn
        -> mp Binding
 sMatch vts fits bind cbvs pbvs subC subP
-  | isFeasibleSubstnMatch subC subP  =  sMatch' vts fits bind cbvs pbvs subC subP
-  | otherwise                        =  fail "infeasible substition match"
+  | isFeasibleSubMatch subC subP = sMatch' vts fits bind cbvs pbvs subC subP
+  | otherwise                    =  fail "infeasible substition match"
 \end{code}
 
 We match substitutions by first trying every way

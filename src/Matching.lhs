@@ -374,7 +374,16 @@ $$
  giving the incorrect replacment $\forall \lst y \bullet P[\lst e/\lst x]$.
 
 We now present how we should match this:
-(TBD)
+$$
+\inferrule
+   {\inferrule{a}{b} \and c \and \inferrule{d}{e} } 
+   {\kappa s;\theta;(\emptyset,\emptyset) 
+    \vdash 
+    \lst x = \lst e \implies P \equiv P 
+    :: 
+    \forall \lst x,\lst y \bullet \lst x = \lst e \implies P 
+    \leadsto \beta}
+$$
 
 
 \subsection{Value Term-Pattern (\texttt{Val})}

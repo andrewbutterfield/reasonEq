@@ -341,6 +341,42 @@ a constructor term matches against an iteration.
 itop = jId "_itop"
 \end{code}
 
+\textbf{Current Bug}
+The problematic pattern match is the following LHS match:
+\begin{eqnarray*}
+   t_C && \lst x = \lst e \implies P \equiv P
+\\ axiom && (\forall \lst x,\lst y \bullet \lst x = \lst e \implies P) 
+          \equiv 
+          (\forall \lst y \bullet P[\lst e/\lst x])
+\\ t_P && (\forall \lst x,\lst y \bullet \lst x = \lst e \implies P) 
+\end{eqnarray*}
+The match 
+$$
+   \lst x = \lst e \implies P \equiv P
+   \quad :: \quad
+   \forall \lst x,\lst y \bullet \lst x = \lst e \implies P
+$$
+should succeed with binding
+$$
+  \mapof{ B \mapsto \Bool
+        , P \mapsto P
+        , \implies \mapsto \implies
+        , \lst e \mapsto \lst e
+        , \lst x \mapsto \lst x
+        , \lst y \mapsto \emptyset
+        }
+$$
+and replacement:
+$$
+P[\lst e/\lst x]~.
+$$
+ The issue is that we get $\lst y$ bound (incorrectly) to $\setof{\lst y}$
+ giving the incorrect replacment $\forall \lst y \bullet P[\lst e/\lst x]$.
+
+We now present how we should match this:
+(TBD)
+
+
 \subsection{Value Term-Pattern (\texttt{Val})}
 
 Values only match themselves, and add no new bindings.

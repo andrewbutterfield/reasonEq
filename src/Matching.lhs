@@ -46,7 +46,7 @@ in some context ($\Gamma$),
 to obtain a binding ($\beta$), if successful,
 of pattern variables to appropriate term components.
 $$
-\Gamma \vdash C :: P  \leadsto \beta
+\mrule{\Gamma}{C}{P}{\beta}
 $$
 The context has two components,
 the first ($\kappa$) being the known variables,
@@ -55,7 +55,7 @@ We need to track bound variables for both
 the candidate ($B_C$)
 and pattern ($B_P$)
 $$
-\kappa;(B_C,B_P) \vdash C :: P  \leadsto \beta
+\mrule{\kappa;(B_C,B_P)}{C}{P}{\beta}
 $$
 The use-case that is most common in the planned use for matching
 is where we want to match a single candidate against many patterns.
@@ -71,7 +71,7 @@ doing matching on one sub-component at a time,
 passing the partial binding result along and attempting to add new bindings
 directly into it.
 $$
-\kappa;\beta;(B_C,B_P) \vdash C :: P \leadsto \beta'
+\mrule{\kappa;\beta;(B_C,B_P)}{C}{P}{\beta'}
 $$
 We also posit a binary partial operator ($\uplus$) that merges two bindings
 as long as overlapping entries agree,
@@ -86,10 +86,12 @@ We also need to support the idea that some patterns may match a given
 candidate in more than one way,
 so we would like to return a list of bindings,
 leading us to adopt the \texttt{MonadPlus} class.
-$$
-\kappa;\beta;(B_C,B_P) \vdash C :: P
-\leadsto \langle \beta'_1 , \dots , \beta'_n \rangle
-$$
+
+
+% $\mrule{\kappa;\beta;(B_C,B_P)}{C}{P}{\langle\beta'_1,\dots,\beta'_n\rangle}$
+
+$$\mrule{\kappa;\beta;(B_C,B_P)}{C}{P}{\langle\beta'_1,\dots,\beta'_n\rangle}$$
+
 Each of the $\beta'_i$
 has the general form $\beta'_{i1} \uplus \dots \uplus \beta'_{ik_i}$,
 and a rule applies provided at least one of the $\beta'_i$ is defined.
@@ -132,10 +134,10 @@ We initialise the bound-variable sets to empty ($\emptyset$)
 and the bindings already obtained to the null map ($\theta$).
 $$
 \inferrule
-   {\kappa s;\theta;(\emptyset,\emptyset) \vdash C :: P \leadsto \beta s}
-   {\kappa s \vdash C :: P \leadsto \beta s}
+   {\mrule{\kappa s;\theta;(\emptyset,\emptyset)}{C}{P}{\beta s}}
+   {\mrule{\kappa s}{C}{P}{\beta s}}
    \quad
-   \texttt{match}
+   \texttt{M}
 $$
 \begin{code}
 match :: (MonadPlus mp, MonadFail mp) 
@@ -147,15 +149,15 @@ match vts fits cand patn
 
 \newpage
 \section{Type Matching}
-This is the first thing done by \h{termMatch}.
+This is the first thing done by \h{typeMatch}.
 
 
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{typeMatch}
+   \texttt{tyM}
 $$
 \begin{code}
 type TVCmp = Identifier -> Identifier -> Bool
@@ -169,9 +171,9 @@ typeMatch :: MonadFail m
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: \top \leadsto \beta}
+   {\mrule{\beta}{t_C}{\top}{\beta}}
    \quad
-   \texttt{typeMatch ArbType}
+   \texttt{tyM-Arb}
 $$
 \begin{code}
 typeMatch _ bind typC ArbType       =  return bind 
@@ -180,9 +182,9 @@ typeMatch _ bind typC ArbType       =  return bind
 $$
 \inferrule
    {tv_C \sim tv_P}
-   {\beta \vdash tv_C :: tv_P \leadsto \beta \uplus \mapof{{tv_P}\mapsto{t_C}}}
+   {\mrule{\beta}{tv_C}{tv_P}{\beta \uplus \mapof{{tv_P}\mapsto{t_C}}}}
    \quad
-   \texttt{typeMatch TVar-TVar}
+   \texttt{tyM-TV-TV}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)
@@ -192,9 +194,9 @@ typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: tv_P \leadsto \beta \uplus \mapof{{tv_P}\mapsto{t_C}}}
+   {\mrule{\beta}{t_C}{tv_P}{\beta \uplus \mapof{{tv_P}\mapsto{t_C}}}}
    \quad
-   \texttt{typeMatch Type-TVar}
+   \texttt{tyM-T-TV}
 $$
 \begin{code}
 typeMatch (fits,_) bind typC (TypeVar iP) 
@@ -204,22 +206,22 @@ typeMatch (fits,_) bind typC (TypeVar iP)
 % $$
 % \inferrule
 %    {???}
-%    {\beta \vdash tv_C :: t_P \leadsto \mapof{{tv_C}\mapsto{t_P}}}
+%    {\mrule{\beta}{tv_C}{t_P}{\mapof{{tv_C}\mapsto{t_P}}}}
 %    \quad
 %    \texttt{type Check?}
 % $$
 % \begin{code}
 % -- !! will this work?
-% typeMatch (fits,_) bind (TypeVar iC) typP 
+% tyM (fits,_) bind (TypeVar iC) typP 
 %                    =  bindTypeVarToType fits iC typP bind
 % \end{code}
 
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
@@ -231,9 +233,9 @@ typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(AlgType iC fsC) (AlgType iP fsP)
@@ -244,9 +246,9 @@ typeMatch (fits,vfits) bind typC@(AlgType iC fsC) (AlgType iP fsP)
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(FunType tdC trC) (FunType tdP trP) = do
@@ -259,9 +261,9 @@ typeMatch _ bind _ BottomType = return bind
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 -- `vfits` not relevant here
@@ -272,9 +274,9 @@ typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 -- typeMatch (fits,_) bind typC typP@(GivenType iP)
@@ -284,9 +286,9 @@ $$
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC typP 
@@ -298,9 +300,9 @@ typeMatch (fits,vfits) bind typC typP
 $$
 \inferrule
    {}
-   {\beta \vdash t_C :: t_P \leadsto \beta s}
+   {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{type X}
+   \texttt{tyM-X}
 $$
 \begin{code}
 typesMatch (fits,vfits) bind [] [] = return bind
@@ -345,16 +347,16 @@ itop = jId "_itop"
 The problematic pattern match is the following LHS match:
 \begin{eqnarray*}
    t_C && \lst x = \lst e \implies P \equiv P
-\\ axiom && (\forall \lst x,\lst y \bullet \lst x = \lst e \implies P) 
+\\ axiom && (\forall \lst x,\lst y \st \lst x = \lst e \implies P) 
           \equiv 
-          (\forall \lst y \bullet P[\lst e/\lst x])
-\\ t_P && (\forall \lst x,\lst y \bullet \lst x = \lst e \implies P) 
+          (\forall \lst y \st P[\lst e/\lst x])
+\\ t_P && (\forall \lst x,\lst y \st \lst x = \lst e \implies P) 
 \end{eqnarray*}
 The match 
 $$
    \lst x = \lst e \implies P \equiv P
    \quad :: \quad
-   \forall \lst x,\lst y \bullet \lst x = \lst e \implies P
+   \forall \lst x,\lst y \st \lst x = \lst e \implies P
 $$
 should succeed with binding
 $$
@@ -371,18 +373,15 @@ $$
 P[\lst e/\lst x]~.
 $$
  The issue is that we get $\lst y$ bound (incorrectly) to $\setof{\lst y}$
- giving the incorrect replacment $\forall \lst y \bullet P[\lst e/\lst x]$.
+ giving the incorrect replacment $\forall \lst y \st P[\lst e/\lst x]$.
 
 We now present how we should match this:
 $$
 \inferrule
-   {\inferrule{a}{b} \and c \and \inferrule{d}{e} } 
-   {\kappa s;\theta;(\emptyset,\emptyset) 
-    \vdash 
-    \lst x = \lst e \implies P \equiv P 
-    :: 
-    \forall \lst x,\lst y \bullet \lst x = \lst e \implies P 
-    \leadsto \beta}
+   {\mrule{a}{b}{c}{d}} 
+   {\mrule{\kappa s;\theta;(\emptyset,\emptyset)}{\lst x = \lst e \implies P \equiv P}
+          {\forall \lst x,\lst y \st \lst x = \lst e \implies P}{\beta}
+   }
 $$
 
 
@@ -393,9 +392,9 @@ Values only match themselves, and add no new bindings.
 $$
 \inferrule
    {{\kk k}_C = {\kk k}_P}
-   {\beta \vdash {\kk k}_C :: {\kk k}_P \leadsto \beta}
+   {\mrule{\beta}{{\kk k}_C}{{\kk k}_P}{\beta}}
    \quad
-   \texttt{termMatch Val}
+   \texttt{tmM-Val}
 $$
 
 \begin{code}
@@ -416,10 +415,10 @@ $$
 \inferrule
    {type(t_C) \cong type(v_P)
     \and
-    \beta \vdash \bb{n_C}{vs_C}{t_C} :: v_P \leadsto \beta'}
-   {\beta \vdash \bb{n_C}{vs_C}{t_C}  :: {\vv v}_P \leadsto \beta'}
+    {\mrule{\beta}{\bb{n_C}{vs_C}{t_C}}{v_P}{\beta'}}}
+   {\mrule{\beta}{\bb{n_C}{vs_C}{t_C} }{{\vv v}_P}{\beta'}}
    \quad
-   \texttt{termMatch Bind vs Var}
+   \texttt{tmM-Bnd-Var}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC@(Bnd ttC nC vsC tbodyC) (Var ttP vP)
@@ -430,10 +429,10 @@ termMatch' vts fits bind cbvs pbvs tC@(Lam ttC nC vlC tbodyC) (Var ttP vP)
 
 $$
 \inferrule
-   {\beta \vdash t_C :: v_P \leadsto \beta'}
-   {\beta \vdash t_C :: {\vv v}_P \leadsto \beta'}
+   {\mrule{\beta}{t_C}{v_P}{\beta'}}
+   {\mrule{\beta}{t_C}{{\vv v}_P}{\beta'}}
    \quad
-   \texttt{termMatch non-Bind vs Var}
+   \texttt{tmM-nonBnd-Var}
 $$
 
 \begin{code}
@@ -450,20 +449,22 @@ and the term-lists are of the same length and corresponding terms match.
 
 $$
 \inferrule
-   { \beta \vdash n_C :: n_P \leadsto \beta_0
+   {{\mrule {\beta}{n_C}{n_P}{\beta_0}}
      \and
-     \beta \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
+    {\mrule{\beta}{t_{C_i}}{t_{P_i}}{\beta_i}}
    }
-   {\beta \vdash \cc{n_C}{ts_C} :: \cc{n_P}{ts_P}
-    \leadsto
-    \uplus_{i \in 0\dots n}\{\beta_i\}}
+   {\mrule{\beta}
+          {\cc{n_C}{ts_C}}
+          {\cc{n_P}{ts_P}}
+          {\uplus_{i \in 0\dots n} \beta_i }}
    \quad
-   \texttt{termMatch Cons}
+   \texttt{tmM-Cons}
 $$
 
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-termMatch' vts fits bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
+termMatch' vts fits bind cbvs pbvs 
+           (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
  | ttC `fits` ttP && sbC == sbP
    =  do bind0 <- consBind vts fits bind cbvs pbvs ttC nC nP
          tsMatch vts fits bind0 cbvs pbvs tsC tsP
@@ -477,18 +478,16 @@ that matches the outer name of the Iterator,
 and the replacement term has an occurrence of the iterator.
 We use the special (meta-)variable \itop\ to record this.
 
-Single case:
+Single case: !
 $$
 \inferrule
   {ni_C = n_P \and ts_P[i] = \vv v_i}
-  {\beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \cc {n_P}{ts_P} 
-     \leadsto
-     \beta 
-     \uplus 
-     \{ \itop \mapsto na_C \}
-     \uplus
-     \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
-  \quad\texttt{termMatch Single-Iter}
+  { \mrule {\beta}
+           {\ii{na_C}{ni_C}{lvs_C}}
+           {\cc {n_P}{ts_P}}
+           {\beta \uplus \{ \itop \mapsto na_C \}
+                  \uplus \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}} }
+  \quad\texttt{tmM-1-Itr}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
@@ -510,12 +509,13 @@ termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP
 $$
 \inferrule
    {ni_C = ni_P \and \#\seqof{t_I} = \#lvs_P}
-   { \beta \vdash ni_C\seqof{t_I} :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
+   { \mrule {\beta}
+            {ni_C\seqof{t_I}}
+            {\ii{na_P}{ni_P}{lvs_P}}
+            {\beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}}
    }
    \quad
-   \texttt{termMatch Iter-Single}
+   \texttt{tmM-Itr-1}
 $$
 
 
@@ -523,11 +523,10 @@ General case:
 $$
 \inferrule
   {this}
-  {\beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \cc {na_P}{ts_P}
-     \leadsto
-     \beta \uplus (\frown) \beta_j}
+  { \mrule {\beta}{\ii{na_C}{ni_C}{lvs_C}}{\cc {na_P}{ts_P}}
+           {\beta \uplus (\frown) \beta_j} }
   \quad
-  \texttt{termMatch Cons-Iter}
+  \texttt{tmM-Cns-Itr}
 $$
 
 $$
@@ -550,12 +549,13 @@ $$
      \land
      \beta_j = \{lvs_P[i] \mapsto lvs_C[i]\}
    }
-   { \beta \vdash na_C({t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus (\frown) \beta_j
+   { \mrule {\beta}
+            {na_C({t_C}_j)}
+            {\ii{na_P}{ni_P}{lvs_P}}
+            {\beta \uplus (\frown) \beta_j} 
    }
    \quad
-   \texttt{termMatch Iter-Cons}
+   \texttt{tmM-Itr-Cns}
 $$
 We use $(\frown)$ to denote the ``striping'' of the mappings,
 e.g.
@@ -573,18 +573,18 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta;(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+    {\mrule{\beta;(B_C\cup vs_C,B_P\cup vs_P)}{t_C}{t_P}{\beta'_t}}
     \and
-    \beta \vdash vs_C :: vs_P \leadsto \beta'_{vs}
+    {\mrule{\beta}{vs_C}{vs_P}{\beta'_{vs}}}
    }
-   { \beta;(B_C,B_P) \vdash \bb{n_C}{vs_C}{t_C} :: \bb{n_P}{vs_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_{vs}
+   { \mrule {\beta;(B_C,B_P)}
+            {\bb{n_C}{vs_C}{t_C}}{\bb{n_P}{vs_P}{t_P}}
+            {\beta \uplus \beta'_t \uplus \beta'_{vs}}
    }
    \quad
-   \texttt{termMatch Binding}
+   \texttt{tmM-Bnd}
 $$
-Remember, the type of $\forall \lst x \bullet P$ is the type of $P$:
+Remember, the type of $\forall \lst x \st P$ is the type of $P$:
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
   | (termtype tC) `fits` (termtype tP) && nC == nP
@@ -605,14 +605,14 @@ $$
    \and
    \beta_{vs} = \{ \lst{vs}_P \mapsto \emptyset \}
    \and
-   \kappa s;\beta\uplus \beta_{vs};(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+   \mrule {\kappa s;\beta\uplus \beta_{vs};(B_C\cup vs_C,B_P\cup vs_P)}
+          {t_C}{t_P}{\beta'_t}
    }
-   { \kappa s;\beta;(B_C,B_P) \vdash t_C :: \bb{n_P}{\lst{vs}_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_{vs}
+   { \mrule{\kappa s;\beta;(B_C,B_P)}{t_C}{\bb{n_P}{\lst{vs}_P}{t_P}}
+           {\beta \uplus \beta'_t \uplus \beta'_{vs}}
    }
    \quad
-   \texttt{termMatch Binding0}
+   \texttt{tmM-Bnd0}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Bnd ttP nP vsP tP)
@@ -630,16 +630,15 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta;(B_C\cup vl_C,B_P\cup vl_P) \vdash t_C :: t_P \leadsto \beta'_t
+    \mrule{\beta;(B_C\cup vl_C,B_P\cup vl_P)}{t_C}{t_P}{\beta'_t}
     \and
-    \beta \vdash vl_C :: vl_P \leadsto \beta'_{vl}
+    \mrule{\beta}{vl_C}{vl_P}{\beta'_{vl}}
    }
-   { \beta;(B_C,B_P) \vdash \ll{n_C}{vl_C}{t_C} :: \ll{n_P}{vl_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_{vl}
+   { \mrule {\beta;(B_C,B_P)}{\ll{n_C}{vl_C}{t_C}}{\ll{n_P}{vl_P}{t_P}}
+            {\beta \uplus \beta'_t \uplus \beta'_{vl}}
    }
    \quad
-   \texttt{termMatch Lambda}
+   \texttt{tmM-Lam}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
@@ -656,14 +655,15 @@ $$
    \and
    \beta_{vl} = \{ \lst{vl}_P \mapsto \nil \}
    \and
-   \kappa s;\beta\uplus \beta_{vl};(B_C\cup vl_C,B_P\cup vl_P) \vdash t_C :: t_P \leadsto \beta'_t
+   \mrule{\kappa s;\beta\uplus \beta_{vl};(B_C\cup vl_C,B_P\cup vl_P)}
+         {t_C}{t_P}
+         {\beta'_t}
    }
-   { \kappa s;\beta;(B_C,B_P) \vdash t_C :: \ll{n_P}{\lst{vl}_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_{vl}
+   { \mrule {\kappa s;\beta;(B_C,B_P)}{t_C}{\ll{n_P}{\lst{vl}_P}{t_P}}
+            {\beta \uplus \beta'_t \uplus \beta'_{vl}}
    }
    \quad
-   \texttt{termMatch Lambda0}
+   \texttt{tmM-Lam0}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Lam ttP nP vlP tP)
@@ -680,14 +680,12 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta;(\fv(t_C),\fv(t_P)) \vdash t_C :: t_P \leadsto \beta'
+    \mrule{\beta;(\fv(t_C),\fv(t_P))}{t_C}{t_P}{\beta'}
    }
-   { \beta \vdash \xx{n_C}{t_C} :: \xx{n_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'
+   { \mrule{\beta}{\xx{n_C}{t_C}}{\xx{n_P}{t_P}}{\beta \uplus \beta'}
    }
    \quad
-   \texttt{termMatch Closure}
+   \texttt{tmM-Cls}
 $$
 Note that here we only close w.r.t. free \emph{observational} variables.
 \begin{code}
@@ -704,16 +702,15 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta \vdash t_C :: t_P \leadsto \beta'_t
+    \mrule{\beta}{t_C}{t_P}{\beta'_t}
     \and
-    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
+    \mrule{\beta}{\sigma_C}{\sigma_P}{\beta'_\sigma}
    }
-   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_\sigma
+   { \mrule {\beta}{t_C\sigma_C}{t_P\sigma_P}
+            {\beta \uplus \beta'_t \uplus \beta'_\sigma}
    }
    \quad
-   \texttt{termMatch Subst}
+   \texttt{tmM-Sub}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
@@ -732,12 +729,11 @@ $$
    {na_C = na_P \and ni_C = ni_P
     \and \#lvs_C = \#lvs_P
    }
-   { \beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}
+   { \mrule{\beta}{\ii{na_C}{ni_C}{lvs_C}}{\ii{na_P}{ni_P}{lvs_P}}
+     {\beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}}
    }
    \quad
-   \texttt{termMatch Iter-Self}
+   \texttt{tmM-Itr-Slf}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
@@ -764,12 +760,11 @@ without the application of the top-level operator $na$.
 $$
 \inferrule
    {ni_C = ni_P \and \#\seqof{t_I} = \#lvs_P}
-   { \beta \vdash ni_C\seqof{t_I} :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
+   { \mrule{\beta}{ni_C\seqof{t_I}}{\ii{na_P}{ni_P}{lvs_P}}
+           {\beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}}
    }
    \quad
-   \texttt{termMatch Iter-Single}
+   \texttt{tmM-Itr-1}
 $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC@(Cons ttC siC niC tsC)
@@ -834,12 +829,11 @@ $$
      \land
      \beta_j = \{lvs_P[i] \mapsto lvs_C[i]\}
    }
-   { \beta \vdash na_C({t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus (\frown) \beta_j
+   { \mrule {\beta}{na_C({t_C}_j)}{\ii{na_P}{ni_P}{lvs_P}}
+            {\beta \uplus (\frown) \beta_j}
    }
    \quad
-   \texttt{termMatch Iter-Cons}
+   \texttt{tmM-Itr-Cns}
 $$
 We use $(\frown)$ to denote the ``striping'' of the mappings,
 e.g.
@@ -910,12 +904,12 @@ termMatch' vts fits bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 %    \and
 %    \#(\seqof{t_{C}}[j]) = \#lvs_P
 %    }
-%    { \beta \vdash na_C(ni_C\seqof{t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
+%    { \beta}{na_C(ni_C\seqof{t_C}_j)}{\ii{na_P}{ni_P}{lvs_P}
 %      \leadsto
 %      \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
 %    }
 %    \quad
-%    \texttt{termMatch Iter-Only-Cons}
+%    \texttt{tmM-Iter-Only-Cons}
 % $$
 % This does not cater for a partial expansion!
 % \begin{code}
@@ -1006,10 +1000,7 @@ Here we are matching a candidate term \m{t_C} against a variable pattern \m{v_P}
 $$
 \inferrule
    {  conditions }
-   { \Gamma 
-     \vdash t_C :: v_P
-    \leadsto
-    \beta \uplus \{ v_P \mapsto t_C \}
+   { \mrule {\Gamma}{t_C}{v_P}{\beta \uplus \{ v_P \mapsto t_C \}}
   }  
 $$
 
@@ -1046,12 +1037,11 @@ tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
 $$
 \inferrule
    { v_P \notin B_P \cup \mathbf{dom}\,\kappa s}
-   { \kappa s;\beta;B_P \vdash t_C :: v_P
-    \leadsto
-    \beta \uplus \{ v_P \mapsto t_C \}
-  }
+   { \mrule {\kappa s;\beta;B_P}{t_C}{v_P}
+            {\beta \uplus \{ v_P \mapsto t_C \}}
+   }
    \quad
-   \texttt{tvMatch Arbitrary}
+   \texttt{tvM-Arb}
 $$
 \begin{code}
 --tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
@@ -1079,11 +1069,11 @@ $$
      \and
      v_P = v_C
   }
-   {\kappa s;\beta;B_P \vdash t_C :: v_P
-   \leadsto
-   \beta \uplus \{ v_P \mapsto v_P \}}
+  { \mrule{\kappa s;\beta;B_P}{t_C}{v_P}
+           {\beta \uplus \{ v_P \mapsto v_P \}}
+  }
    \quad
-   \texttt{tvMatch Known-Var-Refl}
+   \texttt{tvM-Knwn-Var-Refl}
 $$
 $$
 \inferrule
@@ -1095,11 +1085,11 @@ $$
      \and
      t_C = \kappa s(v_P)
   }
-   {\kappa s;\beta;B_P \vdash t_C :: v_P
+   {\kappa s;\beta;B_P}{t_C}{v_P
     \leadsto
     \beta \uplus \{ v_P \mapsto v_C \}}
    \quad
-   \texttt{tvMatch Known-Var-Var}
+   \texttt{tvM-Knwn-Var-Var}
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
@@ -1118,11 +1108,11 @@ $$
      \and
      t_C = \kappa s(v_P)
   }
-   {\kappa s;\beta;B_P \vdash t_C :: v_P
+   {\kappa s;\beta;B_P}{t_C}{v_P
     \leadsto
     \beta \uplus \{ v_P \mapsto t_C \}}
    \quad
-   \texttt{tvMatch Known-Var-TVal}
+   \texttt{tvM-Known-Var-TVal}
 $$
 $$
 \inferrule
@@ -1134,11 +1124,11 @@ $$
      \and
      \kappa s(v_P) : T
   }
-   {\kappa s;\beta;B_P \vdash t_C :: v_P
+   {\kappa s;\beta;B_P}{t_C}{v_P
     \leadsto
     \beta \uplus \{ v_P \mapsto t_C \}}
    \quad
-   \texttt{tvMatch Known-Var-TType}
+   \texttt{tvM-Known-Var-TType}
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
@@ -1276,8 +1266,8 @@ $$
       \and
      v_C \in B_C
    }
-   {\beta;(B_C,B_P) \vdash v_C :: v_P
-    \leadsto \beta \uplus \{ v_P \mapsto v_C \}}
+   {\beta;(B_C,B_P)}{v_C}{v_P
+   }{\beta \uplus \{ v_P \mapsto v_C \}}
    \quad
    \texttt{vMatch Bound-Var}
 $$
@@ -1786,7 +1776,7 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
    \Gamma
       \vdash
       \mathtt{xC} \mvlxx \mathtt{xP}
-      \leadsto ( \beta',\ell',\mathtt{xP'} )
+     \leadsto ( \beta',\ell',\mathtt{xP'} )
   \]
   If both are empty, we are done:
 \[
@@ -2482,7 +2472,7 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
    \Gamma
       \vdash
       \mathtt{xC} \mvsxx \mathtt{xP}
-      \leadsto ( \beta',\ell',\mathtt{xP'} )
+     \leadsto ( \beta',\ell',\mathtt{xP'} )
   \]
   If both are empty, we are done:
 \[
@@ -2906,11 +2896,11 @@ Similarly, $r$ denotes one substitution replacement (list-variable or term)
 while $R$ is a collection of same.
 $$
 \inferrule
-   { \beta \vdash G_{C_j} :: g_{P_i} \leadsto \beta_{t_i}
+   { \beta}{G_{C_j}}{g_{P_i}}{\beta_{t_i}
      \and
-     \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i}
+     \beta \uplus \{\beta_{t_i}\}}{R_{C_j}}{r_{P_i}}{\beta_{r_i}
    }
-   { \beta \vdash [R_{C_j}/G_{C_j}]_j :: [r_{P_i}/g_{P_i}]_i
+   { \beta}{[R_{C_j}/G_{C_j}]_j}{[r_{P_i}/g_{P_i}]_i
      \leadsto
      \uplus \{\beta_{t_i}\uplus\beta_{r_i}\}
    }

@@ -381,7 +381,7 @@ $$
    {\mrule{a}{b}{c}{d}} 
    {\mrule{\kappa s;\theta;(\emptyset,\emptyset)}{\lst x = \lst e \implies P \equiv P}
           {\forall \lst x,\lst y \st \lst x = \lst e \implies P}{\beta}
-   }
+   }~\texttt{tmM-Bnd0}
 $$
 
 
@@ -609,7 +609,7 @@ $$
           {t_C}{t_P}{\beta'_t}
    }
    { \mrule{\kappa s;\beta;(B_C,B_P)}{t_C}{\bb{n_P}{\lst{vs}_P}{t_P}}
-           {\beta \uplus \beta'_t \uplus \beta'_{vs}}
+           {\beta \uplus \beta'_t}
    }
    \quad
    \texttt{tmM-Bnd0}

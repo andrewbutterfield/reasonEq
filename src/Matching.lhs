@@ -375,7 +375,9 @@ $$
  The issue is that we get $\lst y$ bound (incorrectly) to $\setof{\lst y}$
  giving the incorrect replacment $\forall \lst y \st P[\lst e/\lst x]$.
 
-We now present how we should match this:
+We now present how we should match this.
+
+First rule applied:
 $$
 \inferrule
    { \lst vs_P \disj \kappa s
@@ -393,6 +395,35 @@ $$
            {\beta}
    }~\texttt{tmM-Bnd0}
 $$
+We have $\lst vs_P \disj \kappa s$ as true, so we proceed
+
+Second rule applied:
+$$
+\inferrule
+  { \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+           {\implies}
+           {\implies}
+           {\beta_0}
+  \\\\
+    \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+           {\lst x = \lst e}
+           {\forall \lst x,\lst y \st \lst x = \lst e}
+           {\beta_1}
+  \\\\
+    \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+           {P}
+           {P}
+           {\beta_2}
+  }
+  { \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+           {\lst x = \lst e \implies P \equiv P}
+           {\forall \lst x,\lst y \st \lst x = \lst e \implies P}
+           {\beta'_t}
+    } 
+   ~\texttt{tmM-Cons}
+$$
+We easily get $\beta_0 = \mapof{\implies \mapsto \implies}$
+and $\beta_2 = \mapof{P \mapsto P}$.
 
 
 \subsection{Value Term-Pattern (\texttt{Val})}

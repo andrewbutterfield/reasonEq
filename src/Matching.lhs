@@ -378,9 +378,19 @@ $$
 We now present how we should match this:
 $$
 \inferrule
-   {\mrule{a}{b}{c}{d}} 
-   {\mrule{\kappa s;\theta;(\emptyset,\emptyset)}{\lst x = \lst e \implies P \equiv P}
-          {\forall \lst x,\lst y \st \lst x = \lst e \implies P}{\beta}
+   { \lst vs_P \disj \kappa s
+     \and
+     \beta_{vs} = \setof{\lst vs_P \mapsto \emptyset}
+     \\\\
+     \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+            {\lst x = \lst e \implies P \equiv P}
+            {\forall \lst x,\lst y \st \lst x = \lst e \implies P}
+            {\beta'_t}
+    } 
+   {\mrule {\kappa s;\theta;(\emptyset,\emptyset)}
+           {\lst x = \lst e \implies P \equiv P}
+           {\forall \lst x,\lst y \st \lst x = \lst e \implies P}
+           {\beta}
    }~\texttt{tmM-Bnd0}
 $$
 

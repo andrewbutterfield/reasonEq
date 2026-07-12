@@ -48,6 +48,10 @@ Fixing bugs as we go.
 
   - need to fix match failure below:
 
+    **THE USE OF LOGICAL INFERENCE STYLE SPECS OF MATCHING IS NOT HELPING**
+
+    *Need approach that specifies the order in which the bindings are constructed*
+
     The issue is that we get a `Cons` goal matching a `Bnd` pattern with unknown list-variables as quantifiers (`termMatch Binding0`). Currently these are all bound to the empty set. 
 
     Proposal: bind them to themselves? 

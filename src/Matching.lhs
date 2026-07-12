@@ -426,28 +426,59 @@ We easily get $\beta_0 = \mapof{\implies \mapsto \implies}$
 and $\beta_2 = \mapof{P \mapsto P}$.
 So we have:
 $$
-  \beta 
+  \beta
   = 
   \mapof{\lst vs_P \mapsto \emptyset,\implies \mapsto \implies,P \mapsto P}
 $$
-\textbf{Note:} the $ $ mapping comes from matching the quantified variables,
+\textbf{Note:} the $\mapof{}$ sub-mapping comes from matching the quantified variables,
 and should be considered a holding pattern, 
 rather than a final definitive mapping.
 \emph{In particular, given a binding $\lst a \mapsto \lst b$,
 we should remain open to $\lst b$ being further elaborated in later matches,
-which should include the possibility of it being $\empty$.}
+which should include the possibility of it being $\emptyset$.}
 
 Third rule applied:
 $$
 \inferrule
-  { whatever }
+  {\lst{vs}_P \not{\!\cap}~ \kappa s
+   \and
+   \beta_{vs} = \{ \lst{vs}_P \mapsto \emptyset \}
+   \and
+   \mrule {\kappa s;\beta_{vs};(vs_C,vs_P)}
+          {\lst x = \lst e}{\lst x = \lst e}{\beta_3}
+  }
   { \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
            {\lst x = \lst e}
            {\forall \lst x,\lst y \st \lst x = \lst e}
-           {\beta_1}
+           {\beta_3}
   }
-   ~\texttt{tmM-X}
+   ~\texttt{tmM-Bnd0}
 $$
+
+Here 
+$\beta=\beta_{vs}$, 
+$B_C=\setof{vs_C}$, 
+$B_P=\setof{vs_P}$,
+$t_C=\lst x = \lst e$,
+$\lst{vs}_P=\setof{\lst x,\lst y}$,
+$t_P=\lst x = \lst e$.
+
+$$
+\inferrule
+   {\lst{vs}_P \not{\!\cap}~ \kappa s
+   \and
+   \beta_{vs} = \{ \lst{vs}_P \mapsto \emptyset \}
+   \and
+   \mrule {\kappa s;\beta\uplus \beta_{vs};(B_C\cup vs_C,B_P\cup vs_P)}
+          {t_C}{t_P}{\beta'_t}
+   }
+   { \mrule{\kappa s;\beta;(B_C,B_P)}{t_C}{\bb{n_P}{\lst{vs}_P}{t_P}}
+           {\beta \uplus \beta'_t}
+   }
+   \quad
+   \texttt{tmM-Bnd0}
+$$
+
 
 
 \subsection{Value Term-Pattern (\texttt{Val})}

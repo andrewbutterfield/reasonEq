@@ -424,6 +424,30 @@ $$
 $$
 We easily get $\beta_0 = \mapof{\implies \mapsto \implies}$
 and $\beta_2 = \mapof{P \mapsto P}$.
+So we have:
+$$
+  \beta 
+  = 
+  \mapof{\lst vs_P \mapsto \emptyset,\implies \mapsto \implies,P \mapsto P}
+$$
+\textbf{Note:} the $ $ mapping comes from matching the quantified variables,
+and should be considered a holding pattern, 
+rather than a final definitive mapping.
+\emph{In particular, given a binding $\lst a \mapsto \lst b$,
+we should remain open to $\lst b$ being further elaborated in later matches,
+which should include the possibility of it being $\empty$.}
+
+Third rule applied:
+$$
+\inferrule
+  { whatever }
+  { \mrule {\kappa s;\beta_{vs};(\setof{vs_C},\setof{vs_P})}
+           {\lst x = \lst e}
+           {\forall \lst x,\lst y \st \lst x = \lst e}
+           {\beta_1}
+  }
+   ~\texttt{tmM-X}
+$$
 
 
 \subsection{Value Term-Pattern (\texttt{Val})}

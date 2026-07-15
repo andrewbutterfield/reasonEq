@@ -699,7 +699,7 @@ $$
 \inferrule
    {\lst{vs}_P \not{\!\cap}~ \kappa s
    \and
-   \beta_{vs} = \{ \lst{vs}_P \mapsto \emptyset \}
+   \beta_{vs} = \{ \lst{vs}_P \mapsto {?}{\lst{vs}_P}  \}
    \and
    \mrule {\kappa s;\beta\uplus \beta_{vs};(B_C\cup vs_C,B_P\cup vs_P)}
           {t_C}{t_P}{\beta'_t}
@@ -713,7 +713,7 @@ $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   | all (gVarIsUnknownLVar vts) vlP
-    =  do bind' <- bindLVarsToSelf bind $ listVarsOf vlP
+    =  do bind' <- bindLVarsToFloatingSelf bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
           termMatch vts fits bind' cbvs pbvs' tC tP
   where vlP = S.toList vsP
@@ -764,7 +764,7 @@ $$
 \begin{code}
 termMatch' vts fits bind cbvs pbvs tC (Lam ttP nP vlP tP)
   | all (gVarIsUnknownLVar vts) vlP
-    =  do bind' <- bindLVarsToSelf bind $ listVarsOf vlP
+    =  do bind' <- bindLVarsToFloatingSelf bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
           termMatch vts fits bind' cbvs pbvs' tC tP
 \end{code}

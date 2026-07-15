@@ -46,51 +46,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - need to fix match failure below:
-
-    **THE USE OF LOGICAL INFERENCE STYLE SPECS OF MATCHING IS NOT HELPING**
-
-    *Need approach that specifies the order in which the bindings are constructed*
-
-    The issue is that we get a `Cons` goal matching a `Bnd` pattern with unknown list-variables as quantifiers (`termMatch Binding0`). Currently these are all bound to the empty set. 
-
-    Proposal: bind them to themselves? 
-    Note that this has been done for a while without apparent harmfull effects.
-
-    **TRIED THIS** We get the following matches
-
-    Against the *WHOLE* thing (seems, good, we get `true`)
-
-    ```
-    1 : “forall_one_point” [*]
-    { B  ⟼ 𝔹  , P  ⟼ P, ≡  ⟼ ≡, ⟹   ⟼ ⟹ , e$  ⟼ ⟨e$⟩, x$  ⟼ ⟨x$⟩, y$  ⟼ {y$} }
-    true
-    (e$⋔x$) ⟹ (e$⋔x$)
-              
-    true
-    ⊢
-    (∧=)(x$;e$) ⟹  P ≡ P[e$/x$]
-    (e$⋔x$)
-    Focus = [] :: 𝔹  
-    ```
-
-    Against the *LHS* (we get `∀y$ • P[e$/x$] ≡ P[e$/x$]`) at which point we get stuck
-
-    ```
-    2 : “forall_one_point” [≡lhs]
-    { B  ⟼ 𝔹  , P  ⟼ P, ⟹   ⟼ ⟹ , e$  ⟼ ⟨e$⟩, x$  ⟼ ⟨x$⟩, y$  ⟼ {y$} }
-    ∀y$ • P[e$/x$]
-    (e$⋔x$) ⟹ (e$⋔x$)
-              
-    true
-    ⊢
-    (∧=)(x$;e$) ⟹  P ≡ P[e$/x$]
-    (e$⋔x$)
-
-    ```
-
-    **THE ISSUE IS THAT WE SHOULD HAVE `y$  ⟼ {}`**
-
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
 Issues: `Laws.assocFlatten` loses information 
@@ -100,6 +55,10 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+   - The `fixFLoat(L)Vars` machinery is broken.
+  
+   - need to fix match failure  with forall_one_point
 
   - Still can't apply the following:  tm 1 forall_remove
 

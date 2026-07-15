@@ -31,7 +31,7 @@ module Binding
 , lookupTypeVarBind
 , lookupVarBind
 , lookupLstBind
-, bindLVarsToNull, bindLVarsToEmpty, bindLVarsToSelf
+, bindLVarsToNull, bindLVarsToEmpty, bindLVarsToFloatingSelf
 , mappedVars
 , onlyTrivialListVarBindings
 , findUnboundVars, bindKnown
@@ -1291,6 +1291,19 @@ rangeEqvLSSub nAPI lv binding (BS vs) srepl@(BX tlvs)
 rangeEqvLSSub nAPI lv binding srepl@(BX tlvs) (BS vs)
  | substReplEqv tlvs (S.toList vs)  =  return srepl
 \end{code}
+If a list-variable is bound to a single floating version of itself, 
+then we allow it to be updated in an arbitrary way.
+\begin{code}
+rangeEqvLSSub nAPI lv binding newb (BL [LstVar oldlv])
+ | isFloatingLV oldlv  = return newb
+rangeEqvLSSub nAPI lv binding newb (BS oldvs)
+ | isFloatingLV oldlv  = return newb
+ where 
+   oldvl = S.toList oldvs
+   oldlv = case oldvl of
+             [LstVar lv]  ->  lv
+             _            ->  LVbl (Vbl (jId "junk") ObsV Static) [] []
+\end{code}
 If none of the above, then we expect full equality.
 \begin{code}
 rangeEqvLSSub nAPI lv binding vc1 vc2
@@ -1666,14 +1679,17 @@ bindLVarsToEmpty bind (lv:lvs)
 \end{code}
 
 
-Binding a list of list-variables to themselves:
+Binding a list of list-variables to floating versions of themselves:
 \begin{code}
-bindLVarsToSelf :: MonadFail m => Binding -> [ListVar] -> m Binding
-bindLVarsToSelf bind [] = return bind
-bindLVarsToSelf bind (lv:lvs)
- = do bind' <- bindLVarToVSet lv (S.singleton $ LstVar lv) bind
-      bindLVarsToSelf bind' lvs
+bindLVarsToFloatingSelf :: MonadFail m => Binding -> [ListVar] -> m Binding
+bindLVarsToFloatingSelf bind [] = return bind
+bindLVarsToFloatingSelf bind (lv:lvs)
+ = do bind' <- bindLVarToVSet lv (S.singleton $ LstVar $ fLVar lv) bind
+      bindLVarsToFloatingSelf bind' lvs
 \end{code}
+
+
+
 
 \section{Mapped Variables}
 
@@ -2148,13 +2164,21 @@ term2VarBind t          =  BT t
 \end{code}
 
 \begin{code}
+-- need to search for `[rlv]` in the range of `lbind`.
 patchVarListBind :: ListVar -> VarList -> Binding -> Binding
-patchVarListBind lv vl (BD (tbind,vbind,sbind,lbind)) 
+patchVarListBind rlv nvl (BD (tbind,vbind,sbind,lbind)) 
+-- So       [ (dlv1,rlvs1),..,(dlvi,[rlv]),..,(dvln,rlvsn)]
+-- Becomes [ (dlv1,rlvs1),..,(dlvi,nvl]),..,(dvln,rlvsn)]
   = BD (tbind,vbind,sbind,lbind')
   where
-    lbind' = M.mapWithKey f lbind
-    f _ (BL [LstVar lv']) | lv == lv'  =  BL vl
-    f _ blv                            =  blv
+    lbind' = M.fromList $ map f $ M.toList lbind
+
+    f (lv,BL [LstVar lv']) | lv' == rlv  =  (lv,BL $ nvl)
+    f other@(lv,BS vs) =
+      case S.toList vs of
+        [LstVar lv'] | lv' == rlv       ->  (lv,BL nvl)
+        _                               ->  other
+    f other                              =  other
 \end{code}
 
 \newpage

@@ -379,8 +379,8 @@ applyMatchToFocus2 :: MonadFail m => [VarTable]
                    -> [(Variable,Term)]   -- floating Variables -> Term
                    -> [(ListVar,VarList)] -- floating ListVar -> VarList
                    -> LiveProof -> m LiveProof
-applyMatchToFocus2 vtbls mtch vts lvvls liveProof
-  -- need to use vts and lvvls to update mtch and process law side-conditions
+applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
+  -- need to use svtms and lvvls to update mtch and process law side-conditions
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
@@ -394,7 +394,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         (tz,seq') = focus liveProof
         dpath = focusPath liveProof
         conjpart = exitTZ tz
-    in do let sbind = patchBinding vts lvvls cbind
+    in do let sbind = patchBinding svtms lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage obsv lvvls scLasC
           scCX <- mrgSideCond scC scCL
@@ -428,13 +428,20 @@ Here we replace floating variables in the \emph{range} of the binding
 by the replacements just chosen by the user.
 \begin{code}
 patchBinding :: [(Variable,Term)]   -- floating Variables -> Term
-             -> [(ListVar,VarList)] -- floating ListVar -> VarList
+             -> [(ListVar,VarList)] -- ListVar -> VarList
              -> Binding -> Binding
+
+-- lvvls:    ?ys --> [x$,e$]
+-- [ ( LV (VR (Id "?y" 0, VO, WS), [], [])
+--   , [ GL (LV (VR (Id "x" 0, VO, WS), [], []))
+--     , GL (LV (VR (Id "e" 0, VE, WS), [], []))] ) 
+-- ]
+
 patchBinding [] [] bind = bind
-patchBinding ((v,t):vts) lvvls bind
-  = patchBinding vts lvvls $ patchVarBind v t bind
-patchBinding vts ((lv,vl):lvvls) bind
-  = patchBinding vts lvvls $ patchVarListBind lv vl bind
+patchBinding ((v,t):svtms) lvvls bind
+  = patchBinding svtms lvvls $ patchVarBind v t bind
+patchBinding svtms ((flv,nvl):lvvls) bind
+  = patchBinding svtms lvvls $ patchVarListBind flv nvl bind
 \end{code}
 
 If a floating replacement is used

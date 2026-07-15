@@ -486,7 +486,7 @@ takeThings hdr showThing things
        putStrLn $ numberList showThing things
        choicesTxt <- userPrompt "Take by numbers: "
        let choices =  map readNat $ words choicesTxt
-       putStrLn ("Available: "++show choices)
+       putStrLn ("Selected: "++show choices)
        if null choices
          then return (True,([],things)) -- can choose nothing!
        else if all (inRange size) choices && choices == nub choices

@@ -1,1 +1,58 @@
-[("or_and_absorb",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],SCD [] (fromList []))),("and_not_or_absorb",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],SCD [] (fromList []))),("or_not_and_absorb",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],SCD [] (fromList []))),("or_and_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],SCD [] (fromList []))),("and_or_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],SCD [] (fromList []))),("deMorgan_and",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]],SCD [] (fromList []))),("deMorgan_or",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]],SCD [] (fromList []))),("eqv_replace",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]],SCD [] (fromList []))),("eqv_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]],SCD [] (fromList [])))]
+goal:  ∀x$ • ¬P ≡ ¬P (P⋔x$)  -- CORRECT
+
+“forall_idem”  (∀ x$  • (∀ y$  • P)) ≡ (∀ y$  • P)  (x$⊆y$) -- CORRECT
+
+{ B  ⟼ 𝔹  , P  ⟼ ¬P, ≡  ⟼ ≡, x$  ⟼ {x$}, y$  ⟼ {?y$} }  -- CORRECT
+
+proof> a1
+Choose variables (zero or more) to replace ?y$
+   1. x$
+   2. y$
+Take by numbers: 1
+Selected: [1]
+Taken x$
+Remaining y$
+Chosen list is ⟨x$⟩
+
+@AM.SVTMS:  null   -- CORRECT
+  []
+
+@AM.LVVLS:  ?y$ -->  x$   -- CORRECT
+  [ ( LV (VR (Id "?y" 0,VO,WS),[],[])
+    , [ GL (LV (VR (Id "x" 0,VO,WS),[],[])) ]
+    )
+  ]
+
+@AMTF2.sbind:  -- CORRECT
+  { B  ⟼ 𝔹  , P  ⟼ ¬P, ≡  ⟼ ≡, x$  ⟼ {x$}, y$  ⟼ {x$} }
+  BD ( [( Id "B" 0, TG (Id "B" 0) )]
+     , [ ( (Id "P" 0,VP)
+         , BT ( C (TG (Id "B" 0)) True (Id "not" 0) 
+                [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))] )
+         )
+       , ( (Id "eqv" 0,VO)
+         , BV (VR (Id "eqv" 0,VO,WS)) )
+       ]
+     , []
+     , [ ( (Id "x" 0,VO,[],[])
+         , BS ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+         )
+       , ( (Id "y" 0,VO,[],[])
+           , BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
+         )
+       ]
+  )
+@scDischarge.ilawSC:   x$ subsetof {x$} -- should be automatic ????
+  SCD [ VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+              (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+      ] (fromList [])
+
+@scDischarge goalSC:  P disj {x$} ; x$ subsetof {x$}
+  SCD [ VSDisj (GV (VR (Id "P" 0,VP,WS))) 
+                   (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+      , VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+             (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+      ] (fromList [])
+
+@scDischarge.vsp':  P subsetof {}  -- WRONG
+  [ VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList []) ]

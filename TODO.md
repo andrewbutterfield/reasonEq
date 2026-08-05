@@ -46,6 +46,12 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - `Exists` bug
+
+    fresh-var s.c. discharge failed (C)
+
+    **We need to fix  `vspDischarge` as per the bold text regarding set operators and term or list-variables.**
+
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
 Issues: `Laws.assocFlatten` loses information 

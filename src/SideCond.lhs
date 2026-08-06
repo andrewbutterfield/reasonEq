@@ -990,9 +990,9 @@ $
 goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
 goalsDischarge obs vspsG vspL 
   = let 
-      involved = filter (not . S.null . vspInvolved vspL) vspsG
-      optimised = map (optimiseVSPPairs vspL) vspsG
-      discharged = sort $ concat $ map (dischargeVSPPairs obs) optimised
+      -- vspPairs = map (optimiseVSPPairs vspL) vspsG
+      vspPairs = map (\ g -> (vspL,g)) vspsG
+      discharged = sort $ concat $ map (dischargeVSPPairs obs) vspPairs
     in case discharged of
          []                              ->  []
          _ |  all isFalseVSP discharged  ->  fcollapse discharged
@@ -1266,45 +1266,54 @@ to try to discharge an term variable side-condition ($L_j$):
 $$
 G_F \vdash L_j
 $$
-\begin{code}
-freshTVarDischarge :: VarSet -> VarSet -> VSetPred 
-                   -> VSetPred
-\end{code}
-Given
-\[G_F \discharges (D \disj V,C \supseteq V,Cd \supseteq_a V)\]
+Given $G_F \discharges (D \disj V,C \supseteq V,Cd \supseteq_a V_d)$
 we can simplify the discharge portion of this to 
-\[( D\setminus G_F \disj V
-  , C\setminus G_F \supseteq V
-  , Cd\setminus G_F \supseteq_a V )\]
-based on the idea that $G_F \disj V$ by construction
-(it's what it means for be fresh!).
+$( V \notin D\setminus G_F
+  , V \mof C\setminus G_F 
+  , V_d \mof Cd\setminus G_F )$
+based on the idea that $V \notin G_F $ by construction
+(it's what it means to be fresh!).
+\begin{code}
+freshTVarDischarge :: VarSet -> VarSet -> VSetPred -> VSetPred
+\end{code}
 \begin{eqnarray*}
    G_F \discharges D_L \disj V
-   &=& \true, \quad \IF\quad D_L \subseteq G_F
-\\ &\mapsto& D_L \setminus G_F \disj V
-\\ G_F \discharges C_L \supseteq V
-   &\mapsto&  C_L \setminus G_F \supseteq V
-\\ G_F \discharges Cd_L \supseteq_a V
-   &\mapsto&  Cd_L \setminus G_F \supseteq_a V
+   &\mapsto& V \notin (D_L \setminus G_F)
 \end{eqnarray*}
 \begin{code}
 freshTVarDischarge obsv gF (VSDisj gv vsD) = do
   let vsD' = (vsD S.\\ gF)
   if S.null vsD' then VSTrueP
-                 else VSDisj gv vsD'
+  else if gv `S.member` vsD' 
+    then VSFalseP "fresh-var s.c. discharge failed (D)"
+    else VSDisj gv vsD'
+\end{code}
+\begin{eqnarray*}
+   G_F \discharges C_L \supseteq V
+   &\mapsto&  V \mof (C_L \setminus G_F)
+\end{eqnarray*}
+\begin{code}
 freshTVarDischarge obsv gF (VSSub  gv vsC) = do
   let vsC' = (vsC S.\\ gF)
   if S.null vsC' then VSFalseP "fresh-var s.c. discharge failed (C)"
-                 else VSSub gv vsC'
-freshTVarDischarge obsv gF (VSSubD gv vsCd)
-  = if gv `S.member` obsv then do
-      let vsCd' =  (vsCd S.\\ gF)
-      if S.null vsCd' then VSFalseP "fresh-var s.c. discharge failed (Cd)"
-                      else VSSubD gv vsCd'
-    else VSTrueP
+  else if gv `S.member` vsC' then VSTrueP
+  else VSSub gv vsC'
+\end{code}
+\begin{eqnarray*}
+   G_F \discharges Cd_L \supseteq_a V
+   &\mapsto&  V \mof (Cd_L \setminus G_F)
+\end{eqnarray*}
+\begin{code}
+freshTVarDischarge obsv gF (VSSubD gv vsCd) = do
+  let vsCd' =  (vsCd S.\\ gF)
+  if S.null vsCd' then VSFalseP "fresh-var s.c. discharge failed (Cd)"
+  else if gv `S.member` vsCd' then VSTrueP
+  else VSSubD gv vsCd'
+\end{code}
+Otherwise, nothing changes:
+\begin{code}
 freshTVarDischarge _ _ vsp = vsp
 \end{code}
-
 \newpage
 \section{Check for Floating Conditions}
 

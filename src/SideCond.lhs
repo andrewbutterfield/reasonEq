@@ -883,7 +883,7 @@ scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
   = if isTrivialSC ilawSC then scTrue
     else if isTrivialSC goalSC then ilawSC
     else let vsp' = vspsDischarge obsv (pdbg "scD.goalVSC" goalVSC) $ pdbg "scD.ilawVSC" ilawVSC  
-         in freshDischarge obsv goalFvs ilawFvs vsp'
+         in freshDischarge obsv goalFvs ilawFvs $ pdbg "scD.vsp'" vsp'
 \end{code}
 
 
@@ -994,8 +994,8 @@ goalsDischarge obs vspsG vspL
   = let 
       -- vspPairs = map (optimiseVSPPairs vspL) vspsG
       vspPairs = map (\ g -> (g,vspL)) vspsG
-      discharged = sort $ concat $ map (dischargeVSPPairs obs) vspPairs
-    in case discharged of
+      discharged = sort $ concat $ map (dischargeVSPPairs obs) $ pdbg "gD.vspPairs" vspPairs
+    in case pdbg "gD.discharged" discharged of
          []                              ->  []
          _ |  all isFalseVSP discharged  ->  fcollapse discharged
            |  otherwise                  ->  fremove discharged
@@ -1180,6 +1180,8 @@ vspDischarge obsv (VSSubD gv vsCdG) predL@(VSDisj _ vsDL)
 
 \subsubsection{Pairwise Discharging (D:C)}
 
+Example: $P \disj \lst x \discharges \lst x \mof \setof{\lst x}$.
+
 \begin{eqnarray*}
    D_G \disj V \discharges C_L \supseteq V
    & = & \false
@@ -1189,8 +1191,8 @@ vspDischarge obsv (VSSubD gv vsCdG) predL@(VSDisj _ vsDL)
 Edge case: \m{D_G = \emptyset} means no change to law s.c.
 \begin{code}
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSub _ vsCL)
-  | S.null vsDG                  =  predL
-  | vsCL `S.isSubsetOf` vsDG && isObsGVar gv = VSFalseP "discharge DC false"
+  | S.null $ pdbg "vspD.DC.vsDG" vsDG                  =  predL
+  | (pdbg "vspD.DC.vsCL" vsCL) `S.isSubsetOf` vsDG && isObsGVar (pdbg "vspD.DC.GV" gv) = VSFalseP "discharge DC false"
   | otherwise  =  VSSub gv (vsCL S.\\ vsDG)
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSubD _ vsCdL)
   | S.null vsDG                  =  predL
@@ -1298,7 +1300,7 @@ freshTVarDischarge obsv gF (VSDisj gv vsD) = do
 \end{eqnarray*}
 \begin{code}
 freshTVarDischarge obsv gF (VSSub  gv vsC) = do
-  let vsC' = (vsC S.\\ gF)
+  let vsC' = ((pdbg "fTVD.vsC" vsC) S.\\ (pdbg "fTVD.gF" gF))
   if S.null vsC' then VSFalseP "fresh-var s.c. discharge failed (C)"
   else if gv `S.member` vsC' then VSTrueP
   else VSSub gv vsC'

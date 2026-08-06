@@ -52,6 +52,10 @@ Fixing bugs as we go.
 
     **We need to fix  `vspDischarge` as per the bold text regarding set operators and term or list-variables.**
 
+    *Confounding issue: the temporary swap of order (G,L) to (L,G) used for `optimiseVSPPairs` was not implemented consistently, and was wrong in the lambda expression temporarily used to replace it by an identity operation.*
+
+    **NOW FIXED**
+
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
 Issues: `Laws.assocFlatten` loses information 

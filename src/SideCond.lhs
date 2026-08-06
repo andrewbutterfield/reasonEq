@@ -882,7 +882,7 @@ scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
 scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
   = if isTrivialSC ilawSC then scTrue
     else if isTrivialSC goalSC then ilawSC
-    else let vsp' = vspsDischarge obsv goalVSC ilawVSC  
+    else let vsp' = vspsDischarge obsv (pdbg "scD.goalVSC" goalVSC) $ pdbg "scD.ilawVSC" ilawVSC  
          in freshDischarge obsv goalFvs ilawFvs vsp'
 \end{code}
 
@@ -970,8 +970,9 @@ L_1 \land L_2 \land \dots \land L_n
 $:
 \begin{code}
 vspsDischarge :: VarSet -> [VSetPred] -> [VSetPred] -> [VSetPred]
-vspsDischarge _   _  []     =  []     --  discharged
-vspsDischarge _   [] vspsL  =  vspsL  --  not discharged
+-- inputs:    obs vspsG vspsL
+vspsDischarge _   _     []     =  []     --  discharged
+vspsDischarge _   []    vspsL  =  vspsL  --  residual
 vspsDischarge obs vspsG (vspL:vspsL) 
   = case goalsDischarge obs vspsG vspL of
       f@[VSFalseP _]  ->  f
@@ -988,10 +989,11 @@ $
 $
 \begin{code}
 goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
+-- inputs:     obs vspsG vspL
 goalsDischarge obs vspsG vspL 
   = let 
-      -- vspPairs = map (optimiseVSPPairs vspL) vspsG
-      vspPairs = map (\ g -> (vspL,g)) vspsG
+      vspPairs = map (optimiseVSPPairs vspL) vspsG
+      -- vspPairs = map (\ g -> (vspL,g)) vspsG
       discharged = sort $ concat $ map (dischargeVSPPairs obs) vspPairs
     in case discharged of
          []                              ->  []
@@ -1019,14 +1021,16 @@ Given goal s.c. $x ~rel~ y$
 -- we have L, G in this order
 -- we return (G,L)
 optimiseVSPPairs :: VSetPred -> VSetPred -> (VSetPred,VSetPred)
+-- inputs:       vspL                    vspG
+-- outputs:  (vspG',vspL')
 optimiseVSPPairs vspL@(VSDisj gvL vsetL) vspG
   = case vspGVar vspG of
-      Nothing   ->   (vspL,vspG)
+      Nothing   ->   (vspG,vspL)
       Just gvG  -> 
         case vlistL of
           [setGVL] | setGVL == gvG
              ->  (vspG, VSDisj setGVL (S.singleton gvL))
-                   | otherwise  -> (vspL,vspG)
+                   | otherwise  -> (vspG,vspL)
           _  ->  (vspL,vspG)
     where vlistL = S.toList vsetL
 optimiseVSPPairs vspL vspG = (vspG,vspL)
@@ -1042,14 +1046,14 @@ $
 -- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
 dischargeVSPPairs :: VarSet -> (VSetPred,VSetPred) -> [VSetPred]
 dischargeVSPPairs obs (vspG,vspL)
-  = case vspDischarge obs vspG vspL  of
-      f@(VSFalseP _)  ->  [f]  
-      VSTrueP         ->  []  -- discharged
-      vsp             ->  [vsp]
+  = case vspDischarge (pdbg "vspD.obs" obs) (pdbg "vspD.vspG" vspG) $ pdbg "vspD.vspL" vspL  of
+      f@(VSFalseP _)  ->  pdbg "vspD-false" [f]  
+      VSTrueP         ->  pdbg "vspD-true" []  -- discharged
+      vsp             ->  pdbg "vspD-residual" [vsp]
 \end{code}
 
-
-\subsubsection{Discharging Variable-Set Pairs}
+\newpage
+\subsection{Discharging Variable-Set Pairs}
 
 At this point we have the form, 
 for given (usually term) variables $V_G$ and $V_L$:

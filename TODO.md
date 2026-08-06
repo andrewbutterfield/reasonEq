@@ -51,10 +51,14 @@ Fixing bugs as we go.
     fresh-var s.c. discharge failed (C)
 
     **We need to fix  `vspDischarge` as per the bold text regarding set operators and term or list-variables.**
+    *Not sure about this --- looks like it may already be done. Also not the real issue, see below*
 
-    *Confounding issue: the temporary swap of order (G,L) to (L,G) used for `optimiseVSPPairs` was not implemented consistently, and was wrong in the lambda expression temporarily used to replace it by an identity operation.*
+    *One problem is that `x$⊆x$` should be reduced to true almost immediately*
+    **We need a better check for trivially easy cases, better than just using `isTrivialSC`.**
 
-    **NOW FIXED**
+    *Another problem: when we process `P⋔x$` discharging `x$⊆x$`, mode (D:C), it goes off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`.* 
+    **When handling `A⋔B` we need to also try `B⋔A`, or find a rigorous way to choose the correct version**
+
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 

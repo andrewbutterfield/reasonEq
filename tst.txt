@@ -19,6 +19,20 @@ Chosen value for ?y$ is ⟨x$⟩
 Without optimiseVSPPairs
 -- ---------------------
 
+@gD.vspPairs:  [(P⋔x$,x$⊆x$),(x$⊆x$,x$⊆x$)]
+  
+  [ ( VSDisj (GV (VR (Id "P" 0,VP,WS))) 
+             (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+    , VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+            (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+    )
+  , ( VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+            (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+    , VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+            (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+    )
+  ]
+
 @vspD.vspL: x$⊆x$ 
   VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
         (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
@@ -27,12 +41,29 @@ Without optimiseVSPPairs
   VSDisj (GV (VR (Id "P" 0,VP,WS))) 
          (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
 
-@vspD-residual: P⊆[] 
+-- here 'V' is x$ in `vspL`, while 'V' is P in `vspG`.
+
+@vspD.DC.vsDG:  fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
+
+@vspD.DC.vsCL:  fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
+
+@vspD.DC.GV:  GV (VR (Id "P" 0,VP,WS))
+
+@vspD-residual: P⊆{}
   [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])]
 
 @vspD.vspG: x$⊆x$ 
   VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
         (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+
+@gD.discharged:  [P⊆{}]
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])]
+
+@scD.vsp':  P⊆{} 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])]
+
+@fTVD.vsC:  {}
+  fromList []
 
 Undischarged side-conditions: false(fresh-var s.c. discharge failed (C))
 
@@ -47,7 +78,7 @@ With optimiseVSPPairs
   VSDisj (GV (VR (Id "P" 0,VP,WS))) 
          (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
 
-@vspD-residual:  P⊆[]
+@vspD-residual:  P⊆{}
    [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])]
 
 @vspD.vspL:  x$⊆x$

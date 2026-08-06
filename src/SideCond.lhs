@@ -992,8 +992,8 @@ goalsDischarge :: VarSet -> [VSetPred] -> VSetPred -> [VSetPred]
 -- inputs:     obs vspsG vspL
 goalsDischarge obs vspsG vspL 
   = let 
-      vspPairs = map (optimiseVSPPairs vspL) vspsG
-      -- vspPairs = map (\ g -> (vspL,g)) vspsG
+      -- vspPairs = map (optimiseVSPPairs vspL) vspsG
+      vspPairs = map (\ g -> (g,vspL)) vspsG
       discharged = sort $ concat $ map (dischargeVSPPairs obs) vspPairs
     in case discharged of
          []                              ->  []
@@ -1018,8 +1018,8 @@ Given goal s.c. $x ~rel~ y$
         then switch the law s.c  to $x \disj \setof{z}$.
 \begin{code}
 -- condition both sides, noting that `disj` is commutative
--- we have L, G in this order
--- we return (G,L)
+-- we are given (L,G) 
+-- we return (G',L')
 optimiseVSPPairs :: VSetPred -> VSetPred -> (VSetPred,VSetPred)
 -- inputs:       vspL                    vspG
 -- outputs:  (vspG',vspL')

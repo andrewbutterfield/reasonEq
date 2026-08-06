@@ -1,39 +1,40 @@
 Failing Discharge Scenario:
 -- ========================
 
-(P⋔x$) ⟹ (x$⊆?y$) 
-  given {B⟼𝔹, P⟼¬P, ≡⟼ ≡, x$⟼{x$}, y$⟼{?y$}}
+(P⋔x$) ⟹ (x$⊆?y$)
+
+Binding: {B⟼𝔹, P⟼¬P, ≡⟼ ≡, x$⟼{x$}, y$⟼{?y$}}
 Chosen value for ?y$ is ⟨x$⟩
 
 @scD.ilawVSC:  x$⊆x$
   [ VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
           (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) ]
 
-@scD.goalVSC:  P⋔x$ x$⊆x$
+@scD.goalVSC:  P⋔x$ x$⊆x$ -- why is x$⊆x$ here?
   [ VSDisj (GV (VR (Id "P" 0,VP,WS))) 
            (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
   , VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
           (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
 
-
 Without optimiseVSPPairs
 -- ---------------------
 
-@vspD.vspL:  P⋔x$
-  VSDisj (GV (VR (Id "P" 0,VP,WS))) 
-         (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-
-@vspD.vspG:  x$⊆x$
+@vspD.vspL: x$⊆x$ 
   VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
         (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
 
-@vspD-false:  [VSFalseP "discharge CD false"]
-
-@vspD.vspL:  x$⊆x$
-   VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+@vspD.vspG:  P⋔x$
+  VSDisj (GV (VR (Id "P" 0,VP,WS))) 
          (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
 
-Undischarged side-conditions: false(discharge CD false)
+@vspD-residual: P⊆[] 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])]
+
+@vspD.vspG: x$⊆x$ 
+  VSSub (GL (LV (VR (Id "x" 0,VO,WS),[],[]))) 
+        (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+
+Undischarged side-conditions: false(fresh-var s.c. discharge failed (C))
 
 With optimiseVSPPairs
 -- ------------------

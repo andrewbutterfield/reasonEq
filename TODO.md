@@ -48,17 +48,11 @@ Fixing bugs as we go.
 
   - `Exists` bug
 
-    fresh-var s.c. discharge failed (C)
+    potential `scDischarge` bug.
 
-    **We need to fix  `vspDischarge` as per the bold text regarding set operators and term or list-variables.**
-    *Not sure about this --- looks like it may already be done. Also not the real issue, see below*
-
-    *One problem is that `x$⊆x$` should be reduced to true almost immediately*
-    **We need a better check for trivially easy cases, better than just using `isTrivialSC`.**
-
-    *Another problem: when we process `P⋔x$` discharging `x$⊆x$`, mode (D:C), it goes off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`.* 
-    **When handling `A⋔B` we need to also try `B⋔A`, or find a rigorous way to choose the correct version**
-
+    When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it wnr off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
+    *When handling `A⋔B` we may need to also try `B⋔A`, or find a rigorous way to choose the correct version*
+    Fix this if/when we encouter the issue.
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 
@@ -69,6 +63,8 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+   - fresh-var s.c. discharge failed (C)
 
    - The `fixFLoat(L)Vars` machinery is broken.
   

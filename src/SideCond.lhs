@@ -190,7 +190,7 @@ $$
 We provide some builders for the three conditions:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
-gv `disjfrom`   vsD   =  VSDisj gv vsD
+gv `disjfrom`   vsD   =  vsDisj gv vsD
 gv `coveredby`  vsC   =  VSSub  gv vsC
 gv `dyncovered` vsCd  =  VSSubD gv vsCd
 \end{code}
@@ -282,7 +282,7 @@ This leads to the following predicate-splitting laws:
 % $$(g \setminus X) \disj Y ~=~ g \disj (Y \setminus X)$$
 % \begin{code}
 % simplifyVSetPred ((g `vsMinus` x) `VSDisj` y)  
-%              =  ( g `VSDisj` (y `vsMinus` x) , [] )
+%              =  ( g `vsDisj` (y `vsMinus` x) , [] )
 % \end{code} 
 
 % $$ 
@@ -292,7 +292,7 @@ This leads to the following predicate-splitting laws:
 % $$
 % \begin{code}
 % simplifyVSetPred ((g `vsUnion` x) `VSDisj` y)  
-%                = ( g `VSDisj` y , [x `VSDisj` y ] )
+%                = ( g `vsDisj` y , [x `vsDisj` y ] )
 % \end{code} 
 
 % $$  
@@ -544,7 +544,7 @@ readSC2'' sc (')':str) = (sc,str)
 readSC2'' sc str =   error ("readSC2'', close-par expected, seen: '"++str)
 
 sN = vsSngl gN
-sEdN  = VSDisj gE sN
+sEdN  = vsDisj gE sN
 sEsN  = VSSub  gE sN
 sEsdN = VSSubD gE sN
 
@@ -648,7 +648,7 @@ $D_1 \times D_2$
 \end{eqnarray*}
 \begin{code}
 mrgSameGVSC (VSDisj gv vsD1) (VSDisj _ vsD2) 
-                                   = return [VSDisj gv (vsD1 `S.union` vsD2)]
+                                   = return [vsDisj gv (vsD1 `S.union` vsD2)]
 \end{code}
 
 $D \times C \qquad D \times C_d$
@@ -1029,7 +1029,7 @@ optimiseVSPPairs vspL@(VSDisj gvL vsetL) vspG
       Just gvG  -> 
         case vlistL of
           [setGVL] | setGVL == gvG
-             ->  (vspG, VSDisj setGVL (S.singleton gvL))
+             ->  (vspG, vsDisj setGVL (S.singleton gvL))
                    | otherwise  -> (vspG,vspL)
           _  ->  (vspL,vspG)
     where vlistL = S.toList vsetL
@@ -1055,37 +1055,49 @@ dischargeVSPPairs obs (vspG,vspL)
 \newpage
 \subsection{Discharging Variable-Set Pairs}
 
-At this point we have the form, 
-for given (usually term) variables $V_G$ and $V_L$:
+Finally, we have arrived at where the real work is done.
+
+At this point we have given (usually term) variables $V_G$ and $V_L$,
+and variable-sets $S_G$ and $S_L$:
 \begin{equation}
  \left( V_G ~rel_G~ S_G\right)
  \implies
  \left( V_L ~rel_L~ S_L\right)
 \end{equation}
-Finally, we have arrived at where the real work is done.
+We use $V$ to denote the general variable in the predicate.
+It represents some set of (possibly other) variables, 
+or even just (the singleton set containing) itself ($\setof{V}$, a.k.a $V$).
 
-\begin{code}
-vspDischarge  :: VarSet
-              -> VSetPred -> VSetPred   -- goal -> ilaw
-              -> VSetPred
-\end{code}
+We have three kinds of general variable:
+\begin{description}
+\item[Term Variable ($P$,$e$)]
+It refers to the free variables of that term ($\fv(P),\fv(e)$).
+\item[Observation Variable ($v$)]
+It denotes (the singleton set containing) itself ($\setof{v}$, a.k.a. $v$).
+\item [List Variable ($\lst x$)]
+It denotes some set (possibly empty) of general variables.
+\end{description}
 
-
-We use $V$ to denote the general variable,
-which represents some set of (other) variables.
 We have a situation where we may be able to discharge,
 or falsify, but also have the possibility of being unable to do either.
 This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
 We use the notation $G \discharges L \mapsto R$
 to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
-We also have a set of all variables ($DO$) that are known dynamic observables
-For example, given $O,O' \supseteq_a ls$, and knowlege that $ls \in O$,
+We also have a set of all variables that are known dynamic observables
+For example, given $O,O' \supseteq_a ls$, and knowledge that $ls \in O$,
 we should be able to reduce this to true.
 \begin{eqnarray*}
    O,O' \supseteq_a v &=& v \in O \lor v \in O'
 \\ O,O' \supseteq v &=& v \in O \lor v \in O'
 \end{eqnarray*}
+
+The implementation:
+\begin{code}
+vspDischarge  :: VarSet
+              -> VSetPred -> VSetPred   -- goal -> ilaw
+              -> VSetPred
+\end{code}
 
 The following case needs special treatment:
 
@@ -1146,7 +1158,7 @@ Edge case: \m{D_G = \emptyset} means no change to law s.c.
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSDisj _ vsDL)
   | S.null vsDG                  =  predL
   | vsDL `S.isSubsetOf` vsDG     =  VSTrueP 
-  | otherwise                    =  VSDisj gv (vsDL S.\\ vsDG)
+  | otherwise                    =  vsDisj gv (vsDL S.\\ vsDG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (C:D)}
@@ -1170,12 +1182,12 @@ vspDischarge obsv (VSSub gv vsCG) predL@(VSDisj _ vsDL)
   | S.null vsCG                               =  predL
   | vsCG `S.disjoint` vsDL                    =  VSTrueP 
   | vsCG `S.isSubsetOf` vsDL && isObsGVar gv  =  VSFalseP "discharge CD false"
-  | otherwise            =  VSDisj gv  (vsDL `S.intersection` vsCG)
+  | otherwise            =  vsDisj gv  (vsDL `S.intersection` vsCG)
 vspDischarge obsv (VSSubD gv vsCdG) predL@(VSDisj _ vsDL)
   | S.null vsCdG                               =  predL
   | vsCdG `S.disjoint` vsDL                    =  VSTrueP 
   | vsCdG `S.isSubsetOf` vsDL && isObsGVar gv  =  VSFalseP "discharge CdD false"
-  | otherwise            =  VSDisj gv  (vsDL `S.intersection` vsCdG)
+  | otherwise            =  vsDisj gv  (vsDL `S.intersection` vsCdG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
@@ -1292,7 +1304,7 @@ freshTVarDischarge obsv gF (VSDisj gv vsD) = do
   if S.null vsD' then VSTrueP
   else if gv `S.member` vsD' 
     then VSFalseP "fresh-var s.c. discharge failed (D)"
-    else VSDisj gv vsD'
+    else vsDisj gv vsD'
 \end{code}
 \begin{eqnarray*}
    G_F \discharges C_L \supseteq V

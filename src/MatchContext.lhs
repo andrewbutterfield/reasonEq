@@ -111,7 +111,7 @@ expandSCKnowns vts (SCD vscs freshvs)
 
 expandVSCKnowns :: [VarTable] -> VSetPred -> [VSetPred]
 expandVSCKnowns vts  (VSDisj gv vset) 
-  = buildVSCS VSDisj (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+  = buildVSCS vsDisj (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
 expandVSCKnowns vts  (VSSub gv vset) 
   = buildVSCS VSSub  (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
 expandVSCKnowns vts  (VSSubD gv vset) 

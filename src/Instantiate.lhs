@@ -839,7 +839,7 @@ instVSP :: MonadFail mf
 instVSP ictx bind (VSDisj gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
-  splitGVars VSDisj sgvfvs vsfvs
+  splitGVars vsDisj sgvfvs vsfvs
 instVSP ictx bind (VSSub gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)

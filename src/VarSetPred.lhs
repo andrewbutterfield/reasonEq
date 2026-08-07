@@ -183,8 +183,8 @@ vsDisj :: GenVar -> VarSet -> VSetPred
 vsDisj gv vs
   | S.null vs                       =  VSTrueP
   | gv `S.member` vs                =  VSFalseP "vsDisj: gv in vs"
-  | isObsGVar gv 
-    && all isObsGVar (S.toList vs)  =  VSTrueP
+  | isStdObs gv 
+    && all isStdObs (S.toList vs)  =  VSTrueP
 vsDisj gv vs                        =  VSDisj gv vs
 \end{code}
 
@@ -207,11 +207,11 @@ $$
 \begin{code}
 vsSub :: GenVar -> VarSet -> VSetPred
 vsSub gv vs
-  | gv `S.member` vs  =  VSTrueP
-  | isObsGVar gv
+  | (pdbg "vsSub.gv" gv) `S.member` (pdbg "vsSub.vs" vs)  =  VSTrueP
+  | isStdObs gv
     && S.null vs      =  VSFalseP "vsSub: obs-var not in null vs"
-  | isObsGVar gv 
-    && all isObsGVar (S.toList vs)  
+  | isStdObs gv 
+    && all isStdObs (S.toList vs)  
                       =  VSFalseP "vsSub: obs-var not in obs-varset"
 vsSub gv vs =  VSSub gv vs
 \end{code}

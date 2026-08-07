@@ -843,11 +843,11 @@ instVSP ictx bind (VSDisj gv vset) = do
 instVSP ictx bind (VSSub gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
-  splitGVars VSSub sgvfvs vsfvs
+  splitGVars vsSub sgvfvs vsfvs
 instVSP ictx bind (VSSubD gv vset) = do
   let sgvfvs = instantiateSCGVar ictx bind gv
   let vsfvs = instantiateSCGVars ictx bind (S.toList vset)
-  splitGVars VSSubD sgvfvs vsfvs
+  splitGVars vsSubD sgvfvs vsfvs
 instVSP _ _ vsp = return [vsp]
 \end{code}
 

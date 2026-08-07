@@ -113,9 +113,9 @@ expandVSCKnowns :: [VarTable] -> VSetPred -> [VSetPred]
 expandVSCKnowns vts  (VSDisj gv vset) 
   = buildVSCS vsDisj (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
 expandVSCKnowns vts  (VSSub gv vset) 
-  = buildVSCS VSSub  (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+  = buildVSCS vsSub  (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
 expandVSCKnowns vts  (VSSubD gv vset) 
-  = buildVSCS VSSubD (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
+  = buildVSCS vsSubD (expandVSCGenVar vts gv) (mapVToverVarSet vts vset)
 expandVSCKnowns vts vsp  =  [vsp]
 \end{code}
 We have $g~rel~vs$, 

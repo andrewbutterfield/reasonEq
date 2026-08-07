@@ -191,8 +191,8 @@ We provide some builders for the three conditions:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VSetPred
 gv `disjfrom`   vsD   =  vsDisj gv vsD
-gv `coveredby`  vsC   =  VSSub  gv vsC
-gv `dyncovered` vsCd  =  VSSubD gv vsCd
+gv `coveredby`  vsC   =  vsSub  gv vsC
+gv `dyncovered` vsCd  =  vsSubD gv vsCd
 \end{code}
 
 \newpage
@@ -302,7 +302,7 @@ This leads to the following predicate-splitting laws:
 % $$
 % \begin{code}
 % simplifyVSetPred ((g `vsMinus` x) `VSSub` y) 
-%   = ( g `vsMinus` (x `vsUnion` x) `VSSub` vsEmpty , [] )
+%   = ( g `vsMinus` (x `vsUnion` x) `vsSub` vsEmpty , [] )
 % \end{code} 
 
 % $$ (g \cup X) \subseteq Y
@@ -311,7 +311,7 @@ This leads to the following predicate-splitting laws:
 % $$
 % \begin{code}
 % simplifyVSetPred ((g `vsUnion` x) `VSSub` y)  
-%              =  ( g `VSSub` y , [x `VSSub` y] )
+%              =  ( g `vsSub` y , [x `vsSub` y] )
 % \end{code} 
 
 
@@ -329,7 +329,7 @@ This leads to the following predicate-splitting laws:
 % $$
 % \begin{code}
 % simplifyVSetPred ((g `vsMinus` x) `VSSubD` y) 
-%   = ( g `vsMinus` (x `vsUnion` x) `VSSubD` vsEmpty , [] )
+%   = ( g `vsMinus` (x `vsUnion` x) `vsSubD` vsEmpty , [] )
 % \end{code} 
 
 % $$ (g \cup X) \subseteq_d Y
@@ -338,7 +338,7 @@ This leads to the following predicate-splitting laws:
 % $$
 % \begin{code}
 % simplifyVSetPred ((g `vsUnion` x) `VSSubD` y)  
-%              =  ( g `VSSubD` y , [x `VSSubD` y] )
+%              =  ( g `vsSubD` y , [x `vsSubD` y] )
 % \end{code} 
 
 % \subsection{All other cases: no change}
@@ -545,8 +545,8 @@ readSC2'' sc str =   error ("readSC2'', close-par expected, seen: '"++str)
 
 sN = vsSngl gN
 sEdN  = vsDisj gE sN
-sEsN  = VSSub  gE sN
-sEsdN = VSSubD gE sN
+sEsN  = vsSub  gE sN
+sEsdN = vsSubD gE sN
 
 scVSPreds :: SideCond -> [VSetPred]
 scVSPreds (SCD vsps _)  =  vsps
@@ -660,9 +660,9 @@ $D \times C \qquad D \times C_d$
 \end{eqnarray*}
 \begin{code}
 mrgSameGVSC vspDisj@(VSDisj gv vsD) (VSSub _ vsC) 
-                                   = return [vspDisj,VSSub gv (vsC S.\\ vsD)]
+                                   = return [vspDisj,vsSub gv (vsC S.\\ vsD)]
 mrgSameGVSC vspDisj@(VSDisj gv vsD) (VSSubD _ vsCd) 
-                                 = return [vspDisj,VSSubD gv (vsCd S.\\ vsD)]
+                                 = return [vspDisj,vsSubD gv (vsCd S.\\ vsD)]
 \end{code}
 
 $C_1 \times C_2 \qquad Cd_1 \times Cd_2$
@@ -672,9 +672,9 @@ $C_1 \times C_2 \qquad Cd_1 \times Cd_2$
 \end{eqnarray*}
 \begin{code}
 mrgSameGVSC (VSSub gv vsC1) (VSSub _ vsC2)
-                             = return [VSSub gv (vsC1 `S.intersection` vsC2)]
+                             = return [vsSub gv (vsC1 `S.intersection` vsC2)]
 mrgSameGVSC (VSSubD gv vsCd1) (VSSubD _ vsCd2)
-                           = return [VSSub gv (vsCd1 `S.intersection` vsCd2)]
+                           = return [vsSub gv (vsCd1 `S.intersection` vsCd2)]
 \end{code}
 
 $C \times D \qquad C_d \times D$
@@ -686,9 +686,9 @@ $C \times D \qquad C_d \times D$
 \end{eqnarray*}
 \begin{code}
 mrgSameGVSC vspSub@(VSSub _ vsC1) vspDisj@(VSDisj gv vsD2)
-                                 = return [vspDisj,VSSub gv (vsC1 S.\\ vsD2)]
+                                 = return [vspDisj,vsSub gv (vsC1 S.\\ vsD2)]
 mrgSameGVSC vspSub@(VSSubD _ vsCd1) vspDisj@(VSDisj gv vsD2)
-                               = return [vspDisj,VSSubD gv (vsCd1 S.\\ vsD2)]
+                               = return [vspDisj,vsSubD gv (vsCd1 S.\\ vsD2)]
 \end{code}
 
 $C \times C_d \qquad C_d \times C$
@@ -1135,14 +1135,14 @@ vspDischarge obsv (VSSub gv vsCG) predL@(VSSub _ vsCL)
   | vsCG `S.isSubsetOf` vsCL                =  VSTrueP 
   | vsCL `S.disjoint` vsCG && isObsGVar gv  =  VSFalseP "discharge CC false"
   | otherwise  
-          = VSSub gv ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
+          = vsSub gv ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
   where vsCLf = S.filter isFloatingGVar vsCL
 vspDischarge obsv (VSSubD gv vsCdG) predL@(VSSubD _ vsCdL)
   | S.null vsCdG                            = predL
   | vsCdG `S.isSubsetOf` vsCdL              = VSTrueP 
   | vsCdL `S.disjoint` vsCdG && isObsGVar gv = VSFalseP "discharge CdCd false"
   | otherwise  
-       = VSSubD gv ((vsCdG `S.intersection` vsCdL) `S.union` vsCdLf)
+       = vsSubD gv ((vsCdG `S.intersection` vsCdL) `S.union` vsCdLf)
   where vsCdLf = S.filter isFloatingGVar vsCdL
 \end{code}
 
@@ -1205,11 +1205,11 @@ Edge case: \m{D_G = \emptyset} means no change to law s.c.
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSub _ vsCL)
   | S.null $ pdbg "vspD.DC.vsDG" vsDG                  =  predL
   | (pdbg "vspD.DC.vsCL" vsCL) `S.isSubsetOf` vsDG && isObsGVar (pdbg "vspD.DC.GV" gv) = VSFalseP "discharge DC false"
-  | otherwise  =  VSSub gv (vsCL S.\\ vsDG)
+  | otherwise  =  vsSub gv (vsCL S.\\ vsDG)
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSubD _ vsCdL)
   | S.null vsDG                  =  predL
   | vsCdL `S.isSubsetOf` vsDG && isObsGVar gv = VSFalseP "discharge DCd false"
-  | otherwise  =  VSSubD gv (vsCdL S.\\ vsDG)
+  | otherwise  =  vsSubD gv (vsCdL S.\\ vsDG)
 \end{code}
 
 We have a catch-all here:
@@ -1315,7 +1315,7 @@ freshTVarDischarge obsv gF (VSSub  gv vsC) = do
   let vsC' = ((pdbg "fTVD.vsC" vsC) S.\\ (pdbg "fTVD.gF" gF))
   if S.null vsC' then VSFalseP "fresh-var s.c. discharge failed (C)"
   else if gv `S.member` vsC' then VSTrueP
-  else VSSub gv vsC'
+  else vsSub gv vsC'
 \end{code}
 \begin{eqnarray*}
    G_F \discharges Cd_L \supseteq_a V
@@ -1326,7 +1326,7 @@ freshTVarDischarge obsv gF (VSSubD gv vsCd) = do
   let vsCd' =  (vsCd S.\\ gF)
   if S.null vsCd' then VSFalseP "fresh-var s.c. discharge failed (Cd)"
   else if gv `S.member` vsCd' then VSTrueP
-  else VSSubD gv vsCd'
+  else vsSubD gv vsCd'
 \end{code}
 Otherwise, nothing changes:
 \begin{code}

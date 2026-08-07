@@ -28,11 +28,10 @@ Lists
 LTL
 Closure
 Sets
-Exists
-Arith
--- working here:
-Forall
+Exists -- working here:
 -- ok below here:
+Arith
+Forall 
 Equal
 Impl
 AOI
@@ -46,9 +45,29 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - `Exists` bug
+  - typeMatch 'disinct types' bug
 
-    potential `scDischarge` bug.
+    ```
+    ¬(∀x$,y$ • ¬((∧=)(x$;e$) ∧ P)) ≡ ∃y$ • P[e$/x$]      (e$⋔x$)
+  Focus = [2] :: 𝔹  
+  proof> tm 1 exists_def
+  Match against 'exists_def'[1] failed!
+  try match failed
+  (∃ y$  • P[e$/x$]) :: (∃ x$  • P)
+  lnm[parts]=exists_def[1]
+  tP=(∃ x$  • P) ≡ ¬((∀ x$  • ¬P))
+    scP=⊤
+    partsP=(∃ x$  • P)
+    replP=¬((∀ x$  • ¬P))
+  tC=(∃ y$  • P[e$/x$])
+    scC=(e$⋔x$)
+  ---
+  typeMatch: distinct types
+  typC = T
+  typP = TG (Id "B" 0)
+    ```
+
+  - potential `scDischarge` bug.
 
     When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it wnr off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
     *When handling `A⋔B` we may need to also try `B⋔A`, or find a rigorous way to choose the correct version*

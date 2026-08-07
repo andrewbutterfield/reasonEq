@@ -11,7 +11,7 @@ module VarSetPred (
 , isFalseVSP, falseVSPmsg
 , vspGVar, vspVSet, vspAllVars, vspCoverage, vspInvolved
 , vsEmpty, vsSngl, vsList, vsUnion, vsMinus
-, enumSamePred
+, vsDisj, vsSub, vsSubD
 ) where
 import Data.Char(isSpace)
 import Data.Set(Set)
@@ -44,18 +44,18 @@ subset ($\subseteq$),
 and a version of subset restricted to dynamic variables ($\subseteq_d$).
 Dynamic subset ($\subseteq_d$) is defined as:
 $$
-  g \subseteq_d X \quad \defs \quad g|d \subseteq X|d
+  g \subseteq_d X \quad \defs \quad (g|d) \subseteq (X|d)
 $$
 where $S|d$ is $S$ restricted to the dynamic variables in scope.
 The key question is: does this affect the laws?
 The answer is no, because being dynamic is a pointwise property
-and restriction w.r.t a set element (or sets of elements) is idempotent.
+and restriction w.r.t a set element distributes through the set operators.
 \begin{eqnarray*}
    \emptyset|d &\defs& \emptyset
-\\ \setof{x}|d &\defs& \setof{x} \cond{x \in d} \emptyset
-\\ (S\cup T)|d &\defs& S|d \cup T|d
-\\ (S\cap T)|d &\defs& S|d \cap T|d
-\\ (S\setminus T)|d &\defs& S|d \setminus T|d
+\\ \setof{x}|d &\defs& \setof{x} \cond{x \textit{ is dynamic}} \emptyset
+\\ (S\cup T)|d &\defs& (S|d) \cup (T|d)
+\\ (S\cap T)|d &\defs& (S|d) \cap (T|d)
+\\ (S\setminus T)|d &\defs& (S|d) \setminus (T|d)
 \end{eqnarray*}
 
 
@@ -141,11 +141,114 @@ vsMinus = S.difference
 \end{code}
 
 
-
-\newpage
 \subsection{Simplifying Variable-Set Predicates}
 
-We can/may encode some standard set-theoretic simplifications here.
+While we define sensible VS-predicates when defining assertions,
+these are also produced when matches are instantiated.
+It helps to have a way to check such predicates to see if they can be
+simplified to true, false, or some reduced form.
+We define smart builders that perform these checks.
+
+We assume general variable $V$ 
+that can be instantiated as one of $x$, $T$, or $\lst x$.
+We also use $W$ to represent other general variables.
+
+We use the notation $cond ~\vdash~ pred ~\mapsto~ pred'$ 
+to assert that if $cond$ is true, then $V~rel~S$ can be reduced to $pred'$.
+The $cond$ in the next row is the negation of the $pred$ in the row above.
+The left column accumulates what needs to be false to get any given row.
+The blank $cond$ in the first row always implicitly $\true$.
+
+\def\is{\mathrel{\text{is}}}
+
+\subsubsection{Smart Disjoint}
+
+$$ V \disj D $$
+$$
+\begin{array}{l@{~\vdash~}l@{~\mapsto~}l}
+   & D=\emptyset 
+   & \true
+%
+\\ D \neq \emptyset 
+   & V \mof D 
+   & \false
+%
+\\ V \notin D 
+   & V \is x \land \forall W \mof D \have obs(W) 
+   & \true
+\end{array}
+$$
+\begin{code}
+vsDisj :: GenVar -> VarSet -> VSetPred
+vsDisj gv vs
+  | S.null vs                       =  VSTrueP
+  | gv `S.member` vs                =  VSFalseP "vsDisj: gv in vs"
+  | isObsGVar gv 
+    && all isObsGVar (S.toList vs)  =  VSTrueP
+vsDisj gv vs                        =  VSDisj gv vs
+\end{code}
+
+\newpage
+\subsubsection{Smart Subset}
+
+$$ V \subseteq C $$
+$$
+\begin{array}{l@{~\vdash~}l@{~\mapsto~}l}
+   & V \mof C 
+   & \true
+%
+\\ V \notin C 
+   & obs(V) \land C = \emptyset 
+   & \false
+\\ & obs(V) \land \forall W \mof C \have obs(W) 
+   & \false
+\end{array}
+$$
+\begin{code}
+vsSub :: GenVar -> VarSet -> VSetPred
+vsSub gv vs
+  | gv `S.member` vs  =  VSTrueP
+  | isObsGVar gv
+    && S.null vs      =  VSFalseP "vsSub: obs-var not in null vs"
+  | isObsGVar gv 
+    && all isObsGVar (S.toList vs)  
+                      =  VSFalseP "vsSub: obs-var not in obs-varset"
+vsSub gv vs =  VSSub gv vs
+\end{code}
+
+\subsubsection{Smart Dynamic Subset}
+
+
+$$ V \subseteq_a C_a $$
+$$
+\begin{array}{l@{~\vdash~}l@{~\mapsto~}l}
+   & \lnot dyn(V) 
+   & \false
+%
+\\ dyn(V) 
+   & V \mof (C_a|d)
+   & \true
+%
+\\ V \notin (C_a|d)
+   & obs(V) \land (C_a|d) = \emptyset 
+   & \false
+\\ & obs(V) \land \forall W \mof (C_a|d) \have obs(W) 
+   & \false
+\end{array}
+$$
+Note: if $C_a$ is defined properly, then $C_a|d$ does not change anything.
+\begin{code}
+vsSubD :: GenVar -> VarSet -> VSetPred
+vsSubD gv _ | not (isDynGVar gv)  =  VSFalseP "vsSubD: gv not dynamic"
+vsSubD gv vs 
+  = case vsSub gv (S.filter isDynGVar vs) of
+      VSSub gv' vs'  ->  VSSubD gv' vs'
+      vsp            ->  vsp
+\end{code}
+
+
+
+\subsection*{Not Used, Currently Deprecated}
 
 In addition, 
 we have an interpretation of predicate $S_1 ~rel~S_2$

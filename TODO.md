@@ -45,9 +45,17 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - saving Forall results in runtime error in call to `mrgscs`.
+
+  ```
+  @mSC-ARG:  [SCD [VSFalseP "vsSubD: gv not dynamic"] (fromList []),SCD VSFalseP "vsSubD: gv not dynamic"] (fromList [])]
+  ```
+
+    **Need to follow-through on having explicit `VSFalseP`, and find out why the `Forall` theory has false side-conditions**
+
   - typeMatch 'disinct types' bug
 
-    ```
+  ```
     ¬(∀x$,y$ • ¬((∧=)(x$;e$) ∧ P)) ≡ ∃y$ • P[e$/x$]      (e$⋔x$)
   Focus = [2] :: 𝔹  
   proof> tm 1 exists_def
@@ -65,7 +73,7 @@ Fixing bugs as we go.
   typeMatch: distinct types
   typC = T
   typP = TG (Id "B" 0)
-    ```
+  ```
 
   - potential `scDischarge` bug.
 

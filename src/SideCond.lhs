@@ -781,7 +781,7 @@ that are also ``total'',
 in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
 \begin{code}
 mrgscs :: [SideCond] -> SideCond
-mrgscs = fromJust . mrgSideConds
+mrgscs = fromJust . mrgSideConds . pdbg "mSC-ARG"
 (.:) :: SideCond -> SideCond -> SideCond
 sc1 .: sc2 = mrgscs [sc1,sc2]
 \end{code}

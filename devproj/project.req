@@ -3,36 +3,9 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Closure","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Proto","Sets","UBase","UTCP","UWhile"]
 SDAG = [[("UTCP",["Designs","UWhile","Sets","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("Closure",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("Proto",[]),("EQV",[])]]
 END THEORIES
-CURRTHEORY = Exists
+CURRTHEORY = Forall
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Exists","exists_one_point")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: exists_one_point
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]),B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList []))
-SIDE = SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 10
-BD = False
-TM = False
-TL = False
-TS = False
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))),[(2,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]])]] [])])
-BEGIN SEQUENT'
-SIDECOND = SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_one_point", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "exists_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]))])) [1],ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [I (TG (Id "B" 0)) True (Id "and" 0) True (Id "eq" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]),B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],SCD [VSDisj (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

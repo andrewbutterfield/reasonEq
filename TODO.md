@@ -4,17 +4,7 @@
 **IMPORTANT:**
 *When a law is recorded in a justification, is its provenance recorded?* **NO**
 
-
 ## URGENT or NEXT
-
-We need to replace `SideCond.VarSideConds` by `Instantiate.{VSetExpr,VSetPred}`. In practise, this means a separate module, **THIS IS A MAJOR REWRITE**
-
-*Everything compiles - experimentation time!*
-
-*`save` and `restore` work*
-
-**`gen` and `load` now work**
-
 
 ### Systematic Proof of all Conjectures
 
@@ -44,19 +34,6 @@ EQV
 Fixing bugs as we go.
 
 #### Bugs Found
-
-  - saving Forall results in runtime error in call to `mrgscs`.
-
-  ```
-  @mSC-ARG:  
-    [ SCD [VSFalseP "vsSubD: GV (VR (Id \"P\" 0,VP,WS))"] (fromList [])
-    , SCD [VSFalseP "vsSubD: GV (VR (Id \"Q\" 0,VP,WS))"] (fromList [])
-    ]
-  ```
-
-    **Need to follow-through on having explicit `VSFalseP`, and find out why the `Forall` theory has false side-conditions**
-
-    **SubD is False when an obs-var is non-dynamic. A static term-var is normal and just fine**
 
   - typeMatch 'disinct types' bug
 
@@ -101,27 +78,29 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 
 Most recent first...
 
-   - fresh-var s.c. discharge failed (C)
+  - saving Forall results in runtime error in call to `mrgscs`.
 
-   - The `fixFLoat(L)Vars` machinery is broken.
+  - fresh-var s.c. discharge failed (C)
+
+  - The `fixFLoat(L)Vars` machinery is broken.
   
-   - need to fix match failure  with forall_one_point
+  - need to fix match failure  with forall_one_point
 
-  - Still can't apply the following:  tm 1 forall_remove
+ - Still can't apply the following:  tm 1 forall_remove
 
-  - need to be able to toggle all show-matches setting on/off 
+ - need to be able to toggle all show-matches setting on/off 
 
-  - fix match ranking
+ - fix match ranking
  
-  - fix `isFloatingVSC`
+ - fix `isFloatingVSC`
 
-  - wierd `readSideCond` usage:
+ - wierd `readSideCond` usage:
 
  - fails to `restore` theory:
    
-  - back command has stopped working !
+ - back command has stopped working !
 
-  - justification should have emphasised law-name first, 
+ - justification should have emphasised law-name first, 
    then finer match details. **DONE**
 
  - fix proof settings UI

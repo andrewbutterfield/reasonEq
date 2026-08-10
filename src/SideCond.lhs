@@ -781,7 +781,7 @@ that are also ``total'',
 in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
 \begin{code}
 mrgscs :: [SideCond] -> SideCond
-mrgscs = fromJust . mrgSideConds . pdbg "mSC-ARG"
+mrgscs = fromJust . mrgSideConds
 (.:) :: SideCond -> SideCond -> SideCond
 sc1 .: sc2 = mrgscs [sc1,sc2]
 \end{code}
@@ -882,8 +882,8 @@ scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
 scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
   = if isTrivialSC ilawSC then scTrue
     else if isTrivialSC goalSC then ilawSC
-    else let vsp' = vspsDischarge obsv (pdbg "scD.goalVSC" goalVSC) $ pdbg "scD.ilawVSC" ilawVSC  
-         in freshDischarge obsv goalFvs ilawFvs $ pdbg "scD.vsp'" vsp'
+    else let vsp' = vspsDischarge obsv goalVSC ilawVSC  
+         in freshDischarge obsv goalFvs ilawFvs vsp'
 \end{code}
 
 
@@ -994,8 +994,8 @@ goalsDischarge obs vspsG vspL
   = let 
       -- vspPairs = map (optimiseVSPPairs vspL) vspsG
       vspPairs = map (\ g -> (g,vspL)) vspsG
-      discharged = sort $ concat $ map (dischargeVSPPairs obs) $ pdbg "gD.vspPairs" vspPairs
-    in case pdbg "gD.discharged" discharged of
+      discharged = sort $ concat $ map (dischargeVSPPairs obs) vspPairs
+    in case discharged of
          []                              ->  []
          _ |  all isFalseVSP discharged  ->  fcollapse discharged
            |  otherwise                  ->  fremove discharged
@@ -1046,10 +1046,10 @@ $
 -- goal (if possible): both as (gv `rel` vs) for an involved `gv`.
 dischargeVSPPairs :: VarSet -> (VSetPred,VSetPred) -> [VSetPred]
 dischargeVSPPairs obs (vspG,vspL)
-  = case vspDischarge (pdbg "vspD.obs" obs) (pdbg "vspD.vspG" vspG) $ pdbg "vspD.vspL" vspL  of
-      f@(VSFalseP _)  ->  pdbg "vspD-false" [f]  
-      VSTrueP         ->  pdbg "vspD-true" []  -- discharged
-      vsp             ->  pdbg "vspD-residual" [vsp]
+  = case vspDischarge obs vspG vspL  of
+      f@(VSFalseP _)  ->  [f]  
+      VSTrueP         ->  []  -- discharged
+      vsp             ->  [vsp]
 \end{code}
 
 \newpage
@@ -1203,8 +1203,8 @@ Example: $P \disj \lst x \discharges \lst x \mof \setof{\lst x}$.
 Edge case: \m{D_G = \emptyset} means no change to law s.c.
 \begin{code}
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSub _ vsCL)
-  | S.null $ pdbg "vspD.DC.vsDG" vsDG                  =  predL
-  | (pdbg "vspD.DC.vsCL" vsCL) `S.isSubsetOf` vsDG && isObsGVar (pdbg "vspD.DC.GV" gv) = VSFalseP "discharge DC false"
+  | S.null vsDG                  =  predL
+  | vsCL `S.isSubsetOf` vsDG && isObsGVar gv = VSFalseP "discharge DC false"
   | otherwise  =  vsSub gv (vsCL S.\\ vsDG)
 vspDischarge obsv (VSDisj gv vsDG) predL@(VSSubD _ vsCdL)
   | S.null vsDG                  =  predL
@@ -1312,7 +1312,7 @@ freshTVarDischarge obsv gF (VSDisj gv vsD) = do
 \end{eqnarray*}
 \begin{code}
 freshTVarDischarge obsv gF (VSSub  gv vsC) = do
-  let vsC' = ((pdbg "fTVD.vsC" vsC) S.\\ (pdbg "fTVD.gF" gF))
+  let vsC' = (vsC S.\\ gF)
   if S.null vsC' then VSFalseP "fresh-var s.c. discharge failed (C)"
   else if gv `S.member` vsC' then VSTrueP
   else vsSub gv vsC'

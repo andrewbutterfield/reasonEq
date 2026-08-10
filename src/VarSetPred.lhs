@@ -218,7 +218,7 @@ $$
 \begin{code}
 vsSub :: GenVar -> VarSet -> VSetPred
 vsSub gv vs
-  | (pdbg "vsSub.gv" gv) `S.member` (pdbg "vsSub.vs" vs)  =  VSTrueP
+  | gv `S.member` vs  =  VSTrueP
   | isStdObs gv
     && S.null vs      =  vsFalseP12 "vsSub:" gv "not in" vs
   | isStdObs gv 

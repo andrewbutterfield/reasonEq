@@ -38,8 +38,9 @@ Fixing bugs as we go.
   - typeMatch 'disinct types' bug
 
   ```
-    ¬(∀x$,y$ • ¬((∧=)(x$;e$) ∧ P)) ≡ ∃y$ • P[e$/x$]      (e$⋔x$)
-  Focus = [2] :: 𝔹  
+  ∃y$ • P[e$/x$] ⟹  ∃x$,y$ • P
+  ⊤
+  Focus = [1] :: 𝔹  
   proof> tm 1 exists_def
   Match against 'exists_def'[1] failed!
   try match failed
@@ -50,7 +51,7 @@ Fixing bugs as we go.
     partsP=(∃ x$  • P)
     replP=¬((∀ x$  • ¬P))
   tC=(∃ y$  • P[e$/x$])
-    scC=(e$⋔x$)
+    scC=⊤
   ---
   typeMatch: distinct types
   typC = T

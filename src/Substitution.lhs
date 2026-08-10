@@ -1156,7 +1156,7 @@ mid_for_post = jSubstn [] [(lO',lO1)]
 pre_for_mid = jSubstn [] [(lO1,lO)]
 post_for_mid = jSubstn [] [(lO1,lO')]
 
-esub tm sub = Sub ArbType tm sub
+esub tm sub = Sub arbpred tm sub
 \end{code}
 \begin{eqnarray*}
    f[O_1/O]     &=& f_1  
@@ -1219,7 +1219,7 @@ tstSameAssignSubs
       , testCase "[ e,O\\x / x1,O1\\x ] is uniform+complete" 
           (isCompleteSubst sa_sub  @?= Just (During "1") )
       , testCase "f1[ e,O\\x / x1,O1\\x ] = f[e/x]" 
-          (subC subObsEF sa_sub f1 @?= Sub ArbType f e_for_x)
+          (subC subObsEF sa_sub f1 @?= Sub arbpred f e_for_x)
       ]      
 \end{code}
 
@@ -1780,7 +1780,7 @@ obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
 
 vN = ExprVar (jId "N") Static ; tN = jVar ArbType vN ; gN = StdVar vN
 vR = ExprVar (jId "R") Static ; tR = jVar ArbType vR ; gR = StdVar vR
-va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar arbpred va 
 xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va)) 
        --   .: ([gO,gO'] `notin` gN)
        --   .: ([gO,gO'] `notin` gR)
@@ -1799,13 +1799,13 @@ Starting point:\m{\xxaExample}
 \begin{code}
 xx_subOO = jSubstn [] [(lO',lO1)]
 xx_subls = jSubstn [(vls1,ls_R_N)] []
-xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
+xx_a_subOO_subls = Sub arbpred (Sub arbpred a xx_subOO) xx_subls
 \end{code}
 
 After \h{substCompose}: \m\xxaCompRec
 \begin{code}
 xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
-xx_a_subOls = Sub ArbType a xx_subOls
+xx_a_subOls = Sub arbpred a xx_subOls
 \end{code}
 
 After \h{subComplete1}: \m\xxaCmpOneRec
@@ -1816,7 +1816,7 @@ xx_sublssls  = jSubstn [(vls1,ls_R_N),(vs',ts1),(vls',tls1)] []
 After \h{subComplete2}: \m\xxaCmpTwo
 \begin{code}
 xx_subss  = jSubstn [(vs',ts1)] []
-xx_a_subss = Sub ArbType a xx_subss
+xx_a_subss = Sub arbpred a xx_subss
 \end{code}
 
 \begin{code}

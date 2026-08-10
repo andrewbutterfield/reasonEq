@@ -751,7 +751,7 @@ mklvid s n = jId (s++show n)
 
 mkVT v = jpVar $ StaticVar $ jId v
 
-mksubst tvc lvc = Sub ArbType  (mkVT "t") $ mksub tvc lvc
+mksubst tvc lvc = Sub arbpred  (mkVT "t") $ mksub tvc lvc
 
 tdisp t ww 
  = putStrLn (replicate ww '_' ++ "\n" ++ ppTerm ww 0 t)

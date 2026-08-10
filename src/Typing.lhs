@@ -612,7 +612,7 @@ consToApp (Cons _ _ f es)
 consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
-mkApply f e = (Cons ArbType True app [f,e])
+mkApply f e = (Cons arbpred True app [f,e])
 \end{code}
 
 \newpage

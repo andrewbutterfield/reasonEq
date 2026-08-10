@@ -147,7 +147,7 @@ ey = fromJust $ eVar ArbType y
 
 -- ------------- Predicates (Term) ------------
 
-pTrue = Val ArbType $ Boolean True
+pTrue = Val arbpred $ Boolean True
 
 
 -- ================ FUNCTIONS =======================

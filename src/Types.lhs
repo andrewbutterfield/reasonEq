@@ -68,10 +68,9 @@ We have the following type expressions:
                   \mid \bot
 \end{eqnarray*}
 
-
 \begin{code}
 data Type -- most general types first
- = T  -- arbitrary type -- top of sub-type relation
+ = T  -- arbitrary type -- top of sub-type relation, use for arbitrary expr
  | TV Identifier -- type variable
  | TC Identifier [Type] -- type constructor, applied
  | TA Identifier [(Identifier,[Type])] -- algebraic data type

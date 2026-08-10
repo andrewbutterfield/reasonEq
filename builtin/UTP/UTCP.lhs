@@ -162,10 +162,10 @@ cstarIntro  =  mkConsIntro i_cstar boolf_1 True
 
 We want predicate variables $C$, $D$, $E$ and $F$:
 \begin{code}
-c = fromJust $ pVar ArbType $ Vbl (jId "C") PredV Static
-d = fromJust $ pVar ArbType $ Vbl (jId "D") PredV Static
-e = fromJust $ pVar ArbType $ Vbl (jId "E") PredV Static
-f = fromJust $ pVar ArbType $ Vbl (jId "F") PredV Static
+c = fromJust $ pVar arbpred $ Vbl (jId "C") PredV Static
+d = fromJust $ pVar arbpred $ Vbl (jId "D") PredV Static
+e = fromJust $ pVar arbpred $ Vbl (jId "E") PredV Static
+f = fromJust $ pVar arbpred $ Vbl (jId "F") PredV Static
 \end{code}
 
 \section{Low-Level Semantics}
@@ -503,7 +503,7 @@ We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
 gE = StdVar vE
 gN = StdVar vN
-va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar arbpred va 
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 eNotObs = [gO,gO'] `notin` gE
@@ -621,7 +621,7 @@ of $X$-actions:
       \lst O,\lst O' \disj E_1,R_1,N_1,E_2,R_2,N_2
 }
 \begin{code}
-vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb
+vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar arbpred vb
 vE1 = ExprVar (jId "E1") Static ; sE1 = jVar ls_t vE1
 vE2 = ExprVar (jId "E2") Static ; sE2 = jVar ls_t vE2
 vR1 = ExprVar (jId "R1") Static ; sR1 = jVar ls_t vR1

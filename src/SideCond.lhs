@@ -1590,7 +1590,7 @@ vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
 vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
 vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
 va = Vbl (jId "a") PredV Static 
-a = fromJust $ pVar ArbType va ; ga = StdVar va
+a = fromJust $ pVar arbpred va ; ga = StdVar va
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 eNotObs = [gO,gO'] `notin` gE

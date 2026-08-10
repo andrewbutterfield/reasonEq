@@ -44,9 +44,9 @@ based on \cite{gries.93}.
 Some useful local definitions:
 \begin{code}
 v_and = Vbl theAnd ObsV Static
-p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "R") PredV Static
 vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
 ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
 sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]

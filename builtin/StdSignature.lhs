@@ -100,9 +100,9 @@ as they have significance for proof strategies.
 \subsection{Propositional Variables}
 
 \begin{code}
-p = fromJust $ pVar ArbType $ Vbl (jId "P") PredV Static
-q = fromJust $ pVar ArbType $ Vbl (jId "Q") PredV Static
-r = fromJust $ pVar ArbType $ Vbl (jId "R") PredV Static
+p = fromJust $ pVar arbpred $ Vbl (jId "P") PredV Static
+q = fromJust $ pVar arbpred $ Vbl (jId "Q") PredV Static
+r = fromJust $ pVar arbpred $ Vbl (jId "R") PredV Static
 \end{code}
 
 \subsection{Propositional Types}

@@ -396,7 +396,7 @@ theGVar = StdVar . theVar
 Lifting a variable to a term:
 \begin{code}
 varAsTerm :: Variable -> Term
-varAsTerm v@(PredVar _ _)  =  V arbpred     v
+varAsTerm v@(PredVar _ _)  =  V arbpred v
 varAsTerm v                =  V ArbType v
 \end{code}
 
@@ -457,8 +457,8 @@ v_b' = PostVar   $ i_b
 varConstructTests  = testGroup "AST.var,eVar,pVar"
  [ testCase "var arbpred arbpred (Ok)"
    ( var arbpred v_P  @?= Just (V arbpred (PreCond i_P) ))
- , testCase "var ArbType arbpred (Fail)"
-   ( var ArbType v_P  @?= Nothing )
+ , testCase "var arbpred arbpred (Fail)"
+   ( var arbpred v_P  @?= Nothing )
  , testCase "var arbpred a (Fail)"
    ( var arbpred v_a  @?= Nothing )
  , testCase "var ArbType a (Ok)"
@@ -467,9 +467,9 @@ varConstructTests  = testGroup "AST.var,eVar,pVar"
  , testCase "eVar tarb arbpred (Fail)" ( eVar ArbType v_P  @?= Nothing )
  , testCase "eVar tarb a (Ok)"
    ( eVar ArbType v_a @?= Just (V ArbType (PreVar i_a ) ) )
- , testCase "pVar a (Fail)" ( pVar ArbType v_a  @?= Nothing )
+ , testCase "pVar a (Fail)" ( pVar arbpred v_a  @?= Nothing )
  , testCase "pVar arbpred (Ok)"
-   ( pVar ArbType v_P @?= Just (V arbpred (PreCond i_P) ) )
+   ( pVar arbpred v_P @?= Just (V arbpred (PreCond i_P) ) )
  ]
 
 gv_a =  StdVar v_a
@@ -853,7 +853,7 @@ jLam :: Type -> Identifier -> VarList -> Term ->Term
 jLam typ n vl tm  =  fromJust $ lam typ n vl tm
 
 jeVar v = fromJust $ eVar ArbType v
-jpVar v = fromJust $ pVar ArbType v
+jpVar v = fromJust $ pVar arbpred v
 
 
 int_tst_AST :: [TF.Test]

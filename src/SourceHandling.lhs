@@ -595,7 +595,7 @@ trm2term ctxt@(dflts,vt) (TCons dv trms) = do
   let  (id,vw) = dynvar2idwhen dv
   let sbbl = lkpSubable (Vbl id ObsV Static) vt
   terms <- sequence $ map (trm2term ctxt) trms 
-  return $ Cons ArbType (sbbl==SB) id terms
+  return $ Cons arbpred (sbbl==SB) id terms
 \end{code}
 
 Binders
@@ -605,12 +605,12 @@ trm2term ctxt (TBndSet binder bvars trm) = do
   let  (id,vw) = dynvar2idwhen binder
   let gvars = map (gvar2genvar ctxt) bvars
   term <- trm2term ctxt trm
-  bnd ArbType id (S.fromList gvars) term
+  bnd arbpred id (S.fromList gvars) term
 trm2term ctxt (TBndLst binder bvars trm) = do
   let  (id,vw) = dynvar2idwhen binder
   let gvars = map (gvar2genvar ctxt) bvars
   term <- trm2term ctxt trm
-  lam ArbType id gvars term
+  lam arbpred id gvars term
 trm2term ctxt (TClose closer trm) = do
   let  (id,_) = dynvar2idwhen closer
   term <- trm2term ctxt trm
@@ -634,7 +634,7 @@ trm2term ctxt (TIter mrg fun dlvs) = do
   let (mrgid,_) = dynvar2idwhen mrg
   let (funid,_) = dynvar2idwhen fun
   let lvs = map (liv ctxt . dynvar2idwhen) dlvs
-  return $ Iter ArbType False mrgid False funid lvs
+  return $ Iter arbpred False mrgid False funid lvs
  where 
    liv :: Context -> (Identifier,VarWhen) -> ListVar
    liv ctxt (id,vw) = 
@@ -721,7 +721,7 @@ mkSubst ctxt trm trms tdvs rdlvs tdlvs = do
   let tvars  = map (dynvar2stdvar ctxt) tdvs
   let rlvars = map (dynvar2lstvar ctxt) rdlvs
   let tlvars = map (dynvar2lstvar ctxt) tdlvs
-  return $ Sub ArbType term $ xSubstn (zip tvars terms) (zip tlvars rlvars)
+  return $ Sub arbpred term $ xSubstn (zip tvars terms) (zip tlvars rlvars)
 \end{code}
 Note the lack of error checking!!!
 

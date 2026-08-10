@@ -354,7 +354,7 @@ utpBase_Theory
 \section{UTP Base Infrastructure}
 
 \begin{code}
-p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar arbpred $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}

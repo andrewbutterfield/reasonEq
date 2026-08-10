@@ -500,8 +500,8 @@ designTheory
 
 
 \begin{code}
-vP = Vbl (jId "P") PredV Static; p =  fromJust $ pVar ArbType vP; gP = StdVar vP
-vp = Vbl (jId "p") PredV Static; pc = fromJust $ pVar ArbType vp; gp = StdVar vp
-vQ = Vbl (jId "Q") PredV Static; q =  fromJust $ pVar ArbType vQ; gQ = StdVar vQ
-vR = Vbl (jId "R") PredV Static; r =  fromJust $ pVar ArbType vR; gR = StdVar vR
+vP = Vbl (jId "P") PredV Static; p =  fromJust $ pVar arbpred vP; gP = StdVar vP
+vp = Vbl (jId "p") PredV Static; pc = fromJust $ pVar arbpred vp; gp = StdVar vp
+vQ = Vbl (jId "Q") PredV Static; q =  fromJust $ pVar arbpred vQ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static; r =  fromJust $ pVar arbpred vR; gR = StdVar vR
 \end{code}

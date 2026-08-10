@@ -209,7 +209,7 @@ mkVs nm vc vw = (v,gv,lv,glv)
 
 
 mkBody = mkV "body" PredV Static
-mkQ str vl body = jBnd ArbType (jId str) (S.fromList vl) body
+mkQ str vl body = jBnd arbpred (jId str) (S.fromList vl) body
 
 tmForall0 = tmConj ("forall"-.-"zero")
             (mkQ "forall" [] mkBody)
@@ -222,7 +222,7 @@ tmExists3 = tmConj ("exists"-.-"three")
 tmForall4 = tmConj ("forall"-.-"four")
             (mkQ "forall" [gva,gva',glva,glva'] mkBody)
 
-mkL str vl body = jLam ArbType (jId str) vl body
+mkL str vl body = jLam arbpred (jId str) vl body
 
 tmLambda0 = tmConj ("lambda"-.-"zero")
             (mkL "lambda" [] mkBody)
@@ -247,7 +247,7 @@ tmExistential2 = tmConj ("exist"-.-"closure") (Cls (jId existence) exists1)
 
 -- Substitution
 
-simpleSub term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
+simpleSub term vs lvlvs =  Sub arbpred term $ jSubstn (zip vs (repeat mkBody)) lvlvs
 
 mkS term vts lvlvs = Sub (termtype term) term $ jSubstn vts lvlvs
 

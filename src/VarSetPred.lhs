@@ -161,6 +161,17 @@ The blank $cond$ in the first row always implicitly $\true$.
 
 \def\is{\mathrel{\text{is}}}
 
+We provide a useful message generator for false outcomes:
+\begin{code}
+vsFalseP1 :: String -> GenVar -> VSetPred
+vsFalseP1 what gv  
+  = VSFalseP (what++": "++show gv)
+
+vsFalseP12 :: String -> GenVar -> String -> VarSet -> VSetPred
+vsFalseP12 what gv rel vs 
+  = VSFalseP (what++": "++show gv++" "++rel++" "++show vs)
+\end{code}
+
 \subsubsection{Smart Disjoint}
 
 $$ V \disj D $$
@@ -181,11 +192,11 @@ $$
 \begin{code}
 vsDisj :: GenVar -> VarSet -> VSetPred
 vsDisj gv vs
-  | S.null vs                       =  VSTrueP
-  | gv `S.member` vs                =  VSFalseP "vsDisj: gv in vs"
+  | S.null vs                      =  VSTrueP
+  | gv `S.member` vs               =  vsFalseP12 "vsDisj" gv "in" vs
   | isStdObs gv 
     && all isStdObs (S.toList vs)  =  VSTrueP
-vsDisj gv vs                        =  VSDisj gv vs
+vsDisj gv vs                       =  VSDisj gv vs
 \end{code}
 
 \newpage
@@ -209,10 +220,10 @@ vsSub :: GenVar -> VarSet -> VSetPred
 vsSub gv vs
   | (pdbg "vsSub.gv" gv) `S.member` (pdbg "vsSub.vs" vs)  =  VSTrueP
   | isStdObs gv
-    && S.null vs      =  VSFalseP "vsSub: obs-var not in null vs"
+    && S.null vs      =  vsFalseP12 "vsSub:" gv "not in" vs
   | isStdObs gv 
     && all isStdObs (S.toList vs)  
-                      =  VSFalseP "vsSub: obs-var not in obs-varset"
+                      =  vsFalseP12 "vsSub:" gv "not in" vs
 vsSub gv vs =  VSSub gv vs
 \end{code}
 
@@ -222,7 +233,7 @@ vsSub gv vs =  VSSub gv vs
 $$ V \subseteq_a C_a $$
 $$
 \begin{array}{l@{~\vdash~}l@{~\mapsto~}l}
-   & \lnot dyn(V) 
+   & obs(V) \land \lnot dyn(V) 
    & \false
 %
 \\ dyn(V) 
@@ -239,7 +250,7 @@ $$
 Note: if $C_a$ is defined properly, then $C_a|d$ does not change anything.
 \begin{code}
 vsSubD :: GenVar -> VarSet -> VSetPred
-vsSubD gv _ | not (isDynGVar gv)  =  VSFalseP "vsSubD: gv not dynamic"
+vsSubD gv _ | isObsGVar gv && not (isDynGVar gv)  =  vsFalseP1 "vsSubD" gv
 vsSubD gv vs 
   = case vsSub gv (S.filter isDynGVar vs) of
       VSSub gv' vs'  ->  VSSubD gv' vs'

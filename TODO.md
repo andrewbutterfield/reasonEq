@@ -48,10 +48,15 @@ Fixing bugs as we go.
   - saving Forall results in runtime error in call to `mrgscs`.
 
   ```
-  @mSC-ARG:  [SCD [VSFalseP "vsSubD: gv not dynamic"] (fromList []),SCD VSFalseP "vsSubD: gv not dynamic"] (fromList [])]
+  @mSC-ARG:  
+    [ SCD [VSFalseP "vsSubD: GV (VR (Id \"P\" 0,VP,WS))"] (fromList [])
+    , SCD [VSFalseP "vsSubD: GV (VR (Id \"Q\" 0,VP,WS))"] (fromList [])
+    ]
   ```
 
     **Need to follow-through on having explicit `VSFalseP`, and find out why the `Forall` theory has false side-conditions**
+
+    **SubD is False when an obs-var is non-dynamic. A static term-var is normal and just fine**
 
   - typeMatch 'disinct types' bug
 
@@ -75,11 +80,16 @@ Fixing bugs as we go.
   typP = TG (Id "B" 0)
   ```
 
+  - Need to follow-through on consequences of having explicit `VSFalseP`
+
+    Fix this if/when we re-encounter the issue.
+    
+
   - potential `scDischarge` bug.
 
     When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it wnr off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
     *When handling `A⋔B` we may need to also try `B⋔A`, or find a rigorous way to choose the correct version*
-    Fix this if/when we encouter the issue.
+    Fix this if/when we re-encounter the issue.
 
   - need to enable `b` for the `ge` proof step (*not urgent*)
 

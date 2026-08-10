@@ -58,6 +58,8 @@ Fixing bugs as we go.
   typP = TG (Id "B" 0)
   ```
 
+  *Going up and running `tm 1 exists_def` results in tC being correct (`bool`). Looks like going down messes up the type of the focus, except when we a single predicate variable at the focus*
+
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.

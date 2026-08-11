@@ -362,10 +362,12 @@ typeInference :: MonadFail mf
               -> Term 
               -> mf (Type,Term,TypeSubst)
 typeInference vts trm
-  = do  let (fis,env) = foldl (addVarType vts)  ([1..],M.empty) (getTypedVars trm)
+  = do  let (fis,env) = foldl (addVarType $ pdbg "tI.vts" vts)  
+                              ([1..],M.empty) 
+                              (getTypedVars $ pdbg "tI.trm" trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
-        let typ' = apply sub typ
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "tI.env" env) trm
+        let typ' = apply (pdbg "tI.sub" sub) $ pdbg "tI.typ" typ
         return (typ',settype typ' trm,sub)
 
 getTypedVars :: Term -> [(Type,Variable)]
@@ -517,7 +519,7 @@ inferTypes vts fis env (Lam typ lmbd vl e)
     curryType (d:ds) r = FunType d $ curryType ds r
 \end{code} 
 
-
+$$\IQUANT$$
 
 $$\IQUANTS$$
 
@@ -549,6 +551,7 @@ Generalising to multiple substitution:
 
 $$\ISUBST$$
 
+\textbf{Only does let-expression modelled as a simple subtitution}
 \begin{code}
 inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs -- remove this, assume nothing about ves
@@ -569,9 +572,11 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
 \subsubsection{Unimplemented}
 
 In all other cases (if any) we simply return an empty type-substitution
-and the arbitrary type:
+--and the arbitrary type:
+and the terms current type:
 \begin{code}
-inferTypes vts fis env t = return (fis,(M.empty,ArbType))
+--inferTypes vts fis env t = return (fis,(M.empty,ArbType))
+inferTypes vts fis env t = return (fis,(M.empty,termtype $ pdbg "iT-unimp.t" t))
 \end{code}
 
 \newpage

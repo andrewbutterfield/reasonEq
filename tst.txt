@@ -52,6 +52,15 @@
            (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
                      ,LV (VR (Id "e" 0,VE,WS),[],[]))])))
 
+@iT-unimp.t:  
+  S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
+    ( SN (fromList []) 
+         (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
+                  ,LV (VR (Id "e" 0,VE,WS),[],[]))]))
+
+
+@tI.typ:  T  -- only pdbg output from typeInference !
+
 @tFA.asn':  ASN (
   B T (Id "exists" 0) -- Why is this `T` and not `TG (Id "B" 0)` ?
     (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 

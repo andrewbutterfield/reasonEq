@@ -65,6 +65,8 @@ Fixing bugs as we go.
   The fail is in `mkTypedAsn` where the top-level bool type becomes arbitrary. An obvious issue is that the rule for binders should require that the binder type
   is the same as that of the body. This should not be the case for lambda-like bindings.
 
+  **Real issue: `inferTypes` only handles the substitution `P[e/x]`**  
+
   **Open issue** *Should we use `mkTypedAsn` after every focus change. Focus changes preserve type-info. Perhaps we should used `mkTypedAsn` whenever assertions are created/modified?*
 
   - Need to follow-through on consequences of having explicit `VSFalseP`

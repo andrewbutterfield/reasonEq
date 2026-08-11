@@ -366,7 +366,7 @@ typeInference vts trm
                               ([1..],M.empty) 
                               (getTypedVars $ pdbg "tI.trm" trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "tI.env" env) trm
+        (_,(sub, typ)) <- inferTypes fis (TypeEnv $ pdbg "tI.env" env) trm
         let typ' = apply (pdbg "tI.sub" sub) $ pdbg "tI.typ" typ
         return (typ',settype typ' trm,sub)
 
@@ -408,7 +408,7 @@ app = jId "@"
 
 \begin{code}
 inferTypes :: MonadFail mf
-           => [VarTable] -> FreshInts -> TypeEnv -> Term 
+           => FreshInts -> TypeEnv -> Term 
            -> mf (FreshInts,(TypeSubst, Type))
 \end{code}
 
@@ -420,7 +420,7 @@ From MG:
 
 $\ITLIT$
 \begin{code}
-inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
+inferTypes fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
 \end{code}
 
 
@@ -433,7 +433,7 @@ From MG:
 
 $$\ITVAR$$
 \begin{code}
-inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _)) 
+inferTypes fis (TypeEnv env) (Var _ (Vbl n _ _)) 
   = case M.lookup n env of
       Nothing     ->  fail $ "unbound variable: " ++ show n
       Just sigma  ->  do let (fis',t) = instantiate fis sigma
@@ -449,7 +449,7 @@ However we need to record this in the type system.
 $$\ITTVAR$$
 
 \begin{code}
-inferTypes vts fis (TypeEnv env) (VTyp t (Vbl n _ _)) 
+inferTypes fis (TypeEnv env) (VTyp t (Vbl n _ _)) 
   = do  let (fis1,tv) = newTyVar fis 
         (fis2,s) <- mgu fis1 tv t
         return (fis2,(s,t))
@@ -466,11 +466,11 @@ From MG:
 $\IAPP$
 
 \begin{code}
-inferTypes vts fis env (Cons _ True f [e1,e2])
+inferTypes fis env (Cons _ True f [e1,e2])
   | f == app 
   = do  let (fis1,tv) = newTyVar fis 
-        (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
-        (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
+        (fis2,(s1, t1)) <- inferTypes fis1 env e1
+        (fis3,(s2, t2)) <- inferTypes fis2 (apply s1 env) e2
         (fis4,s3) <- mgu fis3 (apply s2 t1) (FunType t2 tv)
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
 \end{code}
@@ -481,8 +481,8 @@ $\ICURRY$
 
 $\IDATA$
 \begin{code}
-inferTypes vts fis env econs@(Cons _ _ _ _)
-  = inferTypes vts fis env $ consToApp econs
+inferTypes fis env econs@(Cons _ _ _ _)
+  = inferTypes fis env $ consToApp econs
 \end{code}
 
 \newpage
@@ -508,10 +508,10 @@ We then generalise to multiples
 $$\ITLAMN$$
 
 \begin{code}
-inferTypes vts fis env (Lam typ lmbd vl e)
+inferTypes fis env (Lam typ lmbd vl e)
   = do  let ids = getStdIds vl
         let (fis1,vl1,env1) = abstractBindingVars fis env ids
-        (fis2,(s1, t1)) <- inferTypes vts fis1 env1 e
+        (fis2,(s1, t1)) <- inferTypes fis1 env1 e
         let vts = map (apply s1) vl1
         return (fis2,(s1, curryType vts t1))
   where 
@@ -524,10 +524,10 @@ $$\IQUANT$$
 $$\IQUANTS$$
 
 \begin{code}
-inferTypes vts fis env (Bnd typ quant vs e)
+inferTypes fis env (Bnd typ quant vs e)
   = do  let ids = getStdIds $ S.toList vs
         let (fis1,vl1,env1) = abstractBindingVars fis env ids
-        (fis2,(s1, t1)) <- inferTypes vts fis1 env1 e
+        (fis2,(s1, t1)) <- inferTypes fis1 env1 e
         return (fis2,(s1,t1))
 \end{code}
 
@@ -553,14 +553,14 @@ $$\ISUBST$$
 
 \textbf{Only does let-expression modelled as a simple subtitution}
 \begin{code}
-inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
+inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs -- remove this, assume nothing about ves
-  = do  (fis1,(s1, t1)) <- inferTypes vts fis env e1 -- do this for all e_i
+  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
         let TypeEnv env' = remove env x -- x_1 .. x_N
         let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
         let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
         -- compose all s_i here as "s_1" ?
-        (fis2,(s2, t2)) <- inferTypes vts fis1 (apply s1 env'') e2
+        (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
         return (fis2,(s1 `composeSubst` s2, t2))
   where
     vel = S.toList ves
@@ -575,8 +575,8 @@ In all other cases (if any) we simply return an empty type-substitution
 --and the arbitrary type:
 and the terms current type:
 \begin{code}
---inferTypes vts fis env t = return (fis,(M.empty,ArbType))
-inferTypes vts fis env t = return (fis,(M.empty,termtype $ pdbg "iT-unimp.t" t))
+--inferTypes fis env t = return (fis,(M.empty,ArbType))
+inferTypes fis env t = return (fis,(M.empty,termtype $ pdbg "iT-unimp.t" t))
 \end{code}
 
 \newpage

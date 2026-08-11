@@ -696,7 +696,7 @@ mkTypedAsn :: [VarTable] -> Term -> SideCond -> (Assertion, CanonicalMap)
 mkTypedAsn vts term sc 
   = case typeInference vts term of
       But msgs                 ->  addTypeInfo sc ArbType term M.empty
-      Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
+      Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' $ pdbg "mTA.typsub" typsub
 
 addTypeInfo :: SideCond -> Type -> Term -> TypeSubst
             -> (Assertion, CanonicalMap)

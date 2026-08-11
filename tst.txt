@@ -1,4 +1,70 @@
 
+-- FOCUS DOWN ONTO IMPLICATION LHS
+
+@mFD.tz:  exists y$ @ P[e$/x$] ==> exists y$ @ P[e$/x$]
+  ( C (TG (Id "B" 0)) True (Id "imp" 0) 
+      [ B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
+        (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
+        ( S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
+            (SN (fromList []) 
+                (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
+                            , LV (VR (Id "e" 0,VE,WS),[],[]))
+                          ]))
+        )
+        , B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
+            (fromList [ GL (LV (VR (Id "x" 0,VO,WS),[],[]))
+                      , GL (LV (VR (Id "y" 0,VO,WS),[],[]))
+                      ]
+            ) 
+            (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+      ]
+  , []
+  )
+
+@mFD.i':  1
+
+@mFD.tz':  
+  ( B (TG (Id "B" 0)) (Id "exists" 0) 
+      (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
+      ( S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
+          (SN (fromList []) 
+              (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
+                          , LV (VR (Id "e" 0,VE,WS),[],[])
+                          )
+                        ])))
+  , [ ( 1
+      , Cons' (TG (Id "B" 0)) True (Id "imp" 0) [] 
+              [ B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
+                  (fromList [ GL (LV (VR (Id "x" 0,VO,WS),[],[]))
+                            , GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
+                  (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))]
+      )
+    ]
+  )
+
+-- MAKING TYPED ASSERTION FOR MATCHING
+
+@tFA.goalt:  
+  B (TG (Id "B" 0)) (Id "exists" 0) 
+    (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
+    (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
+       (SN (fromList []) 
+           (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
+                     ,LV (VR (Id "e" 0,VE,WS),[],[]))])))
+
+@tFA.asn':  ASN (
+  B T (Id "exists" 0) -- Why is this `T` and not `TG (Id "B" 0)` ?
+    (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
+    (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
+       (SN (fromList []) 
+       (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
+                 ,LV (VR (Id "e" 0,VE,WS),[],[]))])))
+, SCD [] (fromList [])
+)
+
+
+-- MATCH OUTCOME
+
 @tM.tP:  exists x$ . P   ::  Bool
   B (TG (Id "B" 0)) 
     (Id "exists" 0) 

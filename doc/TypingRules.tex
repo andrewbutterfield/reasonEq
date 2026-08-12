@@ -122,7 +122,7 @@
   \TINFER
    { \TJUDGE\TENV{e_1}{t}{S_1}
      \and
-     \TJUDGE{S_1\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_2}
+     \TJUDGE{S_1\TENV,x:\TGEN{S_1\TENV}}{e_2}{t'}{S_2}
    }
    {\TJUDGE\TENV{\LET x = e_1 \IN e_2}{t'}{S_2 S_1}}
 }

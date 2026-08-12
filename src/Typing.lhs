@@ -362,12 +362,12 @@ typeInference :: MonadFail mf
               -> Term 
               -> mf (Type,Term,TypeSubst)
 typeInference vts trm
-  = do  let (fis,env) = foldl (addVarType $ pdbg "tI.vts" vts)  
+  = do  let (fis,env) = foldl (addVarType vts)  
                               ([1..],M.empty) 
-                              (getTypedVars $ pdbg "tI.trm" trm)
+                              (getTypedVars trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes fis (TypeEnv $ pdbg "tI.env" env) trm
-        let typ' = apply (pdbg "tI.sub" sub) $ pdbg "tI.typ" typ
+        (_,(sub, typ)) <- inferTypes fis (TypeEnv env) trm
+        let typ' = apply sub typ
         return (typ',settype typ' trm,sub)
 
 getTypedVars :: Term -> [(Type,Variable)]
@@ -576,7 +576,7 @@ In all other cases (if any) we simply return an empty type-substitution
 and the terms current type:
 \begin{code}
 --inferTypes fis env t = return (fis,(M.empty,ArbType))
-inferTypes fis env t = return (fis,(M.empty,termtype $ pdbg "iT-unimp.t" t))
+inferTypes fis env t = return (fis,(M.empty,termtype t))
 \end{code}
 
 \newpage

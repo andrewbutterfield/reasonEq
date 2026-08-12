@@ -138,9 +138,9 @@ moveFocusDown :: MonadFail m => Int -> LiveProof -> m LiveProof
 moveFocusDown i liveProof
   = let (tz,seq') = focus liveProof
         i' = if i <= 0 then 1 else i
-        (ok,tz') = downTZ (pdbg "mFD.i'" i') $ pdbg "mFD.tz" tz
+        (ok,tz') = downTZ i' tz
     in if ok
-        then return ( focus_ (pdbg "mFD.tz'" tz',seq')
+        then return ( focus_ (tz',seq')
                     $ matches_ [] liveProof )
         else fail ("No sub-term "++show i')
 
@@ -311,9 +311,9 @@ tryFocusAgainst lawnm parts liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
-    in do let (asn',tvmap) = mkTypedAsn vts (pdbg "tFA.goalt" goalt) scC
-          let fits  =  cSubType $ pdbg "tFA.tvmap" tvmap
-          tryLawByName (pdbg "tFA.asn'" asn') lawnm parts ctxts fits
+    in do let (asn',tvmap) = mkTypedAsn vts goalt scC
+          let fits  =  cSubType tvmap
+          tryLawByName asn' lawnm parts ctxts fits
 \end{code}
 
 \newpage

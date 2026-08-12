@@ -351,6 +351,7 @@ mgu fis t1 t2                  =  fail ("mgu types don't unify:\n  t1 is "
                                         ++"\n  t2 is "++show t2)
 \end{code}
 
+\newpage
 \section{Type Inference}
 
 \subsection{Type Inferencer}
@@ -378,7 +379,6 @@ isStdTypedVar (_,StdVar _)  =  True
 isStdTypedVar _             =  False
 \end{code}
 
-\newpage
 Here we add types into the type environment, 
 generating fresh type-variables when needed.
 \begin{code}
@@ -423,8 +423,6 @@ $\ITLIT$
 inferTypes fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
 \end{code}
 
-
-\newpage
 \subsubsection{Variables}
 
 From MG:
@@ -456,7 +454,7 @@ inferTypes fis (TypeEnv env) (VTyp t (Vbl n _ _))
 \end{code}
 
 
-
+\newpage
 \subsubsection{Function Application}
 
 From MG:
@@ -485,7 +483,7 @@ inferTypes fis env econs@(Cons _ _ _ _)
   = inferTypes fis env $ consToApp econs
 \end{code}
 
-\newpage
+
 \subsubsection{Variable Binding Constructs}
 
 Both quantifier bindings ($\forall x \bullet p$)
@@ -495,7 +493,9 @@ The difference is that the type of the quantifier is that of its body,
 while the type of the abstraction is a higher-order function 
 from the types of the binders to the type of the body.
 
-We start with function abstraction.
+\newpage
+We start with variable-list abstraction, 
+which includes the classic typed lambda-calculus case.
 
 From MG:
 
@@ -518,6 +518,9 @@ inferTypes fis env (Lam typ lmbd vl e)
     curryType [] r = r
     curryType (d:ds) r = FunType d $ curryType ds r
 \end{code} 
+
+We then look at variable-set abstraction, 
+which corresponds to the standard logic quantifiers.
 
 $$\IQUANT$$
 
@@ -542,16 +545,26 @@ From MG:
 $$\ILET$$
 
 We note that a let-expression $\LET x=e_1 \IN e_2$
-is basically a substitution $e_2[e_1/x]$.
-
+is basically a single substitution $e_2[e_1/x]$.
 
 $$\ISUBSTONE$$
+
+\textbf{Note: }
+in general (where no $x_i$ is same as $x_j$ for $i\neq j$):
+$$
+((e_0[e_1/x_1])[e_1/x_2])\dots)[e_n/x_n]
+  \neq
+  e_0[e_1,\dots,e_n/x_1,\dots,x_n]
+$$
+This means the multiple substitution case needs to be explicitly implemented,
+with the simple form being just the case where $n=1$.
 
 Generalising to multiple substitution:
 
 $$\ISUBST$$
 
-\textbf{Only does let-expression modelled as a simple subtitution}
+
+\textbf{Only does a single substitution at present}
 \begin{code}
 inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs -- remove this, assume nothing about ves
@@ -695,7 +708,7 @@ hdConsTl = M.fromList
         t = jId "t"
 \end{code}
 
-\newpage
+
 \subsection{Implementation}
 
 We represent 

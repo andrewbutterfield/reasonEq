@@ -564,6 +564,21 @@ Generalising to multiple substitution:
 $$\ISUBST$$
 
 
+\begin{code}
+inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
+  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
+        let TypeEnv env' = remove env x -- x_1 .. x_N
+        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
+        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
+        -- compose all s_i here as "s_1" ?
+        (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
+        return (fis2,(s1 `composeSubst` s2, t2))
+  where
+    (xs,es) = unzip $ S.toList ves
+    e1 = head es
+    x = varId $ head xs
+\end{code}
+
 \textbf{Only does a single substitution at present}
 \begin{code}
 inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
@@ -631,6 +646,13 @@ consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
 mkApply f e = (Cons arbpred True app [f,e])
+\end{code}
+
+Type-inference for a list of terms.
+We cannot just use map, because we need to thread the fresh integers,
+and accumulate a substitution.
+\begin{code}
+-- TBD
 \end{code}
 
 \newpage

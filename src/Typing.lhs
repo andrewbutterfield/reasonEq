@@ -263,6 +263,10 @@ Removing an term variable from an environment:
 \begin{code}
 remove :: TypeEnv -> TermVariable -> TypeEnv
 remove (TypeEnv env) var  =  TypeEnv (M.delete var env)
+
+removeMany :: TypeEnv -> [TermVariable] -> TypeEnv
+removeMany tenv [] = tenv
+removeMany tenv (tv:tvs) = removeMany (remove tenv tv) tvs
 \end{code}
 
 The function \h{generalize}, given an environment and type,
@@ -559,24 +563,27 @@ $$
 This means the multiple substitution case needs to be explicitly implemented,
 with the simple form being just the case where $n=1$.
 
+\TLEGEND 
+
 Generalising to multiple substitution:
 
 $$\ISUBST$$
 
-
 \begin{code}
 inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
-        let TypeEnv env' = remove env x -- x_1 .. x_N
+  = do  (fis1,sts) <- inferManyTypes fis env es -- do this for all e_i
+        let TypeEnv env' = removeMany env xs -- x_1 .. x_N
+        let (s1,t1) = head sts
         let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
         let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
         -- compose all s_i here as "s_1" ?
         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
         return (fis2,(s1 `composeSubst` s2, t2))
   where
-    (xs,es) = unzip $ S.toList ves
+    (vs,es) = unzip $ S.toList ves
+    xs = map varId vs
     e1 = head es
-    x = varId $ head xs
+    x = varId $ head vs
 \end{code}
 
 \textbf{Only does a single substitution at present}
@@ -609,6 +616,20 @@ inferTypes fis env t = return (fis,(M.empty,termtype t))
 
 \newpage
 \subsubsection{Support}
+
+Type-inference for a list of terms.
+We cannot just use map, because we need to thread the fresh integers,
+and accumulate a substitution.
+\begin{code}
+inferManyTypes :: MonadFail mf
+               => FreshInts -> TypeEnv -> [Term]
+               -> mf (FreshInts,[(TypeSubst, Type)])
+inferManyTypes fis env [] = return (fis,[])
+inferManyTypes fis0 env (trm:trms) = do
+  (fis1,st1) <- inferTypes fis0 env trm
+  (fis2,sts2) <- inferManyTypes fis1 env trms
+  return (fis2,st1:sts2)
+\end{code}
 
 Extracting standard variable identifiers from a general variable list:
 \begin{code}
@@ -646,13 +667,6 @@ consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
 mkApply f e = (Cons arbpred True app [f,e])
-\end{code}
-
-Type-inference for a list of terms.
-We cannot just use map, because we need to thread the fresh integers,
-and accumulate a substitution.
-\begin{code}
--- TBD
 \end{code}
 
 \newpage

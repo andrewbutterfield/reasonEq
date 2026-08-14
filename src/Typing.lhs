@@ -571,12 +571,13 @@ $$\ISUBST$$
 
 \begin{code}
 inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-  = do  (fis1,sts) <- inferManyTypes fis env es -- do this for all e_i
-        let TypeEnv env' = removeMany env xs -- x_1 .. x_N
-        let (s1,t1) = head sts
-        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
-        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
-        -- compose all s_i here as "s_1" ?
+  = do  (fis1,sts) <- inferManyTypes fis env es 
+        let TypeEnv env' = removeMany env xs 
+        let tschemes = map (applyAndGen env) sts  
+        let (tsubs,typs) = unzip sts 
+        let vss = zip xs tschemes
+        let env'' = TypeEnv $ envInsertMany vss env'  
+        let s1 = foldl composeSubst M.empty tsubs
         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
         return (fis2,(s1 `composeSubst` s2, t2))
   where
@@ -586,22 +587,22 @@ inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
     x = varId $ head vs
 \end{code}
 
-\textbf{Only does a single substitution at present}
-\begin{code}
-inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-  | islet vel && S.null lvlvs -- remove this, assume nothing about ves
-  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
-        let TypeEnv env' = remove env x -- x_1 .. x_N
-        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
-        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
-        -- compose all s_i here as "s_1" ?
-        (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
-        return (fis2,(s1 `composeSubst` s2, t2))
-  where
-    vel = S.toList ves
-    islet [_] = True; islet _ = False
-    ((Vbl x _ _),e1) = head vel
-\end{code}
+% \textbf{Only does a single substitution at present}
+% \begin{code}
+% inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
+%   | islet vel && S.null lvlvs -- remove this, assume nothing about ves
+%   = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
+%         let TypeEnv env' = remove env x -- x_1 .. x_N
+%         let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
+%         let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
+%         -- compose all s_i here as "s_1" ?
+%         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
+%         return (fis2,(s1 `composeSubst` s2, t2))
+%   where
+%     vel = S.toList ves
+%     islet [_] = True; islet _ = False
+%     ((Vbl x _ _),e1) = head vel
+% \end{code}
 
 
 \subsubsection{Unimplemented}
@@ -629,6 +630,19 @@ inferManyTypes fis0 env (trm:trms) = do
   (fis1,st1) <- inferTypes fis0 env trm
   (fis2,sts2) <- inferManyTypes fis1 env trms
   return (fis2,st1:sts2)
+\end{code}
+
+Apply and Generalise:
+\begin{code}
+applyAndGen :: TypeEnv -> (TypeSubst,Type) -> TypeScheme
+applyAndGen env (s,t) = generalize (apply s env) t
+\end{code}
+
+Insert Environment entries:
+\begin{code}
+envInsertMany :: [(TermVariable,TypeScheme)] -> Env -> Env
+envInsertMany [] env = env
+envInsertMany ((tv,ts):vss) env = envInsertMany vss (M.insert tv ts env)
 \end{code}
 
 Extracting standard variable identifiers from a general variable list:

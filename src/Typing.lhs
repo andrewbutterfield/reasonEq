@@ -587,24 +587,6 @@ inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
     x = varId $ head vs
 \end{code}
 
-% \textbf{Only does a single substitution at present}
-% \begin{code}
-% inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-%   | islet vel && S.null lvlvs -- remove this, assume nothing about ves
-%   = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
-%         let TypeEnv env' = remove env x -- x_1 .. x_N
-%         let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
-%         let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
-%         -- compose all s_i here as "s_1" ?
-%         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
-%         return (fis2,(s1 `composeSubst` s2, t2))
-%   where
-%     vel = S.toList ves
-%     islet [_] = True; islet _ = False
-%     ((Vbl x _ _),e1) = head vel
-% \end{code}
-
-
 \subsubsection{Unimplemented}
 
 In all other cases (if any) we simply return an empty type-substitution

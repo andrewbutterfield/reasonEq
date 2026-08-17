@@ -563,7 +563,7 @@ $$
 This means the multiple substitution case needs to be explicitly implemented,
 with the simple form being just the case where $n=1$.
 
-\TLEGEND
+\TLEGEND 
 
 Generalising to multiple substitution:
 
@@ -571,38 +571,21 @@ $$\ISUBST$$
 
 \begin{code}
 inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- OLD
-        (fis1,(s1,ts1)) <- inferManyTypes fis env es -- NEW
-        let TypeEnv env' = remove env x -- OLD
-        let TypeEnv env1 = removeMany env xs -- NEW
-        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
-        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
-        -- compose all s_i here as "s_1" ?
+  = do  (fis1,sts) <- inferManyTypes fis env es 
+        let TypeEnv env' = removeMany env xs 
+        let tschemes = map (applyAndGen env) sts  
+        let (tsubs,typs) = unzip sts 
+        let vss = zip xs tschemes
+        let env'' = TypeEnv $ envInsertMany vss env'  
+        let s1 = foldl composeSubst M.empty tsubs
         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
         return (fis2,(s1 `composeSubst` s2, t2))
   where
     (vs,es) = unzip $ S.toList ves
+    xs = map varId vs
     e1 = head es
-    xs = map varId vs ; x = head xs
+    x = varId $ head vs
 \end{code}
-
-\textbf{Only does a single substitution at present}
-\begin{code}
-inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
-  | islet vel && S.null lvlvs -- remove this, assume nothing about ves
-  = do  (fis1,(s1, t1)) <- inferTypes fis env e1 -- do this for all e_i
-        let TypeEnv env' = remove env x -- x_1 .. x_N
-        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
-        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
-        -- compose all s_i here as "s_1" ?
-        (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
-        return (fis2,(s1 `composeSubst` s2, t2))
-  where
-    vel = S.toList ves
-    islet [_] = True; islet _ = False
-    ((Vbl x _ _),e1) = head vel
-\end{code}
-
 
 \subsubsection{Unimplemented}
 
@@ -610,6 +593,7 @@ In all other cases (if any) we simply return an empty type-substitution
 --and the arbitrary type:
 and the terms current type:
 \begin{code}
+--inferTypes fis env t = return (fis,(M.empty,ArbType))
 inferTypes fis env t = return (fis,(M.empty,termtype t))
 \end{code}
 
@@ -621,13 +605,26 @@ We cannot just use map, because we need to thread the fresh integers,
 and accumulate a substitution.
 \begin{code}
 inferManyTypes :: MonadFail mf
-           => FreshInts -> TypeEnv -> [Term] 
-           -> mf (FreshInts,(TypeSubst, [Type]))
-inferManyTypes fis env [] = return (fis,(M.empty,[]))
-inferManyTypes fis0 env (t:ts) = do
-  (fis1,(s1,t1)) <- inferTypes fis0 env t
-  (fis2,(s2,ts2)) <- inferManyTypes fis1 (apply s1 env) ts
-  return (fis2,(s2 `composeSubst` s1,t1:ts2))
+               => FreshInts -> TypeEnv -> [Term]
+               -> mf (FreshInts,[(TypeSubst, Type)])
+inferManyTypes fis env [] = return (fis,[])
+inferManyTypes fis0 env (trm:trms) = do
+  (fis1,st1) <- inferTypes fis0 env trm
+  (fis2,sts2) <- inferManyTypes fis1 env trms
+  return (fis2,st1:sts2)
+\end{code}
+
+Apply and Generalise:
+\begin{code}
+applyAndGen :: TypeEnv -> (TypeSubst,Type) -> TypeScheme
+applyAndGen env (s,t) = generalize (apply s env) t
+\end{code}
+
+Insert Environment entries:
+\begin{code}
+envInsertMany :: [(TermVariable,TypeScheme)] -> Env -> Env
+envInsertMany [] env = env
+envInsertMany ((tv,ts):vss) env = envInsertMany vss (M.insert tv ts env)
 \end{code}
 
 Extracting standard variable identifiers from a general variable list:
@@ -667,7 +664,6 @@ consToApp cons = cons
 mkApply :: Term -> Term -> Term
 mkApply f e = (Cons arbpred True app [f,e])
 \end{code}
-
 
 \newpage
 \section{Type-Variable Equivalence}

@@ -35,39 +35,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - typeMatch 'disinct types' bug
-
-  ```
-  ∃y$ • P[e$/x$] ⟹  ∃x$,y$ • P
-  ⊤
-  Focus = [1] :: 𝔹  
-  proof> tm 1 exists_def
-  Match against 'exists_def'[1] failed!
-  try match failed
-  (∃ y$  • P[e$/x$]) :: (∃ x$  • P)
-  lnm[parts]=exists_def[1]
-  tP=(∃ x$  • P) ≡ ¬((∀ x$  • ¬P))
-    scP=⊤
-    partsP=(∃ x$  • P)
-    replP=¬((∀ x$  • ¬P))
-  tC=(∃ y$  • P[e$/x$])
-    scC=⊤
-  ---
-  typeMatch: distinct types
-  typC = T
-  typP = TG (Id "B" 0)
-  ```
-
-  *Going up and running `tm 1 exists_def` results in tC being correct (`bool`). Looks like going down messes up the type of the focus, except when we a single predicate variable at the focus*
-
-  The call to `downTZ` does *not* alter/break any typing info.
-
-  The fail is in `mkTypedAsn` where the top-level bool type becomes arbitrary. An obvious issue is that the rule for binders should require that the binder type
-  is the same as that of the body. This should not be the case for lambda-like bindings.
-
-  **Real issue: `inferTypes` only handles the substitution `P[e/x]`**  
-
-  **Open issue** *Should we use `mkTypedAsn` after every focus change. Focus changes preserve type-info. Perhaps we should used `mkTypedAsn` whenever assertions are created/modified?*
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
@@ -89,6 +56,8 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - typeMatch 'disinct types' bug
 
   - saving Forall results in runtime error in call to `mrgscs`.
 

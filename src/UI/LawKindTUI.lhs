@@ -123,11 +123,16 @@ For now there is one prover-level command:
 \begin{code}
 doClassDrivenAutomation :: REPLCmd (REqState, LiveProof)
 doClassDrivenAutomation _ (reqs,liveproof)
-  = case applyCLA liveproof of
+  = case applyCLA cls ranking liveproof of
       Yes liveproof' -> return (reqs, liveproof')
       But msgs -> do putStrLn $ unlines' msgs
                      waitForReturn
-                     return (reqs, liveproof) 
+                     return (reqs, liveproof)
+  where
+    ranking = filterAndSort ( matchFilter $ liveSettings liveproof
+                            , favourDefLHSOrd )
+    cls = catClassyLaws $ map lwkinds
+            $ getTheoryDeps' (currTheory reqs) (theories reqs)
 \end{code}
 (This may change)
 

@@ -74,6 +74,46 @@ Fixing bugs as we go.
 
     Puzzling: `(P⊆Ø) ⟹ (P⊆?x$)` should discharge.
 
+    Note that `tm` seems to think that things work OK.
+
+    ```
+    proof> tm 1 uclose_def
+    Match against 'uclose_def'[1] was successful
+    Binding:
+      { B  ⟼ 𝔹  , P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
+    Instantiated Replacement:
+      (∀ ?x$  • P)
+    Instantiated Variables: {P,?x$}
+    Floating Vars?: True
+    Law S.C.:
+      (P⊆x$)
+    Instantiated Law S.C.:
+      (P⊆?x$)
+    Goal S.C.:
+      (P⊆Ø)
+    Discharged Law S.C.:
+      (P⊆?x$)
+   ```
+
+   ```
+   proof> tm 2 uclose_def
+    Match against 'uclose_def'[2] was successful
+    Binding:
+      { B  ⟼ 𝔹  , P  ⟼ P, x$  ⟼ {?x$} }
+    Instantiated Replacement:
+      [P]
+    Instantiated Variables: {P}
+    Floating Vars?: False
+    Law S.C.:
+      (P⊆x$)
+    Instantiated Law S.C.:
+      (P⊆?x$)
+    Goal S.C.:
+      (P⊆Ø)
+    Discharged Law S.C.:
+      (P⊆?x$)
+  ```
+
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 

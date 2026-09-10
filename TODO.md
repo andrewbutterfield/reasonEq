@@ -35,14 +35,50 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - When trying to start a proof of `exists_idem`, 
-    we get the error message *shadowed bound-vars. in conjecture*.
+  - Problem with `Closure` conjecture, trying `m uclose_def`,
+    where that law is `[P] ≡ (∀ x$  • P)  (P⊆x$)`.
+
+    ```
+    Proof for univ_id_on_closed
+      [P] ≡ P
+      (P⊆Ø)
+    by red-All
+    Matches:
+    2 : “uclose_def” [≡rhs]
+    [[P]]
+    (P⊆Ø) ⟹ ⊤
+    1 : “uclose_def” [≡lhs]
+    ∀?x$ • P
+    (P⊆Ø) ⟹ (P⊆?x$)
+              
+    true
+    ⊢
+    [P] ≡ P
+    (P⊆Ø)
+    Focus = [1] :: 𝔹  
+
+    Target (RHS): 
+    true
+    XPNDD:
+    (P⊆Ø)
+
+
+    proof>  a1
+    Choose variables (zero or more) to replace ?x$
+       1. x$
+    Take by numbers: 
+    Selected: []
+    Chosen list is ⟨⟩
+    Undischarged side-conditions: false(fresh-var s.c. discharge failed (C))
+    ```
+
+    Puzzling: `(P⊆Ø) ⟹ (P⊆?x$)` should discharge.
+
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.
     
-
   - potential `scDischarge` bug.
 
     When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it wnr off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
@@ -58,6 +94,9 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - When trying to start a proof of `exists_idem`, 
+    we get the error message *shadowed bound-vars. in conjecture*.
 
   - typeMatch 'disinct types' bug
 

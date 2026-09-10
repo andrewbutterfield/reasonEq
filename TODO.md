@@ -35,6 +35,8 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - When trying to start a proof of `exists_idem`, 
+    we get the error message *shadowed bound-vars. in conjecture*.
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 

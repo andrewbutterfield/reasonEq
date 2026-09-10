@@ -17,9 +17,9 @@ UBase
 Lists
 LTL
 Closure
-Sets
-Exists -- working here:
+Sets -- working here
 -- ok below here:
+Exists
 Arith
 Forall 
 Equal

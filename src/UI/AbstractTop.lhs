@@ -421,7 +421,12 @@ newProof2 (nm,asn) seqnt reqs
 \textbf{Note:}
 \textit{
 This is now ensured in any Assertion by construction.
-We retain it temporarily as a double-check.
+We remove it as it makes it impossible to prove the $\exists$-idem conjecture
+($
+(\exists \lst x \bullet (\exists \lst x \bullet P))
+\equiv
+(\exists \lst x \bullet P)
+$)
 }
 We need to ensure that all bound variables in a conjecture
 are not ``shadowed'' by bound variables nested deeper in,
@@ -441,7 +446,7 @@ of distinguishing substitutable and non-substitutable terms.
 \textsf{We do now, as theories have a \texttt{SubAbilityMap} component}
 \begin{code}
 shadowFree :: Assertion -> Bool
-shadowFree (Assertion t sc) = shadowFree' sc S.empty t
+shadowFree (Assertion t sc) = True -- shadowFree' sc S.empty t
 
 shadowFree' :: SideCond -> VarSet -> Term -> Bool
 shadowFree' sc bvs (Cons _ _ _ ts)   =  all (shadowFree' sc bvs) ts

@@ -38,6 +38,9 @@ Fixing bugs as we go.
   - Problem with `Closure` conjecture, trying `m uclose_def`,
     where that law is `[P] ≡ (∀ x$  • P)  (P⊆x$)`.
 
+    Problems is `scDischarge` with observable `?x$` 
+    and arguments that are *both* `P⊆Ø` fails.
+
     ```
     Proof for univ_id_on_closed
       [P] ≡ P

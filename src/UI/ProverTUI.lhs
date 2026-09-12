@@ -431,7 +431,7 @@ applyMatch args pstate@(reqs, liveProof)
              (lvardone,lvvls)
                <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
              if vardone && lvardone then
-               case applyMatchToFocus2 vts mtch svtms lvvls liveProof of
+               case applyMatchToFocus2 vts mtch (pdbg "aM.svtms" svtms) (pdbg "aM.lvvls" lvvls) liveProof of
                  Yes liveProof'
                   -> return(reqs, liveProof')
                  But msgs

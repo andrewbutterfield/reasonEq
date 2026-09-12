@@ -23,7 +23,7 @@ TS = False
 FV = False
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),[(1,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])])
+TERMZIP = (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),[(2,Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))] [])])
 BEGIN SEQUENT'
 SIDECOND = SCD [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [])] (fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_id_on_closed", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}

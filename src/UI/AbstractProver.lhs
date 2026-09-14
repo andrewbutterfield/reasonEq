@@ -398,8 +398,8 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage obsv lvvls scLasC
           scCX <- mrgSideCond scC scCL
-          let scD = scDischarge (pdbg "aMTF2.obsv" obsv) (pdbg "aMTF2.scCX" scCX) $ pdbg "aMTF2.scLasC" scLasC
-          if onlyFreshSC $ pdbg "aMTF2.scD" scD
+          let scD = scDischarge obsv scCX scLasC
+          if onlyFreshSC scD
             then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent

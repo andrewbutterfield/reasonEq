@@ -35,88 +35,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - Problem with `Closure` conjecture, trying `m uclose_def`,
-    where that law is `[P] ≡ (∀ x$  • P)  (P⊆x$)`.
-
-    Problems is `scDischarge` with observable `?x$` 
-    and arguments that are *both* `P⊆Ø` fails.
-
-    ```
-    Proof for univ_id_on_closed
-      [P] ≡ P
-      (P⊆Ø)
-    by red-All
-    Matches:
-    2 : “uclose_def” [≡rhs]
-    [[P]]
-    (P⊆Ø) ⟹ ⊤
-    1 : “uclose_def” [≡lhs]
-    ∀?x$ • P
-    (P⊆Ø) ⟹ (P⊆?x$)
-              
-    true
-    ⊢
-    [P] ≡ P
-    (P⊆Ø)
-    Focus = [1] :: 𝔹  
-
-    Target (RHS): 
-    true
-    XPNDD:
-    (P⊆Ø)
-
-
-    proof>  a1
-    Choose variables (zero or more) to replace ?x$
-       1. x$
-    Take by numbers: 
-    Selected: []
-    Chosen list is ⟨⟩
-    Undischarged side-conditions: false(fresh-var s.c. discharge failed (C))
-    ```
-
-    Puzzling: `(P⊆Ø) ⟹ (P⊆?x$)` should discharge.
-
-    Note that `tm` seems to think that things work OK.
-
-    ```
-    proof> tm 1 uclose_def
-    Match against 'uclose_def'[1] was successful
-    Binding:
-      { B  ⟼ 𝔹  , P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
-    Instantiated Replacement:
-      (∀ ?x$  • P)
-    Instantiated Variables: {P,?x$}
-    Floating Vars?: True
-    Law S.C.:
-      (P⊆x$)
-    Instantiated Law S.C.:
-      (P⊆?x$)
-    Goal S.C.:
-      (P⊆Ø)
-    Discharged Law S.C.:
-      (P⊆?x$)
-   ```
-
-   ```
-   proof> tm 2 uclose_def
-    Match against 'uclose_def'[2] was successful
-    Binding:
-      { B  ⟼ 𝔹  , P  ⟼ P, x$  ⟼ {?x$} }
-    Instantiated Replacement:
-      [P]
-    Instantiated Variables: {P}
-    Floating Vars?: False
-    Law S.C.:
-      (P⊆x$)
-    Instantiated Law S.C.:
-      (P⊆?x$)
-    Goal S.C.:
-      (P⊆Ø)
-    Discharged Law S.C.:
-      (P⊆?x$)
-  ```
-
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
@@ -137,6 +55,11 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - Problem with `Closure` conjecture, trying `m uclose_def`,
+    where that law is `[P] ≡ (∀ x$  • P)  (P⊆x$)`.
+    Problems was `scDischarge` with observable `?x$` 
+    and arguments that are *both* `P⊆Ø` fails. Now fixed.
 
   - When trying to start a proof of `exists_idem`, 
     we get the error message *shadowed bound-vars. in conjecture*.

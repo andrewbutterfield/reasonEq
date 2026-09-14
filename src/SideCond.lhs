@@ -877,11 +877,19 @@ the plan is first to use the $G_i$ to discharge the $L_i$,
 and then finish by using $G_F$ to discharge $G_L$ and any remaining $L_i$.
 
 \newpage
+We start by looking at some simple early optimisations:
+\begin{eqnarray*}
+   \true ~\vdash L &\mapsto& \true
+\\ G \vdash \true &\mapsto& G
+\\ S \vdash S &\mapsto& \true
+\end{eqnarray*}
 \begin{code}
 scDischarge :: VarSet -> SideCond -> SideCond -> SideCond
 scDischarge obsv goalSC@(SCD goalVSC goalFvs) ilawSC@(SCD ilawVSC ilawFvs)
   = if isTrivialSC ilawSC then scTrue
     else if isTrivialSC goalSC then ilawSC
+    else if goalVSC == ilawVSC && goalFvs == ilawFvs then scTrue
+    -- OK, now time to dig a little deeper....
     else let vsp' = vspsDischarge obsv goalVSC ilawVSC  
          in freshDischarge obsv goalFvs ilawFvs vsp'
 \end{code}

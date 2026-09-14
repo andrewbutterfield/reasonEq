@@ -16,8 +16,8 @@ UWhile
 UBase
 Lists
 LTL
-Closure
-Sets -- working here
+Closure -- working here
+Sets 
 -- ok below here:
 Exists
 Arith
@@ -35,6 +35,9 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - Time to fix `xxx_def` ranking higher than `true` (or `false`).
+
+    The `Closure` theory is a good place to fix this.
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 

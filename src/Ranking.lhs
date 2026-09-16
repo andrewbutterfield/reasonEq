@@ -7,7 +7,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Ranking
   ( FilterFunction, OrderFunction, Ranking
-  , filterAndSort -- used in ProverTUI
   -- exported Filters
   , acceptAll, acceptNone -- used in ProofSettings
   , isTrivialMatch-- used in ProofSettings
@@ -18,6 +17,7 @@ module Ranking
   , sizeOrd -- not used
   , favourDefLHSOrd -- used in ProverTUI
   -- exported rankings
+  , filterAndSort -- used in ProverTUI
   , sizeRanking -- not used
   , favouriteRanking -- not used
   )
@@ -60,6 +60,125 @@ type OrderFunction ord = [MatchContext] -> ProofMatch -> ord
 type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
+
+\newpage
+\section{Filters}
+
+\subsection{Accept All/None}
+
+\begin{code}
+acceptAll, acceptNone :: FilterFunction
+acceptAll _ _   =  True
+acceptNone _ _  =  False
+\end{code}
+
+
+
+\subsection{Pathological Cases}
+
+Some matches are quite pathological in character,
+and usually we want to supress these.
+Sometimes, however, they are useful.
+
+We provide some predicates here that identify specific pathologies.
+All of these are disabled by default.
+
+\subsubsection{Trivial Matches}
+
+Matches against a single predicate variable
+\begin{code}
+isTrivialMatch :: FilterFunction
+isTrivialMatch _ m
+  = trivial $ mClass m
+  where
+     trivial (MatchEqvVar _)  =  True
+     trivial _                =  False
+\end{code}
+
+\subsubsection{Vanishing List Variables}
+
+All pattern list-variables
+are mapped to empty sets or lists.
+\begin{code}
+onlyTrivialLVarMatches :: FilterFunction
+onlyTrivialLVarMatches _ mtch
+  =  onlyTrivialListVarBindings (mBind mtch)
+\end{code}
+
+\subsubsection{Accept Empty Substitutions}
+
+Matches that contain empty substitutions ($t[/]$).
+\begin{code}
+anyTrivialSubstitutions :: FilterFunction
+anyTrivialSubstitutions _  =  anyTrivialSubstitution . mRepl
+\end{code}
+
+\subsection{Accept Floating Matches}
+
+Some matches to one part of a law will not cover all the variables
+in the other (replacement) part.
+Sometimes we need these matches, sometimes they are a distraction.
+\begin{code}
+hasFloatingVariables :: FilterFunction
+hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
+\end{code}
+If floating variables are enabled (the default),
+they will also be subject to the screening above for pathological matches.
+
+
+\newpage
+\section{Orderings}
+
+In orderings, smaller is better.
+
+\subsection{Term Size}
+
+Simple ranking by replacement term size,
+after the binding is applied:
+\begin{code}
+sizeOrd :: OrderFunction Int
+sizeOrd _ m  =  termSize $ mRepl m
+\end{code}
+
+
+\subsection{Favour LHS and Definitions}
+
+Show matches to laws named as definitions first,
+then those matching LHS of equivalence laws,
+and then the rest.
+Key exceptions: replacement \h{true} trumps definitions.
+\begin{code}
+favourDefLHSOrd :: OrderFunction (Int,Int,Int,Int)
+favourDefLHSOrd ctxt m
+  = ( subMatchRepl $ mRepl m
+    , subMatchDef $ mName m
+    , subMatchOrd $ mClass m
+    , sizeOrd ctxt m
+    )
+
+subMatchRepl :: Term -> Int
+subMatchRepl term
+  | term == theTrue  =  0
+  | term == theFalse =  0
+  | otherwise        =  1
+
+
+subMatchDef :: String -> Int
+subMatchDef lawname
+ | take 4 (reverse lawname) == "fed_"  =  0
+ | otherwise                           =  1
+
+subMatchOrd :: MatchClass -> Int
+subMatchOrd MatchAll         =  0
+subMatchOrd MatchEqvLHS      =  1
+subMatchOrd MatchEqvRHS      =  2
+subMatchOrd (MatchEqv _)     =  2
+subMatchOrd MatchAnte        =  3
+subMatchOrd MatchCnsq        =  3
+subMatchOrd (MatchEqvVar _)  =  3
+\end{code}
+
+\newpage
 \section{Ranking Match Lists}
 
 Simple sorting according to rank,
@@ -106,7 +225,6 @@ sameRepl m1 m2 = mRepl m1 == mRepl m2
 
 \section{Rankings}
 
-
 \subsection{Size Matters}
 
 \begin{code}
@@ -119,121 +237,5 @@ sizeRanking = filterAndSort ( acceptAll, sizeOrd )
 \begin{code}
 favouriteRanking  :: Ranking
 favouriteRanking = filterAndSort ( onlyTrivialLVarMatches, favourDefLHSOrd )
-\end{code}
-
-
-\newpage
-\section{Filters}
-
-\subsection{Accept All/None}
-
-\begin{code}
-acceptAll, acceptNone :: FilterFunction
-acceptAll _ _   =  True
-acceptNone _ _  =  False
-\end{code}
-
-\subsection{Accept Floating Matches}
-
-Some matches to one part of a law will not cover all the variables
-in the other (replacement) part.
-Sometimes we need these matches, sometimes they are a distraction.
-\begin{code}
-hasFloatingVariables :: FilterFunction
-hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
-\end{code}
-If floating variables are enabled (the default),
-they will also be subject to the screening below for pathological matches.
-
-
-\subsection{Pathological Cases}
-
-Some matches are quite pathological in character,
-and usually we want to supress these.
-Sometimes, however, they are useful.
-
-We provide some predicates here that identify specific pathologies.
-All of these are disabled by default.
-
-\subsubsection{Trivial Matches}
-
-Matches against a single predicate variable
-\begin{code}
-isTrivialMatch :: FilterFunction
-isTrivialMatch _ m
-  = trivial $ mClass m
-  where
-     trivial (MatchEqvVar _)  =  True
-     trivial _                =  False
-\end{code}
-
-\subsubsection{Vanishing List Variables}
-
-All pattern list-variables
-are mapped to empty sets or lists.
-\begin{code}
-onlyTrivialLVarMatches :: FilterFunction
-onlyTrivialLVarMatches _ mtch
-  =  onlyTrivialListVarBindings (mBind mtch)
-\end{code}
-
-\subsubsection{Accept Empty Substitutions}
-
-Matches that contain empty substitutions ($t[/]$).
-\begin{code}
-anyTrivialSubstitutions :: FilterFunction
-anyTrivialSubstitutions _  =  anyTrivialSubstitution . mRepl
-\end{code}
-
-
-\newpage
-\section{Orderings}
-
-In orderings, smaller is better.
-
-\subsection{Term Size}
-
-Simple ranking by replacement term size,
-after the binding is applied:
-\begin{code}
-sizeOrd :: OrderFunction Int
-sizeOrd _ m  =  termSize $ mRepl m
-\end{code}
-
-
-\subsection{Favour LHS and Definitions}
-
-Show matches to laws named as definitions first,
-then those matching LHS of equivalence laws,
-and then the rest.
-Key exceptions: replacement \h{true} trumps definitions.
-\begin{code}
-favourDefLHSOrd :: OrderFunction (Int,Int,Int,Int)
-favourDefLHSOrd ctxt m
-  = ( subMatchRepl $ mRepl m
-    , subMatchDef $ mName m
-    , subMatchOrd $ mClass m
-    , sizeOrd ctxt m
-    )
-
-subMatchRepl :: Term -> Int
-subMatchRepl term
-  | term == theTrue  =  0
-  | otherwise        =  1
-
-
-subMatchDef :: String -> Int
-subMatchDef lawname
- | take 4 (reverse lawname) == "fed_"  =  0
- | otherwise                           =  1
-
-subMatchOrd :: MatchClass -> Int
-subMatchOrd MatchAll         =  0
-subMatchOrd MatchEqvLHS      =  1
-subMatchOrd MatchEqvRHS      =  2
-subMatchOrd (MatchEqv _)     =  2
-subMatchOrd MatchAnte        =  3
-subMatchOrd MatchCnsq        =  3
-subMatchOrd (MatchEqvVar _)  =  3
 \end{code}
 

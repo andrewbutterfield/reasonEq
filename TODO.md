@@ -39,6 +39,9 @@ Fixing bugs as we go.
 
     The `Closure` theory is a good place to fix this.
 
+    We need to redesign `ProofSettings` and `Ranking`, 
+    and think about unused rankings: `(size|favourite)Ranking`.
+
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.

@@ -42,6 +42,30 @@ Fixing bugs as we go.
     We need to redesign `ProofSettings` and `Ranking`, 
     and think about unused rankings: `(size|favourite)Ranking`.
 
+    With settings below, `m` returns 39 visible matches.
+    ```
+    proof> show
+   1. maxMatchDisplay       - 5
+   2. maxStepDisplay        - 10
+   3. showBindings          - False
+   4. showTrivialMatches    - True
+   5. showTrivialListVars   - True
+   6. showTrivialSubst      - True
+   7. showFloatingVariables - True
+   ```
+   The *best* result `[P]` (`univ_id_on_closed`) is no 6, 
+   after the following 5 `_def`s:
+     5 [trivial!1] `?Q ≡ [[P]] ∧ ?Q ∨ ¬([[P]]) ∧ ¬?Q`
+     4 [trivial!2] `?P ≡ ?P ∧ [[P]] ∨ ¬?P ∧ ¬([[P]])`
+     3 [≡rhs] `[[[P]]]`
+     2 [≡lhs] `¬(∀?x$ • ¬([[P]]))`
+     1 [≡lhs] `∀?x$ • [P]`
+
+  The promotion of `_def` matches should depend on what "mode" the prover is in.
+  If in unfold mode promote `[≡lhs]` def-matches,
+  in fold mode promote `[≡rhs]` def-matches,
+  and in calculate mode def-matches do not get special treatment.
+
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.

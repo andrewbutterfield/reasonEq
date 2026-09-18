@@ -25,6 +25,7 @@ import Data.Maybe (fromJust)
 import Utilities
 import WriteRead
 import Ranking
+import MatchContext
 import ProofMatch
 
 import Debugger
@@ -46,7 +47,7 @@ data ProofSettings
      , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
-     , matchFilter :: FilterFunction
+     , matchFilter :: [MatchContext] -> ProofMatch -> Bool
      }
 
 -- metadata about the above
@@ -141,7 +142,7 @@ and the setting for $F$ is $\false$,
 then that match is dropped, regardless of any other settings.
 
 \begin{code}
--- FilterFunction = [MatchContext] -> ProofMatch -> Bool
+-- ([MatchContext] -> ProofMatch -> Bool) = [MatchContext] -> ProofMatch -> Bool
 matchFilterUpdate r
   = r{matchFilter = filterSpecs}
   where

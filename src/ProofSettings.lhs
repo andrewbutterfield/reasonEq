@@ -25,7 +25,6 @@ import Data.Maybe (fromJust)
 import Utilities
 import WriteRead
 import Ranking
-import MatchContext
 import ProofMatch
 
 import Debugger
@@ -47,7 +46,7 @@ data ProofSettings
      , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
-     , matchFilter :: [MatchContext] -> ProofMatch -> Bool
+     , matchFilter :: ProofMatch -> Bool
      }
 
 -- metadata about the above
@@ -142,21 +141,20 @@ and the setting for $F$ is $\false$,
 then that match is dropped, regardless of any other settings.
 
 \begin{code}
--- ([MatchContext] -> ProofMatch -> Bool) = [MatchContext] -> ProofMatch -> Bool
+matchFilterUpdate :: ProofSettings -> ProofSettings
 matchFilterUpdate r
   = r{matchFilter = filterSpecs}
   where
-    mkFilter ( showit, ff ) (ctxts,mtch)  = ff ctxts mtch && not showit
+    mkFilter ( showit, ff ) mtch  = ff mtch && not showit
     filterTM = mkFilter ( showTrivialMatches r, isTrivialMatch  )
     filterTL = mkFilter ( showTrivialListVars r, onlyTrivialLVarMatches )
     filterTS = mkFilter ( showTrivialSubst r, anyTrivialSubstitutions)
     filterFV = mkFilter ( showFloatingVariables r,hasFloatingVariables   )
-    filterSpecs ctxts mtch
-      = not $ or  [ filterTM cm
-                  , filterTS cm
-                  , filterTL cm
-                  , filterFV cm ]
-      where cm = (ctxts,mtch)
+    filterSpecs mtch
+      = not $ or  [ filterTM mtch
+                  , filterTS mtch
+                  , filterTL mtch
+                  , filterFV mtch ]
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 

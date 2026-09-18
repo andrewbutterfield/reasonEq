@@ -270,7 +270,7 @@ matchFocus ranking liveProof
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
           let fits  =  cSubType tvmap
           let mtchs = matchInContexts ctxts fits asn'
-          let rankedM = ranking ctxts mtchs
+          let rankedM = ranking mtchs
           return $ matches_ rankedM liveProof
   where 
     mshow m = 

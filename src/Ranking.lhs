@@ -33,7 +33,6 @@ import Binding
 import Laws
 import Proofs
 import Instantiate
-import MatchContext
 import ProofMatch
 import TestRendering
 
@@ -54,8 +53,9 @@ Ordering is done by computing a $n$-tuple of values ($n \geq 1$),
 to be used in sorting comparisons.
 The values should belong to a type that has an instance of \texttt{Ord},
 so that the tuple itself is also an instance of \texttt{Ord}.
+All filtering and ordering is done with access to matching contexts.
 \begin{code}
-type Ranking = [MatchContext] -> Matches -> Matches
+type Ranking = Matches -> Matches
 \end{code}
 
 
@@ -65,9 +65,9 @@ type Ranking = [MatchContext] -> Matches -> Matches
 \subsection{Accept All/None}
 
 \begin{code}
-acceptAll, acceptNone :: [MatchContext] -> ProofMatch -> Bool
-acceptAll _ _   =  True
-acceptNone _ _  =  False
+acceptAll, acceptNone :: ProofMatch -> Bool
+acceptAll  _  =  True
+acceptNone _  =  False
 \end{code}
 
 
@@ -75,7 +75,7 @@ acceptNone _ _  =  False
 \subsection{Pathological Cases}
 
 Some matches are quite pathological in character,
-and usually we want to supress these.
+and usually we want to suppress these.
 Sometimes, however, they are useful.
 
 We provide some predicates here that identify specific pathologies.
@@ -85,8 +85,8 @@ All of these are disabled by default.
 
 Matches against a single predicate variable
 \begin{code}
-isTrivialMatch :: [MatchContext] -> ProofMatch -> Bool
-isTrivialMatch _ m
+isTrivialMatch :: ProofMatch -> Bool
+isTrivialMatch m
   = trivial $ mClass m
   where
      trivial (MatchEqvVar _)  =  True
@@ -98,8 +98,8 @@ isTrivialMatch _ m
 All pattern list-variables
 are mapped to empty sets or lists.
 \begin{code}
-onlyTrivialLVarMatches :: [MatchContext] -> ProofMatch -> Bool
-onlyTrivialLVarMatches _ mtch
+onlyTrivialLVarMatches :: ProofMatch -> Bool
+onlyTrivialLVarMatches mtch
   =  onlyTrivialListVarBindings (mBind mtch)
 \end{code}
 
@@ -107,8 +107,8 @@ onlyTrivialLVarMatches _ mtch
 
 Matches that contain empty substitutions ($t[/]$).
 \begin{code}
-anyTrivialSubstitutions :: [MatchContext] -> ProofMatch -> Bool
-anyTrivialSubstitutions _  =  anyTrivialSubstitution . mRepl
+anyTrivialSubstitutions :: ProofMatch -> Bool
+anyTrivialSubstitutions  =  anyTrivialSubstitution . mRepl
 \end{code}
 
 \subsection{Accept Floating Matches}
@@ -117,8 +117,8 @@ Some matches to one part of a law will not cover all the variables
 in the other (replacement) part.
 Sometimes we need these matches, sometimes they are a distraction.
 \begin{code}
-hasFloatingVariables :: [MatchContext] -> ProofMatch -> Bool
-hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
+hasFloatingVariables :: ProofMatch -> Bool
+hasFloatingVariables  =  any isFloatingGVar . mentionedVars . mRepl
 \end{code}
 If floating variables are enabled (the default),
 they will also be subject to the screening above for pathological matches.
@@ -134,8 +134,8 @@ In orderings, smaller is better.
 Simple ranking by replacement term size,
 after the binding is applied:
 \begin{code}
-sizeOrd :: [MatchContext] -> ProofMatch ->  Int
-sizeOrd _ m  =  termSize $ mRepl m
+sizeOrd :: ProofMatch ->  Int
+sizeOrd  =  termSize . mRepl 
 \end{code}
 
 
@@ -146,12 +146,12 @@ then those matching LHS of equivalence laws,
 and then the rest.
 Key exceptions: replacement \h{true} trumps definitions.
 \begin{code}
-favourDefLHSOrd :: [MatchContext] -> ProofMatch ->  (Int,Int,Int,Int)
-favourDefLHSOrd ctxt m
+favourDefLHSOrd :: ProofMatch ->  (Int,Int,Int,Int)
+favourDefLHSOrd m
   = ( subMatchRepl $ mRepl m
     , subMatchDef $ mName m
     , subMatchOrd $ mClass m
-    , sizeOrd ctxt m
+    , sizeOrd m
     )
 
 subMatchRepl :: Term -> Int
@@ -185,13 +185,11 @@ with duplicate replacements removed
 
 \begin{code}
 filterAndSort :: Ord ord
-              => ( [MatchContext] -> ProofMatch -> Bool 
-                 , [MatchContext] -> ProofMatch ->  ord )
-              -> [MatchContext]
+              => ( ProofMatch -> Bool, ProofMatch ->  ord )
               -> Matches -> Matches
-filterAndSort (ff,rf) ctxts ms
-  = let fms = filter (ff ctxts) ms
-    in remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
+filterAndSort (ff,rf) ms
+  = let fms = filter ff ms
+    in remDupRepl $ map snd $ sortOn fst $ zip (map rf fms) fms
   where  
     mshow m = 
       mName m 

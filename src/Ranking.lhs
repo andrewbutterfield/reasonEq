@@ -1,12 +1,12 @@
 \chapter{Term and Match Ranking}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2017--25
+Copyright  Andrew Butterfield (c) 2017--26
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Ranking
-  ( FilterFunction, OrderFunction, Ranking
+  ( Ranking
   -- exported Filters
   , acceptAll, acceptNone -- used in ProofSettings
   , isTrivialMatch-- used in ProofSettings
@@ -55,8 +55,6 @@ to be used in sorting comparisons.
 The values should belong to a type that has an instance of \texttt{Ord},
 so that the tuple itself is also an instance of \texttt{Ord}.
 \begin{code}
-type FilterFunction = [MatchContext] -> ProofMatch -> Bool
-type OrderFunction ord = [MatchContext] -> ProofMatch -> ord
 type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
@@ -67,7 +65,7 @@ type Ranking = [MatchContext] -> Matches -> Matches
 \subsection{Accept All/None}
 
 \begin{code}
-acceptAll, acceptNone :: FilterFunction
+acceptAll, acceptNone :: [MatchContext] -> ProofMatch -> Bool
 acceptAll _ _   =  True
 acceptNone _ _  =  False
 \end{code}
@@ -87,7 +85,7 @@ All of these are disabled by default.
 
 Matches against a single predicate variable
 \begin{code}
-isTrivialMatch :: FilterFunction
+isTrivialMatch :: [MatchContext] -> ProofMatch -> Bool
 isTrivialMatch _ m
   = trivial $ mClass m
   where
@@ -100,7 +98,7 @@ isTrivialMatch _ m
 All pattern list-variables
 are mapped to empty sets or lists.
 \begin{code}
-onlyTrivialLVarMatches :: FilterFunction
+onlyTrivialLVarMatches :: [MatchContext] -> ProofMatch -> Bool
 onlyTrivialLVarMatches _ mtch
   =  onlyTrivialListVarBindings (mBind mtch)
 \end{code}
@@ -109,7 +107,7 @@ onlyTrivialLVarMatches _ mtch
 
 Matches that contain empty substitutions ($t[/]$).
 \begin{code}
-anyTrivialSubstitutions :: FilterFunction
+anyTrivialSubstitutions :: [MatchContext] -> ProofMatch -> Bool
 anyTrivialSubstitutions _  =  anyTrivialSubstitution . mRepl
 \end{code}
 
@@ -119,7 +117,7 @@ Some matches to one part of a law will not cover all the variables
 in the other (replacement) part.
 Sometimes we need these matches, sometimes they are a distraction.
 \begin{code}
-hasFloatingVariables :: FilterFunction
+hasFloatingVariables :: [MatchContext] -> ProofMatch -> Bool
 hasFloatingVariables _ =   any isFloatingGVar . mentionedVars . mRepl
 \end{code}
 If floating variables are enabled (the default),
@@ -136,7 +134,7 @@ In orderings, smaller is better.
 Simple ranking by replacement term size,
 after the binding is applied:
 \begin{code}
-sizeOrd :: OrderFunction Int
+sizeOrd :: [MatchContext] -> ProofMatch ->  Int
 sizeOrd _ m  =  termSize $ mRepl m
 \end{code}
 
@@ -148,7 +146,7 @@ then those matching LHS of equivalence laws,
 and then the rest.
 Key exceptions: replacement \h{true} trumps definitions.
 \begin{code}
-favourDefLHSOrd :: OrderFunction (Int,Int,Int,Int)
+favourDefLHSOrd :: [MatchContext] -> ProofMatch ->  (Int,Int,Int,Int)
 favourDefLHSOrd ctxt m
   = ( subMatchRepl $ mRepl m
     , subMatchDef $ mName m
@@ -187,7 +185,9 @@ with duplicate replacements removed
 
 \begin{code}
 filterAndSort :: Ord ord
-              => (FilterFunction, OrderFunction ord) -> [MatchContext]
+              => ( [MatchContext] -> ProofMatch -> Bool 
+                 , [MatchContext] -> ProofMatch ->  ord )
+              -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
   = let fms = filter (ff ctxts) ms

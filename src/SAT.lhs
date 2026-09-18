@@ -210,11 +210,6 @@ getAllVariables t = unsupportedError "getAllVariables" t
 \end{code}
 
 \begin{code}
-cnfSize :: Term -> String
-cnfSize t = show $ termSize t
-\end{code}
-
-\begin{code}
 storeJustification :: String -> [String] -> Term -> (Term, [String])
 storeJustification s sx t = (t, sx ++ [s])
 \end{code}

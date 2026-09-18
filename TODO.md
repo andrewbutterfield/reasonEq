@@ -37,6 +37,19 @@ Fixing bugs as we go.
 
   - Time to fix `xxx_def` ranking higher than `true` (or `false`).
 
+    `termSize` is only needed in `Ranking` and `Classifier`.
+    After AST,
+    Ranking imports: Binding Laws Proofs Instantiate ProofMatch
+    Classifier imports: Assertions LexBase Proofs
+
+    Ranking imported by:
+      Main
+      UI/TopGUI UI/AbstractProver UI/LawKindTUI UI/AbstractTop
+      UI/AbstractLawKinds UI/TopTUI UI/ProverTUI
+      ProofSettings REqState
+    Classifier imported by: 
+      Main UI/TopGUI UI/LawKindTUI UI/TopTUI UI/ProverTUI Theories
+
     The `Closure` theory is a good place to fix this.
 
     We need to redesign `ProofSettings` and `Ranking`, 

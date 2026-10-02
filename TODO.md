@@ -50,6 +50,19 @@ Fixing bugs as we go.
     Classifier imported by: 
       Main UI/TopGUI UI/LawKindTUI UI/TopTUI UI/ProverTUI Theories
 
+
+    From `lhsimports` we discover the direct and indirect imports
+
+    Ranking:
+      AST Binding Instantiate Laws ProofMatch Proofs Utilities Variables
+      indirect: += 18
+
+    Classifier:
+      AST Assertions Laws LexBase Proofs Utilities 
+      indirect: += 17
+
+    We need to be able to flip the mapping.
+
     The `Closure` theory is a good place to fix this.
 
     We need to redesign `ProofSettings` and `Ranking`, 

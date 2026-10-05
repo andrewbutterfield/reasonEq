@@ -6,7 +6,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module ProofMatch ( ProofMatch(..), Matches ) 
+module ProofMatch 
+ ( TermSC
+ , NamedTermSC
+ , ProofMatch(..)
+ , Matches 
+ ) 
 where
 
 import Data.Maybe
@@ -20,8 +25,15 @@ import AST
 import SideCond 
 import Binding 
 import Proofs
-import Sequents
+--import Sequents
 \end{code}
+
+Here we name unwrapped \texttt{Assertion}s.
+\begin{code}
+type TermSC = (Term, SideCond)
+type NamedTermSC = (String, TermSC)
+\end{code}
+
 
 \section{Proof Matches}
 

@@ -47,7 +47,6 @@ import TestRendering
 import SourceHandling
 import Dev
 import SAT
-import Classifier
 import ProofMatch
 import UI.AbstractProver
 import UI.AbstractLawKinds

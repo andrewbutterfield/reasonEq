@@ -45,7 +45,6 @@ import Instantiate
 import TestRendering
 import Dev
 import SAT
-import Classifier
 import LiveProofs
 import UI.REPL
 import UI.ProverTUI

@@ -58,7 +58,7 @@ import VarData
 import Assertions
 import Laws
 import Proofs
-import Classifier
+import Ranking
 
 import TestRendering
 import WriteRead

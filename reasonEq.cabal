@@ -22,7 +22,6 @@ library
       Assertions
       AST
       Binding
-      Classifier
       Control
       Debugger
       Dev

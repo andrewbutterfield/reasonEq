@@ -32,7 +32,6 @@ module AST ( Value, pattern Boolean, pattern Integer
            , mentionedVars, mentionedVarLists, mentionedVarSets
            , getTypedIds, mentionedIds
            , onlyTrivialQuantifiers, anyTrivialSubstitution
-           , termSize
            -- test only below here
            , int_tst_AST
            , jSub, jVar, jBnd, jLam, jeVar, jpVar, jSubstn, xSubstn
@@ -815,24 +814,6 @@ mentionedIds = S.map snd . getTypedIds
 \end{code}
 
 For type inference, we need to know which identifiers have given types.
-
-
-Term Sizes
-\begin{code}
-termSize :: Term -> Int
-termSize (Val _ _)            =  1
-termSize (Var _ _)            =  1
-termSize (Cons _ _ _ ts)      =  1 + sum (map termSize ts)
-termSize (Bnd _ _ vs t)       =  2 + S.size vs + termSize t
-termSize (Lam _ _ vl t)       =  2 + length vl + termSize t
-termSize (Cls _ t)            =  1 + termSize t
-termSize (Sub _ t subs)       =  1 + termSize t + subsSize subs
-termSize (Iter _ _ _ _ _ vl)  =  3 + length vl
-termSize (VTyp _ _)           =  2
-
-subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
-\end{code}
-
 
 
 \newpage

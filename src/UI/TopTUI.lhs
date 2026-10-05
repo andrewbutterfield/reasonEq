@@ -46,7 +46,6 @@ import TestRendering
 import SourceHandling
 import Dev
 import SAT
-import Classifier
 import LiveProofs
 import UI.AbstractTop
 import UI.REPL

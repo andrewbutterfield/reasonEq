@@ -8,7 +8,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Sequents
  ( Sequent(..)
- , TermSC, NamedTermSC
  , availableStrategies
  , reduceAll, reduceBoth, reduceToLeftmost, reduceToRightmost
  , deduce
@@ -47,6 +46,7 @@ import VarData
 import Laws
 import Proofs
 import Theories
+import ProofMatch
 
 import Symbols
 import TestRendering
@@ -83,11 +83,6 @@ data Sequent
 
 \section{Sequent Strategies}
 
-Here we unwrap \texttt{Assertion}s.
-\begin{code}
-type TermSC = (Term, SideCond)
-type NamedTermSC = (String, TermSC)
-\end{code}
 
 
 Given any conjecture (named assertion)

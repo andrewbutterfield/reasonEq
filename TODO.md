@@ -35,39 +35,7 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - Time to fix `xxx_def` ranking higher than `true` (or `false`).
-
-    `termSize` is only needed in `Ranking` and `Classifier`.
-    After AST,
-    Ranking imports: Binding Laws Proofs Instantiate ProofMatch
-    Classifier imports: Assertions LexBase Proofs
-
-    Ranking imported by:
-      Main
-      UI/TopGUI UI/AbstractProver UI/LawKindTUI UI/AbstractTop
-      UI/AbstractLawKinds UI/TopTUI UI/ProverTUI
-      ProofSettings REqState
-    Classifier imported by: 
-      Main UI/TopGUI UI/LawKindTUI UI/TopTUI UI/ProverTUI Theories
-
-
-    From `lhsimports` we discover the direct and indirect imports
-
-    Ranking:
-      AST Binding Instantiate Laws ProofMatch Proofs Utilities Variables
-      indirect: += 18
-
-    Classifier:
-      AST Assertions Laws LexBase Proofs Utilities 
-      indirect: += 17
-
-    We need to be able to flip the mapping.
-
-    The `Closure` theory is a good place to fix this.
-
-    We need to redesign `ProofSettings` and `Ranking`, 
-    and think about unused rankings: `(size|favourite)Ranking`.
-
+  - `maxMatchDisplay` seems to be glitching badly
     With settings below, `m` returns 39 visible matches.
     ```
     proof> show
@@ -87,10 +55,12 @@ Fixing bugs as we go.
      2 [≡lhs] `¬(∀?x$ • ¬([[P]]))`
      1 [≡lhs] `∀?x$ • [P]`
 
-  The promotion of `_def` matches should depend on what "mode" the prover is in.
-  If in unfold mode promote `[≡lhs]` def-matches,
-  in fold mode promote `[≡rhs]` def-matches,
-  and in calculate mode def-matches do not get special treatment.
+  - Time to fix `xxx_def` ranking higher than `true` (or `false`).
+
+    The promotion of `_def` matches should depend on what "mode" the prover is in.
+    If in unfold mode promote `[≡lhs]` def-matches,
+    in fold mode promote `[≡rhs]` def-matches,
+    and in calculate mode def-matches do not get special treatment.
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
@@ -111,6 +81,11 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - Term-size issue
+ 
+    **Solution** fuse `Ranking` and `Classifier` and move `termSize` in.
+    Also had to move `TermSC` and `NamedTermSC` into `ProofMatch`.
 
   - Problem with `Closure` conjecture, trying `m uclose_def`,
     where that law is `[P] ≡ (∀ x$  • P)  (P⊆x$)`.

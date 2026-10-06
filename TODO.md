@@ -35,6 +35,15 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - lost key side-condition
+
+    In proof of `and_close_distr`, we want to match `[P]` against `uclose_def`
+    `[P] ≡ (∀ x$  • P)  (P⊆x$)`
+    We obtain `∀x$ • P  ⊤`. 
+    If we match again against `uclose_def` (either way) it fails.
+     **We should retain the `P⊆x$` side-condition.**
+
+
   - Time to fix rankings,
     e.g., `xxx_def` ranking higher than `true` (or `false`);
       or where `forall_and_distr [≡rhs]` is ranked 16th after a lot 

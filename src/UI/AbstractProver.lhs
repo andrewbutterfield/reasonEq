@@ -267,18 +267,14 @@ matchFocus ranking liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
-    in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
-          let fits  =  cSubType tvmap
-          let mtchs = matchInContexts ctxts fits asn'
-          let rankedM = ranking mtchs
-          return $ matches_ rankedM liveProof
+    in do let (asn',tvmap)  =  mkTypedAsn vts goalt scC 
+          let fits          =  cSubType tvmap
+          let mtchs         =  matchInContexts ctxts fits asn'
+          let rankedM       =  ranking mtchs
+          let clippedM      =  take mmd rankedM
+          return $ matches_ clippedM liveProof
   where 
-    mshow m = 
-      mName m 
-      ++ "(" 
-      ++ show (mClass m)
-      ++ ")  --  "
-      ++ trTerm 0 (mRepl m)
+    mmd = maxMatchDisplay (liveSettings liveProof)
 \end{code}
 
 \subsubsection{Matching Specific Law} 

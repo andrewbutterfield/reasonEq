@@ -35,26 +35,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - `maxMatchDisplay` seems to be glitching badly
-    With settings below, `m` returns 39 visible matches.
-    ```
-    proof> show
-   1. maxMatchDisplay       - 5
-   2. maxStepDisplay        - 10
-   3. showBindings          - False
-   4. showTrivialMatches    - True
-   5. showTrivialListVars   - True
-   6. showTrivialSubst      - True
-   7. showFloatingVariables - True
-   ```
-   The *best* result `[P]` (`univ_id_on_closed`) is no 6, 
-   after the following 5 `_def`s:
-     5 [trivial!1] `?Q ≡ [[P]] ∧ ?Q ∨ ¬([[P]]) ∧ ¬?Q`
-     4 [trivial!2] `?P ≡ ?P ∧ [[P]] ∨ ¬?P ∧ ¬([[P]])`
-     3 [≡rhs] `[[[P]]]`
-     2 [≡lhs] `¬(∀?x$ • ¬([[P]]))`
-     1 [≡lhs] `∀?x$ • [P]`
-
   - Time to fix `xxx_def` ranking higher than `true` (or `false`).
 
     The promotion of `_def` matches should depend on what "mode" the prover is in.
@@ -81,6 +61,9 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - `maxMatchDisplay` seems to be glitching badly.
+    The above parameter wasn't used at all - now fixed.
 
   - Term-size issue
  

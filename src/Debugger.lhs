@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, sdbg, fdbg, trc ) 
+ ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, lendbg, sdbg, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -63,6 +63,8 @@ ldbg,sdbg :: (a -> String) -> Dbgs a
 ldbg render nm xs = trace ('@':nm++": (list)\n"++dbgs render xs) xs
 sdbg render nm xs = trace ('@':nm++": (set)\n"++dbgs render xs) xs
 
+lendbg :: String -> [a] -> [a]
+lendbg nm xs = trace ('@':nm++": (len)\n"++show (length xs)) xs
 
 dbgs :: (a -> String) -> [a] -> String
 dbgs render xs = unlns' $ map (("  "++) . render) xs

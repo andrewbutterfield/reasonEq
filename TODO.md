@@ -35,12 +35,23 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - Time to fix `xxx_def` ranking higher than `true` (or `false`).
+  - Time to fix rankings,
+    e.g., `xxx_def` ranking higher than `true` (or `false`);
+      or where `forall_and_distr [≡rhs]` is ranked 16th after a lot 
+      of bigger `[≡lhs]` matches of laws 
+      (e.g. `golden_rule`)
+      `∀x$ • P ≡ ∀x$ • Q ≡ ∀x$ • P ∨ ∀x$ • Q`
+      or those with floating variables (e.g. `forall_and_distr`)
+      `∀?x$ • ∀x$ • P ∧ ∀?x$ • ∀x$ • Q`.
 
     The promotion of `_def` matches should depend on what "mode" the prover is in.
     If in unfold mode promote `[≡lhs]` def-matches,
     in fold mode promote `[≡rhs]` def-matches,
-    and in calculate mode def-matches do not get special treatment.
+    and in calculate mode def-matches do not get special treatment,
+    whereas size matters.
+
+    *THIS IS A NON-TRIVIAL EXERCISE*. 
+    We need a mode switch command and some implementation thereof.
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 

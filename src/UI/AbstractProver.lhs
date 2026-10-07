@@ -356,7 +356,7 @@ applyMatchToFocus1 i liveProof
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
-        let (lstFloating,lstNormal)        =  partition isFloatingGVar lstvars
+        let (lstFloating,lstNormal) =  partition isFloatingGVar lstvars
         let replGVars          =  lstNormal ++ map sinkGV lstFloating
         return ( mtch
                , stdVarsOf stdFloating, replTerms
@@ -383,16 +383,16 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
         mctxts = mtchCtxts liveProof
         scC = xpndSC liveProof
         obsv = getDynamicObservables vtbls
-        ictxt = ICtxt obsv scC
+        ictxt = ICtxt obsv $ pdbn "scC" scC
         (tz,seq') = focus liveProof
         dpath = focusPath liveProof
         conjpart = exitTZ tz
-    in do let sbind = patchBinding svtms lvvls cbind
-          scLasC <- instantiateSC ictxt sbind scL
-          scCL <- extendGoalSCCoverage obsv lvvls scLasC
-          scCX <- mrgSideCond scC scCL
-          let scD = scDischarge obsv scCX scLasC
-          if onlyFreshSC scD
+    in do let sbind = patchBinding svtms lvvls $ pdbn "cbind" cbind
+          scLasC <- instantiateSC ictxt (pdbn "sbind" sbind) $ pdbn "scL" scL
+          scCL <- extendGoalSCCoverage obsv lvvls $ pdbn "scLasC" scLasC
+          scCX <- mrgSideCond scC $ pdbn "scCL" scCL
+          let scD = scDischarge obsv (pdbn "scCX" scCX) $ pdbn "scLasc" scLasC
+          if onlyFreshSC $ pdbn "scD" scD
             then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent

@@ -37,6 +37,12 @@ Fixing bugs as we go.
 
   - lost key side-condition
 
+    CONTEXT: `applyMatchToFocus2` .
+
+    Issue?: `scCX` is ignored - it records what we need. 
+    Needs to be added in after `scDischarge` returns.
+
+
     In proof of `and_close_distr`, we want to match `[P]` against `uclose_def`
     `[P] ≡ (∀ x$  • P)  (P⊆x$)`
     We obtain `∀x$ • P  ⊤`. 

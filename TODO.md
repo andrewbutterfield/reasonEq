@@ -43,6 +43,23 @@ Fixing bugs as we go.
     If we match again against `uclose_def` (either way) it fails.
      **We should retain the `P⊆x$` side-condition.**
 
+    We do `m uclose_def` and see both lhs and rhs matches.
+    The lhs match is `∀?x$ • P ∧ Q     ⊤ ⟹ (P⊆?x$), (Q⊆?x$)`.
+    If we apply this, we are asked and instantiate `?x$` as `x$`
+    to get: `∀x$ • P ∧ Q`  with s.c. `⊤`  (**wrong**).
+
+    If instead we do `tm 1 uclose_def` we observe success:
+    Instantiated Variables: `{P,Q,?x$}`
+    Floating Vars?: `True`
+    Law S.C.: `(P⊆x$)`
+    Instantiated Law S.C.: `(P⊆?x$), (Q⊆?x$)`
+    Goal S.C.: `⊤`
+    Discharged Law S.C.: `(P⊆?x$), (Q⊆?x$)`
+
+    **We should keep all dischgred s.c.s involving instantiated floating vars**
+
+
+
 
   - Time to fix rankings,
     e.g., `xxx_def` ranking higher than `true` (or `false`);

@@ -391,26 +391,26 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
           scLasC <- instantiateSC ictxt (pdbn "sbind" sbind) $ pdbn "scL" scL
           scCL <- extendGoalSCCoverage obsv lvvls $ pdbn "scLasC" scLasC
           scCX <- mrgSideCond scC $ pdbn "scCL" scCL
-          let scD = scDischarge obsv (pdbn "scCX" scCX) $ pdbn "scLasc" scLasC
+          let scD = scDischarge obsv (pdbn "scCX" scCX) scLasC
           if onlyFreshSC $ pdbn "scD" scD
             then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent
                     let (fbind,fresh)
-                          = generateFreshVars knownVs freshneeded sbind
-                    let scC' = addFreshVars fresh $ conjSC liveProof
-                    brepl  <- instTerm ictxt fbind repl
+                          = generateFreshVars knownVs (pdbn "freshneeded" freshneeded) sbind
+                    let scC' = addFreshVars (pdbg "fresh" fresh) $ conjSC liveProof
+                    brepl  <- instTerm ictxt (pdbn "fbind" fbind) repl
                     let asn' = mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
-                           $ conjSC_ scC'
+                           $ conjSC_ (pdbn "scC'" scC')
                            $ xpndSC_ (expandSideCondKnownVars mctxts scC')
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
-                                        fbind
+                                        (pdbn "fbind" fbind)
                                         dpath
-                               , (asn')):)
+                               , asn'):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
 \end{code}

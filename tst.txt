@@ -1,172 +1,85 @@
 
--- FOCUS DOWN ONTO IMPLICATION LHS
+applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
 
-@mFD.tz:  exists y$ @ P[e$/x$] ==> exists y$ @ P[e$/x$]
-  ( C (TG (Id "B" 0)) True (Id "imp" 0) 
-      [ B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
-        (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-        ( S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-            (SN (fromList []) 
-                (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
-                            , LV (VR (Id "e" 0,VE,WS),[],[]))
-                          ]))
-        )
-        , B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
-            (fromList [ GL (LV (VR (Id "x" 0,VO,WS),[],[]))
-                      , GL (LV (VR (Id "y" 0,VO,WS),[],[]))
-                      ]
-            ) 
-            (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-      ]
-  , []
-  )
+@scL := snd $ mAsn mtch
+SCD 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] 
+  ([])
 
-@mFD.i':  1
-
-@mFD.tz':  
-  ( B (TG (Id "B" 0)) (Id "exists" 0) 
-      (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-      ( S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-          (SN (fromList []) 
-              (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
-                          , LV (VR (Id "e" 0,VE,WS),[],[])
-                          )
-                        ])))
-  , [ ( 1
-      , Cons' (TG (Id "B" 0)) True (Id "imp" 0) [] 
-              [ B (TG (Id "B" 0)) (Id "exists" 0) -- exists y$ @ P[e$/x$]
-                  (fromList [ GL (LV (VR (Id "x" 0,VO,WS),[],[]))
-                            , GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-                  (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))]
-      )
+@cbind : == mBind mtch
+BD ([(Id "B" 0,TG (Id "B" 0))]
+   ,[((Id "P" 0,VP)
+     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
+            [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+            ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]
+         )
+     )
     ]
-  )
+   ,[]
+   ,[((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])]
+   )
 
--- MAKING TYPED ASSERTION FOR MATCHING
+@sbind := patchBinding svtms lvvls cbind
+BD ([(Id "B" 0,TG (Id "B" 0))]
+   ,[((Id "P" 0,VP)
+     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
+            [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+            ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]))]
+   ,[]
+   ,[((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
+   )
 
-@tFA.goalt:  
-  B (TG (Id "B" 0)) (Id "exists" 0) 
-    (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-    (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-       (SN (fromList []) 
-           (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
-                     ,LV (VR (Id "e" 0,VE,WS),[],[]))])))
+@scC := xpndSC liveProof
+SCD [] ([])
 
-@iT-unimp.t:  
-  S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-    ( SN (fromList []) 
-         (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
-                  ,LV (VR (Id "e" 0,VE,WS),[],[]))]))
+@scLasC :?= instantiateSC ictxt sbind scL
+SCD 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) 
+         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) 
+         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ] 
+  ([])
 
+@scCL :?=  extendGoalSCCoverage obsv lvvls scLasC
+SCD 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) 
+         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) 
+         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ] 
+  ([])
 
-@tI.typ:  T  -- only pdbg output from typeInference !
+@scCX :?= mrgSideCond scC scCL
+SCD 
+  [VSSub (GV (VR (Id "P" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+  ] 
+  ([])
 
-@tFA.asn':  ASN (
-  B T (Id "exists" 0) -- Why is this `T` and not `TG (Id "B" 0)` ?
-    (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-    (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-       (SN (fromList []) 
-       (fromList [(LV (VR (Id "x" 0,VO,WS),[],[])
-                 ,LV (VR (Id "e" 0,VE,WS),[],[]))])))
-, SCD [] (fromList [])
-)
+@scD := scDischarge obsv scCX scLasC
+SCD [] ([])
 
+@freshneeded := scFVars scD
+[]
 
--- MATCH OUTCOME
-
-@tM.tP:  exists x$ . P   ::  Bool
-  B (TG (Id "B" 0)) 
-    (Id "exists" 0) 
-    (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) 
-    (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-
-@tM.typ:  TG (Id "B" 0)  -- Bool
-
-@tM.tC:  exists y$  . P[e$/x$]  ::   Top
-  B T 
-    (Id "exists" 0) 
-    (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-    ( S (TG (Id "B" 0)) 
-        (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-        (SN (fromList []) 
-            (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])
-        )
-      )
-
-@tM.typC:  T
-Match against 'exists_def'[1] failed!
-try match failed
-
-
-
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: exists_gen
-CONJ = ASN 
-  ( C (TG (Id "B" 0)) True (Id "imp" 0) 
-    [ B (TG (Id "B" 0)) (Id "exists" 0) 
-        (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-        (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) 
-           (SN (fromList []) 
-               (fromList 
-                 [(LV (VR (Id "x" 0,VO,WS),[],[])
-                  ,LV (VR (Id "e" 0,VE,WS),[],[]))])
-          )
-        )
-    , B (TG (Id "B" 0)) (Id "exists" 0) 
-        (fromList 
-          [GL (LV (VR (Id "x" 0,VO,WS),[],[]))
-          ,GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-        (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-    ]
-  , SCD [] (fromList [])
-  )
-SIDE = SCD [] (fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 10
-BD = False
-TM = False
-TL = False
-TS = False
-FV = False
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = 
-  ( B (TG (Id "B" 0)) (Id "exists" 0) 
-      (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) 
-      (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))
-  , [ ( 1
-      , Cons' (TG (Id "B" 0)) True (Id "imp" 0) [] 
-         [ B (TG (Id "B" 0)) (Id "exists" 0) 
-             (fromList 
-               [ GL (LV (VR (Id "x" 0,VO,WS),[],[]))
-               , GL (LV (VR (Id "y" 0,VO,WS),[],[]))
-               ]
-             ) 
-             (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+@fbind := fst $ generateFreshVars knownVs freshneeded sbind
+BD ([(Id "B" 0,TG (Id "B" 0))]
+   ,[((Id "P" 0,VP)
+     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
+         [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+         ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
          ]
-      )
+         )
+     )
     ]
-  )
-BEGIN SEQUENT'
-SIDECOND = SCD [] (fromList [])
-LAWS' = CLaws' 
-  { hyp0 = Theory 
-      { thName = "H.exists_gen"
-      , thDeps = []
-      , known = VD ("",fromList [],fromList [],fromList [])
-      , laws = []
-      , proofs = []
-      , lwkinds = ClassifiedLaws {simps = [], folds = []}
-      , conjs = []
-      }
-  , whichC = Lft
-  , otherC = K (TG (Id "B" 0)) (VB True)
-  }
-END SEQUENT'
-END SEQZIP
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
+   ,[]
+   ,[((Id "x" 0,VO,[],[])
+     ,BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
+     )
+    ]
+   )
+
+@fresh -- not output
+
+@scC' -- not output

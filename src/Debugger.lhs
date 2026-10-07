@@ -1,13 +1,23 @@
 \chapter{Debug Support}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2023-25
+Copyright  Andrew Butterfield (c) 2023-26
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, lendbg, sdbg, fdbg, trc ) 
+ ( dbg    -- msg x  ; String -> a -> a
+ , pdbg   -- nm x   ; String -> a -> a ; oneliner
+ , pdbn   -- nm x   ; String -> a -> a ; newline after nm
+ , mdbg   -- nm mx  ; String -> YesBut a -> m a ; 
+ , rdbg   -- render nm x ; (a -> String) -> String -> a -> a
+ , rdbn   -- render nm x ; (a -> String) -> String -> a -> a
+ , ldbg   -- render nm xs ; (a -> String) -> String -> [a] -> [a] ; as List
+ , sdbg      -- render nm xs ; (a -> String) -> String -> [a] -> [a] ; as Set
+ , lendbg -- nm xs  ; String [a] -> [a] ; outputs lengths
+ , fdbg   -- f nm x ; (a -> b) -> String -> b -> b ; result of f x
+ , trc ) 
 where
 
 import Debug.Trace
@@ -80,11 +90,12 @@ trc = trace
 
 What about?
 \begin{code}
+--fdbg :: Show a => (a -> b) -> String -> b -> b
 fdbg f nm x  =  trace ('@':nm++":\n"++show (f x)) x
 \end{code}
 
 
-We have a debugging version of `h{unlines'}` here,
+We have a debugging version of \h{unlines'} here,
 so that \h{Utilities} can use debug features.
 \begin{code}
 unlns' [] = ""

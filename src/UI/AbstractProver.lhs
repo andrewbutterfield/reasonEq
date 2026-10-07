@@ -380,9 +380,6 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
-        (Assertion conj _) = conjecture liveProof
-        ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                     $ S.map gvarWhen $ mentionedVars conj
         mctxts = mtchCtxts liveProof
         scC = xpndSC liveProof
         obsv = getDynamicObservables vtbls
@@ -459,23 +456,11 @@ extendGoalSCCoverage obsv lvvls (SCD vsps _)
     xtndCoverage _ _ vsps [] = return (SCD vsps S.empty)
     xtndCoverage obsv ffvls vsps (vsp@(VSSub _ vsC) : rest)
       | S.toList vsC `elem` ffvls
-
-             -- DO WE NEED THIS?
-             -- (Assertion conj _) = conjecture liveProof
-             -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
-             --              $ S.map gvarWhen $ mentionedVars conj
-
          = do vsps' <- mrgVarConds vsp vsps  
               xtndCoverage obsv ffvls vsps' rest
       | otherwise  =  xtndCoverage obsv ffvls vsps rest
     xtndCoverage obsv ffvls vsps (vsp@(VSSubD _ vsCd) : rest)
       | S.toList vsCd `elem` ffvls
-
-             -- DO WE NEED THIS?
-             -- (Assertion conj _) = conjecture liveProof
-             -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
-             --              $ S.map gvarWhen $ mentionedVars conj
-
          = do vsps' <- mrgVarConds vsp vsps  
               xtndCoverage obsv ffvls vsps' rest
       | otherwise  =  xtndCoverage obsv ffvls vsps rest
@@ -560,7 +545,7 @@ substituteFocus thrys liveProof
         t = getTZ tz
         -- vts = getVarTables $ mtchCtxts liveProof
         scC = xpndSC liveProof
-        (Assertion conj _) = conjecture liveProof
+        -- (Assertion conj _) = conjecture liveProof
         sctxt = mkSubCtxt scC $ thd3 $ head $ mtchCtxts liveProof
     in case t of
          (Sub _ tm s)
@@ -735,9 +720,6 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        let scC = conjSC liveProof
        let ictxt = mkInsCtxt vts scC
        ilsc <- instantiateSC ictxt lbind lsc
-       let (Assertion conj _) = conjecture liveProof
-       let ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                        $ S.map gvarWhen $ mentionedVars conj
        nsc <- mrgSideCond scC ilsc
        ilawt <- instTerm ictxt lbind lawt
        let (tz,seq') = focus liveProof

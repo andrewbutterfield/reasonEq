@@ -1,85 +1,15 @@
 
 applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
 
-@scL := snd $ mAsn mtch
-SCD 
-  [VSSub (GV (VR (Id "P" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] 
-  ([])
-
-@cbind : == mBind mtch
-BD ([(Id "B" 0,TG (Id "B" 0))]
-   ,[((Id "P" 0,VP)
-     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
-            [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
-            ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]
-         )
-     )
-    ]
-   ,[]
-   ,[((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])]
-   )
-
-@sbind := patchBinding svtms lvvls cbind
-BD ([(Id "B" 0,TG (Id "B" 0))]
-   ,[((Id "P" 0,VP)
-     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
-            [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
-            ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]))]
-   ,[]
-   ,[((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
-   )
-
-@scC := xpndSC liveProof
-SCD [] ([])
-
-@scLasC :?= instantiateSC ictxt sbind scL
-SCD 
-  [VSSub (GV (VR (Id "P" 0,VP,WS))) 
-         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) 
-         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ] 
-  ([])
-
-@scCL :?=  extendGoalSCCoverage obsv lvvls scLasC
-SCD 
-  [VSSub (GV (VR (Id "P" 0,VP,WS))) 
-         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) 
-         ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ] 
-  ([])
-
-@scCX :?= mrgSideCond scC scCL
-SCD 
-  [VSSub (GV (VR (Id "P" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ,VSSub (GV (VR (Id "Q" 0,VP,WS))) ([GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-  ] 
-  ([])
-
-@scD := scDischarge obsv scCX scLasC
-SCD [] ([])
-
-@freshneeded := scFVars scD
-[]
-
-@fbind := fst $ generateFreshVars knownVs freshneeded sbind
-BD ([(Id "B" 0,TG (Id "B" 0))]
-   ,[((Id "P" 0,VP)
-     ,BT (C (TG (Id "B" 0)) True (Id "and" 0) 
-         [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
-         ,V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))
-         ]
-         )
-     )
-    ]
-   ,[]
-   ,[((Id "x" 0,VO,[],[])
-     ,BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]
-     )
-    ]
-   )
-
-@fresh -- not output
-
-@scC' -- not output
+Chosen: ?x$ ⟼ ⟨x$⟩
+@scL:  (P⊆x$)
+@cbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
+@sbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
+@scC:  ⊤
+@scLasC:  (P⊆x$), (Q⊆x$)
+@scCL:  (P⊆x$), (Q⊆x$)
+@scCX:  (P⊆x$), (Q⊆x$)
+@scD:  ⊤
+-- 
+@freshneeded:  Ø
+@fbind1:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }

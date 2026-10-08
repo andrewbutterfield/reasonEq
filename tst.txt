@@ -4,12 +4,16 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
 Chosen: ?x$ ⟼ ⟨x$⟩
 @scL:  (P⊆x$)
 @cbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
+-- we want to note anything that binds to at one floating variable...
+-- here we have x$  ⟼ ⟨?x$⟩
+-- we note that scL mentions x$
 @sbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
 @scC:  ⊤
-@scLasC:  (P⊆x$), (Q⊆x$)
+@scLasC:  (P⊆x$), (Q⊆x$) -- this is law s.c. mapped to candidate space
 @scCL:  (P⊆x$), (Q⊆x$)
 @scCX:  (P⊆x$), (Q⊆x$)
 @scD:  ⊤
--- 
+-- Looking at scL,scLasC we conclude that:
+--  the s.c. sub-parts of scLasC that mention x$ should be added into scD
 @freshneeded:  Ø
 @fbind1:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }

@@ -383,32 +383,31 @@ applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
         mctxts = mtchCtxts liveProof
         scC = xpndSC liveProof
         obsv = getDynamicObservables vtbls
-        ictxt = ICtxt obsv $ pdbn "scC" scC
         (tz,seq') = focus liveProof
         dpath = focusPath liveProof
         conjpart = exitTZ tz
-    in do let sbind = patchBinding svtms lvvls $ pdbn "cbind" cbind
-          scLasC <- instantiateSC ictxt (pdbn "sbind" sbind) $ pdbn "scL" scL
-          scCL <- extendGoalSCCoverage obsv lvvls $ pdbn "scLasC" scLasC
-          scCX <- mrgSideCond scC $ pdbn "scCL" scCL
-          let scD = scDischarge obsv (pdbn "scCX" scCX) scLasC
-          if onlyFreshSC $ pdbn "scD" scD
+    in do let sbind = patchBinding svtms lvvls cbind
+          let ictxt = ICtxt obsv scC
+          scLasC <- instantiateSC ictxt sbind scL
+          scCL <- extendGoalSCCoverage obsv lvvls scLasC
+          scCX <- mrgSideCond scC scCL
+          let scD = scDischarge obsv scCX scLasC
+          if onlyFreshSC scD
             then do let freshneeded = scFVars scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent
-                    let (fbind,fresh)
-                          = generateFreshVars knownVs (pdbn "freshneeded" freshneeded) sbind
-                    let scC' = addFreshVars (pdbg "fresh" fresh) $ conjSC liveProof
-                    brepl  <- instTerm ictxt (pdbn "fbind" fbind) repl
+                    let (fbind,fresh) = generateFreshVars knownVs freshneeded sbind
+                    let scC' = addFreshVars fresh $ conjSC liveProof
+                    brepl  <- instTerm ictxt fbind repl
                     let asn' = mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
-                           $ conjSC_ (pdbn "scC'" scC')
+                           $ conjSC_ scC'
                            $ xpndSC_ (expandSideCondKnownVars mctxts scC')
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
-                                        (pdbn "fbind" fbind)
+                                        fbind
                                         dpath
                                , asn'):)
                               liveProof )

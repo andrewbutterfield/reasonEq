@@ -38,33 +38,17 @@ Fixing bugs as we go.
   - lost key side-condition
 
     CONTEXT: `applyMatchToFocus2` .
+ 
+    File `tst.txt` contains the current example with annotations.
 
-    Issue?: `scCX` is ignored - it records what we need. 
-    Needs to be added in after `scDischarge` returns.
+    **We should keep all discharged s.c.s involving instantiated floating vars**
 
-
-    In proof of `and_close_distr`, we want to match `[P]` against `uclose_def`
-    `[P] ≡ (∀ x$  • P)  (P⊆x$)`
-    We obtain `∀x$ • P  ⊤`. 
-    If we match again against `uclose_def` (either way) it fails.
-     **We should retain the `P⊆x$` side-condition.**
-
-    We do `m uclose_def` and see both lhs and rhs matches.
-    The lhs match is `∀?x$ • P ∧ Q     ⊤ ⟹ (P⊆?x$), (Q⊆?x$)`.
-    If we apply this, we are asked and instantiate `?x$` as `x$`
-    to get: `∀x$ • P ∧ Q`  with s.c. `⊤`  (**wrong**).
-
-    If instead we do `tm 1 uclose_def` we observe success:
-    Instantiated Variables: `{P,Q,?x$}`
-    Floating Vars?: `True`
-    Law S.C.: `(P⊆x$)`
-    Instantiated Law S.C.: `(P⊆?x$), (Q⊆?x$)`
-    Goal S.C.: `⊤`
-    Discharged Law S.C.: `(P⊆?x$), (Q⊆?x$)`
-
-    **We should keep all dischgred s.c.s involving instantiated floating vars**
+    We need to add code to fix. this. 
+    We also note that `ProverTUI.fixFloatLVars` should not be in that module.
+    That function, plus the fix should be in a different (new?) module.
 
 
+ 
 
 
   - Time to fix rankings,

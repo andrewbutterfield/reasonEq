@@ -14,7 +14,7 @@ module Debugger
  , rdbg   -- render nm x ; (a -> String) -> String -> a -> a
  , rdbn   -- render nm x ; (a -> String) -> String -> a -> a
  , ldbg   -- render nm xs ; (a -> String) -> String -> [a] -> [a] ; as List
- , sdbg      -- render nm xs ; (a -> String) -> String -> [a] -> [a] ; as Set
+ , sdbg   -- render nm xs ; (a -> String) -> String -> [a] -> [a] ; as Set
  , lendbg -- nm xs  ; String [a] -> [a] ; outputs lengths
  , fdbg   -- f nm x ; (a -> b) -> String -> b -> b ; result of f x
  , trc ) 

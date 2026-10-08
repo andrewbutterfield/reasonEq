@@ -498,7 +498,8 @@ with one floating variable. Is this too restrictive?  \textbf{Yes}):
                  trGVar gvars
            if chosen
             then do let (wanted,leftover) = choices
-                    putStrLn ("Chosen list is "++trVList wanted)
+                    putStrLn $ unwords 
+                      [ "Chosen:", trLVar lv, _maplet, trVList wanted ]
                     fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
             else return (False,lvvls)
 \end{code}

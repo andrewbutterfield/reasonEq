@@ -376,20 +376,13 @@ applyMatchToFocus2 :: MonadFail m
   -> [(ListVar,VarList)] -- floating ListVar -> VarList
   -> LiveProof -> m LiveProof
 applyMatchToFocus2 mtch svtms lvvls liveProof
-  -- need to use svtms and lvvls to update mtch and process law side-conditions
-  = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
-        repl = mLawPart mtch
-        scL = snd $ mAsn mtch
+  = let sbind = patchBinding svtms lvvls $ mBind mtch
         mctxts = mtchCtxts liveProof
-        scC = xpndSC liveProof
+        scC = xpndSC liveProof -- why not conjSC ?
         obsv = getDynamicObservables $ getVarTables mctxts
-        (tz,seq') = focus liveProof
-        dpath = focusPath liveProof
-        conjpart = exitTZ tz
     in do 
-      let sbind = patchBinding svtms lvvls cbind
       let ictxt = ICtxt obsv scC
-      scLasC <- instantiateSC ictxt sbind scL
+      scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch
       scCL <- extendGoalSCCoverage obsv lvvls scLasC
       scCX <- mrgSideCond scC scCL
       let scD = scDischarge obsv scCX scLasC
@@ -398,10 +391,13 @@ applyMatchToFocus2 mtch svtms lvvls liveProof
         let freshneeded = scFVars scD
         let knownVs = zipperVarsMentioned $ focus liveProof
         -- knownVs is all variables in entire goal and sequent
-        let (fbind,fresh) = generateFreshVars knownVs freshneeded sbind
-        let scC' = addFreshVars fresh $ conjSC liveProof
-        brepl  <- instTerm ictxt fbind repl
-        let asn' = mkAsn conjpart (conjSC liveProof)
+        let (fbind -- used below
+             ,fresh) = generateFreshVars knownVs freshneeded sbind -- used below
+        let cjSC = conjSC liveProof -- used below
+        let scC' = addFreshVars fresh cjSC -- used below
+        brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
+        let (tz,seq') = focus liveProof
+        let asn' = mkAsn (exitTZ tz) cjSC
         return ( focus_ ((setTZ brepl tz),seq')
                 $ matches_ []
                 $ conjSC_ scC'
@@ -410,7 +406,7 @@ applyMatchToFocus2 mtch svtms lvvls liveProof
                   (( UseLaw (ByMatch $ mClass mtch)
                             (mName mtch)
                             fbind
-                            dpath
+                            (focusPath liveProof)
                     , asn'):)
                   liveProof )
       else fail ("Undischarged side-conditions: "++trSideCond scD)

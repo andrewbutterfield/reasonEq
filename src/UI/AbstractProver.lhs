@@ -337,13 +337,13 @@ identify their possible replacements,
 and return those along with the match.
 \begin{code}
 applyMatchToFocus1 :: MonadFail m
-                   => Int -> LiveProof
-                   -> m ( ProofMatch       -- the chosen match
-                        , [Variable]  -- unresolved floating variables
-                        , [Term]      -- potential variable replacements
-                        , [ListVar]   -- unresolved floating list-variables
-                        , VarList     -- potential general-variable replacements
-                        )
+  => Int -> LiveProof
+  -> m ( ProofMatch  -- the chosen match
+      , [Variable]   -- unresolved floating variables
+      , [Term]       -- potential variable replacements
+      , [ListVar]    -- unresolved floating list-variables
+      , VarList      -- potential general-variable replacements
+      )
 applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
         let goal = exitTZ $ fst $ focus liveProof
@@ -370,48 +370,50 @@ apply them to the replacements and side-conditions.
 We then try to discharge the side-condition.
 If successful, we replace the focus.
 \begin{code}
-applyMatchToFocus2 :: MonadFail m => [VarTable]
-                   -> ProofMatch
-                   -> [(Variable,Term)]   -- floating Variables -> Term
-                   -> [(ListVar,VarList)] -- floating ListVar -> VarList
-                   -> LiveProof -> m LiveProof
-applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
+applyMatchToFocus2 :: MonadFail m 
+  => ProofMatch
+  -> [(Variable,Term)]   -- floating Variables -> Term
+  -> [(ListVar,VarList)] -- floating ListVar -> VarList
+  -> LiveProof -> m LiveProof
+applyMatchToFocus2 mtch svtms lvvls liveProof
   -- need to use svtms and lvvls to update mtch and process law side-conditions
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
         mctxts = mtchCtxts liveProof
         scC = xpndSC liveProof
-        obsv = getDynamicObservables vtbls
+        obsv = getDynamicObservables $ getVarTables mctxts
         (tz,seq') = focus liveProof
         dpath = focusPath liveProof
         conjpart = exitTZ tz
-    in do let sbind = patchBinding svtms lvvls cbind
-          let ictxt = ICtxt obsv scC
-          scLasC <- instantiateSC ictxt sbind scL
-          scCL <- extendGoalSCCoverage obsv lvvls scLasC
-          scCX <- mrgSideCond scC scCL
-          let scD = scDischarge obsv scCX scLasC
-          if onlyFreshSC scD
-            then do let freshneeded = scFVars scD
-                    let knownVs = zipperVarsMentioned $ focus liveProof
-                    -- knownVs is all variables in entire goal and sequent
-                    let (fbind,fresh) = generateFreshVars knownVs freshneeded sbind
-                    let scC' = addFreshVars fresh $ conjSC liveProof
-                    brepl  <- instTerm ictxt fbind repl
-                    let asn' = mkAsn conjpart (conjSC liveProof)
-                    return ( focus_ ((setTZ brepl tz),seq')
-                           $ matches_ []
-                           $ conjSC_ scC'
-                           $ xpndSC_ (expandSideCondKnownVars mctxts scC')
-                           $ stepsSoFar__
-                              (( UseLaw (ByMatch $ mClass mtch)
-                                        (mName mtch)
-                                        fbind
-                                        dpath
-                               , asn'):)
-                              liveProof )
-            else fail ("Undischarged side-conditions: "++trSideCond scD)
+    in do 
+      let sbind = patchBinding svtms lvvls cbind
+      let ictxt = ICtxt obsv scC
+      scLasC <- instantiateSC ictxt sbind scL
+      scCL <- extendGoalSCCoverage obsv lvvls scLasC
+      scCX <- mrgSideCond scC scCL
+      let scD = scDischarge obsv scCX scLasC
+      if onlyFreshSC scD
+      then do   
+        let freshneeded = scFVars scD
+        let knownVs = zipperVarsMentioned $ focus liveProof
+        -- knownVs is all variables in entire goal and sequent
+        let (fbind,fresh) = generateFreshVars knownVs freshneeded sbind
+        let scC' = addFreshVars fresh $ conjSC liveProof
+        brepl  <- instTerm ictxt fbind repl
+        let asn' = mkAsn conjpart (conjSC liveProof)
+        return ( focus_ ((setTZ brepl tz),seq')
+                $ matches_ []
+                $ conjSC_ scC'
+                $ xpndSC_ (expandSideCondKnownVars mctxts scC')
+                $ stepsSoFar__
+                  (( UseLaw (ByMatch $ mClass mtch)
+                            (mName mtch)
+                            fbind
+                            dpath
+                    , asn'):)
+                  liveProof )
+      else fail ("Undischarged side-conditions: "++trSideCond scD)
 \end{code}
 
 \newpage

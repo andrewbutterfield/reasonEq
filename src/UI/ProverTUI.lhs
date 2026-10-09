@@ -422,57 +422,56 @@ We then finish off the match application (API Part 2).
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
-      Nothing -> return pstate
-      Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do let availTerms = theFalse : theTrue : gSubTerms
-             (vardone,svtms)
-               <-  fixFloatVars [] availTerms $ map StdVar fStdVars
-             (lvardone,lvvls)
-               <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
-             if vardone && lvardone then
-               case applyMatchToFocus2 vts mtch svtms lvvls liveProof of
-                 Yes liveProof'
-                  -> return(reqs, liveProof')
-                 But msgs
-                  -> do putStrLn $ unlines msgs
-                        waitForReturn
-                        return pstate
-             else do putStrLn ( "Bad choices - done(var,lvar) = "
-                             ++ show (vardone,lvardone) )
-                     waitForReturn
-                     return pstate
-  where
-    vts = getVarTables $ mtchCtxts liveProof
+  Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)  ->  do 
+    let availTerms = theFalse : theTrue : gSubTerms
+    (vardone,svtms)
+      <-  fixFloatVars [] availTerms $ map StdVar fStdVars
+    (lvardone,lvvls)
+      <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
+    if vardone && lvardone then
+      case applyMatchToFocus2 mtch svtms lvvls liveProof of
+        Yes liveProof'  ->  return(reqs, liveProof')
+        But msgs        -> do 
+          putStrLn $ unlines msgs
+          waitForReturn
+          return pstate
+    else do 
+      putStrLn ("Bad choices: done(var,lvar)= "++ show (vardone,lvardone))
+      waitForReturn
+      return pstate
+  Nothing  ->  return pstate
 \end{code}
 
 
 
 Ask the user to specify a replacement term for each floating standard variable:
 \begin{code}
-    fixFloatVars :: [(Variable,Term)] -- replacements so far
-                 -> [Term]            -- possible replacement terms
-                 -> VarList           -- floating standard variables
-                 -> IO (Bool,[(Variable,Term)])
-    fixFloatVars vts _ []  = return (True,vts)
-    fixFloatVars vts gterms@[term] ((StdVar v):stdvars)
-      = do putStrLn ("-forced choice: "++trTerm 0 term)
-           fixFloatVars ((v,term):vts) gterms stdvars
-    fixFloatVars vts gterms ((StdVar v):stdvars)
-      = do (chosen,term) 
-             <- pickOrProvideThing 
-                  ("Choose term to replace "++(trVar v))
-                  (trTerm 0) (str2Term v) gterms
-           if chosen
-            then do putStrLn ("Chosen term is "++trTerm 0 term)
-                    fixFloatVars ((v,term):vts) gterms stdvars
-            else return (False,vts)
+fixFloatVars :: [(Variable,Term)] -- replacements so far
+              -> [Term]            -- possible replacement terms
+              -> VarList           -- floating standard variables
+              -> IO (Bool,[(Variable,Term)])
 
-    str2Term v s 
-      = case ident s of
-          Yes i -> mkVarLike v i
-          But msgs -> mkVarLike v $ jId "InvalidIdentifier"
-      where
-        mkVarLike v@(Vbl _ cls whn) i = jeVar $ Vbl i cls whn
+fixFloatVars vts _ []  = return (True,vts)
+
+fixFloatVars vts gterms@[term] ((StdVar v):stdvars) = do 
+  putStrLn ("-forced choice: "++trTerm 0 term)
+  fixFloatVars ((v,term):vts) gterms stdvars
+
+fixFloatVars vts gterms ((StdVar v):stdvars)  = do 
+  (chosen,term) <- pickOrProvideThing 
+                    ("Choose term to replace "++(trVar v))
+                    (trTerm 0) (str2Term v) gterms
+  if chosen
+  then do putStrLn ("Chosen term is "++trTerm 0 term)
+          fixFloatVars ((v,term):vts) gterms stdvars
+  else return (False,vts)
+
+str2Term v s 
+  = case ident s of
+      Yes i -> mkVarLike v i
+      But msgs -> mkVarLike v $ jId "InvalidIdentifier"
+  where
+    mkVarLike v@(Vbl _ cls whn) i = jeVar $ Vbl i cls whn
 \end{code}
 
 \newpage
@@ -482,26 +481,26 @@ for each floating list variable.
 (We currently assume that each replacement variable can only be associated
 with one floating variable. Is this too restrictive?  \textbf{Yes}):
 \begin{code}
-    fixFloatLVars :: [(ListVar,VarList)] -- replacements so far
-                  -> VarList             -- possible replacement variables
-                  -> VarList             -- floating list-variables
-                  -> IO (Bool,[(ListVar,VarList)])
-    fixFloatLVars lvvls _ []        = return (True,lvvls)
-    fixFloatLVars lvvls [] lstvars  = return (True,lvvls++empties)
-      where
-        fixAsEmpty (LstVar lvar) = (lvar,[])
-        empties = map fixAsEmpty lstvars
-    fixFloatLVars lvvls gvars ((LstVar lv):lstvars)
-      = do (chosen,choices)
-             <- takeThings 
-                 ("Choose variables (zero or more) to replace "++(trLVar lv))
-                 trGVar gvars
-           if chosen
-            then do let (wanted,leftover) = choices
-                    putStrLn $ unwords 
-                      [ "Chosen:", trLVar lv, _maplet, trVList wanted ]
-                    fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
-            else return (False,lvvls)
+fixFloatLVars :: [(ListVar,VarList)] -- replacements so far
+              -> VarList             -- possible replacement variables
+              -> VarList             -- floating list-variables
+              -> IO (Bool,[(ListVar,VarList)])
+fixFloatLVars lvvls _ []        = return (True,lvvls)
+fixFloatLVars lvvls [] lstvars  = return (True,lvvls++empties)
+  where
+    fixAsEmpty (LstVar lvar) = (lvar,[])
+    empties = map fixAsEmpty lstvars
+fixFloatLVars lvvls gvars ((LstVar lv):lstvars) = do
+  (chosen,choices) 
+    <- takeThings 
+         ("Choose variables (zero or more) to replace "++(trLVar lv))
+         trGVar gvars
+  if chosen
+  then do let (wanted,leftover) = choices
+          putStrLn $ unwords 
+            [ "Chosen:", trLVar lv, _maplet, trVList wanted ]
+          fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
+  else return (False,lvvls)
 \end{code}
 
 \newpage
@@ -868,7 +867,7 @@ applySimp isApplicable vts simp@(assnm,dir) (reqs, liveProof)
         Nothing -> fail ("simplifer '"++assnm++"' does not apply here")
         Just (mtch,_,_,_,_) ->
           if isApplicable simp (mClass mtch)
-          then applyMatchToFocus2 vts mtch [] [] liveproof
+          then applyMatchToFocus2 mtch [] [] liveproof
           else trySimpMatches liveproof (i+1)
 \end{code}
 
@@ -898,7 +897,7 @@ applyFold isApplicable vts fold (reqs, liveProof)
         Nothing -> fail ("fold '"++fold++"' does not apply here")
         Just (mtch,_,_,_,_) ->
           if isApplicable (mClass mtch)
-          then applyMatchToFocus2 vts mtch [] [] liveproof
+          then applyMatchToFocus2 mtch [] [] liveproof
          else tryFoldMatches liveproof (i+1)
 \end{code}
 

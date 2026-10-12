@@ -931,8 +931,8 @@ applyLawMatch :: MonadFail m
 applyLawMatch mtch svtms lvvls liveProof = do
   let cbind = mBind mtch
   let sbind = patchBinding svtms lvvls cbind
-  let mctxts = mtchCtxts liveProof
   let scC = xpndSC liveProof -- why not conjSC ?
+  let mctxts = mtchCtxts liveProof
   let obsv = getDynamicObservables $ getVarTables mctxts
   let ictxt = ICtxt obsv scC
   scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch

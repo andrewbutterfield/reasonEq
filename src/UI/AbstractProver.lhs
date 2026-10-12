@@ -332,7 +332,6 @@ We have a matchLawCommand-phase approach here:
     (\texttt{applyMatchToFocus2}).
 \end{itemize}
 
-
 First we find the match and determine what variables
 in the replacement are floating,
 identify their possible replacements,
@@ -366,6 +365,7 @@ applyMatchToFocus1 i liveProof
 \end{code}
 
 \newpage
+
 We take the chosen new match pairs,
 integrate them into the match,
 apply them to the replacements and side-conditions.
@@ -374,33 +374,13 @@ If successful, we replace the focus.
 \begin{code}
 applyMatchToFocus2 :: MonadFail m 
   => ProofMatch
-  -> [(Variable,Term)]   -- floating Variables -> Term
+  -> [(Variable,Term)]   -- floating Std-Var -> Term
   -> [(ListVar,VarList)] -- floating ListVar -> VarList
   -> LiveProof -> m LiveProof
-applyMatchToFocus2 mtch svtms lvvls liveProof = do
-  let sbind = patchBinding svtms lvvls $ mBind mtch 
-  applyLawMatch mtch lvvls sbind liveProof
+applyMatchToFocus2 mtch svtms lvvls liveProof 
+  = applyLawMatch mtch svtms lvvls liveProof
 \end{code}
 
-Here we replace floating variables in the \emph{range} of the binding
-by the replacements just chosen by the user.
-\begin{code}
-patchBinding :: [(Variable,Term)]   -- floating Variables -> Term
-             -> [(ListVar,VarList)] -- ListVar -> VarList
-             -> Binding -> Binding
-
--- lvvls:    ?ys --> [x$,e$]
--- [ ( LV (VR (Id "?y" 0, VO, WS), [], [])
---   , [ GL (LV (VR (Id "x" 0, VO, WS), [], []))
---     , GL (LV (VR (Id "e" 0, VE, WS), [], []))] ) 
--- ]
-
-patchBinding [] [] bind = bind
-patchBinding ((v,t):svtms) lvvls bind
-  = patchBinding svtms lvvls $ patchVarBind v t bind
-patchBinding svtms ((flv,nvl):lvvls) bind
-  = patchBinding svtms lvvls $ patchVarListBind flv nvl bind
-\end{code}
 
 \newpage
 \subsection{Apply SAT Solver to Focus}

@@ -911,15 +911,28 @@ basicMatch mc vts fits
     chkPatn mc _                             =  mc
 \end{code}
 
+\newpage
 \subsection{Applying a Match}
 
-\textbf{TODO: }
-\textsf{bring match application here}
+At this point we have:
+chosen a match (\h{mtch}) we want to use;
+and chosen how to instantiate any floating variables,
+distinguishing between standard variables (\h{svtms})
+and list variables (\h{lvvls}).
+
 
 \begin{code}
-applyLawMatch mtch lvvls sbind liveProof = do
+applyLawMatch :: MonadFail m 
+  => ProofMatch
+  -> [(Variable, Term)]
+  -> [(ListVar, VarList)]
+  -> LiveProof
+  -> m LiveProof
+applyLawMatch mtch svtms lvvls liveProof = do
+  let cbind = mBind mtch
+  let sbind = patchBinding svtms lvvls cbind
   let mctxts = mtchCtxts liveProof
-  let scC = xpndSC liveProof -- why not conjSC ? --ARG
+  let scC = xpndSC liveProof -- why not conjSC ?
   let obsv = getDynamicObservables $ getVarTables mctxts
   let ictxt = ICtxt obsv scC
   scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch
@@ -938,7 +951,7 @@ applyLawMatch mtch lvvls sbind liveProof = do
     brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
     let (tz,seq') = focus liveProof
     let asn' = mkAsn (exitTZ tz) cjSC
-    return ( focus_ ((setTZ brepl tz),seq')
+    return  ( focus_ ((setTZ brepl tz),seq')
             $ matches_ []
             $ conjSC_ scC'
             $ xpndSC_ (expandSideCondKnownVars mctxts scC')
@@ -953,6 +966,26 @@ applyLawMatch mtch lvvls sbind liveProof = do
 \end{code}
 
 \subsubsection{Apply Match Suppport Code}
+
+Here we replace floating variables in the \emph{range} of the binding
+by the replacements just chosen by the user.
+\begin{code}
+patchBinding :: [(Variable,Term)]   -- floating Variables -> Term
+             -> [(ListVar,VarList)] -- ListVar -> VarList
+             -> Binding -> Binding
+
+-- lvvls:    ?ys --> [x$,e$]
+-- [ ( LV (VR (Id "?y" 0, VO, WS), [], [])
+--   , [ GL (LV (VR (Id "x" 0, VO, WS), [], []))
+--     , GL (LV (VR (Id "e" 0, VE, WS), [], []))] ) 
+-- ]
+
+patchBinding [] [] bind = bind
+patchBinding ((v,t):svtms) lvvls bind
+  = patchBinding svtms lvvls $ patchVarBind v t bind
+patchBinding svtms ((flv,nvl):lvvls) bind
+  = patchBinding svtms lvvls $ patchVarListBind flv nvl bind
+\end{code}
 
 If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,

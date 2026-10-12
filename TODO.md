@@ -41,13 +41,14 @@ Fixing bugs as we go.
  
     File `tst.txt` contains the current example with annotations.
 
+    **Key step: implement:**
+      `@scDf <- addFloatSCS(scD,svtms,lvvls,sbind,scCx)`   
+
     **We should keep all discharged s.c.s involving instantiated floating vars**
 
-    We need to add code to fix. this. 
-    We also note that `ProverTUI.fixFloatLVars` should not be in that module.
-    That function, plus the fix should be in a different (new?) module.
-
-
+    We need to add code to fix this. 
+    Most of `aMTF2`'s code has now become `LiveProofs.applyLawMatch`.
+    
  
 
 

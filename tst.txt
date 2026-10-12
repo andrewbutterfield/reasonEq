@@ -1,19 +1,35 @@
 
-applyMatchToFocus2 vtbls mtch svtms lvvls liveProof
 
-Chosen: ?x$ ⟼ ⟨x$⟩
-@scL:  (P⊆x$)
+
+
+
+applyLawMatch mtch svtms lvvls liveProof
+
+
+
+Actual values in order:
+
+@svtms: ⟨⟩
+@lvvls: ⟨ ?x$ ⟼ ⟨x$⟩ ⟩
 @cbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
--- we want to note anything that binds to at one floating variable...
--- here we have x$  ⟼ ⟨?x$⟩
--- we note that scL mentions x$
+  -patchBinding->
 @sbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
-@scC:  ⊤
-@scLasC:  (P⊆x$), (Q⊆x$) -- this is law s.c. mapped to candidate space
+@scC:  ⊤  <- xpndSC(lP)
+@scLasC:  (P⊆x$), (Q⊆x$)  <- instSC sbind (P⊆x$) -- mAsn mtch
+  -extendGoalSCCoverage->
 @scCL:  (P⊆x$), (Q⊆x$)
+  -mrgSideCond(scC)->
 @scCX:  (P⊆x$), (Q⊆x$)
-@scD:  ⊤
--- Looking at scL,scLasC we conclude that:
---  the s.c. sub-parts of scLasC that mention x$ should be added into scD
-@freshneeded:  Ø
-@fbind1:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
+@scD:  ⊤  <- scDischarge 
+if onlyFreshSC scD :
+      @scDf <- addFloatSCS(scD,svtms,lvvls,sbind,scCx)   **NEW**
+      -scFVars-> 
+      @freshneeded:  Ø
+      -generateFreshVars(knownVS,sbind)->
+      ( @fbind1:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
+      , @fresh: { ... } )
+      -addFreshVars(cjSc)->
+      @scC': ...
+      @brepl: ... <- instTerm(...,fbind,...)
+      ADDSTEP(cjSC,scC',fbind)
+

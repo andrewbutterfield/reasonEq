@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Control ( 
-  mifte
+  massert, mifte
 , fcombine
 , andf, orf
 , addIfWanted
@@ -34,6 +34,12 @@ We provide general flow-of-control constructs here,
 often of a monadic flavour.
 
 \section{Monadic conditionals}
+
+\begin{code}
+massert :: MonadFail mf => String -> Bool -> mf ()
+massert _   True   =  return ()
+massert msg False  =  fail msg
+\end{code}
 
 \begin{code}
 mifte :: Monad m => m Bool -> m a -> m a -> m a

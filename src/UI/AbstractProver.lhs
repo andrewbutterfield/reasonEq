@@ -56,6 +56,7 @@ import Control.Applicative
 import NotApplicable
 import YesBut
 import Utilities
+import Control
 import UnivSets
 import LexBase
 import Variables
@@ -76,6 +77,7 @@ import Typing
 import Instantiate
 import Sequents
 import ProofSettings
+import LiveProofs
 import REqState
 import Persistence
 import ProofMatch
@@ -375,44 +377,10 @@ applyMatchToFocus2 :: MonadFail m
   -> [(Variable,Term)]   -- floating Variables -> Term
   -> [(ListVar,VarList)] -- floating ListVar -> VarList
   -> LiveProof -> m LiveProof
-applyMatchToFocus2 mtch svtms lvvls liveProof
-  = let sbind = patchBinding svtms lvvls $ mBind mtch
-        mctxts = mtchCtxts liveProof
-        scC = xpndSC liveProof -- why not conjSC ?
-        obsv = getDynamicObservables $ getVarTables mctxts
-    in do 
-      let ictxt = ICtxt obsv scC
-      scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch
-      scCL <- extendGoalSCCoverage obsv lvvls scLasC
-      scCX <- mrgSideCond scC scCL
-      let scD = scDischarge obsv scCX scLasC
-      if onlyFreshSC scD
-      then do   
-        let freshneeded = scFVars scD
-        let knownVs = zipperVarsMentioned $ focus liveProof
-        -- knownVs is all variables in entire goal and sequent
-        let (fbind -- used below
-             ,fresh) = generateFreshVars knownVs freshneeded sbind -- used below
-        let cjSC = conjSC liveProof -- used below
-        let scC' = addFreshVars fresh cjSC -- used below
-        brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
-        let (tz,seq') = focus liveProof
-        let asn' = mkAsn (exitTZ tz) cjSC
-        return ( focus_ ((setTZ brepl tz),seq')
-                $ matches_ []
-                $ conjSC_ scC'
-                $ xpndSC_ (expandSideCondKnownVars mctxts scC')
-                $ stepsSoFar__
-                  (( UseLaw (ByMatch $ mClass mtch)
-                            (mName mtch)
-                            fbind
-                            (focusPath liveProof)
-                    , asn'):)
-                  liveProof )
-      else fail ("Undischarged side-conditions: "++trSideCond scD)
+applyMatchToFocus2 mtch svtms lvvls liveProof = do
+  let sbind = patchBinding svtms lvvls $ mBind mtch 
+  applyLawMatch mtch lvvls sbind liveProof
 \end{code}
-
-\newpage
 
 Here we replace floating variables in the \emph{range} of the binding
 by the replacements just chosen by the user.
@@ -432,35 +400,6 @@ patchBinding ((v,t):svtms) lvvls bind
   = patchBinding svtms lvvls $ patchVarBind v t bind
 patchBinding svtms ((flv,nvl):lvvls) bind
   = patchBinding svtms lvvls $ patchVarListBind flv nvl bind
-\end{code}
-
-If a floating replacement is used
-in a \texttt{CoveredBy} atomic law side condition,
-then we need to copy it over as a proof-local goal side-condition.
-\begin{code}
-extendGoalSCCoverage obsv lvvls (SCD vsps _)
-  = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage vsps)
-  where
-    isCoverage (VSSub _ _)   =  True 
-    isCoverage (VSSubD _ _)  =  True 
-    isCoverage _             =  False
-
-    xtndCoverage :: MonadFail m => VarSet
-                 -> [VarList] -- floating replacements
-                 -> [VSetPred] -- extra side-conditions (so far)
-                 -> [VSetPred] -- Law coverage side-conditions
-                 -> m SideCond
-    xtndCoverage _ _ vsps [] = return (SCD vsps S.empty)
-    xtndCoverage obsv ffvls vsps (vsp@(VSSub _ vsC) : rest)
-      | S.toList vsC `elem` ffvls
-         = do vsps' <- mrgVarConds vsp vsps  
-              xtndCoverage obsv ffvls vsps' rest
-      | otherwise  =  xtndCoverage obsv ffvls vsps rest
-    xtndCoverage obsv ffvls vsps (vsp@(VSSubD _ vsCd) : rest)
-      | S.toList vsCd `elem` ffvls
-         = do vsps' <- mrgVarConds vsp vsps  
-              xtndCoverage obsv ffvls vsps' rest
-      | otherwise  =  xtndCoverage obsv ffvls vsps rest
 \end{code}
 
 \newpage

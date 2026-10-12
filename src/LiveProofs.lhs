@@ -24,6 +24,7 @@ module LiveProofs
  , displayMatches
  -- , instantiateRepl, instReplInMatch
  , matchInContexts, matchLawByName, tryLawByName
+ , applyLawMatch
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , makeEquivalence
@@ -914,6 +915,75 @@ basicMatch mc vts fits
 
 \textbf{TODO: }
 \textsf{bring match application here}
+
+\begin{code}
+applyLawMatch mtch lvvls sbind liveProof = do
+  let mctxts = mtchCtxts liveProof
+  let scC = xpndSC liveProof -- why not conjSC ? --ARG
+  let obsv = getDynamicObservables $ getVarTables mctxts
+  let ictxt = ICtxt obsv scC
+  scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch
+  scCL <- extendGoalSCCoverage obsv lvvls scLasC
+  scCX <- mrgSideCond scC scCL
+  let scD = scDischarge obsv scCX scLasC
+  if onlyFreshSC scD
+  then do   
+    let freshneeded = scFVars scD
+    let knownVs = zipperVarsMentioned $ focus liveProof
+    -- knownVs is all variables in entire goal and sequent
+    let (fbind -- used below
+          ,fresh) = generateFreshVars knownVs freshneeded sbind -- used below
+    let cjSC = conjSC liveProof -- used below
+    let scC' = addFreshVars fresh cjSC -- used below
+    brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
+    let (tz,seq') = focus liveProof
+    let asn' = mkAsn (exitTZ tz) cjSC
+    return ( focus_ ((setTZ brepl tz),seq')
+            $ matches_ []
+            $ conjSC_ scC'
+            $ xpndSC_ (expandSideCondKnownVars mctxts scC')
+            $ stepsSoFar__
+              (( UseLaw (ByMatch $ mClass mtch)
+                        (mName mtch)
+                        fbind
+                        (focusPath liveProof)
+                , asn'):)
+              liveProof )
+  else fail ("Undischarged side-conditions: "++trSideCond scD)
+\end{code}
+
+\subsubsection{Apply Match Suppport Code}
+
+If a floating replacement is used
+in a \texttt{CoveredBy} atomic law side condition,
+then we need to copy it over as a proof-local goal side-condition.
+\begin{code}
+extendGoalSCCoverage ::
+  MonadFail m => VarSet -> [(ListVar, VarList)] -> SideCond -> m SideCond
+extendGoalSCCoverage obsv lvvls (SCD vsps _)
+  = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage vsps)
+  where
+    isCoverage (VSSub _ _)   =  True 
+    isCoverage (VSSubD _ _)  =  True 
+    isCoverage _             =  False
+
+    xtndCoverage :: MonadFail m => VarSet
+                 -> [VarList] -- floating replacements
+                 -> [VSetPred] -- extra side-conditions (so far)
+                 -> [VSetPred] -- Law coverage side-conditions
+                 -> m SideCond
+    xtndCoverage _ _ vsps [] = return (SCD vsps S.empty)
+    xtndCoverage obsv ffvls vsps (vsp@(VSSub _ vsC) : rest)
+      | S.toList vsC `elem` ffvls
+         = do vsps' <- mrgVarConds vsp vsps  
+              xtndCoverage obsv ffvls vsps' rest
+      | otherwise  =  xtndCoverage obsv ffvls vsps rest
+    xtndCoverage obsv ffvls vsps (vsp@(VSSubD _ vsCd) : rest)
+      | S.toList vsCd `elem` ffvls
+         = do vsps' <- mrgVarConds vsp vsps  
+              xtndCoverage obsv ffvls vsps' rest
+      | otherwise  =  xtndCoverage obsv ffvls vsps rest
+\end{code}
 
 \newpage
 \subsection{Undoing a Proof Step}

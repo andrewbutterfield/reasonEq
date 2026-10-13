@@ -35,6 +35,13 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
+  - lost key side-condition
+
+    We see that when we apply `forall_and_distr` 
+    (which requires `(P⊆x$), (Q⊆x$)`) that  it suscceds, 
+    but the s.c. gets zeroed out. When we focus on `P` say,
+    and try to use `uclose_def` in reverse,
+    it fails because the s.c. has gone.
 
   - Time to fix rankings,
     e.g., `xxx_def` ranking higher than `true` (or `false`);

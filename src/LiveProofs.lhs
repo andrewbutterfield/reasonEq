@@ -941,16 +941,16 @@ applyLawMatch mtch svtms lvvls liveProof = do
   let scD = scDischarge obsv scCX scLasC
   if onlyFreshSC scD
   then do   
-    let freshneeded = scFVars scD
+    let scFloated = addFloatSCS scD lvvls scCX
     let knownVs = zipperVarsMentioned $ focus liveProof
     -- knownVs is all variables in entire goal and sequent
-    let (fbind -- used below
-          ,fresh) = generateFreshVars knownVs freshneeded sbind -- used below
-    let cjSC = conjSC liveProof -- used below
-    let scC' = addFreshVars fresh cjSC -- used below
+    let (fbind,fresh) 
+         = generateFreshVars knownVs (scFVars $ pdbn "scFloated" scFloated) sbind -- used below
+    let scC' = addFreshVars fresh scFloated --  
     brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
     let (tz,seq') = focus liveProof
-    let asn' = mkAsn (exitTZ tz) cjSC
+    let cjSC = conjSC liveProof 
+    let asn' = mkAsn (exitTZ tz) cjSC -- used below
     return  ( focus_ ((setTZ brepl tz),seq')
             $ matches_ []
             $ conjSC_ scC'
@@ -964,6 +964,8 @@ applyLawMatch mtch svtms lvvls liveProof = do
               liveProof )
   else fail ("Undischarged side-conditions: "++trSideCond scD)
 \end{code}
+
+\newpage
 
 \subsubsection{Apply Match Suppport Code}
 
@@ -1016,6 +1018,50 @@ extendGoalSCCoverage obsv lvvls (SCD vsps _)
          = do vsps' <- mrgVarConds vsp vsps  
               xtndCoverage obsv ffvls vsps' rest
       | otherwise  =  xtndCoverage obsv ffvls vsps rest
+\end{code}
+
+\newpage
+
+When \h{scDischarge} is complete, 
+we expect it to have no variable-set predicates (VSP) at all,
+but allow one or more fresh-variables to be present.
+However if \h{scCX} mentions any instantiated floating \emph{list}-variables,
+the relevant VSP must be added to the final outcome.
+
+Basically, 
+for every entry in \h{lvvls} of the form \m{?x \mapsto stuf\!f},
+any VSP in \h{scSX} whose variable-set contains \m{stuf\!f} 
+must be added back into \h{scD}.
+
+Working example:
+\begin{eqnarray*}
+   \h{lvvls} &=& \seqof{\lst{?x} \mapsto \seqof{ \lst x}}
+\\ \h{cbind} &=& \setof{ \dots, \lst x \mapsto \seqof{ \lst{?x} } }
+\\ \h{sbind} &=& \setof{ \dots, \lst x \mapsto \seqof{ \lst x } }
+\\ \h{scCX}  &=&  P \subseteq \lst x ~;~ Q \subseteq \lst x
+\\ \h{scD}   &=& \top
+\end{eqnarray*}
+We find one entry, \m{\lst{?x} \mapsto \seqof{ \lst x}}.
+Searching \h{scCX} reveals two entries that mention \m{\lst x},
+namely \m{P \subseteq \lst x} and \m{Q \subseteq \lst x}.
+We add these in on top of \h{scD}.
+
+\begin{code}
+addFloatSCS :: SideCond 
+            -> [(ListVar,VarList)] -> SideCond 
+            -> SideCond
+addFloatSCS scD@(SCD [] fvs) lvvls scCx@(SCD vsps _)
+  = let
+      fltLVs = filter (isFloatingLV . fst) lvvls
+      instLVs = S.fromList $ concat $ map snd fltLVs
+      keptVSPs = filter (mentioned_by instLVs) vsps
+    in (SCD keptVSPs fvs) 
+addFloatSCS (SCD _ fvs) _ _  
+  = SCD [VSFalseP "addFloatCS: unexpected VSPs"] fvs
+
+mentioned_by :: VarSet -> VSetPred -> Bool
+mentioned_by wanted vsp
+  = not $ S.null (wanted `S.intersection` vspVSet vsp)
 \end{code}
 
 \newpage

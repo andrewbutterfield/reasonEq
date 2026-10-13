@@ -35,22 +35,6 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - lost key side-condition
-
-    CONTEXT: `applyMatchToFocus2` .
- 
-    File `tst.txt` contains the current example with annotations.
-
-    **Key step: implement:**
-      `@scDf <- addFloatSCS(scD,svtms,lvvls,sbind,scCx)`   
-
-    **We should keep all discharged s.c.s involving instantiated floating vars**
-
-    We need to add code to fix this. 
-    Most of `aMTF2`'s code has now become `LiveProofs.applyLawMatch`.
-    
- 
-
 
   - Time to fix rankings,
     e.g., `xxx_def` ranking higher than `true` (or `false`);
@@ -89,6 +73,10 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - lost key side-condition
+
+    Fix - implement `LiveProofs.addFloatSCS`  
 
   - `maxMatchDisplay` seems to be glitching badly.
     The above parameter wasn't used at all - now fixed.

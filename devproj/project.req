@@ -11,7 +11,7 @@ BEGIN LIVE-PROOF
 TH-NAME: Closure
 CJ-NAME: and_uclose_distr
 CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))],X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],SCD [] (fromList []))
-SIDE = SCD [] (fromList [])
+SIDE = SCD [VSSub (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]),VSSub (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])] (fromList [])
 STRAT red-R2L
 BEGIN PRFSET
 MM = 30
@@ -23,13 +23,14 @@ TS = False
 FV = False
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]),[])
+TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]),[])
 BEGIN SEQUENT'
 SIDECOND = SCD [] (fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.and_uclose_distr", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))]}
 END SEQUENT'
 END SEQZIP
 BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "uclose_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [],ASN (X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]),SCD [] (fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

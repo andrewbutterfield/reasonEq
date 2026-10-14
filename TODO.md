@@ -37,6 +37,13 @@ Fixing bugs as we go.
 
 **Looks like `xpndSC` is potentially dangerous!**
 
+  - Matching `P[e$/x$]` in quantifier theory scope (Forall,Exists,Closure)
+    results in side-conditions like `(P⊆x$)`. (OK) 
+    along with either `(P⋔e$)`, `(e$⋔?x$)`, or `(e$⊆?x$)`,  (NOT OK)
+
+  - The last 4  `Closure` conjectures are tricky.
+    A possible gap in `Forall` theory?
+
   - Given `[P]`, 
     matching using `m` against `uclose_def` results only in a RHS match (`[[P]]`)
     We need to use `m uclose_def` to get the `∀?x$ • P` match.

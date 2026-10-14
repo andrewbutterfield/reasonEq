@@ -930,31 +930,32 @@ applyLawMatch :: MonadFail m
   -> m LiveProof
 applyLawMatch mtch svtms lvvls liveProof = do
   let cbind = mBind mtch
-  let sbind = patchBinding svtms lvvls cbind
+  let sbind = patchBinding svtms (pdbg "lvvls" lvvls) $ bndbg "cbind" cbind
   let scC = xpndSC liveProof -- why not conjSC ?
   let mctxts = mtchCtxts liveProof
   let obsv = getDynamicObservables $ getVarTables mctxts
-  let ictxt = ICtxt obsv scC
-  scLasC <- instantiateSC ictxt sbind $ snd $ mAsn mtch
-  scCL <- extendGoalSCCoverage obsv lvvls scLasC
-  scCX <- mrgSideCond scC scCL
-  let scD = scDischarge obsv scCX scLasC
-  if onlyFreshSC scD
+  let ictxt = ICtxt obsv $ scdbg "scC" scC
+  scLasC <- instantiateSC ictxt (bndbg "sbind" sbind) $ snd $ mAsn mtch
+  scCL <- extendGoalSCCoverage obsv lvvls $ scdbg "scLasC" scLasC
+  scCX <- mrgSideCond scC $ scdbg "scCL" scCL
+  let scD = scDischarge obsv (scdbg "scCX"  scCX) scLasC
+  if onlyFreshSC $ scdbg "scD" scD
   then do   
-    let scFloated = addFloatSCS scD lvvls scCX
+    let scFloated = addFloatSCS scD lvvls $ scdbg "scCX" scCX
     let knownVs = zipperVarsMentioned $ focus liveProof
     -- knownVs is all variables in entire goal and sequent
     let (fbind,fresh) 
-         = generateFreshVars knownVs (scFVars $ pdbn "scFloated" scFloated) sbind -- used below
+         = generateFreshVars knownVs (scFVars $ scdbg "scFloated" scFloated) sbind -- used below
     let scC' = addFreshVars fresh scFloated --  
-    brepl  <- instTerm ictxt fbind $ mLawPart mtch -- used below
+    brepl  <- instTerm ictxt (bndbg "fbind" fbind) $ mLawPart mtch -- used below
     let (tz,seq') = focus liveProof
     let cjSC = conjSC liveProof 
+    cjSC' <- mrgSideCond (scdbg "cjSC" cjSC) $ scdbg "scC'" scC'
     let asn' = mkAsn (exitTZ tz) cjSC -- used below
     return  ( focus_ ((setTZ brepl tz),seq')
             $ matches_ []
-            $ conjSC_ scC'
-            $ xpndSC_ (expandSideCondKnownVars mctxts scC')
+            $ conjSC_ (scdbg "cjSC'" cjSC')
+            $ xpndSC_ (expandSideCondKnownVars mctxts cjSC')
             $ stepsSoFar__
               (( UseLaw (ByMatch $ mClass mtch)
                         (mName mtch)

@@ -35,13 +35,7 @@ Fixing bugs as we go.
 
 #### Bugs Found
 
-  - lost key side-condition
-
-    We see that when we apply `forall_and_distr` 
-    (which requires `(P⊆x$), (Q⊆x$)`) that  it suscceds, 
-    but the s.c. gets zeroed out. When we focus on `P` say,
-    and try to use `uclose_def` in reverse,
-    it fails because the s.c. has gone.
+**Looks like `xpndSC` is potentially dangerous!**
 
   - Time to fix rankings,
     e.g., `xxx_def` ranking higher than `true` (or `false`);
@@ -80,6 +74,11 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+   - lost key side-condition (again!)
+  
+    Ensure that `conjSC` and `xpndSC` are *synchronised*,
+    and that `conjSC` (and `xpndSC`) may *gain* terms, but *never* lose any.
 
   - lost key side-condition
 

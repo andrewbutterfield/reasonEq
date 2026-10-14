@@ -32,7 +32,7 @@ module TestRendering (
  , trLstVarMatchRole, trLstVarMatchRoleU
  , trVarTable, trVarTableU
  , trLstLVarOrTerm, trLstLVarOrTermU
- , trBinding, trBindingU, bnddbg
+ , trBinding, trBindingU, bndbg
  , seplist
  , seeV, seeLV, seeGV, seeVL, seeVS
  , seeType, seeVal, seeTerm, seeBind, seeVarTable
@@ -763,7 +763,7 @@ trtlv trid = either (trlvar trid) (trterm trid 0)
 \begin{code}
 trBinding = trbinding trId
 trBindingU = trbinding trIdU
-bnddbg = rdbg trBinding
+bndbg = rdbg trBinding
 
 trbinding trid = trbinding' trid . dumpBinding
 

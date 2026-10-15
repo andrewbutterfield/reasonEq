@@ -1,0 +1,148 @@
+\chapter{Gries-Schneider Quantification}
+
+Here we gather key definitions from \cite{gries.93} 
+with regard to boolean quantification.
+
+First, Leibniz for quantification:
+
+$\begin{array}{l@{\quad}l}
+   (8.12)~\textbf{Leibniz:}
+   &
+   \inferrule
+     {P = Q}
+     {(\star x \mid E[x:=P] : S) = (\star x \mid E[z:=Q] : S)}
+\\
+\\ &
+   \inferrule
+     {R \implies (P=Q)}
+     {(\star x \mid R : E[x:=P]) = (\star x \mid R : E[z:=Q])}
+\end{array}$\newline\newline
+
+The following are all \textbf{Axiom}s in \cite{gries.93}.
+
+$\begin{array}{l@{\quad}l}
+   (8.13)~\textbf{Empty Range:}
+   &
+   ( \star x \mid false : P) = u
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.14)~\textbf{One-point rule:} \text{ Provided } \lnot occurs(`x',`E'),
+\\ \\ \qquad 
+   (\star x\mid x= E : P) = P[x:=E] \quad 
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.15)~\textbf{Distributivity:} 
+   \text{ Provided }P,Q:\Bool \text{ or } R \text{ is finite,}
+\\ \\ \qquad
+   (\star x \mid R : P) \star (\star x \mid R :Q) 
+   = (\star x \mid R : P \star Q)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.16)~\textbf{Range split:}
+   \text{ Provided } R \land S \equiv false
+     \text{ and } P:\Bool \text{ or } R \text{ and } S \text{ are finite,}
+\\ \\ \qquad
+   (\star x \mid R \lor S : P)
+   = (\star x \mid R : P) \star (\star x \mid S : P)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.17)~\textbf{Range split:}
+   \text{ Provided } P:\Bool \text{ or } 
+   R \text{ and } S \text{ are finite,}
+\\ \\ \qquad
+   (\star x \mid R \lor S : P) \star (\star x \mid R \land S : P)
+   = (\star x \mid R : P) \star (\star x \mid S : P)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.18)~\textbf{Range split for idempotent $\star$ :}
+ \\ \\ \qquad
+   (\star x \mid R \lor S : P)
+   = (\star x \mid R : P) \star (\star x \mid S : P)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.19)~\textbf{Interchange of dummies:}
+   \text{ Provided } \star \text{ is idempotent or } \\
+   R \text{ and } Q \text{ are finite, }  
+   \lnot occurs(`y',`R'), \lnot occurs(`x',`Q')
+\\ \\ \qquad
+   (\star x \mid R : (\star y \mid Q : P)) 
+   = (\star y \mid Q : (\star x \mid R : P))
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.20)~\textbf{Nesting:} \text{ Provided } \lnot occurs(`y',`R'),
+\\ \\ \qquad
+   (\star x,y \mid R \land Q : P)
+   = (\star x \mid R : (\star y \mid Q : P))
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (8.21)~\textbf{Dummy renaming:} \text{ Provided } \lnot occurs(`y',`R,P'),
+\\ \\ \qquad
+   (\star x \mid R : P) = (\star y \mid R[x:=y] : P[x:=y])
+\end{array}$\newline\newline
+
+We note the following theorem:
+
+$\begin{array}{l@{\quad}l}
+   (8.23)~\textbf{Theorem Split off term:} \text{ For } n:\Nat
+\\ \\ \qquad
+   (\star i \mid 0 \leq i < n+1 : P)
+   = (\star i \mid 0 \leq i < n : P) \star P[i:=n]
+\\ \qquad
+   (\star i \mid 0 \leq i < n+1 : P)
+   = P[i:=0] \star (\star i \mid 0 < i < n+1 : P)
+\end{array}$\newline\newline
+
+
+
+More \textbf{Axiom}s.
+
+~(9.1) $\qquad$ We re-write $(\land x \mid R : P)$ as $(\forall x \mid R : P)$.
+\newline
+
+$\begin{array}{l@{\quad}l}
+   (9.2)~\textbf{Trading:} 
+\\ \\ \qquad
+   (\forall x \mid R : P) \equiv (\forall x\mid: R \implies P)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (9.5)~\textbf{Distributivity of $\lor$ over $\forall$:} 
+   \text{ Provided }  \lnot occurs(`x',`P')
+\\ \\ \qquad
+   P \lor (\forall x \mid R : Q)
+   = (\forall x \mid R: P \lor Q)
+\end{array}$\newline\newline
+
+$\begin{array}{l@{\quad}l}
+   (9.17)~\textbf{Generalised De Morgan:} 
+   \text{ Rewriting $(\lor x \mid R : P)$ as $(\exists x \mid R : P)$}
+\\ \\ \qquad
+   (\exists x \mid R : P) \equiv \lnot (\forall x \mid R : \lnot P)
+\end{array}$\newline\newline
+
+We have the following law that is not described as either an axiom or theorem:
+No proof is supplied, or even hinted at.
+
+$\begin{array}{l@{\quad}l}
+   (9.13)~\textbf{Instantiation } 
+   (\forall x \mid: P) \implies P[x:=E]
+\end{array}$\newline\newline
+
+Can we prove this?
+\begin{eqnarray*}
+   \lefteqn{(\forall x \mid: P) \implies P[x:=E]}
+\\&=& \text{adding explicit range predicate}
+\\&& (\forall x \mid true : P) \implies P[x:=E]
+\\&=&  true = P \lor \lnot P
+\\&& (\forall x \mid x=K \lor x \neq K : P) \implies P[x:=E]
+\\&=& \text{Idempotent range split}
+\\&& (\forall x \mid x=K : P) \land (\forall x \mid x \neq K : P) \implies P[x:=E]
+\end{eqnarray*}

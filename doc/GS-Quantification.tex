@@ -141,8 +141,13 @@ Can we prove this?
    \lefteqn{(\forall x \mid: P) \implies P[x:=E]}
 \\&=& \text{adding explicit range predicate}
 \\&& (\forall x \mid true : P) \implies P[x:=E]
-\\&=&  true = P \lor \lnot P
-\\&& (\forall x \mid x=K \lor x \neq K : P) \implies P[x:=E]
+\\&=&  true = P \lor \lnot P, \text{choose } P \equiv x=E
+\\&& (\forall x \mid x=E \lor x \neq E : P) \implies P[x:=E]
 \\&=& \text{Idempotent range split}
-\\&& (\forall x \mid x=K : P) \land (\forall x \mid x \neq K : P) \implies P[x:=E]
+\\&& (\forall x \mid x=E : P) \land (\forall x \mid x \neq E : P) 
+     \implies P[x:=E]
+\\&=&  (A\land B \implies C) \equiv (A\implies C)\lor(B\implies C)
+\\&& ((\forall x \mid x=E : P) \implies P[x:=E])
+     \lor
+     ((\forall x \mid x \neq E : P) \implies P[x:=E])
 \end{eqnarray*}

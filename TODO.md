@@ -189,12 +189,12 @@ Setup Module for this and a test theory.
   3. Adds new `acl` command to prover with stub in `ProverTUI` (DONE).
   4. Moves stub to `AbstractUI` (DONE).
   5. Create new module to support law-classifier automation, called `RunClassified` (DONE).
-  6. Flesh out the behaviour of `applyCLA`. As it stands it returns `mf LiveProof` which makes interaction difficult at best. In fact is needs to live in a subset of `ProverTUI` and `AbstractTUI`. The former provides IO access, the latter does the `mf whatever` monadic computations. Another issue is that `AbstractUI` supports both `ProverTUI` and `TopTUI`. It really should be separated. This would then allow us to provide a `ClassifierTUI` as a seperate module extending `ProverTUI`, with its own abstract counterpart (DEFERRED).
+  6. Flesh out the behaviour of `applyCLA`. As it stands it returns `mf LiveProof` which makes interaction difficult at best. In fact is needs to live in a subset of `ProverTUI` and `AbstractTUI`. The former provides IO access, the latter does the `mf whatever` monadic computations. Another issue is that `AbstractUI` supports both `ProverTUI` and `TopTUI`. It really should be separated. This would then allow us to provide a `LawKindTUI` as a seperate module extending `ProverTUI`, with its own abstract counterpart (DEFERRED).
   7. Split `AbstractTUI` into `AbstractTop` and `AbstractProver` (DONE).
-  8. Create `ClassifierTUI` and `AbstractClassifier` that are imported by the `XProver` modules. The abstract one is basically `RunClassified` which is the seed for its development (DONE).
-  9. Move `applyCLA` into `ClassifierTUI` with its support functions in `AbstractClassifier` (DONE).
-  10. Bring `doClassDrivenAutomation` into `ClassifierTUI` (DONE).
-  11. Now figure out what `doClassDrivenAutomation` does, and modify `applyCLA` and add other abstract helpers (which then get pushed over to `AbstractClassifier`).
+  8. Create `LawKindTUI` and `AbstractLawKinds` that are imported by the `XProver` modules. The abstract one is basically `RunClassified` which is the seed for its development (DONE).
+  9. Move `applyCLA` into `LawKindTUI` with its support functions in `AbstractLawKinds` (DONE).
+  10. Bring `doClassDrivenAutomation` into `LawKindTUI` (DONE).
+  11. Now figure out what `doClassDrivenAutomation` does, and modify `applyCLA` and add other abstract helpers (which then get pushed over to `AbstractLawKinds`).
 
 
 ### Classifier

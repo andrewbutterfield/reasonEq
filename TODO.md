@@ -37,12 +37,6 @@ Fixing bugs as we go.
 
 **Looks like `xpndSC` is potentially dangerous!**
 
-  - Given `[P]`, 
-    matching using `m` against `uclose_def` results only in a RHS match (`[[P]]`)
-    We need to use `m uclose_def` to get the `∀?x$ • P` match.
-
-    **Is this an old problem where the `m` command stops searching too soon, once it has matched a given law?**
-
   - Matching `P[e$/x$]` in quantifier theory scope (Forall,Exists,Closure)
     results in side-conditions like `(P⊆x$)`. (OK) 
     along with either `(P⋔e$)`, `(e$⋔?x$)`, or `(e$⊆?x$)`,  (NOT OK)

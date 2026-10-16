@@ -1220,7 +1220,7 @@ shLiveStep ww ( just, asn@(Assertion tm sc) )
 displayMatches :: Int -> ProofSettings -> [MatchContext] -> Matches -> String
 displayMatches _ _ _ []  =  ""
 displayMatches ww prfSet mctxts mtchs
-  =  unlines' ( ("Matches:")
+  =  unlines' ( "..." : "" : "Matches:"
                 : map (shMatch ww showbind vts) (reverse $ zip [1..] mtchs) )
   where 
     vts = getVarTables mctxts

@@ -37,9 +37,36 @@ Fixing bugs as we go.
 
 **Looks like `xpndSC` is potentially dangerous!**
 
+  - having decided that `univ_inst_gen` should be an axiom,
+    we find that matching `univ_inst` against it fails.
+
+    ```
+    [P] ⟹  P  ,  ⊤    Focus = [] :: 𝔹  
+
+    Target (RHS): true
+    XPNDD: (P⊆x$)
+    proof> tm univ_inst_gen
+     [P] ⟹  P :: [P] ⟹  P[e$/x$]
+    lnm[parts]=univ_inst_gen[]
+    tP=[P] ⟹  P[e$/x$]
+      scP=⊤
+      partsP=[P] ⟹  P[e$/x$]
+      replP=true
+    tC=[P] ⟹  P
+      scC=(P⊆x$)
+    ---
+    termMatch': structural mismatch.
+    tC = V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+    tP = S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))
+    ```
+     Should we not get a match where `e$` is bound to `x$`,
+     so reducing `P[e$/x$]` to `P[x$/x$]` which then reduces to `P`?
+
+
   - Matching `P[e$/x$]` in quantifier theory scope (Forall,Exists,Closure)
     results in side-conditions like `(P⊆x$)`. (OK) 
-    along with either `(P⋔e$)`, `(e$⋔?x$)`, or `(e$⊆?x$)`,  (NOT OK)
+    along with either `(P⋔e$)`, `(e$⋔?x$)`, or `(e$⊆?x$)`. (NOT OK?)
+    *in fact, `(e$⋔x$)` is a side-condition for one-point rules.*
 
   - The last 4 `Closure` conjectures are tricky.
     A possible gap in `Forall` theory?

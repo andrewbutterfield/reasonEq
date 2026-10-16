@@ -252,10 +252,6 @@ The proof then becomes:
 
 \[\CJanyUnivClosed \qquad \CJanyUnivClosedS\]
 
-\subsubsection{Proof of $\CJunivInstN$}
-
-\[\CJunivInst \qquad \CJunivInstS\]
-
 \subsubsection{Proof of $\CJunivMonoN$}
 
 \[\CJunivMono \qquad \CJunivMonoS\]
@@ -315,6 +311,29 @@ axUnivDef = preddef ("uclose" -.- "def")
 
 $$
   \begin{array}{lll}
+     \AXunivInst & \AXunivInstS & \AXunivInstN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axUnivInst = preddef ("univ" -.- "inst")
+             (univ p ==> p)
+             scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \AXunivInstGen & \AXunivInstGenS & \AXunivInstGenN
+  \end{array}
+$$
+\begin{code}
+axUnivInstGen = preddef ("univ" -.- "inst" -.- "gen")
+                        (univ p ==> sub p)
+                         scTrue
+\end{code}
+
+
+$$
+  \begin{array}{lll}
      \AXsatDef & \AXsatDefS & \AXsatDefN
   \end{array}
 $$\par\vspace{-8pt}
@@ -329,7 +348,10 @@ We now collect our axiom set:
 closureAxioms :: [Law]
 closureAxioms
   = map labelAsAxiom
-      [ axUnivDef, axSatDef ]
+      [ axUnivDef
+      -- , axUnivInst
+      , axUnivInstGen
+      , axSatDef ]
 \end{code}
 
 
@@ -414,7 +436,6 @@ cjUnivAnyClosed = preddef ("univ" -.- "exists" -.- "closed")
                           scTrue
 \end{code}
 
-
 $$
   \begin{array}{lll}
      \CJunivInst & \CJunivInstS & \CJunivInstN
@@ -422,8 +443,8 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 cjUnivInst = preddef ("univ" -.- "inst")
-                (univ p ==> p)
-                scTrue
+             (univ p ==> p)
+             scTrue
 \end{code}
 
 $$
@@ -479,8 +500,10 @@ closureConjs
     , cjUnivTrue, cjUnivFalse
     , cjUnivIdem, cjAndUnivDistr
     , cjUnivAllClosed, cjUnivAnyClosed
-    , cjUnivInst, cjUnivInstGen
-    , cjUnivMono, cjNecPoss ]
+    , cjUnivInst
+    -- , cjUnivInstGen
+    , cjUnivMono
+    , cjNecPoss ]
 \end{code}
 
 

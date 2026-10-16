@@ -1129,6 +1129,15 @@
 \def\AXUnivDef{[P] \equiv \forall \lst x \bullet P}
 \def\AXUnivDefS{\lst x \supseteq P}
 
+\def\AXunivInstN{\QNAME{[]-inst}}
+\def\AXunivInst{[P] \implies P}
+\def\AXunivInstS{}
+
+\def\AXunivInstGenN{\QNAME{[]-inst-gen}}
+\def\AXunivInstGen{[P] \implies P[\lst e/\lst x]}
+\def\AXunivInstGenS{}
+
+
 % \def\AXUnivClosureL{[P]}
 % \def\AXUnivClosureR{\forall \lst x \bullet P}
 % \def\AXUnivClosureS{\lst x \supseteq p}
@@ -1144,6 +1153,8 @@
 \def\AXUNIVCLOSE{
 \begin{array}{lll}
    \AXUnivDef & \AXUnivDefS & \AXUnivDefN
+\\ \AXunivInstGen & \AXunivInstGenS & \AXunivInstGenN
+% \\ \AXunivInst & \AXunivInstS & \AXunivInstN
 \\ \AXsatDef & \AXsatDefS & \AXsatDefN
 % \\ \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
 \end{array}
@@ -1189,7 +1200,7 @@
 \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
 \\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
 \\ \CJunivInst & \CJunivInstS & \CJunivInstN
-\\ \CJunivInstGen & \CJunivInstGenS & \CJunivInstGenN
+% \\ \CJunivInstGen & \CJunivInstGenS & \CJunivInstGenN
 \\ \CJunivMono & \CJunivMonoS & \CJunivMonoN
 \\ \CJnecPoss & \CJnecPossS & \CJnecPossN
 \end{array}

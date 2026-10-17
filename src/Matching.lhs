@@ -374,8 +374,8 @@ we can simply bind all the target and replacement list variables to empty sets.
 
 $$
 \inferrule
-   { type(t_C) \cong type(v_P)
-    \and \mrule{\beta}{t_C}{v_P}{\beta'}
+   { type(v_C) \cong type(t_P)
+    \and \mrule{\beta}{v_C}{t_P}{\beta'}
     \and \sigma_P = [\lst e1,\dots,\lst e_n/\lst x_1,\dots,\lst x_n]
    }
    { \mrule{\beta}{{\vv v}_C}{{\vv v}_P\sigma_P}
@@ -391,8 +391,16 @@ $$
    \quad
    \texttt{tmM-Subst0-Var}
 $$
+\begin{code}
+termMatch' vts fits bind cbvs pbvs 
+           (Var ttC vC)
+           tP@(Sub _ (Var ttP vP) (Substn tsP lvsP)) 
+  | ttC `fits` ttP && S.null tsP = do
+    bind0 <- vMatch vts fits bind cbvs pbvs ttC vC ttP vP
+    addNullLVBindings bind0 $ S.toList lvsP
+\end{code}
 
-
+\newpage
 The second case is where \h{tC} is a \h{Bnd} or a \h{Lam},
 in which case we expect the type of its \emph{body} 
 to fit with the type of \h{vP}.
@@ -427,7 +435,6 @@ termMatch' vts fits bind cbvs pbvs tC (Var ttP vP)
   | termtype tC `fits` ttP  =  tvMatch vts fits bind cbvs pbvs tC ttP vP
 \end{code}
 
-\newpage
 \subsection{Constructor Term-Pattern (\texttt{Cons})}
 
 Constructors match if they have the same kind,
@@ -551,7 +558,6 @@ $$
 $$
 
 
-\newpage
 \subsection{Binding Term-Pattern (\texttt{Bnd})}
 
 We first start with the obvious rule that tries to match
@@ -610,7 +616,7 @@ termMatch' vts fits bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   where vlP = S.toList vsP
 \end{code}
 
-
+\newpage
 \subsection{Lambda Term-Pattern (\texttt{Lam})}
 
 $$
@@ -660,7 +666,7 @@ termMatch' vts fits bind cbvs pbvs tC (Lam ttP nP vlP tP)
           termMatch vts fits bind' cbvs pbvs' tC tP
 \end{code}
 
-\newpage
+
 \subsection{Closure Term-Pattern (\texttt{Cls})}
 
 $$
@@ -706,7 +712,7 @@ termMatch' vts fits bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
           sMatch vts fits bindT cbvs pbvs subC subP
 \end{code}
 
-
+\newpage
 \subsection{Iterated Term-Pattern (\texttt{Iter})}
 
 The first case is simply where the candidate is itself an iteration,
@@ -739,8 +745,6 @@ termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
       = do bind' <- bindLVarToVList lvP [LstVar lvC] bind
            iibind bind' rest
 \end{code}
-
-\newpage
 
 The next case is when the candidate is an expansion of length one,
 without the application of the top-level operator $na$.
@@ -794,6 +798,12 @@ $\{
   \lst t \mapsto \seqof{e,\lst t \less {e,f},f}
   \}$.
 
+We use $(\frown)$ to denote the ``striping'' of the mappings,
+e.g.
+$$
+  lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
+$$
+
 
 Matching a general expansion against an iteration:
 $$
@@ -822,13 +832,7 @@ $$
    \quad
    \texttt{tmM-Itr-Cns}
 $$
-We use $(\frown)$ to denote the ``striping'' of the mappings,
-e.g.
-$$
-  lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
-$$
 
-\newpage
 
 In practice, we note that if a match is going to succeed,
 then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
@@ -927,6 +931,7 @@ termMatch' vts fits bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 %             ibind bind' rest
 % \end{code}
 
+\newpage 
 \subsection{All cases covered}
 
 Any other situation results in failure:
@@ -939,14 +944,14 @@ termMatch' _ _ _ _ _ tC tP
     ]
 \end{code}
 
-\newpage
 
 \subsection{Term Matching Support}
 
 Matching two constructor names.
 This is really a match between two identifiers 
-that we wrap as static observables:
-
+that we wrap as static observables.
+\textbf{We should store a mapping from nP to nC as a BindId component,
+rather than wrapping it up as a static observation variable.}
 \begin{code}
 consBind vts fits bind cbvs pbvs ttC nC nP
   = vMatch vts fits bind cbvs pbvs ttC vC ttC vP
@@ -955,8 +960,14 @@ consBind vts fits bind cbvs pbvs ttC nC nP
     vP = Vbl nP ObsV Static
 \end{code}
 
-\textbf{We should store a mapping from nP to nC as a BindId component,
-rather than wrapping it up as a static observation variable.}
+Take a list-variable substition and bind all listvars to the empty-set.
+\begin{code}
+addNullLVBindings bind [] = return bind
+addNullLVBindings bind ((rlv,tlv):rest) = do
+  rbind <- bindLVarToVSet rlv S.empty bind
+  tbind <- bindLVarToVSet tlv S.empty rbind
+  addNullLVBindings tbind rest
+\end{code}
 
 \section{Term-List Matching}
 

@@ -362,12 +362,41 @@ termMatch' _ _ bind _ _ kC@(Val _ _) kP@(Val _ _)
 
 \subsection{Variable Term-Pattern (\texttt{Var})}
 
-Here we have 
 Variable matching is complicated, so we farm it out,
 as long as \texttt{Type}s match.
-Here we have an issue if \h{tC} is a \h{Bnd} or a \h{Lam},
+We deal with some special cases beforehand.
+
+The first is where we have a match of pattern variable $v_P$
+against a substitution of the form 
+$v_C[\lst e1,\dots,\lst e_n/\lst x_1,\dots,\lst x_n]$.
+If $v_C$ matches $v_P$, 
+we can simply bind all the target and replacement list variables to empty sets.
+
+$$
+\inferrule
+   { type(t_C) \cong type(v_P)
+    \and \mrule{\beta}{t_C}{v_P}{\beta'}
+    \and \sigma_P = [\lst e1,\dots,\lst e_n/\lst x_1,\dots,\lst x_n]
+   }
+   { \mrule{\beta}{{\vv v}_C}{{\vv v}_P\sigma_P}
+           {\beta' \uplus 
+            \setof{ \lst{e_1} \mapsto \emptyset
+              \dots 
+              \lst{e_n} \mapsto \emptyset
+              ,
+              \lst{x_1} \mapsto \emptyset
+               \dots
+              \lst{x_n} \mapsto \emptyset
+             }} }
+   \quad
+   \texttt{tmM-Subst0-Var}
+$$
+
+
+The second case is where \h{tC} is a \h{Bnd} or a \h{Lam},
 in which case we expect the type of its \emph{body} 
 to fit with the type of \h{vP}.
+Here we do some pre-processing.
 
 $$
 \inferrule

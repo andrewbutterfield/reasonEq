@@ -917,6 +917,15 @@ updateProverSettings _ prfset = do
   str <- userPrompt "Select setting by number: "
   let choice = readNat str
   case choice of
+    4 -> do 
+      putStrLn $ unlines'
+        ( "Select Match order as follows:"
+          : matchOrderShorthands )
+      newmo <- userPrompt "MO> "
+      case changeMatchOrder newmo prfset of
+        Nothing -> do putStrLn ("Invalid order spec: "++newmo)
+                      return prfset
+        Just prfset' -> return prfset'
     0 -> return $ disableAllSpecialMatches prfset
     c | c == proofShowAllMatches 
       -> return $ enableAllSpecialMatches prfset
@@ -928,8 +937,6 @@ updateProverSettings _ prfset = do
          putStrLn ("Invalid choice "++str)
          return prfset
 \end{code}
-
-
 
 
 

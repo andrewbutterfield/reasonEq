@@ -6,13 +6,16 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module ProofSettings ( 
-  ProofSettings(..) -- used elsewhere
+  MatchOrder(..)
+, matchOrderShorthands
+, ProofSettings(..) -- used elsewhere
 , proofSettingsCount, proofShowAllMatches
 , initProofSettings     -- used elsewhere
 , renderProofSettings   -- used elsewhere
 , parseProofSettings    -- used elsewhere
 , showPrfSettings       -- used elsewhere
 , changePrfSettings     -- used elsewhere
+, changeMatchOrder
 , enableAllSpecialMatches
 , disableAllSpecialMatches
 )
@@ -33,6 +36,17 @@ import Debugger
 \newpage
 \section{Proof Settings Datatype}
 
+We first define a match ordering mode,
+which allows fine-tuning of match display depending on the phase of a proof:
+\begin{code}
+data MatchOrder
+  =  SizeMatters  -- we rank matches by size only
+  |  ExpandDefs   -- we give priority to matches that unfold definitions
+  |  CollapseDefs -- we give priority to matches that fold definitions
+  deriving (Eq,Ord,Show,Read)
+\end{code}
+All of these apply to the instantiated replacement term.
+
 \begin{code}
 data ProofSettings
   = PrfSet {
@@ -41,6 +55,7 @@ data ProofSettings
      , maxStepDisplay :: Int -- ms, maxsteps
      , showBindings :: Bool -- bd, showbinds
      -- Section 2 - settings that specify behaviour
+     , matchOrder :: MatchOrder -- specifies how to order matches
      , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
      , showTrivialListVars :: Bool -- tq, trivialquant --> matchFilter
      , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
@@ -50,9 +65,13 @@ data ProofSettings
      }
 
 -- metadata about the above
-proofSettingsCount = (7::Int)
-proofShowAllMatches = (10::Int)
-prfSettingTypes = replicate 2 "Number" ++ replicate 5 "Bool"
+proofSettingsCount = (8::Int)
+proofShowAllMatches = (11::Int)
+prfSettingTypes 
+  =  replicate 2 "Number" 
+  ++ ["Bool"]
+  ++ ["MatchOrder"]
+  ++ replicate 4 "Bool"
 \end{code}
 
 Display functions
@@ -61,6 +80,7 @@ settablePS prfset =
   [ "maxMatchDisplay       - " ++ show (maxMatchDisplay prfset)
   , "maxStepDisplay        - " ++ show (maxStepDisplay prfset)
   , "showBindings          - " ++ show (showBindings prfset)
+  , "matchOrder            - " ++ show (matchOrder prfset)
   , "showTrivialMatches    - " ++ show (showTrivialMatches prfset)
   , "showTrivialListVars   - " ++ show (showTrivialListVars prfset)
   , "showTrivialSubst      - " ++ show (showTrivialSubst prfset)
@@ -93,6 +113,10 @@ showBindings_          =  showBindings__ . const
 \subsection{Section 2 Updaters}
 
 \begin{code}
+matchOrder__ f r
+  =  matchFilterUpdate r{matchOrder = f $ matchOrder r}
+matchOrder_   =  matchOrder__ . const
+
 showTrivialMatches__ f r
   =  matchFilterUpdate r{showTrivialMatches = f $ showTrivialMatches r}
 showTrivialMatches_   =  showTrivialMatches__ . const
@@ -168,6 +192,7 @@ reqsetHDR = "BEGIN "++prfset ; reqsetTRL = "END "++ prfset
 mmKey = "MM = "
 msKey = "MS = "
 bdKey = "BD = "
+moKey = "MO = "
 tmKey = "TM = "
 tlKey = "TL = "
 tsKey = "TS = "  
@@ -179,6 +204,7 @@ renderProofSettings rqset
     , mmKey ++ show (maxMatchDisplay rqset)
     , msKey ++ show (maxStepDisplay rqset)
     , bdKey ++ show (showBindings rqset)
+    , moKey ++ show (matchOrder rqset)
     , tmKey ++ show (showTrivialMatches rqset)
     , tlKey ++ show (showTrivialListVars rqset)
     , tsKey ++ show (showTrivialSubst rqset)
@@ -192,21 +218,23 @@ parseProofSettings txts
        (theMMD,rest2) <- readKey mmKey read     rest1
        (theMSD,rest3) <- readKey msKey read     rest2
        (theSBD,rest4) <- readKey bdKey readBool rest3
-       (theMHT,rest5) <- readKey tmKey readBool rest4
-       (theMHQ,rest6) <- readKey tlKey readBool rest5
-       (theMHS,rest7) <- readKey tsKey readBool rest6
-       (theMHF,rest8) <- readKey fvKey readBool rest7
-       rest9 <- readThis reqsetTRL              rest8
+       (theMOD,rest5) <- readKey moKey read     rest4
+       (theMHT,rest6) <- readKey tmKey readBool rest5
+       (theMHQ,rest7) <- readKey tlKey readBool rest6
+       (theMHS,rest8) <- readKey tsKey readBool rest7
+       (theMHF,rest9) <- readKey fvKey readBool rest8
+       rest10 <- readThis reqsetTRL             rest9
        return ( matchFilterUpdate
                  ( PrfSet theMMD
                           theMSD
                           theSBD
+                          theMOD
                           theMHT
                           theMHQ
                           theMHS
                           theMHF
                           acceptAll )
-              , rest9 )
+              , rest10 )
 \end{code}
 
 \newpage
@@ -218,6 +246,7 @@ initProofSettings
       maxMatchDisplay        = 30
     , maxStepDisplay         = 10
     , showBindings           = False
+    , matchOrder             = SizeMatters
     , showTrivialMatches     = False
     , showTrivialListVars    = False 
     , showTrivialSubst       = False
@@ -239,19 +268,30 @@ showPrfSettings prfset = numberList id $ settablePS prfset
 \subsection{Change Proof Settings}
 
 \begin{code}
-changePrfSettings :: MonadFail m 
+changePrfSettings :: MonadFail mf 
                   => Int -> String -> ProofSettings 
-                  -> m ProofSettings
+                  -> mf ProofSettings
 changePrfSettings setno valstr rqset
   = case setno of
       1 -> return $ maxMatchDisplay_       (readNat  valstr) rqset 
       2 -> return $ maxStepDisplay_        (readNat  valstr) rqset 
       3 -> return $ showBindings_          (readBool valstr) rqset 
-      4 -> return $ showTrivialMatches_    (readBool valstr) rqset 
-      5 -> return $ showTrivialListVars_   (readBool valstr) rqset 
-      6 -> return $ showTrivialSubst_      (readBool valstr) rqset 
-      7 -> return $ showFloatingVariables_ (readBool valstr) rqset 
+      4 -> changeMatchOrder                          valstr  rqset 
+      5 -> return $ showTrivialMatches_    (readBool valstr) rqset 
+      6 -> return $ showTrivialListVars_   (readBool valstr) rqset 
+      7 -> return $ showTrivialSubst_      (readBool valstr) rqset 
+      8 -> return $ showFloatingVariables_ (readBool valstr) rqset 
       _ -> return rqset -- fail silently with no change
+
+matchOrderShorthands = ["sm","ed","cd"]
+
+changeMatchOrder :: MonadFail mf 
+                 => String -> ProofSettings 
+                 -> mf ProofSettings
+changeMatchOrder "sm" rqset = return $ matchOrder_ SizeMatters  rqset
+changeMatchOrder "ed" rqset = return $ matchOrder_ ExpandDefs   rqset
+changeMatchOrder "cd" rqset = return $ matchOrder_ CollapseDefs rqset
+changeMatchOrder valstr rqset = fail ("invalid order spec: "++valstr)
 
 enableAllSpecialMatches :: ProofSettings -> ProofSettings
 enableAllSpecialMatches prfset

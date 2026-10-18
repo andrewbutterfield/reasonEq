@@ -2,6 +2,7 @@ BEGIN PRFSET
 MM = 30
 MS = 10
 BD = False
+MO = SizeMatters
 TM = False
 TL = False
 TS = False

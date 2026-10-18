@@ -14,11 +14,11 @@ DWhile
 Designs
 UWhile
 UBase
-Lists
 LTL
-Closure -- working here
-Sets 
+Lists -- working here
 -- ok below here:
+Closure 
+Sets 
 Exists
 Arith
 Forall 
@@ -36,25 +36,6 @@ Fixing bugs as we go.
 #### Bugs Found
 
 **Looks like `xpndSC` is potentially dangerous!**
-
-
-  - Time to fix rankings,
-    e.g., `xxx_def` ranking higher than `true` (or `false`);
-      or where `forall_and_distr [≡rhs]` is ranked 16th after a lot 
-      of bigger `[≡lhs]` matches of laws 
-      (e.g. `golden_rule`)
-      `∀x$ • P ≡ ∀x$ • Q ≡ ∀x$ • P ∨ ∀x$ • Q`
-      or those with floating variables (e.g. `forall_and_distr`)
-      `∀?x$ • ∀x$ • P ∧ ∀?x$ • ∀x$ • Q`.
-
-    The promotion of `_def` matches should depend on what "mode" the prover is in.
-    If in unfold mode promote `[≡lhs]` def-matches,
-    in fold mode promote `[≡rhs]` def-matches,
-    and in calculate mode def-matches do not get special treatment,
-    whereas size matters.
-
-    *THIS IS A NON-TRIVIAL EXERCISE*. 
-    We need a mode switch command and some implementation thereof.
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
@@ -75,6 +56,10 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 #### Bugs Fixed
 
 Most recent first...
+
+  - Time to fix rankings,
+    
+    Done: we now have 3 modes: `SizeMatters`, `ExpandDefs`, and `CollapseDefs`.
 
   - Matching `P[e$/x$]` in the following s.c. `(e$⊆?x$)`. 
     Is this a problem?

@@ -61,6 +61,7 @@ data ProofSettings
      , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
+     , matchSort   :: [ProofMatch] -> [ProofMatch]
      , matchFilter :: ProofMatch -> Bool
      }
 
@@ -87,7 +88,8 @@ settablePS prfset =
   , "showFloatingVariables - " ++ show (showFloatingVariables prfset)
   ]
 derivedPS prfset =
-  [ "matchFilter           - function"
+  [ "matchSort             - sorter"
+  , "matchFilter           - predicate"
   ]
 
 menuPS = zip [1..] . settablePS 
@@ -114,30 +116,64 @@ showBindings_          =  showBindings__ . const
 
 \begin{code}
 matchOrder__ f r
-  =  matchFilterUpdate r{matchOrder = f $ matchOrder r}
+  =  matchRankingUpdate r{matchOrder = f $ matchOrder r}
 matchOrder_   =  matchOrder__ . const
 
 showTrivialMatches__ f r
-  =  matchFilterUpdate r{showTrivialMatches = f $ showTrivialMatches r}
+  =  matchRankingUpdate r{showTrivialMatches = f $ showTrivialMatches r}
 showTrivialMatches_   =  showTrivialMatches__ . const
 
 showTrivialListVars__ f r
-  =  matchFilterUpdate r{showTrivialListVars = f $ showTrivialListVars r}
+  =  matchRankingUpdate r{showTrivialListVars = f $ showTrivialListVars r}
 showTrivialListVars_   =  showTrivialListVars__ . const
 
 showTrivialSubst__ f r
-  =  matchFilterUpdate r{showTrivialSubst = f $ showTrivialSubst r}
+  =  matchRankingUpdate r{showTrivialSubst = f $ showTrivialSubst r}
 showTrivialSubst_   =  showTrivialSubst__ . const
 
 showFloatingVariables__ f r
-  =  matchFilterUpdate r{showFloatingVariables = f $ showFloatingVariables r}
+  =  matchRankingUpdate r{showFloatingVariables = f $ showFloatingVariables r}
 showFloatingVariables_   =  showFloatingVariables__ . const
 \end{code}
 
 
-\section{Section 3 Updater}
+\section{Section 3 Updaters}
 
 Section 3 updater --- not exported, internal use only.
+
+
+\subsection{Update Map Sorter Function}
+
+We have the followng sorting functions, 
+applied to the match replacment, with the match bindings applied.
+\begin{description}
+\item[Size Matters]
+  We sort purely based on \h{termSize} --- smaller is better.
+\item[Expand Definitions]
+  We rank left-to-right uses of definition laws as better than other laws.
+\item[Collapse Definitions]
+  We rank right-to-left uses of definition laws as better than other laws.
+\end{description}
+\textbf{Notes:} 
+The replacement \m{true} is always first.
+For now, a definition law is one whose name ends in \h{\_def}.
+When other ordering criteria have been applied, 
+we use \h{termSize} to finalise the ordering.
+
+\begin{code}
+matchSort__ f r  =  r{matchSort = f $ matchSort r}
+matchSort_       =  matchSort__ . const
+
+matchOrderUpdate :: ProofSettings -> ProofSettings
+matchOrderUpdate prfset
+  = case matchOrder prfset of
+      SizeMatters   ->  matchSort_ (makeSort sizeOrd) prfset
+      ExpandDefs    ->  prfset -- not yet implemented
+      CollapseDefs  ->  prfset -- not yet implemented
+\end{code}
+
+\subsection{Update Map Filter Function}
+
 
 We identify the following cases where we may want to filter out matches:
 \begin{description}
@@ -182,6 +218,12 @@ matchFilterUpdate r
 \end{code}
 Note that \h{proto/Keep.hs} demonstrates that the logic above is sound.
 
+FInally, glue the updaters together
+\begin{code}
+matchRankingUpdate :: ProofSettings -> ProofSettings
+matchRankingUpdate = matchOrderUpdate . matchFilterUpdate
+\end{code}
+
 
 \newpage
 \section{Write and Read Proof Settings}
@@ -224,7 +266,7 @@ parseProofSettings txts
        (theMHS,rest8) <- readKey tsKey readBool rest7
        (theMHF,rest9) <- readKey fvKey readBool rest8
        rest10 <- readThis reqsetTRL             rest9
-       return ( matchFilterUpdate
+       return ( matchRankingUpdate
                  ( PrfSet theMMD
                           theMSD
                           theSBD
@@ -233,6 +275,7 @@ parseProofSettings txts
                           theMHQ
                           theMHS
                           theMHF
+                          id
                           acceptAll )
               , rest10 )
 \end{code}
@@ -242,7 +285,7 @@ parseProofSettings txts
 
 \begin{code}
 initProofSettings
-  = matchFilterUpdate $ PrfSet {
+  = matchRankingUpdate $ PrfSet {
       maxMatchDisplay        = 30
     , maxStepDisplay         = 10
     , showBindings           = False
@@ -251,7 +294,8 @@ initProofSettings
     , showTrivialListVars    = False 
     , showTrivialSubst       = False
     , showFloatingVariables  = False 
-    , matchFilter = acceptAll
+    , matchSort              = id
+    , matchFilter            = acceptAll
     }
 \end{code}
 

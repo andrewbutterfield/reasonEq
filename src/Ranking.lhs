@@ -18,6 +18,7 @@ module Ranking
   , sizeOrd -- not used
   , favourDefLHSOrd -- used in ProverTUI
   -- exported rankings
+  , makeSort
   , filterAndSort -- used in ProverTUI
   , sizeRanking -- not used
   , favouriteRanking -- not used
@@ -210,19 +211,17 @@ with duplicate replacements removed
 (this requires us to instantiate the replacements).
 
 \begin{code}
+makeSort :: Ord ord 
+         => (ProofMatch -> ord)
+         -> Matches -> Matches
+makeSort rf ms  =  remDupRepl $ map snd $ sortOn fst $ zip (map rf ms) ms
+
 filterAndSort :: Ord ord
               => ( ProofMatch -> Bool, ProofMatch ->  ord )
               -> Matches -> Matches
 filterAndSort (ff,rf) ms
   = let fms = filter ff ms
-    in remDupRepl $ map snd $ sortOn fst $ zip (map rf fms) fms
-  where  
-    mshow m = 
-      mName m 
-      ++ "(" 
-      ++ show (mClass m)
-      ++ ")  --  "
-      ++ trTerm 0 (mRepl m)
+    in makeSort rf fms 
 \end{code}
 
 Note: given the same instantiated replacement from different laws,

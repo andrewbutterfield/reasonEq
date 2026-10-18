@@ -15,13 +15,10 @@ module Ranking
   , anyTrivialSubstitutions -- used in ProofSettings
   , hasFloatingVariables -- used in ProofSettings
   -- exported Orderings
-  , sizeOrd -- not used
-  , favourDefLHSOrd -- used in ProverTUI
+  , sizeOrd -- used in ProofSettings
+  , favourDefnLHS, favourDefnRHS
   -- exported rankings
   , makeSort
-  , filterAndSort -- used in ProverTUI
-  , sizeRanking -- not used
-  , favouriteRanking -- not used
   , termSize
   , Direction(..), ClassifiedLaws(..), nullClassifiedLaws
   , catClassyLaws
@@ -166,32 +163,51 @@ sizeOrd  =  termSize . mRepl
 \end{code}
 
 
-\subsection{Favour LHS and Definitions}
+\subsection{Favour Definition LHS/RHS}
 
 Show matches to laws named as definitions first,
 then those matching LHS of equivalence laws,
 and then the rest.
-Key exceptions: replacement \h{true} trumps definitions.
+Key exceptions: replacements \h{false}, \h{true} trump definitions.
 \begin{code}
-favourDefLHSOrd :: ProofMatch ->  (Int,Int,Int,Int)
-favourDefLHSOrd m
-  = ( subMatchRepl $ mRepl m
-    , subMatchDef $ mName m
-    , subMatchOrd $ mClass m
+favourDefnLHS :: ProofMatch ->  (Int,Int,Int)
+favourDefnLHS m
+  = ( subMatchTrueFalse $ mRepl m
+    , subMatchDefnLHS m
     , sizeOrd m
     )
 
-subMatchRepl :: Term -> Int
-subMatchRepl term
+favourDefnRHS :: ProofMatch ->  (Int,Int,Int)
+favourDefnRHS m
+  = ( subMatchTrueFalse $ mRepl m
+    , subMatchDefnRHS m
+    , sizeOrd m
+    )
+
+
+subMatchTrueFalse :: Term -> Int
+subMatchTrueFalse term
   | term == theTrue  =  0
   | term == theFalse =  0
   | otherwise        =  1
 
+subMatchDefnLHS :: ProofMatch -> Int
+subMatchDefnLHS m
+  | namedAsDefinition (mName m) && mClass m == MatchEqvLHS  =  0
+  | otherwise                                               =  1
+
+subMatchDefnRHS :: ProofMatch -> Int
+subMatchDefnRHS m
+  | namedAsDefinition (mName m) && mClass m == MatchEqvRHS  =  0
+  | otherwise                                               =  1
+
 
 subMatchDef :: String -> Int
 subMatchDef lawname
- | take 4 (reverse lawname) == "fed_"  =  0
- | otherwise                           =  1
+ | namedAsDefinition lawname  =  0
+ | otherwise                  =  1
+
+namedAsDefinition lawname = take 4 (reverse lawname) == "fed_"
 
 subMatchOrd :: MatchClass -> Int
 subMatchOrd MatchAll         =  0
@@ -215,13 +231,6 @@ makeSort :: Ord ord
          => (ProofMatch -> ord)
          -> Matches -> Matches
 makeSort rf ms  =  remDupRepl $ map snd $ sortOn fst $ zip (map rf ms) ms
-
-filterAndSort :: Ord ord
-              => ( ProofMatch -> Bool, ProofMatch ->  ord )
-              -> Matches -> Matches
-filterAndSort (ff,rf) ms
-  = let fms = filter ff ms
-    in makeSort rf fms 
 \end{code}
 
 Note: given the same instantiated replacement from different laws,
@@ -246,21 +255,6 @@ sameRepl :: ProofMatch -> ProofMatch -> Bool
 sameRepl m1 m2 = mRepl m1 == mRepl m2
 \end{code}
 
-\section{Rankings}
-
-\subsection{Size Matters}
-
-\begin{code}
-sizeRanking :: Ranking
-sizeRanking = filterAndSort ( acceptAll, sizeOrd )
-\end{code}
-
-\subsection{No Vanishing Q, favour LHS}
-
-\begin{code}
-favouriteRanking  :: Ranking
-favouriteRanking = filterAndSort ( onlyTrivialLVarMatches, favourDefLHSOrd )
-\end{code}
 
 
 \section{Classifiers}

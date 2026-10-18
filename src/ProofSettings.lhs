@@ -167,9 +167,9 @@ matchSort_       =  matchSort__ . const
 matchOrderUpdate :: ProofSettings -> ProofSettings
 matchOrderUpdate prfset
   = case matchOrder prfset of
-      SizeMatters   ->  matchSort_ (makeSort sizeOrd) prfset
-      ExpandDefs    ->  prfset -- not yet implemented
-      CollapseDefs  ->  prfset -- not yet implemented
+      SizeMatters   ->  matchSort_ (makeSort sizeOrd)       prfset
+      ExpandDefs    ->  matchSort_ (makeSort favourDefnLHS) prfset
+      CollapseDefs  ->  matchSort_ (makeSort favourDefnRHS) prfset
 \end{code}
 
 \subsection{Update Map Filter Function}

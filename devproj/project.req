@@ -6,6 +6,34 @@ END THEORIES
 CURRTHEORY = Lists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Lists","cat_nil")
+BEGIN LIVE-PROOF
+TH-NAME: Lists
+CJ-NAME: cat_nil
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TC (Id "star" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],SCD [] (fromList []))
+SIDE = SCD [] (fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+MS = 10
+BD = False
+MO = CollapseDefs
+TM = True
+TL = True
+TS = True
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (K (TG (Id "B" 0)) (VB True),[(2,Cons' (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [C (TC (Id "star" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]] [])])
+BEGIN SEQUENT'
+SIDECOND = SCD [] (fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cat_nil", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], lwkinds = ClassifiedLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+BEGIN LIST STEPS
+(UseLaw (ByMatch (MEV 2)) "and_unit" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TC (Id "star" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]))],fromList [],fromList [])) [],ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TC (Id "star" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],SCD [] (fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -37,12 +37,26 @@ Fixing bugs as we go.
 
 **Looks like `xpndSC` is potentially dangerous!**
 
-  - The `i` command shows long list of laws ending with3
-   `EQV`
+  - Substitution bug: 
+  
+      Using `s` command with `nil[nil/σ]` has no change.
+      It should become `nil` !!!
+
+    
+  - The `i` command shows long list of laws ending with `EQV`.
+
+    **Revise induction axiom ???**
+      `∀ σ,x • LP ≡ LP[nil/σ] ∧ (LP ⟹  LP[x : σ/σ])`
 
     It should show in reverse order and/or improve the selection process
 
     Runtime error is fixed.
+
+    Looks like `ictx` is irrelevant for `instTerm`.
+
+    In proof of `Lists.cat_nil` we  introduce variables `x` and `σ`,
+    which stand for arbitrary variable and list respectively.
+    Perhaps they should be quantified?
 
     The issue now is that `nil` is not a dynamic variable, but it is known.
     The means that `InsContext` needs to have all (variable?) knowns, 

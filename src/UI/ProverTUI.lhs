@@ -171,6 +171,17 @@ proofREPL reqs liveProof = do
 \newpage
 \section{Proof Settings}
 
+Sometimes we want to show a (possibly large) message,
+wait for the user to read it, 
+and then clear it before re-rendering the proof display.
+\begin{code}
+showMessage :: [String] -> REqState -> LiveProof -> IO (REqState, LiveProof)
+showMessage msgs req liveProof' = do
+  putStrLn $ unlines msgs
+  waitForReturn
+  return (req,liveProof')
+\end{code}
+
 Showing proof settings:
 \begin{code}
 showProofSettingsDescr = ( "show"
@@ -363,11 +374,8 @@ matchLawDescr = ( "m"
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
   = case matchFocus ranking liveProof of
-     Yes liveProof' ->  return (reqs, liveProof')
-     But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
+     Yes liveProof'  ->  return (reqs, liveProof')
+     But msgs        ->  showMessage msgs reqs (matches_ [] liveProof)
   where
     settings = liveSettings liveProof
     ranking = matchSort settings . filter (matchFilter settings)
@@ -375,10 +383,7 @@ matchLawCommand [] (reqs, liveProof)
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm liveProof of
       Yes liveProof'  ->  return (reqs, liveProof')
-      But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
+      But msgs -> showMessage msgs reqs (matches_ [] liveProof)
   where
     lawnm = filter (not . isSpace) $ unwords args
 \end{code}
@@ -431,14 +436,10 @@ applyMatch args pstate@(reqs, liveProof)
     if vardone && lvardone then
       case applyMatchToFocus2 mtch svtms lvvls liveProof of
         Yes liveProof'  ->  return(reqs, liveProof')
-        But msgs        -> do 
-          putStrLn $ unlines msgs
-          waitForReturn
-          return pstate
-    else do 
-      putStrLn ("Bad choices: done(var,lvar)= "++ show (vardone,lvardone))
-      waitForReturn
-      return pstate
+        But msgs        -> showMessage msgs reqs liveProof
+    else  showMessage 
+           ["Bad choices: done(var,lvar)= "++ show (vardone,lvardone)] 
+           reqs liveProof 
   Nothing  ->  return pstate
 \end{code}
 
@@ -589,13 +590,10 @@ tryAlpha _ state@( reqs, liveProof)
 %                  , normQuantCommand )
 
 % normQuantCommand :: REPLCmd (REqState, LiveProof)
-% normQuantCommand _ state@(reqs, liveProof)
+% normQuantCommand _ (reqs, liveProof)
 %   =  case normQuantFocus (theories reqs) liveProof of
 %       Yes liveProof'  ->  return (reqs, liveProof')
-%       But msgs
-%        -> do putStrLn $ unlines' msgs
-%              waitForReturn
-%              return (reqs, matches_ [] liveProof)
+%       But msgs -> showMessage msgs reqs (matches_ [] liveProof)
 % \end{code}
 
 
@@ -611,10 +609,7 @@ simpNestCommand :: REPLCmd (REqState, LiveProof)
 simpNestCommand _ state@(reqs, liveProof)
   =  case nestSimpFocus (theories reqs) liveProof of
       Yes liveProof'  ->  return (reqs, liveProof')
-      But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
+      But msgs -> showMessage msgs reqs (matches_ [] liveProof)
 \end{code}
 
 \newpage
@@ -633,10 +628,7 @@ substituteCommand :: REPLCmd (REqState, LiveProof)
 substituteCommand _ state@(reqs, liveProof)
   =  case substituteFocus (theories reqs) liveProof of
       Yes liveProof'  ->  return (reqs, liveProof')
-      But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
+      But msgs -> showMessage msgs reqs (matches_ [] liveProof)
 \end{code}
 
 \subsection{Instantiation}
@@ -672,8 +664,9 @@ lawInstantiateProof _ ps@(reqs, liveProof )
                  if cancel then return (reqs,liveProof)
                  else do
                   let vts = getVarTables $ mtchCtxts liveProof
-                  liveProof' <- lawInstantiate3 vts lawt vs2ts liveProof
-                  return (reqs, liveProof' )
+                  case lawInstantiate3 vts lawt vs2ts liveProof of
+                    Yes liveProof' ->  return (reqs, liveProof' )
+                    But msgs -> showMessage msgs reqs liveProof
 \end{code}
 
 \newpage
@@ -774,12 +767,10 @@ applySATDescr = ("sat"
               , applySATCommand)
 
 applySATCommand :: REPLCmd (REqState, LiveProof)
-applySATCommand _ (reqs,liveproof)
-  = case applySAT liveproof of
-      Yes liveproof' -> return (reqs, liveproof')
-      But msgs -> do putStrLn $ unlines' msgs
-                     waitForReturn
-                     return (reqs, liveproof) 
+applySATCommand _ (reqs,liveProof)
+  = case applySAT liveProof of
+      Yes liveProof' -> return (reqs, liveProof')
+      But msgs -> showMessage msgs reqs liveProof
 \end{code}
 
 \newpage

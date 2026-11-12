@@ -634,7 +634,7 @@ lawInstantiate3 :: MonadFail m => [VarTable]
 lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        let scC = conjSC liveProof
-       let ictxt = mkInsCtxt (pdbg "lI3.VTS" vts) scC
+       let ictxt = mkInsCtxt vts scC
        ilsc <- instantiateSC ictxt lbind lsc
        nsc <- mrgSideCond scC ilsc
        ilawt <- instTerm ictxt lbind lawt

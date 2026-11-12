@@ -89,7 +89,7 @@ sssize (SSW s _ _ _)  =  s
 sssize (SSL s _ _)    =  s
 sssize (SSO s _ _)    =  s
 
--- the "unit of compostion"
+-- the "unit of composition"
 ssnul = (SSA 0 "")
 \end{code}
 

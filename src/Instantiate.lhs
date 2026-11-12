@@ -91,7 +91,7 @@ aspects of the current state of a proof:
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icDV :: Set Variable
+  =  ICtxt  { icDV :: VarSet
             , icSC :: SideCond
             }
   deriving Show  
@@ -101,15 +101,18 @@ mkInsCtxt vts sc = ICtxt (getPossTermVariables vts) sc
 \end{code}
 
 \begin{code}
-getPossTermVariables :: [VarTable] -> Set Variable
-getPossTermVariables vts  =  S.unions $ map getPossTermVars vts
+getPossTermVariables :: [VarTable] -> VarSet
+getPossTermVariables vts  
+  =  (S.unions $ map getPossTermVars vts)
+     `S.union`
+     getDynamicObservables vts
 
-getPossTermVars :: VarTable -> Set Variable
+getPossTermVars :: VarTable -> VarSet
 getPossTermVars (VarData (_,vrm,_,dvrm))  
   = possvrm `S.union` possdvrm
   where 
-    possvrm = S.empty
-    possdvrm = S.empty
+    possvrm = S.fromList $ map StdVar $ M.keys $ M.filter isKnownVar vrm
+    possdvrm = S.empty  -- DynamicListVarRole?
 \end{code}
 
 \newpage
@@ -184,13 +187,13 @@ instTerm ictx binding vt@(Var tk v) = do
     Just (BindTerm t')  ->  return t'
     Just (BindLVar lv)  ->  fail $ unlines
                                     [ "instTerm: naked list-variable!"]
-    Nothing -> 
-      if v `S.member` (pdbg "ICDV" $ icDV ictx)
-      then  return vt
-      else  fail $ unlines
-              [ "instTerm: variable not found"
-              , "var = " ++ trVar v
-              , "bind = " ++ trBinding binding ]
+    Nothing -> return vt -- !!! we have new free variables?
+    --  if (StdVar v) `S.member` ictx
+    --  then  return vt
+    --  else  fail $ unlines
+    --          [ "instTerm: variable not found"
+    --          , "var = " ++ trVar v
+    --          , "bind = " ++ trBinding binding ]
 \end{code}
 
 \newpage

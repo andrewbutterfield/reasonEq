@@ -37,13 +37,38 @@ Fixing bugs as we go.
 
 **Looks like `xpndSC` is potentially dangerous!**
 
+  - The `i` command shows long list of laws ending with3
+   `EQV`
+
+    It should show in reverse order and/or improve the selection process
+
+    Bug:
+
+    ```
+      Pick a law : 3
+      Chosen law : ⊤  “list_induction”  LP ≡ LP[nil/σ] ∧ (LP ⟹  LP[x : σ/σ])  ⊤
+      Free unknown law variables: LP
+      Goal sub-terms:
+        1. true
+        2. nil
+        3. σ
+        4. σ ⌢ nil
+        5. (σ ⌢ nil) = σ
+        6. (σ ⌢ nil) = σ ∧ true
+      Binding for LP (0 to cancel) ? 5
+      req: user error (instTerm: variable not found
+      var = nil
+      bind = { LP  ⟼ (σ ⌢ nil) = σ }
+      )
+    ```
+
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.
     
   - potential `scDischarge` bug.
 
-    When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it wnr off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
+    When we processed `P⋔x$` discharging `x$⊆x$`, mode (D:C), it went off the rails and returns `P⊆{}` because here `V` is `x$` in `vspL`, while `V` is `P` in `vspG`. Now the `x$⊆x$` gets short-curcuited to `true`.
     *When handling `A⋔B` we may need to also try `B⋔A`, or find a rigorous way to choose the correct version*
     Fix this if/when we re-encounter the issue.
 

@@ -172,11 +172,13 @@ instTerm ictx binding vt@(Var tk v) = do
     Just (BindTerm t')  ->  return t'
     Just (BindLVar lv)  ->  fail $ unlines
                                     [ "instTerm: naked list-variable!"]
-    Nothing             ->  fail $ unlines
-                                    [ "instTerm: variable not found"
-                                    , "var = " ++ trVar v
-                                    , "bind = " ++ trBinding binding
-                                    ]
+    Nothing -> 
+      if (StdVar v) `S.member` (pdbg "ICDV" $ icDV ictx)
+      then  return vt
+      else  fail $ unlines
+              [ "instTerm: variable not found"
+              , "var = " ++ trVar v
+              , "bind = " ++ trBinding binding ]
 \end{code}
 
 \newpage

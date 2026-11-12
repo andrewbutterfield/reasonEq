@@ -42,25 +42,12 @@ Fixing bugs as we go.
 
     It should show in reverse order and/or improve the selection process
 
-    Bug:
+    Runtime error is fixed.
 
-    ```
-      Pick a law : 3
-      Chosen law : ⊤  “list_induction”  LP ≡ LP[nil/σ] ∧ (LP ⟹  LP[x : σ/σ])  ⊤
-      Free unknown law variables: LP
-      Goal sub-terms:
-        1. true
-        2. nil
-        3. σ
-        4. σ ⌢ nil
-        5. (σ ⌢ nil) = σ
-        6. (σ ⌢ nil) = σ ∧ true
-      Binding for LP (0 to cancel) ? 5
-      req: user error (instTerm: variable not found
-      var = nil
-      bind = { LP  ⟼ (σ ⌢ nil) = σ }
-      )
-    ```
+    The issue now is that `nil` is not a dynamic variable, but it is known.
+    The means that `InsContext` needs to have all knowns, 
+    not just dynamic ones and their expansions.
+
 
   - Need to follow-through on consequences of having explicit `VSFalseP`
 

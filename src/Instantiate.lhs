@@ -91,13 +91,25 @@ aspects of the current state of a proof:
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icDV :: VarSet
+  =  ICtxt  { icDV :: Set Variable
             , icSC :: SideCond
             }
   deriving Show  
 
 mkInsCtxt :: [VarTable] -> SideCond -> InsContext
-mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
+mkInsCtxt vts sc = ICtxt (getPossTermVariables vts) sc
+\end{code}
+
+\begin{code}
+getPossTermVariables :: [VarTable] -> Set Variable
+getPossTermVariables vts  =  S.unions $ map getPossTermVars vts
+
+getPossTermVars :: VarTable -> Set Variable
+getPossTermVars (VarData (_,vrm,_,dvrm))  
+  = possvrm `S.union` possdvrm
+  where 
+    possvrm = S.empty
+    possdvrm = S.empty
 \end{code}
 
 \newpage
@@ -173,7 +185,7 @@ instTerm ictx binding vt@(Var tk v) = do
     Just (BindLVar lv)  ->  fail $ unlines
                                     [ "instTerm: naked list-variable!"]
     Nothing -> 
-      if (StdVar v) `S.member` (pdbg "ICDV" $ icDV ictx)
+      if v `S.member` (pdbg "ICDV" $ icDV ictx)
       then  return vt
       else  fail $ unlines
               [ "instTerm: variable not found"

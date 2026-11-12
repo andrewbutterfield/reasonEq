@@ -1,24 +1,87 @@
-@aM.lvvls:  
-[ (LV (VR (Id "?y" 0, VO, WS), [], []), [GL (LV (VR (Id "x" 0, VO, WS), [], [])), GL (LV (VR (Id "e" 0, VE, WS), [], []))]) ]
-@aMTF2.lvvls:  
-[ (LV (VR (Id "?y" 0, VO, WS), [], []), [GL (LV (VR (Id "x" 0, VO, WS), [], [])), GL (LV (VR (Id "e" 0, VE, WS), [], []))]) ]
-@pVLB.lbind:  
-{ ( (Id "e" 0, VE, [], [])
-  , BL [ GL (LV (VR (Id "e" 0, VE, WS), [], [])) ] )
-, ( (Id "x" 0, VO, [], [])
-  , BL [ GL (LV (VR (Id "x" 0, VO, WS), [], [])) ] )
-, ( (Id "y" 0, VO, [], [])
-  , { ( { GL (LV (VR (Id "?y" 0, VO, WS), [], [])) } ) } ) }
-@pB3.lv:  
-LV (VR (Id "?y" 0, VO, WS), [], [])
-@pVLB.rlv:  
-LV (VR (Id "?y" 0, VO, WS), [], [])
-@pVLB.lbind':  
-{ ( (Id "e" 0, VE, [], [])
-  , BL
-    [ GL (LV (VR (Id "e" 0, VE, WS), [], [])) ] )
-, ( (Id "x" 0, VO, [], [])
-  , BL
-    [ GL (LV (VR (Id "x" 0, VO, WS), [], [])) ] )
-, ( (Id "y" 0, VO, [], [])
-  , { ( { GL (LV (VR (Id "?y" 0, VO, WS), [], [])) } ) } ) }
+
+
+@lI3.VTS:  
+[ VD
+  ( "Lists"
+  , { ( VR (Id "cat" 0, VO, WS)
+      , KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) 
+           (Just True)
+      )
+    , (VR (Id "cons" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) (Just True))
+    , (VR (Id "elems" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)])) (Just True))
+    , (VR (Id "hd" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TV (Id "t" 0))) (Just True))
+    , (VR (Id "len" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) ( TG (Id "Z" 0))) (Just True))
+    , ( VR (Id "nil" 0, VO, WS)
+      , KV (TC (Id "star" 0) [TV (Id "t" 0)]) 
+        Nothing
+      )
+    , (VR (Id "pfx" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True))
+    , (VR (Id "rev" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True))
+    , (VR (Id "tl" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True)) 
+    }
+  , {}
+  , {} )
+
+
+
+, VD
+  ( "Sets"
+  , { (VR (Id "card" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))) (Just True))
+    , (VR (Id "emptyset" 0, VO, WS), KV (TC (Id "P" 0) [TV (Id "t" 0)]) Nothing)
+    , (VR (Id "intsct" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True))
+    , (VR (Id "mbr" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True))
+    , (VR (Id "sdiff" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True))
+    , (VR (Id "subseteq" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True))
+    , (VR (Id "union" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "Arith"
+  , { (VR (Id "add" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True))
+    , (VR (Id "idiv" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True))
+    , (VR (Id "imod" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True))
+    , (VR (Id "mul" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True))
+    , (VR (Id "neg" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))) (Just True))
+    , (VR (Id "sub" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "Forall"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "Equal"
+  , { (VR (Id "eq" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "Impl"
+  , { (VR (Id "imp" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "AOI"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "And"
+  , { (VR (Id "and" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "Or"
+  , { (VR (Id "or" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "Not"
+  , { (VR (Id "not" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))) (Just True)) }
+  , {}
+  , {} )
+, VD
+  ( "EQV"
+  , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)) }
+  , {}
+  , {} ) ]

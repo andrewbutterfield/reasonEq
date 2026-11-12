@@ -45,7 +45,7 @@ Fixing bugs as we go.
     Runtime error is fixed.
 
     The issue now is that `nil` is not a dynamic variable, but it is known.
-    The means that `InsContext` needs to have all knowns, 
+    The means that `InsContext` needs to have all (variable?) knowns, 
     not just dynamic ones and their expansions.
 
 

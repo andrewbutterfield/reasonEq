@@ -1,35 +1,6 @@
 
 
+@lI3.VTS:  
+[VD ("Lists",fromList [(VR (Id "cat" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) (Just True)),(VR (Id "cons" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) (Just True)),(VR (Id "elems" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)])) (Just True)),(VR (Id "hd" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TV (Id "t" 0))) (Just True)),(VR (Id "len" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))) (Just True)),(VR (Id "nil" 0,VO,WS),KV (TC (Id "star" 0) [TV (Id "t" 0)]) Nothing),(VR (Id "pfx" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True)),(VR (Id "rev" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True)),(VR (Id "tl" 0,VO,WS),KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True))],fromList [],fromList []),VD ("Sets",fromList [(VR (Id "card" 0,VO,WS),KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))) (Just True)),(VR (Id "emptyset" 0,VO,WS),KV (TC (Id "P" 0) [TV (Id "t" 0)]) Nothing),(VR (Id "intsct" 0,VO,WS),KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True)),(VR (Id "mbr" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True)),(VR (Id "sdiff" 0,VO,WS),KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True)),(VR (Id "subseteq" 0,VO,WS),KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True)),(VR (Id "union" 0,VO,WS),KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))) (Just True))],fromList [],fromList []),VD ("Arith",fromList [(VR (Id "add" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True)),(VR (Id "idiv" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True)),(VR (Id "imod" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True)),(VR (Id "mul" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True)),(VR (Id "neg" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))) (Just True)),(VR (Id "sub" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) (Just True))],fromList [],fromList []),VD ("Forall",fromList [],fromList [],fromList []),VD ("Equal",fromList [(VR (Id "eq" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList []),VD ("Impl",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList []),VD ("AOI",fromList [],fromList [],fromList []),VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList []),VD ("Or",fromList [(VR (Id "or" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList []),VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))) (Just True))],fromList [],fromList []),VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True))],fromList [],fromList [])]
 
-
-
-applyLawMatch mtch svtms lvvls liveProof
-
-
-
-Actual values in order:
-
-@svtms: ⟨⟩
-@lvvls: ⟨ ?x$ ⟼ ⟨x$⟩ ⟩
-@cbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
-  -patchBinding->
-@sbind:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
-@scC:  ⊤  <- xpndSC(lP)
-@scLasC:  (P⊆x$), (Q⊆x$)  <- instSC sbind (P⊆x$) -- mAsn mtch
-  -extendGoalSCCoverage->
-@scCL:  (P⊆x$), (Q⊆x$)
-  -mrgSideCond(scC)->
-@scCX:  (P⊆x$), (Q⊆x$)
-@scD:  ⊤  <- scDischarge 
-if onlyFreshSC scD :
-      @scDf <- addFloatSCS(scD,svtms,lvvls,sbind,scCx)   **NEW**
-      -scFVars-> 
-      @freshneeded:  Ø
-      -generateFreshVars(knownVS,sbind)->
-      ( @fbind1:  { B  ⟼ 𝔹  , P  ⟼ P ∧ Q, x$  ⟼ ⟨x$⟩ }
-      , @fresh: { ... } )
-      -addFreshVars(cjSc)->
-      @scC': ...
-      @brepl: ... <- instTerm(...,fbind,...)
-      ADDSTEP(cjSC,scC',fbind)
 

@@ -254,16 +254,23 @@ We have the following possibilities:
     The connection between $\lst t$ and $v$ 
     will usually be established via a side-condition involving both.
 \end{itemize} 
+We also have to consider the case where the substitution does not apply,
+such as $v[r/u] = v$ where $v$ is an observation variable.
 \begin{code}
 applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  (alookup v vtl)  -- v[..,r,../..,v,..] = r
-     <|> 
-     (termVarSubstitute sctx vrt vtl lvlvl) 
-    -- v[..,r,../..,t,..] = r,v[r/t]     
-     <|> 
-     (lvlvlSubstitute sctx vrt vtl lvlvl)
-     -- v[..,r$,../..,t$,..]=r,v[r$/t$]
-     <|> (return $ Sub tk vrt sub)
+  = case alookup v vtl of
+      Just rterm -> return rterm
+      Nothing -> 
+        if isObsVar v then return vrt
+        else 
+          (alookup v vtl)  -- v[..,r,../..,v,..] = r
+          <|> 
+          (termVarSubstitute sctx vrt vtl lvlvl) 
+          -- v[..,r,../..,t,..] = r,v[r/t]     
+          <|> 
+          (lvlvlSubstitute sctx vrt vtl lvlvl)
+          -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+          <|> (return $ Sub tk vrt sub)
   where vtl = S.toList vts ; lvlvl = S.toList lvlvs
 \end{code}
 

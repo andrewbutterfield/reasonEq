@@ -33,6 +33,6 @@ Conjecture cat_nil . sigma ++ nil == sigma . none
 Conjecture cat_assoc . s1 ++ s2 ++ s3 == (s1 ++ s2) ++ s3 . none
 Conjecture rev_rev_id . rev (rev (sigma)) == sigma . none
 Conjecture rev_cat . rev (s1 ++ s2) == rev (s2) ++ rev (s1) . none
-Conjecture elems_cat . union (elems (s1 ++ s2) == elems (s1), elems (s2)) . none
+Conjecture elems_cat . elems (s1 ++ s2) == union (elems (s1), elems (s2)) . none
 Conjecture len_cat . len (s1 ++ s2) == len (s1) + len (s2) . none
 Conjecture len_rev . len (rev (sigma)) == len (sigma) . none

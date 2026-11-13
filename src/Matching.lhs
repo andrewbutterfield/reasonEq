@@ -1093,7 +1093,7 @@ $$
 -- THIS NEVER ARISES AS THIS FN IS ONLY USED BY tvMatch
 --tkvMatch vts fits bind tC@(Var _ vC) whatP ttP vP
 -- | vC == vP                                    =  bindVarToVar vP vP bind
--- | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
+-- | isKnownTerm whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
 \end{code}
 $$
 \inferrule
@@ -1131,7 +1131,7 @@ $$
 -- know vP is not in pbvs, but is in vts, known as whatP
 tkvMatch vts fits bind tC whatP ttP vP
  | isKnownVar whatP = fail "tkvMatch: known-var can only match self"
- | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
+ | isKnownTerm whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
  | isEType ttP && isKnownVar whatP
    && vmrType whatP == ttP                     =  bindVarToTerm vP tC bind
 tkvMatch _ _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."

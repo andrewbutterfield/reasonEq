@@ -10,7 +10,7 @@ module VarData (
   VarMatchRole
 , pattern KnownTerm, pattern KnownVar
 , pattern GenericVar, pattern InstanceVar, pattern UnknownVar
-, isKnownConst, isKnownVar
+, isKnownTerm, isKnownVar
 , vmrConst, vmrType, vmrInst
 , LstVarMatchRole
 , pattern KnownVarList, pattern KnownVarSet
@@ -135,8 +135,8 @@ pattern UnknownVar        = UV
 \newpage
 Useful predicates and destructors:
 \begin{code}
-isKnownConst (KT _)  = True     -- used
-isKnownConst _       = False
+isKnownTerm (KT _)  = True     -- used
+isKnownTerm _       = False
 isKnownVar (KV _ _)  = True     -- used
 isKnownVar _         = False
 

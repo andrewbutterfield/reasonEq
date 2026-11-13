@@ -367,7 +367,7 @@ axElemsConsDef =  ( "elems" -.- "cons" -.- "def"
                       (ssingle x `sunion` elems s)
                     , scTrue ) )
 cjElemsCat = ( "elems" -.-  "cat"
-      , ( (elems (s1 `cat` s2)) `isEqualTo` (elems s1) `sunion` (elems s2)
+      , ( (elems (s1 `cat` s2)) `isEqualTo` ((elems s1) `sunion` (elems s2))
         , scTrue ) )
 cjElemsSngl = ( "elems" -.-  "lsngl"
       , ( (elems $ lsngl x) `isEqualTo` ssingle x

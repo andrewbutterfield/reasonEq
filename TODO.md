@@ -63,6 +63,8 @@ Fixing bugs as we go.
     not just dynamic ones and their expansions.
 
 
+  - Test code fails to compile because of type changes (t.b.d. later)
+
   - Need to follow-through on consequences of having explicit `VSFalseP`
 
     Fix this if/when we re-encounter the issue.

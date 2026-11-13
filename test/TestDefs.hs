@@ -9,6 +9,7 @@ import Data.Set as S (empty,fromList,singleton)
 
 import LexBase
 import Variables
+import Types
 import AST
 import VarData
 import Binding

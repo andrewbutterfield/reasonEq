@@ -18,6 +18,7 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import LexBase
 import Variables
+import Types
 import AST
 import Assertions
 import FreeVars
@@ -45,7 +46,7 @@ xs = LVbl x [] []
 ys = LVbl y [] []
 iterLVs = Iter arbpred True (jId "/\\") True (jId "=") [xs,ys]
 
-tInt = Typ int
+tInt = VTyp int
 
 subP =  Sub arbpred tP sub42x_ysxs
 
@@ -72,7 +73,7 @@ tst_normNoQ
      , testCase "/\\(x$=y$)     ~> /\\(x$=y$)     "
        ( normQTerm iterLVs @?= iterLVs )
      , testCase "Int           ~> Int           "
-       ( normQTerm tInt @?= tInt )
+       ( normQTerm (tInt g1) @?= tInt g1)
      ]
 
 -- -----------------------------------------------------------------------------

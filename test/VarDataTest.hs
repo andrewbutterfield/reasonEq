@@ -19,6 +19,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Utilities
 import LexBase
 import Variables
+import Types
 import AST
 import VarData
 import TestRendering
@@ -66,13 +67,13 @@ tst_vardata_inserts -- not run as standard regression
  = testGroup "Check VarData insertion shorthands"
      [ testCase "aKC: i ^= j  fails"
          ( vtList (aKC i tj newVarTable)
-           @?= [(i,KnownConst tj)] )
+           @?= [(i,KnownTerm tj)] )
      , testCase "aKV: i : tau succeeds"
          ( vtList (aKV i ArbType newVarTable)
-           @?= [(i,KnownVar ArbType)] )
+           @?= [(i,KnownVar ArbType Nothing)] )
      , testCase "aKC.aKV: i : tau, then j ^=i succeeds"
          ( vtList (aKC j ti $ aKV i ArbType newVarTable)
-           @?= [(i,KnownVar ArbType),(j,KnownConst ti)] )
+           @?= [(i,KnownVar ArbType Nothing),(j,KnownTerm ti)] )
      , testCase "aKL: lu ^= [glu] fails"
          ( d2sList (aKL lu [glu] newVarTable)
            @?= [(vlu,KnownVarList [glu] [] 0)] )
@@ -90,13 +91,13 @@ tst_vardata_inserts -- not run as standard regression
            @?= [(vlu,KnownVarList [gv] [] 0)] )
      , testCase "vtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( vtList (aKL lu [gv] $ aKV v ArbType newVarTable)
-           @?= [(v,KnownVar ArbType)] )
+           @?= [(v,KnownVar ArbType Nothing)] )
      , testCase "aKV.aKV: i : tau, then v : tau succeeds"
          ( vtList (aKV v ArbType $ aKV i ArbType newVarTable)
-           @?= [(i,KnownVar ArbType),(v,KnownVar ArbType)] )
+           @?= [(i,KnownVar ArbType Nothing),(v,KnownVar ArbType Nothing)] )
      , testCase "aKL.aKV.aKV: i : tau, then v : tau, then lu ^= [gv,gi] fails"
          ( vtList (aKL lu [gv,gi] $ aKV v ArbType $ aKV i ArbType newVarTable)
-           @?= [(v,KnownVar ArbType)] )
+           @?= [(v,KnownVar ArbType Nothing)] )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -113,19 +114,19 @@ tst_addKnownConst
  = testGroup "addKnownConst"
      [ testCase "k known as 42"
        ( vtList (fromJust (addKnownConst k k42 newVarTable))
-         @?= [(k,KnownConst k42)] )
+         @?= [(k,KnownTerm k42)] )
      , testCase "v known as 99"
        ( addKnownConst v k99 newVarTable @?= Nothing )
      , testCase "e known as 99"
        ( addKnownConst e k99 newVarTable @?= Nothing )
      , testCase "len known as 99"
        ( vtList (fromJust (addKnownConst len k99 newVarTable))
-         @?= [(len,KnownConst k99)] )
+         @?= [(len,KnownTerm k99)] )
      , testCase "P known as True"
        ( addKnownConst p pTrue newVarTable @?= Nothing )
      , testCase "T known as True"
        ( vtList (fromJust (addKnownConst pT pTrue newVarTable))
-         @?= [(pT,KnownConst pTrue)] )
+         @?= [(pT,KnownTerm pTrue)] )
      , testCase "k |-> 99 after k |-> 42 should fail"
        ( addKnownConst k k99 (fromJust (addKnownConst k k42 newVarTable))
          @?= Nothing )
@@ -141,16 +142,16 @@ tst_addKnownVar
  = testGroup "addKnownVar"
      [ testCase "k : Bool"
        ( vtList (fromJust (addKnownVar k tBool newVarTable))
-         @?= [(k,KnownVar tBool)] )
+         @?= [(k,KnownVar tBool Nothing)] )
      , testCase "v : Int "
        ( vtList (fromJust (addKnownVar v tInt newVarTable))
-         @?= [(v,KnownVar tInt)] )
+         @?= [(v,KnownVar tInt Nothing)] )
      , testCase "e : Int "
        ( vtList (fromJust (addKnownVar e tInt newVarTable))
-        @?= [(e,KnownVar tInt)] )
+        @?= [(e,KnownVar tInt Nothing)] )
      , testCase "T : Bool"
        ( vtList (fromJust (addKnownVar pT tBool newVarTable))
-        @?= [(pT,KnownVar tBool)] )
+        @?= [(pT,KnownVar tBool Nothing)] )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -225,19 +226,19 @@ tst_lookupVarTable
      [ testCase "k not in empty table"
        ( lookupVarTable newVarTable k @?= UnknownVar)
      , testCase "k in  complete table"
-       ( lookupVarTable kvepTable k @?= KnownVar tBool)
+       ( lookupVarTable kvepTable k @?= KnownVar tBool Nothing)
      , testCase "v not in empty table"
        ( lookupVarTable newVarTable v @?= UnknownVar)
      , testCase "v in  complete table"
-       ( lookupVarTable kvepTable v @?= KnownVar tInt)
+       ( lookupVarTable kvepTable v @?= KnownVar tInt Nothing)
      , testCase "len not in empty table"
        ( lookupVarTable newVarTable e @?= UnknownVar)
      , testCase "len in  complete table"
-       ( lookupVarTable kvepTable len @?= KnownConst k99)
+       ( lookupVarTable kvepTable len @?= KnownTerm k99)
      , testCase "T not in empty table"
        ( lookupVarTable newVarTable pT @?= UnknownVar)
      , testCase "T in  complete table"
-       ( lookupVarTable kvepTable pT @?= KnownConst pTrue)
+       ( lookupVarTable kvepTable pT @?= KnownTerm pTrue)
      , testCase "z not in complete table"
        ( lookupVarTable kvepTable z @?= UnknownVar )
      ]

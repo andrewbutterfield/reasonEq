@@ -317,14 +317,55 @@ termtypes (Iter typ sa na si ni lvs)  =  [typ]
 
 We need a comparison that can return what differs:
 this can be a sub-term or a type.
+It returns a path to the first point where a difference is found.
 \begin{code}
-termDifference :: Term -> Term -> Maybe (Either (Term,Term) (Type,Type))
-termDifference t1 t2
-  | t1 == t2      =  Nothing
-  | typ1 /= typ2  =  Just (Right (typ1,typ2))
-  | otherwise     =  Just (Left (t1,t2)) -- should recurse in to divergence?
+termDifference :: Term -> Term -> Maybe ([Int],Either (Term,Term) (Type,Type))
+termDifference term1 term2 = trmDiff [] (term1,term2)
+
+
+trmDiff path (term1,term2)
+  | term1 == term2  =  Nothing
+  | typ1 /= typ2    =  Just (path,Right (typ1,typ2))
+  | otherwise       =  trmDiff' path (term1,term2)
+                          -- should recurse in to divergence?
   where
-    typ1 = termtype t1 ; typ2 = termtype t2
+    typ1 = termtype term1 ; typ2 = termtype term2
+
+-- non recursive cases first:
+trmDiff' _ (K _ v1 , K _ v2) | v1 == v2  =  Nothing
+trmDiff' _ (V _ v1 , V _ v2) | v1 == v2  =  Nothing
+trmDiff' _ (I _ sa1 na1 si1 sn1 lvs1 , I _ sa2 na2 si2 sn2 lvs2)
+  | (sa1,na1,si1,sn1,lvs1) == (sa2,na2,si2,sn2,lvs2)  =  Nothing
+trmDiff' _ (VT _ v1 , VT _ v2) | v1 == v2  =  Nothing
+
+-- single sub-term next:
+trmDiff' p (B _ i1 vs1 tm1 , B _ i2 vs2 tm2)
+  | (i1,vs1) == (i2,vs2)  =  trmDiff (p++[1])  (tm1,tm2)
+trmDiff' p (L _ i1 vl1 tm1 , L _ i2 vl2 tm2)
+  | (i1,vl1) == (i2,vl2)  =  trmDiff (p++[1])  (tm1,tm2)
+trmDiff' p (X i1 tm1 , X i2 tm2) | i1 == i2  =  trmDiff (p++[1])  (tm1,tm2)
+
+-- cons
+trmDiff' p (C _ s1 i1 tms1 , C _ s2 i2 tms2)
+  | (s1,i1,length tms1) == (s2,i2,length tms2) 
+    =  trmsDiff p $ zip [1..] $ zip tms1 tms2
+
+-- substitution
+trmDiff' p (S _ tm1 sub1 , S _ tm2 sub2)
+  = case trmDiff (p++[1]) (tm1,tm2) of
+      Nothing    ->  substDiff (p++[2]) (sub1,sub2)
+      foundDiff  ->  foundDiff
+
+-- gotcha !
+trmDiff' path (term1,term2) = Just (path,Left (term1,term2))
+
+trmsDiff p [] = Nothing
+trmsDiff p ((i,tmpair):rest)
+  = case trmDiff (p++[i]) tmpair of
+      Nothing    ->  trmsDiff p rest
+      foundDiff  ->  foundDiff
+
+substDiff p (SN ts1 lvs1 , SN ts2 lvs2)  =  Nothing -- for now
 \end{code}
 
 \begin{code}

@@ -326,9 +326,10 @@ type Context = (Defaults,VarTable)
 
 \begin{code}
 isDeclItem :: Item -> Bool
-isDeclItem (Conj _ _ _)   =  False
-isDeclItem (Law _ _ _ _)  =  False
-isDeclItem _              =  True
+isDeclItem (DeclVar _ _ _)    =  True
+isDeclItem (DeclDLVar _ _ _)  =  True
+isDeclItem (DeclASet _ _)     =  True
+isDeclItem _                  =  False
 \end{code}
 
 \begin{code}

@@ -1325,39 +1325,48 @@ scanConjs' ivts pvts stroper pCjs@((pnm,passn):pCjs')
 \end{code}
 
 This compares two assertions, one current, one just loaded,
-and flags them if different.
+and flags them if they are different.
 \begin{code}
 foundBoth :: String -> Assertion -> Assertion -> [String]
+-- i=(currently-)installed, p=(just-)parsed
 foundBoth header pAssn iAssn
-  | pAssn == iAssn  =  [] -- nothing to see here....
-  | pSC /= iSC 
-      = [ "  Side-Condition Difference:"
-        , "    Current side-cond: " ++ trSideCond iSC
-        , "    Loaded  side-cond: " ++ trSideCond pSC
-        , header
-        ]
-  | otherwise -- pAssn /= iAssn && pSC == iSC
-      = case termDiffModuloTypes iTerm pTerm of
-        Nothing -- must be types that differ 
-          -> [ "    Loaded  types: "++showtypes pTerm
-             , "    Current types: "++showtypes iTerm
-             , "    Loaded Term: " ++ trTerm 0 pTerm
-             , "  types differ"
-             , header ] 
-        Just (path,iDiff,pDiff) 
-          -> [ "    Current Term: "++trTerm 0 iDiff
-             , "    Type: "++trType (termtype iDiff)
-             , "    Loaded  Term: "++trTerm 0 pDiff
-             , "    Type: "++trType (termtype pDiff)
-             , "    path to divergence: "++show path
-             , "  Term Difference (modulo types):"
-             , header
-             ]
+  = case termDifference iTerm pTerm of  
+    Nothing -> 
+      if pSC == iSC then []
+      else [ "    Loaded  side-cond: " ++ trSideCond pSC
+           , "    Current side-cond: " ++ trSideCond iSC
+           , "  Side-Condition Difference:"
+           , header
+           ]
+    Just (path,DiffTypes itype ptype) ->
+      [ "    Loaded  type: "++trType ptype
+      , "    Current type: "++trType itype
+      , "  Types Differ @ " ++ show path
+      , header
+      ]
+    Just (path,DiffTerms iterm pterm) ->
+      [ "    Loaded  term: "++trTerm 0 pterm
+      , "    Current term: "++trTerm 0 iterm
+      , "  Terms Differ @ " ++ show path
+      , header
+      ]
+    Just (path,DiffStdVs ivar pvar) ->
+      [ "    Loaded  variable: "++trVar pvar++" - "++show pvar
+      , "    Current variable: "++trVar ivar++" - "++show ivar
+      , "  Variables Differ @ " ++ show path
+      , header
+      ]
+    Just (path,DiffLstVs ilvar plvar) ->
+      [ "    Loaded  list-variable: "++trLVar plvar++" - "++show plvar
+      , "    Current list-variable: "++trLVar ilvar++" - "++show ilvar
+      , "  Variables Differ @ " ++ show path
+      , header
+      ]
   where 
-    (pTerm,pSC) = unwrapASN pAssn ; pType = termtype pTerm
-    (iTerm,iSC) = unwrapASN iAssn ; iType = termtype iTerm
-    showtypes term 
-      = filter (not .isSpace) $ intercalate "," $ map trType $ termtypes term
+    (pTerm,pSC) = unwrapASN pAssn ; (iTerm,iSC) = unwrapASN iAssn 
+
+showtypes term 
+ = filter (not .isSpace) $ intercalate "," $ map trType $ termtypes term
 \end{code}
 
 

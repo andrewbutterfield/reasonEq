@@ -39,7 +39,11 @@ Fixing bugs as we go.
 
   - Loading from `.utp` files results in incorrect types
 
-    From `Lists` we get `σ : 𝔹` instead of `σ : *t`.
+    For example, from `Lists` we get `σ : 𝔹` instead of `σ : *t`.
+
+    *proposed solution* 
+    run type-inference once it is installed, so we get all its dependencies.
+      
  
   - Test code fails to compile because of type changes (t.b.d. later)
 

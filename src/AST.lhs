@@ -16,7 +16,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , lam,  eLam,  pLam
            , binderClass
            , termtype, settype, termtypes
-           , termDifference, termDiffModuloTypes
+           , TermDiff, termDifference, termDiffModuloTypes
            , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
@@ -315,22 +315,33 @@ termtypes (Iter typ sa na si ni lvs)  =  [typ]
 \end{code}
 
 
+\subsubsection{Term Differences}
+
 We need a comparison that can return what differs:
-this can be a sub-term or a type.
+this can be a sub-term, type, or general variable.
+\begin{code}
+data TermDiff 
+  = DiffTypes Type Type
+  | DiffTerms Term Term 
+  | DiffStdVs Variable Variable
+  | DiffLstVs ListVar ListVar
+  deriving (Eq,Show)
+\end{code}
 It returns a path to the first point where a difference is found.
 \begin{code}
-termDifference :: Term -> Term -> Maybe ([Int],Either (Term,Term) (Type,Type))
+termDifference :: Term -> Term -> Maybe ([Int],TermDiff)
 termDifference term1 term2 = trmDiff [] (term1,term2)
 
-
+trmDiff ::[Int] -> (Term,Term) -> Maybe ([Int],TermDiff)
 trmDiff path (term1,term2)
   | term1 == term2  =  Nothing
-  | typ1 /= typ2    =  Just (path,Right (typ1,typ2))
+  | typ1 /= typ2    =  Just (path,DiffTypes typ1 typ2)
   | otherwise       =  trmDiff' path (term1,term2)
                           -- should recurse in to divergence?
   where
     typ1 = termtype term1 ; typ2 = termtype term2
 
+trmDiff' :: [Int] -> (Term,Term) -> Maybe ([Int],TermDiff)
 -- non recursive cases first:
 trmDiff' _ (K _ v1 , K _ v2) | v1 == v2  =  Nothing
 trmDiff' _ (V _ v1 , V _ v2) | v1 == v2  =  Nothing
@@ -348,24 +359,53 @@ trmDiff' p (X i1 tm1 , X i2 tm2) | i1 == i2  =  trmDiff (p++[1])  (tm1,tm2)
 -- cons
 trmDiff' p (C _ s1 i1 tms1 , C _ s2 i2 tms2)
   | (s1,i1,length tms1) == (s2,i2,length tms2) 
-    =  trmsDiff p $ zip [1..] $ zip tms1 tms2
+    =  diffList trmDiff p $ zip [1..] $ zip tms1 tms2
 
--- substitution
+-- substitution term
 trmDiff' p (S _ tm1 sub1 , S _ tm2 sub2)
   = case trmDiff (p++[1]) (tm1,tm2) of
       Nothing    ->  substDiff (p++[2]) (sub1,sub2)
       foundDiff  ->  foundDiff
 
 -- gotcha !
-trmDiff' path (term1,term2) = Just (path,Left (term1,term2))
+trmDiff' path (term1,term2) = Just (path,DiffTerms term1 term2)
+\end{code}
 
-trmsDiff p [] = Nothing
-trmsDiff p ((i,tmpair):rest)
-  = case trmDiff (p++[i]) tmpair of
-      Nothing    ->  trmsDiff p rest
+Substitution differences:
+\begin{code}
+substDiff ::[Int] -> (Substn,Substn) -> Maybe ([Int],TermDiff)
+substDiff p (SN ts1 lvs1 , SN ts2 lvs2)
+  | tl1 /= tl2    =  diffList varTermDiff p $ zip [1..] $ zip tl1 tl2
+  | lvl1 /= lvl2  =  diffList listVarDiff p $ zip [1..] $ zip lvl1 lvl2
+  | otherwise     =  Nothing
+  where
+    tl1 = S.toList ts1 ; tl2 = S.toList ts2
+    lvl1 = S.toList lvs1 ; lvl2 = S.toList lvs2
+
+-- called when we know the vt-lists are different
+varTermDiff :: [Int] -> (TermSub,TermSub) -> Maybe ([Int],TermDiff)
+varTermDiff p ((v1,t1),(v2,t2))
+  | v1 /= v2   =  Just (p++[1],DiffStdVs v1 v2)
+  | otherwise  =  trmDiff (p++[2]) (t1,t2)
+
+-- called when we know the lvlv-lists are different
+listVarDiff :: [Int] -> (LVarSub,LVarSub) -> Maybe ([Int],TermDiff)
+listVarDiff p ((tlv1,rlv1),(tlv2,rlv2))
+  | tlv1 /= tlv2  =  Just (p++[1],DiffLstVs tlv1 tlv2)
+  | rlv1 /= rlv2  =  Just (p++[2],DiffLstVs rlv1 rlv2)
+  | otherwise     =  Nothing
+\end{code}
+
+List differences:
+\begin{code}
+diffList :: ([Int] -> (a,a) -> Maybe ([Int],TermDiff)) 
+         -> [Int] -> [(Int,(a,a))] 
+         -> Maybe ([Int],TermDiff)
+diffList diff p [] = Nothing
+diffList diff p ((i,tmpair):rest)
+  = case diff (p++[i]) tmpair of
+      Nothing    ->  diffList diff p rest
       foundDiff  ->  foundDiff
-
-substDiff p (SN ts1 lvs1 , SN ts2 lvs2)  =  Nothing -- for now
 \end{code}
 
 \begin{code}

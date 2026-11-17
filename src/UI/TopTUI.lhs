@@ -299,7 +299,9 @@ loadTheoryFile [thNm] reqs = do
         Yes pthry ->  do
           let pNm = thName pthry
           if pNm == thNm then do
-            putStrLn $ unlines' [ "Loaded theory:", showTheoryStd pthry ]
+            -- do type-inferencing for all laws and conjectures in pthry
+            let pthryT = pthry -- inferencing TBD
+            putStrLn $ unlines' [ "Loaded theory:", showTheoryStd pthryT ]
             let (exists,report) = checkLoadedTheory pthry reqs
             putStrLn report
             putStr "\nInstall (y/n)? "

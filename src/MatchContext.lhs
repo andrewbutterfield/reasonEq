@@ -12,6 +12,7 @@ module MatchContext
  , getVarTables
  , expandSideCondKnownVars         
  , expandSCKnowns
+ , typeTheTheory
  ) where
 
 import Data.Maybe
@@ -136,3 +137,11 @@ buildVSCS cons gvs vset = map (flip cons vset) gvs
 \end{code}
 
 
+\subsection{Assertion Typing}
+
+Given a theory and its dependencies,
+run type-inference over all assertions present.
+\begin{code}
+typeTheTheory :: [VarTable] -> Theory -> Theory
+typeTheTheory vts theory = theory
+\end{code}

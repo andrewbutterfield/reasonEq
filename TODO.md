@@ -45,8 +45,7 @@ Fixing bugs as we go.
     run type-inference once it is installed, so we get all its dependencies.
       
     *We need a function that does type-inference for all laws and conjectures.*
-    This should be done in `Theories`.
-    Perhaps in `MatchContext` ?
+    This will be done in `MatchContext`.
  
   - Test code fails to compile because of type changes (t.b.d. later)
 

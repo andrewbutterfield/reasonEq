@@ -41,6 +41,7 @@ import Assertions
 import Proofs
 import Ranking
 import ProofSettings
+import MatchContext
 import REqState
 import Instantiate
 import TestRendering
@@ -296,12 +297,16 @@ loadTheoryFile [thNm] reqs = do
     haveSource <- doesFileExist fname
     if haveSource then do 
       theory_text <- readFile fname
-      case loadTheory (theories reqs) theory_text of
+      let thDAG = theories reqs
+      case loadTheory thDAG theory_text of
         Yes pthry ->  do
           let pNm = thName pthry
           if pNm == thNm then do
             -- do type-inferencing for all laws and conjectures in pthry
-            let pthryT = pthry -- inferencing TBD
+            let depthrys = getTheoryDeps' pNm thDAG 
+            let mctxts = buildMatchContext depthrys
+            let vts = getVarTables mctxts
+            let pthryT = typeTheTheory [] pthry -- inferencing TBD
             putStrLn $ unlines' [ "Loaded theory:", showTheoryStd pthryT ]
             let (exists,report) = checkLoadedTheory pthry reqs
             putStrLn report

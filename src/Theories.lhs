@@ -38,6 +38,7 @@ module Theories
  , showTheoryLaws
  , showTheoryKnowns
  , lawClassify, lawDepClassify
+ , typeTheTheory
  ) where
 
 import Data.Set (Set)
@@ -55,7 +56,7 @@ import AST
 import StratifiedDAG
 import Substitution
 import VarData
-import Typing
+--import Typing
 import Assertions
 import Laws
 import Proofs
@@ -765,3 +766,12 @@ showDir Left2Right   =  "-->"
 showDir Right2Left  =  "<--"
 \end{code}
 
+
+\subsection{Assertion Typing}
+
+Given a theory and its dependencies,
+run type-inference over all assertions present.
+\begin{code}
+typeTheTheory :: [VarTable] -> Theory -> Theory
+typeTheTheory vts theory = theory
+\end{code}

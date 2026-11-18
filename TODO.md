@@ -46,6 +46,10 @@ Fixing bugs as we go.
       
     *We need a function that does type-inference for all laws and conjectures.*
     This will be done in `MatchContext`.
+
+    Done for conjectures but not working. 
+    If we install `Lists` we get `τ`s everywhere, except at the top-level.
+    Problems seems to be typing failure inside `mkTypedAsn`.
  
   - Test code fails to compile because of type changes (t.b.d. later)
 

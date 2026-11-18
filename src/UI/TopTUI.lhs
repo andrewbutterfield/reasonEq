@@ -38,6 +38,7 @@ import Binding
 import Typing
 import SideCond
 import Assertions
+import Proofs
 import Ranking
 import ProofSettings
 import REqState

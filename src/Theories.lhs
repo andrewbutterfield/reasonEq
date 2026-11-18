@@ -55,6 +55,7 @@ import AST
 import StratifiedDAG
 import Substitution
 import VarData
+import Typing
 import Assertions
 import Laws
 import Proofs

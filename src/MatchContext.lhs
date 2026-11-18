@@ -22,6 +22,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import Control
 import NotApplicable
 import YesBut 
 import Utilities
@@ -142,6 +143,14 @@ buildVSCS cons gvs vset = map (flip cons vset) gvs
 Given a theory and its dependencies,
 run type-inference over all assertions present.
 \begin{code}
-typeTheTheory :: [VarTable] -> Theory -> Theory
-typeTheTheory vts theory = theory
+typeTheTheory :: String -> TheoryDAG -> Theory -> Theory
+typeTheTheory pNm thDAG theory
+  = let 
+      depthrys = getTheoryDeps' pNm thDAG 
+      mctxts = buildMatchContext depthrys
+      vts = getVarTables mctxts
+      typedconj = mapsnd (tinfer vts) $ conjs theory
+    in conjs_ typedconj theory
+
+tinfer vts (Assertion tm sc) = fst $ mkTypedAsn vts tm sc 
 \end{code}

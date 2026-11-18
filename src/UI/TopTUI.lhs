@@ -303,10 +303,7 @@ loadTheoryFile [thNm] reqs = do
           let pNm = thName pthry
           if pNm == thNm then do
             -- do type-inferencing for all laws and conjectures in pthry
-            let depthrys = getTheoryDeps' pNm thDAG 
-            let mctxts = buildMatchContext depthrys
-            let vts = getVarTables mctxts
-            let pthryT = typeTheTheory [] pthry -- inferencing TBD
+            let pthryT = typeTheTheory pNm thDAG pthry -- inferencing TBD
             putStrLn $ unlines' [ "Loaded theory:", showTheoryStd pthryT ]
             let (exists,report) = checkLoadedTheory pthry reqs
             putStrLn report

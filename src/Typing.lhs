@@ -220,7 +220,8 @@ instance Types Type where
                                   Nothing  ->  t
                                   Just t'  ->  t'
     apply s (TypeCons i ts)  =  TypeCons i $ map (apply s) ts
-    apply s (AlgType i fs)   =  error ("AlgType.apply NYfI: "++show i)
+    apply s (AlgType i fs)   =  AlgType i $ map (algApply s) fs
+      where algApply s (j,ts)  =  (j,map (apply s) ts)
     apply s (FunType t1 t2)  =  FunType (apply s t1) (apply s t2)
     apply _ t@(GivenType _)  =  t
     apply _ BottomType       =  BottomType

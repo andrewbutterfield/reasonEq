@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Matching
-( match, itop
+( theMatch, itop
   -- below exported for testing
 , typeMatch, termMatch, tsMatch
 , tvMatch, tkvMatch
@@ -140,10 +140,11 @@ $$
    \texttt{M}
 $$
 \begin{code}
-match :: (MonadPlus mp, MonadFail mp) 
-      => [VarTable] -> TypCmp
-      -> Candidate  -> Pattern -> mp Binding
-match vts fits cand patn  
+-- renamed "theMatch" because "match" is used everywhere....
+theMatch :: (MonadPlus mp, MonadFail mp) 
+         => [VarTable] -> TypCmp
+         -> Candidate  -> Pattern -> mp Binding
+theMatch vts fits cand patn  
   =  termMatch vts fits emptyBinding noBVS noBVS cand patn
 \end{code}
 

@@ -332,11 +332,11 @@ First, try the structural match.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts fits tP partsP replP scP
       = case
-                match vts fits tC partsP
+                theMatch vts fits tC partsP
         of
           Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
           But msgs
-           -> But ([ "try match failed"
+           -> But ([ "try theMatch failed"
                    , ""
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
@@ -889,7 +889,7 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind  <- match vts fits tC partsP
+  =  do bind  <- theMatch vts fits tC partsP
         kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC

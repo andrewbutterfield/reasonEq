@@ -150,7 +150,7 @@ theMatch vts fits cand patn
 
 \newpage
 \section{Type Matching}
-This is the first thing done by \h{typeMatch}.
+This is the first thing done by \h{termMatch}.
 
 
 $$
@@ -204,25 +204,14 @@ typeMatch (fits,_) bind typC (TypeVar iP)
                    =  bindTypeVarToType fits iP typC bind
 \end{code}
 
-% $$
-% \inferrule
-%    {???}
-%    {\mrule{\beta}{tv_C}{t_P}{\mapof{{tv_C}\mapsto{t_P}}}}
-%    \quad
-%    \texttt{type Check?}
-% $$
-% \begin{code}
-% -- !! will this work?
-% tyM (fits,_) bind (TypeVar iC) typP 
-%                    =  bindTypeVarToType fits iC typP bind
-% \end{code}
-
 $$
 \inferrule
-   {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
+   {i_C \sim i_P \and \mrule{\beta}{\tau_{cj}}{\tau_{pj}}{\beta_j}}
+   {\mrule{\beta}{i_C(\tau_{c1},\dots,\tau_{cn})}
+                 {i_P(\tau_{p1},\dots,\tau_{pn})}
+                 {\beta \uplus \beta_1 \uplus \dots \uplus \beta_n}}
    \quad
-   \texttt{tyM-X}
+   \texttt{tyM-TC-TC}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
@@ -233,15 +222,19 @@ typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
 
 $$
 \inferrule
-   {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
+   {i_C \sim i_P \and \mrule{\beta}{TC_{cj}}{TC_{pj}}{\beta_j}}
+   {\mrule{\beta}{i_C(TC_{c1},\dots,TC_{cn})}
+                 {i_P(TC_{p1},\dots,TC_{pn})}
+                 {\beta \uplus \beta_1 \uplus \dots \uplus \beta_n}}
    \quad
-   \texttt{tyM-X}
+   \texttt{tyM-DC-DC}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(AlgType iC fsC) (AlgType iP fsP)
-  | iC `vfits` iP && fsC == fsP   =  bindTypeVarToType fits iP typC bind
-  -- temporary: we should typeMatch fsC!!i :: fsP!!i
+  | iC `vfits` iP = do
+    bindI <- bindTypeVarToType fits iP (TypeVar iC) bind
+    typesMatch (fits,vfits) bindI (map mkTC fsC) (map mkTC fsP)
+  where mkTC (i,ts) = TypeCons i ts
 \end{code}
 
 $$
@@ -249,25 +242,22 @@ $$
    {}
    {\mrule{\beta}{t_C}{t_P}{\beta s}}
    \quad
-   \texttt{tyM-X}
+   \texttt{tyM-FT-FT}
 $$
 \begin{code}
 typeMatch (fits,vfits) bind typC@(FunType tdC trC) (FunType tdP trP) = do
   bindD <- typeMatch (fits,vfits) bind tdC tdP
   typeMatch (fits,vfits) bindD trC trP
-
-typeMatch _ bind _ BottomType = return bind  
 \end{code}
 
 $$
 \inferrule
-   {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
+   {g_C = g_P}
+   {\mrule{\beta}{g_C}{g_P}{\beta s}}
    \quad
-   \texttt{tyM-X}
+   \texttt{tyM-GT-GT}
 $$
 \begin{code}
--- `vfits` not relevant here
 typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
   | iC == iP  =  bindTypeVarToType fits iP typC bind
 \end{code}
@@ -275,22 +265,15 @@ typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
 $$
 \inferrule
    {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
+   {\mrule{\beta}{\bot}{\bot}{\beta}}
    \quad
-   \texttt{tyM-X}
+   \texttt{tyM-B-B}
 $$
 \begin{code}
--- typeMatch (fits,_) bind typC typP@(GivenType iP)
---   | typC `fits` typP  =  bindTypeVarToType fits iP typC bind
+typeMatch _ bind BottomType BottomType = return bind  
 \end{code}
 
-$$
-\inferrule
-   {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
-   \quad
-   \texttt{tyM-X}
-$$
+All else fails.
 \begin{code}
 typeMatch (fits,vfits) bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
@@ -298,18 +281,14 @@ typeMatch (fits,vfits) bind typC typP
                    , "typP = " ++ show typP ]
 \end{code}
 
-$$
-\inferrule
-   {}
-   {\mrule{\beta}{t_C}{t_P}{\beta s}}
-   \quad
-   \texttt{tyM-X}
-$$
+Processing a lists of type matches.
 \begin{code}
 typesMatch (fits,vfits) bind [] [] = return bind
+
 typesMatch (fits,vfits) bind (tC:tsC) (tP:tsP) = do
   bindH <- typeMatch (fits,vfits) bind tC tP
   typesMatch (fits,vfits) bindH tsC tsP
+
 typesMatch (fits,vfits) bind tsC tsP = fail $ unlines
   [ "typesMatch: length difference "++show (length tsP - length tsC)]
 \end{code}

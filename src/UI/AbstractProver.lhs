@@ -269,7 +269,7 @@ matchFocus ranking liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  getVarTables ctxts
-    in do let (asn',tvmap)  =  mkTypedAsn vts goalt scC 
+    in do let (asn',tvmap)  =  mkTypedAsn (pdbn "mF.vts" vts) (pdbn "mF.goalt" goalt) scC 
           let fits          =  cSubType tvmap
           let mtchs         =  matchInContexts ctxts fits asn'
           let rankedM       =  ranking mtchs

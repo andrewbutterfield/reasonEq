@@ -1,29 +1,36 @@
-
-
-@lI3.VTS:  
+@mF.goalt:
+C
+T
+True
+(Id "cat" 0)
+[ C
+  ( TC
+    (Id "star" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "rev" 0)
+  [ V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
+, C
+  ( TV
+    (Id "t" 0) )
+  True
+  (Id "seq" 0)
+  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ] ]
+@mF.vts:
 [ VD
   ( "Lists"
-  , { ( VR (Id "cat" 0, VO, WS)
-      , KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) 
-           (Just True)
-      )
+  , { (VR (Id "cat" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) (Just True))
     , (VR (Id "cons" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)]))) (Just True))
     , (VR (Id "elems" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)])) (Just True))
     , (VR (Id "hd" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TV (Id "t" 0))) (Just True))
-    , (VR (Id "len" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) ( TG (Id "Z" 0))) (Just True))
-    , ( VR (Id "nil" 0, VO, WS)
-      , KV (TC (Id "star" 0) [TV (Id "t" 0)]) 
-        Nothing
-      )
+    , (VR (Id "len" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))) (Just True))
+    , (VR (Id "nil" 0, VO, WS), KV (TC (Id "star" 0) [TV (Id "t" 0)]) Nothing)
     , (VR (Id "pfx" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) (Just True))
     , (VR (Id "rev" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True))
-    , (VR (Id "tl" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True)) 
-    }
+    , (VR (Id "tl" 0, VO, WS), KV (TF (TC (Id "star" 0) [TV (Id "t" 0)]) (TC (Id "star" 0) [TV (Id "t" 0)])) (Just True)) }
   , {}
   , {} )
-
-
-
 , VD
   ( "Sets"
   , { (VR (Id "card" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))) (Just True))
@@ -85,3 +92,36 @@
   , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)) }
   , {}
   , {} ) ]
+@aTI.asn:
+ASN
+( C
+  ( TC
+    (Id "star" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "cat" 0)
+  [ C
+    ( TC
+      (Id "star" 0)
+      [ TV
+        (Id "t" 0) ] )
+    True
+    (Id "rev" 0)
+    [ V (TC (Id "star" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
+  , C
+    ( TV
+      (Id "t" 0) )
+    True
+    (Id "seq" 0)
+    [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ] ]
+, SCD
+  []
+  ( {} ) )
+@aTI.tvmap:
+{ (Id "A1" 0, Id "A1" 0)       {A1} |-> A1
+, (Id "A3" 0, Id "A3" 0)       {A3,A4,A6,A7} |-> A3
+, (Id "A4" 0, Id "A3" 0)
+, (Id "A5" 0, Id "A5" 0)       {A5} |-> A5
+, (Id "A6" 0, Id "A3" 0)
+, (Id "A7" 0, Id "A3" 0) }

@@ -77,7 +77,19 @@ Most recent first...
 
   - `Typing` bugs.
 
-    e.g. 
+    We see stuff like this:
+
+    ```
+    @aTI.tvmap:
+      { (Id "A1" 0, Id "A1" 0)       {A1} |-> A1
+      , (Id "A3" 0, Id "A3" 0)       {A3,A4,A6,A7} |-> A3
+      , (Id "A4" 0, Id "A3" 0)
+      , (Id "A5" 0, Id "A5" 0)       {A5} |-> A5
+      , (Id "A6" 0, Id "A3" 0)
+      , (Id "A7" 0, Id "A3" 0) }
+    ```
+
+    for [2,1,1] below:
 
     ```
     len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
@@ -89,6 +101,7 @@ Most recent first...
     len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
     Focus = [2,1,1,2,1] :: t  -- ok
     ```
+
 
   - The `i` command shows long list of laws ending with `EQV`.
 

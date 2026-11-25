@@ -75,6 +75,21 @@ We should fix this, somehow. Similarly for `Laws.flattenImp`.
 
 Most recent first...
 
+  - `Typing` bugs.
+
+    e.g. 
+
+    ```
+    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
+    Focus = [2,1] :: ℤ -- ok
+    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
+    Focus = [2,1,1] :: τ -- should be *t
+    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
+    Focus = [2,1,1,2] :: t  -- should be *t
+    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
+    Focus = [2,1,1,2,1] :: t  -- ok
+    ```
+
   - The `i` command shows long list of laws ending with `EQV`.
 
     **Revise induction axiom ???**

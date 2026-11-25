@@ -509,20 +509,17 @@ From MG:
 
 $$\ITLAM$$
 
-We then generalise to multiples
-
-$$\ITLAMN$$
-
 \begin{code}
-inferTypes fis env (Lam typ lmbd vl e)
-  = do  let ids = getStdIds vl
-        let (fis1,vl1,env1) = abstractBindingVars fis env ids
-        (fis2,(s1, t1)) <- inferTypes fis1 env1 e
-        let vts = map (apply s1) vl1
-        return (fis2,(s1, curryType vts t1))
-  where 
-    curryType [] r = r
-    curryType (d:ds) r = FunType d $ curryType ds r
+inferTypes fis env (Lam typ lmbd vl e) = lamIT fis env e vl
+  where
+    lamIT fis env e [] = inferTypes fis env e
+    lamIT fis env e (LstVar _:vl) = lamIT fis env e vl
+    lamIT fis env e (StdVar v@(Vbl n _ _):vl) = do
+      let (fis1,tv) = newTyVar fis
+      let TypeEnv env' = remove env n
+      let env'' = TypeEnv (env' `M.union` M.singleton n (Scheme [] tv))
+      (fis2,(s1,t1)) <- lamIT fis1 env'' e vl
+      return (fis2,(s1,FunType (apply s1 tv) t1))
 \end{code} 
 
 We then look at variable-set abstraction, 

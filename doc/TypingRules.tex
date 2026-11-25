@@ -62,15 +62,15 @@
 
 \def\IAPP{
   \TINFER
-    { \TJUDGE\TENV{e_0}{t_0}{S_0}
+    { \TJUDGE\TENV{e_1}{t_1}{S_1}
       \and
-      \TJUDGE{S_0\TENV}{e_1}{t_1}{S_1}
+      \TJUDGE{S_1\TENV}{e_2}{t_2}{S_2}
       \and
       t' = \newv
       \and
-      S_2 = \mgu(S_1 t_0, t_1 \fun t')
+      S_3 = \mgu(S_2 t_1, t_2 \fun t')
     }
-    {\TJUDGE\TENV{e_0~e_1}{S_2 t'}{S_2 S_1 S_0}}
+    {\TJUDGE\TENV{e_1~e_2}{S_3 t'}{S_3 S_2 S_1}}
 }
 
 \def\ICURRY{

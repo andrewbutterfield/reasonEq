@@ -227,13 +227,13 @@ instance Types Type where
     apply _ BottomType       =  BottomType
 
 instance Types TypeScheme where
-    ftv (Scheme vars t)      =  (ftv t) `S.difference` (S.fromList vars)
+    ftv (Scheme vars t)      =  ftv t `S.difference` S.fromList vars
 
     apply s (Scheme vars t)  =  Scheme vars (apply (foldr M.delete s vars) t)
 
 instance Types a => Types [a] where
     apply s  =  map (apply s)
-    ftv l    =  foldr S.union S.empty (map ftv l)
+    ftv      =  foldr (S.union . ftv)  S.empty 
 \end{code}
 
 \subsection{Type Environments}
@@ -277,7 +277,7 @@ that are not free in the environment:
 \begin{code}
 generalize        ::  TypeEnv -> Type -> TypeScheme
 generalize env t  =   Scheme vars t
-  where vars = S.toList ((ftv t) `S.difference` (ftv env))
+  where vars = S.toList (ftv t `S.difference` ftv env)
 \end{code}
 
 \subsection{Fresh Typenames}
@@ -489,7 +489,7 @@ inferTypes fis env econs@(Cons _ _ _ _)
   = inferTypes fis env $ consToApp econs
 \end{code}
 
-
+\newpage
 \subsubsection{Variable Binding Constructs}
 
 Both quantifier bindings ($\forall x \bullet p$)
@@ -499,7 +499,6 @@ The difference is that the type of the quantifier is that of its body,
 while the type of the abstraction is a higher-order function 
 from the types of the binders to the type of the body.
 
-\newpage
 We start with variable-list abstraction, 
 which includes the classic typed lambda-calculus case.
 

@@ -348,7 +348,7 @@ mgu fis ta1@(AlgType _ _) ta2@(AlgType _ _)
 mgu fis (FunType l r) (FunType l' r')  
   =  do  (fis1,s1) <- mgu fis l l'
          (fis2,s2) <- mgu fis1 (apply s1 r) (apply s1 r')
-         return ( fis2, s1 `composeSubst` s2 )
+         return ( fis2, s2 `composeSubst` s1 )
 mgu fis (GivenType gt1) (GivenType gt2)
   | gt1==gt2                   =  return (fis,nullSubst)
 mgu fis t1 t2                  =  fail ("mgu types don't unify:\n  t1 is "
@@ -580,7 +580,7 @@ inferTypes fis env (Sub _ e2 (Substn ves lvlvs))
         let env'' = TypeEnv $ envInsertMany vss env'  
         let s1 = foldl composeSubst M.empty tsubs
         (fis2,(s2, t2)) <- inferTypes fis1 (apply s1 env'') e2
-        return (fis2,(s1 `composeSubst` s2, t2))
+        return (fis2,(s2 `composeSubst` s1, t2))
   where
     (vs,es) = unzip $ S.toList ves
     xs = map varId vs

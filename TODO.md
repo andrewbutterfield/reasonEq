@@ -89,6 +89,8 @@ Most recent first...
       , (Id "A7" 0, Id "A3" 0) }
     ```
 
+    Changing 'A' to '~' makes no difference!
+
     for [2,1,1] below:
 
     ```

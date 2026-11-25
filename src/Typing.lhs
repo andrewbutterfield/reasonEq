@@ -299,6 +299,7 @@ with canonical representatives, discussed below.
 \begin{code}
 newTyVar :: FreshInts -> (FreshInts,Type)
 newTyVar fis = newTypeVariable fis genTypeRoot
+genTypeRoot = "~" -- higher than A-Z,a-z
 \end{code}
 
 
@@ -725,7 +726,6 @@ The above example simplifies to:
 
 Example coded up:
 \begin{code}
-genTypeRoot = "A"
 hdConsTl = M.fromList 
     [ (_1, TypeCons star [TypeVar _3]) 
     , (_2, TypeVar _3)

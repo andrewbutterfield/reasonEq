@@ -183,7 +183,7 @@ nullSubst :: TypeSubst
 nullSubst = M.empty
 
 composeSubst         :: TypeSubst -> TypeSubst -> TypeSubst
-composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
+composeSubst s1 s2   = M.map (apply s1) s2 `M.union` s1
 \end{code}
 
 \subsection{Types Class}
@@ -270,6 +270,7 @@ removeMany tenv [] = tenv
 removeMany tenv (tv:tvs) = removeMany (remove tenv tv) tvs
 \end{code}
 
+\newpage
 The function \h{generalize}, given an environment and type,
 generates a type-scheme that pulls out type variables free in the type
 that are not free in the environment:

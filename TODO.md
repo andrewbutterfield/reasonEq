@@ -81,10 +81,14 @@ Most recent first...
     The former is not properly defined.
     
     `cat_nil` proof stuck: unable to do `nil ⌢ nil :: nil ⌢ σ`.
-    It's the `⌢` typing:
+    It's the `⌢` typing (not really, see below) :
     typeMatch: distinct types
     typC = TC (Id "star" 0) [TV (Id "t" 0)]
     typP = TG (Id "B" 0)
+
+    The issue is that `σ` does not have a VarData entry, 
+    and so it defaults to `VR (Id "sigma" 0,VP,WS)` 
+    - a predicate variable of type Bool !
 
     *looks like the law needs proper typing*
 

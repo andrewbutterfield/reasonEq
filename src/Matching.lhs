@@ -307,7 +307,7 @@ in that the candidate is a subtype of the pattern.
 Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
 termMatch vts fits bind cbvs pbvs tC tP
-  = let typC = termtype tC ; typP = termtype tP
+  = let typC = termtype (pdbn "termMatch.tC" tC) ; typP = termtype $ pdbn "termMatch.tP" tP
     in do
       bindT <- typeMatch (fits,vfits) bind typC typP
       termMatch' vts fits bindT cbvs pbvs tC tP

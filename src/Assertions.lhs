@@ -703,5 +703,5 @@ addTypeInfo :: SideCond -> Type -> Term -> TypeSubst
 addTypeInfo sc typ term typsub 
   = let (tvstyps,tvmap) = typeVarEquivalence typsub
         asn = mkAsn term sc
-    in (pdbn "aTI.asn" asn,pdbn "aTI.tvmap" tvmap) 
+    in (asn,tvmap) 
 \end{code}

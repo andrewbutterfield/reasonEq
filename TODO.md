@@ -77,33 +77,16 @@ Most recent first...
 
   - `Typing` bugs.
 
-    We see stuff like this:
+    Current one solved by replacing `⟨x⟩` by `x : nil`. 
+    The former is not properly defined.
+    
+    `cat_nil` proof stuck: unable to do `nil ⌢ nil :: nil ⌢ σ`.
+    It's the `⌢` typing:
+    typeMatch: distinct types
+    typC = TC (Id "star" 0) [TV (Id "t" 0)]
+    typP = TG (Id "B" 0)
 
-    ```
-    @aTI.tvmap:
-      { (Id "A1" 0, Id "A1" 0)       {A1} |-> A1
-      , (Id "A3" 0, Id "A3" 0)       {A3,A4,A6,A7} |-> A3
-      , (Id "A4" 0, Id "A3" 0)
-      , (Id "A5" 0, Id "A5" 0)       {A5} |-> A5
-      , (Id "A6" 0, Id "A3" 0)
-      , (Id "A7" 0, Id "A3" 0) }
-    ```
-
-    Changing 'A' to '~' makes no difference!
-
-    for [2,1,1] below:
-
-    ```
-    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
-    Focus = [2,1] :: ℤ -- ok
-    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
-    Focus = [2,1,1] :: τ -- should be *t
-    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
-    Focus = [2,1,1,2] :: t  -- should be *t
-    len(rev(σ)) = len(σ) ⟹  len(rev(σ) ⌢ ⟨x⟩) = 1 + len(σ)
-    Focus = [2,1,1,2,1] :: t  -- ok
-    ```
-
+    *looks like the law needs proper typing*
 
   - The `i` command shows long list of laws ending with `EQV`.
 
